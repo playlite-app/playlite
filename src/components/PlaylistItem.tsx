@@ -33,14 +33,14 @@ export default function PlaylistItem({
 }: PlaylistItemProps) {
   return (
     <div
-      className="group flex items-center gap-4 p-3 bg-card border border-border rounded-xl hover:border-primary/50 transition-all hover:shadow-md animate-in fade-in slide-in-from-left-4 duration-300 cursor-grab active:cursor-grabbing"
+      className="group flex items-center gap-3 lg:gap-4 p-2.5 lg:p-3 bg-card border border-border rounded-xl hover:border-primary/50 transition-all hover:shadow-md animate-in fade-in slide-in-from-left-4 duration-300 cursor-grab active:cursor-grabbing"
       onClick={onClick}
     >
-      {/* BLOCO DE CONTROLE (Grip + Setas) */}
+      {/* Bloco de controle (Grip + Setas) */}
       <div className="flex items-center gap-0 mr-1">
-        <GripVertical size={20} className="text-muted-foreground/40" />
+        <GripVertical size={18} className="text-muted-foreground/40 lg:w-5 lg:h-5" />
 
-        {/* Coluna de Setas */}
+        {/* Botões de mover na fila */}
         <div className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground">
           <Button
             variant="ghost"
@@ -53,10 +53,10 @@ export default function PlaylistItem({
             disabled={index === 0}
             title="Mover para cima"
           >
-            <ArrowUp size={14} />
+            <ArrowUp size={13} className="lg:w-3.5 lg:h-3.5" />
           </Button>
 
-          <span className="text-[12px] font-mono font-bold w-6 text-center select-none">
+          <span className="text-[11px] lg:text-xs font-mono font-bold w-6 text-center select-none">
             {index + 1}
           </span>
 
@@ -71,13 +71,13 @@ export default function PlaylistItem({
             disabled={index === total - 1}
             title="Mover para baixo"
           >
-            <ArrowDown size={14} />
+            <ArrowDown size={13} className="lg:w-3.5 lg:h-3.5" />
           </Button>
         </div>
       </div>
 
-      {/* Capa Pequena */}
-      <div className="relative h-16 w-12 shrink-0 rounded overflow-hidden bg-muted cursor-pointer group/img shadow-sm">
+      {/* Cover do jogo */}
+      <div className="relative h-14 w-10 lg:h-16 lg:w-12 shrink-0 rounded overflow-hidden bg-muted cursor-pointer group/img shadow-sm">
         {game.cover_url ? (
           <img
             src={game.cover_url}
@@ -87,10 +87,9 @@ export default function PlaylistItem({
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-[8px]">
-            <ImageOff className="opacity-50" />
+            <ImageOff className="opacity-50 w-4 h-4" />
           </div>
         )}
-        {/* Overlay Play Mini */}
         <div
           className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"
           onClick={(e) => {
@@ -98,7 +97,7 @@ export default function PlaylistItem({
             onPlay();
           }}
         >
-          <Play size={16} className="fill-white text-white" />
+          <Play size={15} className="fill-white text-white lg:w-4 lg:h-4" />
         </div>
       </div>
 
@@ -108,7 +107,7 @@ export default function PlaylistItem({
           {game.name}
         </h4>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-          <span className="bg-secondary/50 px-1.5 py-0.5 rounded text-secondary-foreground border border-border/50">
+          <span className="bg-secondary/50 px-1.5 py-0.5 rounded text-secondary-foreground border border-border/50 truncate max-w-[100px] lg:max-w-none">
             {game.genre || "Geral"}
           </span>
           <span>•</span>
@@ -118,8 +117,8 @@ export default function PlaylistItem({
         </div>
       </div>
 
-      {/* 4. Botões de Ação */}
-      <div className="flex items-center gap-2">
+      {/* Botões de Ação */}
+      <div className="flex items-center gap-1.5 lg:gap-2">
         <Button
           size="sm"
           className="h-7 px-2 flex items-center gap-1 bg-primary/90 hover:bg-primary text-primary-foreground shadow-sm"
@@ -129,9 +128,10 @@ export default function PlaylistItem({
           }}
           title="Jogar Agora"
         >
-          <Play size={12} className="fill-current" />{" "}
+          <Play size={11} className="fill-current lg:w-3 lg:h-3" />
           <span className="text-xs font-bold">Play</span>
         </Button>
+
         <Button
           variant="ghost"
           size="icon"
@@ -142,7 +142,7 @@ export default function PlaylistItem({
           }}
           title="Remover da fila"
         >
-          <Trash2 size={16} />
+          <Trash2 size={15} className="lg:w-4 lg:h-4" />
         </Button>
       </div>
     </div>

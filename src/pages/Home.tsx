@@ -297,7 +297,7 @@ export default function Home({
         </div>
 
         {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
           <div className="lg:col-span-2 bg-card border border-border rounded-xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={20} className="text-primary" />
@@ -343,7 +343,7 @@ export default function Home({
             </div>
           </div>
 
-          <div className="lg:col-span-1 bg-card border border-border rounded-xl p-6 h-full">
+          <div className="col-span-1 bg-card border border-border rounded-xl p-6 h-full">
             <div className="flex items-center gap-2 mb-3">
               <Gamepad2 size={20} className="text-primary" />
               <h2 className="text-lg font-semibold">Gêneros + Jogados</h2>

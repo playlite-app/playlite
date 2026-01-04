@@ -6,7 +6,6 @@ import {
   Settings,
   ShoppingCart,
   TrendingUp,
-  Menu,
 } from "lucide-react";
 import { Game } from "../types";
 
@@ -32,44 +31,41 @@ export default function Sidebar({
   games,
 }: SidebarProps) {
   return (
-    <aside className="w-20 md:w-64 bg-sidebar border-r border-sidebar-border h-screen flex flex-col transition-all duration-300 ease-in-out shrink-0">
-      {/* Logo/Header */}
-      <div className="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-sidebar-border">
-        {/* Mostra Texto em telas grandes */}
-        <h1 className="hidden md:block text-2xl font-bold text-sidebar-foreground truncate">
-          Playlite
-        </h1>
-        {/* Mostra Ícone em telas pequenas */}
-        <div className="md:hidden text-sidebar-foreground">
-          <Menu size={24} />
+    <aside className="w-17.5 lg:w-64 bg-sidebar border-r border-sidebar-border h-screen flex flex-col transition-all duration-300">
+
+      {/* Header / Logo */}
+      <div className="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <img
+            src="/app-icon.png"
+            alt="Logo"
+            className="w-8 h-8 shrink-0 object-contain"
+          />
+          <h1 className="hidden lg:block text-xl font-bold text-sidebar-foreground truncate">
+            Playlite
+          </h1>
         </div>
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 p-3 md:p-4 space-y-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 p-2 lg:p-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeSection === item.id;
-
           return (
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              title={item.label} // Tooltip nativo para quando estiver colapsado
+              title={item.label} // Tooltip nativo para quando estiver só ícone
               className={`
-                w-full flex items-center justify-center md:justify-start gap-3 px-3 py-3 rounded-lg
+                w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-3 rounded-lg
                 transition-all duration-200
-                ${
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                }
+                ${activeSection === item.id
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"}
               `}
             >
-              {/* Ícone fixo */}
-              <Icon size={22} className="shrink-0" />
-              {/* Texto escondido no mobile, visível no desktop */}
-              <span className="hidden md:block truncate text-lg">
+              <Icon size={22} />
+              <span className="hidden lg:block font-medium">
                 {item.label}
               </span>
             </button>
@@ -78,18 +74,16 @@ export default function Sidebar({
       </nav>
 
       {/* User Info */}
-      <div className="p-3 md:p-4 border-t border-sidebar-border">
-        <div className="flex items-center justify-center md:justify-start gap-3 px-1 md:px-4 py-2">
-          <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm md:text-base">
+      <div className="p-3 lg:p-4 border-t border-sidebar-border">
+        <div className="flex items-center justify-center lg:justify-start gap-3 px-1 lg:px-2 py-2">
+          <div className="w-9 h-9 shrink-0 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
             U
           </div>
-
-          {/* Info escondida no mobile */}
-          <div className="hidden md:block flex-1 overflow-hidden">
-            <p className="text-base text-sidebar-foreground truncate">
+          <div className="hidden lg:block flex-1 overflow-hidden">
+            <p className="text-sm font-semibold text-sidebar-foreground truncate">
               Usuário
             </p>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate">
               {games.length} {games.length === 1 ? "jogo" : "jogos"}
             </p>
           </div>

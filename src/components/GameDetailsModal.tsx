@@ -37,12 +37,10 @@ export default function GameDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Modal: Ocupa quase toda a tela em mobile (95vh) para dar espaço ao conteúdo */}
       <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[95vh] md:h-[90vh] p-0 border-none bg-background flex flex-col overflow-hidden shadow-2xl">
         {/* Título para acessibilidade */}
         <DialogTitle className="sr-only">{game.name} - Detalhes</DialogTitle>
 
-        {/* Botão Fechar */}
         <button
           onClick={onClose}
           className="absolute right-3 top-3 md:right-4 md:top-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all"
@@ -59,7 +57,7 @@ export default function GameDetailsModal({
               style={{ backgroundImage: `url(${game.cover_url})` }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-background" />
 
           {/* Conteúdo do Header */}
           <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex items-end gap-6 md:gap-8 z-10">
@@ -128,7 +126,7 @@ export default function GameDetailsModal({
                     <div className="flex items-center gap-2 font-mono font-semibold text-sm md:text-lg">
                       <Clock
                         size={16}
-                        className="md:w-[18px] text-muted-foreground"
+                        className="md:w-4.5 text-muted-foreground"
                       />
                       {game.playtime}h
                     </div>
@@ -173,8 +171,8 @@ export default function GameDetailsModal({
                           details.metacritic >= 75
                             ? "border-green-500/50 text-green-500"
                             : details.metacritic >= 50
-                            ? "border-yellow-500/50 text-yellow-500"
-                            : "border-red-500/50 text-red-500"
+                              ? "border-yellow-500/50 text-yellow-500"
+                              : "border-red-500/50 text-red-500"
                         )}
                       >
                         {details.metacritic}
@@ -187,7 +185,7 @@ export default function GameDetailsModal({
                       <span className="text-muted-foreground flex items-center gap-2 text-xs md:text-sm">
                         <Building2 size={14} /> Dev
                       </span>
-                      <span className="font-medium truncate max-w-[120px] text-right text-xs md:text-sm">
+                      <span className="font-medium truncate max-w-30 text-right text-xs md:text-sm">
                         {details.developers[0].name}
                       </span>
                     </div>

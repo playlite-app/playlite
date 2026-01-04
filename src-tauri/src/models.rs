@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+/// Estrutura que representa um jogo na biblioteca do usuário
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Game {
     pub id: String,
@@ -12,6 +13,7 @@ pub struct Game {
     pub favorite: bool,
 }
 
+/// Estrutura que representa um jogo na lista de desejos do usuário
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WishlistGame {
     pub id: String,
@@ -27,7 +29,7 @@ pub struct WishlistGame {
     pub added_at: Option<String>,
 }
 
-// Enum de erros personalizados para melhor diagnóstico
+/// Enum de erros personalizados para melhor diagnóstico
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
 #[serde(tag = "type", content = "message")]
@@ -39,6 +41,7 @@ pub enum AppError {
     MutexError,
 }
 
+/// Implementação de Display para AppError para mensagens de erro legíveis
 impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

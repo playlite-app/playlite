@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
-  // Traduz mensagens técnicas para suas constantes
+  // Traduz mensagens técnicas para as constantes
   getFriendlyMessage = (originalMessage: string) => {
     if (originalMessage.includes("Rendered fewer hooks")) {
       return ERROR_MESSAGES.RENDER_HOOKS_ERROR;
