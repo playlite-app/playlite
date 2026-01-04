@@ -267,7 +267,7 @@ export default function Home({
                   coverUrl={game.cover_url}
                   subtitle={game.genre?.split(",")[0]}
                   badge="Recomendado"
-                  onClick={() => launchGame(game)}
+                  onClick={() => onGameClick(game)}
                   actions={
                     <ActionButton
                       icon={Play}

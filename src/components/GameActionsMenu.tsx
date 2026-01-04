@@ -1,0 +1,93 @@
+import {
+    Check,
+    Edit,
+    ListPlus,
+    MoreVertical,
+    Trash2,
+} from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { ActionButton } from "@/components/ActionButton";
+import { Game } from "../types";
+
+interface GameActionsMenuProps {
+    game: Game;
+    inPlaylist: boolean;
+    onAddToPlaylist: (id: string) => void;
+    onEdit: (game: Game) => void;
+    onDelete: (id: string) => void;
+}
+
+export function GameActionsMenu({
+    game,
+    inPlaylist,
+    onAddToPlaylist,
+    onEdit,
+    onDelete,
+}: GameActionsMenuProps) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <ActionButton
+                    icon={MoreVertical}
+                    variant="glass"
+                    tooltip="Mais Opções"
+                />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+
+                {/* OPÇÃO: Playlist */}
+                <DropdownMenuItem
+                    disabled={inPlaylist}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (!inPlaylist) {
+                            onAddToPlaylist(game.id);
+                            toast.success(`${game.name} adicionado à playlist!`);
+                        }
+                    }}
+                >
+                    {inPlaylist ? (
+                        <>
+                            <Check className="mr-2 h-4 w-4 text-green-500" />
+                            <span className="text-muted-foreground">Na Playlist</span>
+                        </>
+                    ) : (
+                        <>
+                            <ListPlus className="mr-2 h-4 w-4" />
+                            <span>Playlist</span>
+                        </>
+                    )}
+                </DropdownMenuItem>
+
+                {/* OPÇÃO: Editar */}
+                <DropdownMenuItem
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(game);
+                    }}
+                >
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Editar</span>
+                </DropdownMenuItem>
+
+                {/* OPÇÃO: Excluir */}
+                <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 focus:bg-red-100/10"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(game.id);
+                    }}
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Excluir</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
