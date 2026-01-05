@@ -68,7 +68,6 @@ export default function Wishlist() {
         <Button onClick={() => setShowAddModal(true)} variant="outline">
           <Plus /> Adicionar na Lista
         </Button>
-
         <AddWishlistModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
@@ -100,12 +99,10 @@ export default function Wishlist() {
           <RefreshCw className={`${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? 'Buscando Ofertas...' : 'Atualizar Preços'}
         </Button>
-
         <Button onClick={() => setShowAddModal(true)} variant="outline">
           <Plus /> Adicionar na Lista
         </Button>
       </div>
-
       <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {games.map(game => {
           let priceDisplay = 'Aguardando preço...';
@@ -165,7 +162,6 @@ export default function Wishlist() {
           );
         })}
       </div>
-
       <AddWishlistModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

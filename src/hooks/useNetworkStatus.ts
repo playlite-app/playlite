@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 
+/**
+ * Hook personalizado para monitorar o status de conectividade de rede.
+ * @returns true se online, false se offline.
+ */
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 

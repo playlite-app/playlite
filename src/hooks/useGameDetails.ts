@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { detailsService } from '../services/detailsService';
 import { Game, GameDetails, GamePlatformLink } from '../types';
 
+/**
+ * Hook personalizado para buscar detalhes de um jogo selecionado.
+ * @param selectedGame - O jogo selecionado, ou null se nenhum.
+ * @param allGames - A lista completa de jogos para encontrar irmãos.
+ * @returns Um objeto contendo detalhes, loading e siblings.
+ */
 export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
   const [details, setDetails] = useState<GameDetails | null>(null);
   const [loading, setLoading] = useState(false);

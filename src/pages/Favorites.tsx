@@ -87,8 +87,6 @@ export default function Favorites({
                       tooltip="Remover dos Favoritos"
                       onClick={() => actions.onToggleFavorite(game.id)}
                     />
-
-                    {/* COMPONENTE REUTILIZADO */}
                     <GameActionsMenu
                       game={game}
                       inPlaylist={isInPlaylist(game.id)}

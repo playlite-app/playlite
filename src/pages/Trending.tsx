@@ -124,8 +124,8 @@ export default function Trending(props: TrendingProps) {
   const prevHero = () =>
     setHeroIndex(prev => (prev - 1 + heroGames.length) % heroGames.length);
 
+  // Empty State
   if (!currentHero) {
-    // Empty State
     return (
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center">
         <div className="bg-muted/20 mb-4 rounded-full p-4">
@@ -157,7 +157,7 @@ export default function Trending(props: TrendingProps) {
   // Renderização Principal
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto pb-10">
-      {/* 1. Hero */}
+      {/* Hero */}
       <Hero
         title={currentHero.name}
         backgroundUrl={currentHero.background_image}
@@ -167,13 +167,13 @@ export default function Trending(props: TrendingProps) {
         showNavigation={heroGames.length > 1}
         onNext={nextHero}
         onPrev={prevHero}
-        // Composição: Badge específica de Trending
+        // Badge específica de Trending
         badges={
           <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
             <Flame size={16} /> EM ALTA
           </div>
         }
-        // Composição: Botões específicos de Trending
+        // Botões específicos de Trending
         actions={
           <>
             <Button
@@ -197,7 +197,7 @@ export default function Trending(props: TrendingProps) {
         }
       />
 
-      {/* 2. Barra de Filtros */}
+      {/* Barra de Filtros */}
       <div className="bg-background/80 border-border sticky top-0 z-20 border-b p-4 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6">
           <div className="text-muted-foreground flex items-center gap-2">
@@ -224,7 +224,7 @@ export default function Trending(props: TrendingProps) {
         </div>
       </div>
 
-      {/* 3. Sugestões (Trending) */}
+      {/* Sugestões (Trending) */}
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-6 flex items-center gap-2">
           <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
@@ -277,7 +277,7 @@ export default function Trending(props: TrendingProps) {
         </div>
       </div>
 
-      {/* 4. Lançamentos Aguardados */}
+      {/* Lançamentos Aguardados */}
       {upcomingGames.length > 0 && (
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-6 flex items-center gap-2">

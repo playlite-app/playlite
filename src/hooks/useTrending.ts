@@ -9,6 +9,11 @@ interface UseTrendingProps {
   setCachedGames: (games: RawgGame[]) => void;
 }
 
+/**
+ * Hook personalizado para gerenciar jogos em tendência.
+ * @param props - Propriedades incluindo jogos do usuário, cache e setter.
+ * @returns Estado de loading, erro, gênero selecionado e jogos filtrados.
+ */
 export function useTrending({
   userGames,
   cachedGames,

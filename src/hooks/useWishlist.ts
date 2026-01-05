@@ -3,6 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { wishlistService } from '../services/wishlistService';
 import { WishlistGame } from '../types';
 
+/**
+ * Hook personalizado para gerenciar a lista de desejos.
+ * @returns Estado da wishlist e funções para manipulação.
+ */
 export function useWishlist() {
   const [games, setGames] = useState<WishlistGame[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -6,6 +6,11 @@ import { Game } from '../types';
 const STORE_FILENAME = 'playlist.store';
 const STORE_KEY = 'user_playlist_queue';
 
+/**
+ * Hook personalizado para gerenciar a playlist de jogos.
+ * @param allGames - Lista completa de jogos para referência.
+ * @returns Estado da playlist e funções para manipulação.
+ */
 export function usePlaylist(allGames: Game[]) {
   const [queueIds, setQueueIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);

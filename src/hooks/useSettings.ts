@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { settingsService } from '../services/settingsService';
 
+/**
+ * Hook personalizado para gerenciar configurações do aplicativo.
+ * @param onLibraryUpdate - Callback chamado quando a biblioteca é atualizada.
+ * @returns Estado das chaves, loading, status e funções de ação.
+ */
 export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({
     steamId: '',

@@ -183,7 +183,6 @@ export default function Playlist({
               </div>
             ))}
           </div>
-
           {suggestions.length === 0 && (
             <div className="space-y-2 py-10 text-center">
               <p className="text-muted-foreground text-sm">

@@ -12,6 +12,11 @@ interface UseRecommendationProps {
   setProfileCache?: (profile: UserProfile) => void;
 }
 
+/**
+ * Hook personalizado para gerenciar recomendações baseadas no perfil do usuário.
+ * @param props - Propriedades opcionais para cache do perfil.
+ * @returns Perfil, função de afinidade e estado de loading.
+ */
 export function useRecommendation({
   profileCache,
   setProfileCache,

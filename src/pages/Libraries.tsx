@@ -88,8 +88,6 @@ export default function Libraries({
                       }
                       onClick={() => actions.onToggleFavorite(game.id)}
                     />
-
-                    {/* SUBTITUIÇÃO DO BLOCO GIGANTE PELO COMPONENTE */}
                     <GameActionsMenu
                       game={game}
                       inPlaylist={isInPlaylist(game.id)}

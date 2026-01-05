@@ -37,6 +37,7 @@ export default tseslint.config(
         'warn',
         { argsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/no-explicit-any': 'warn',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'padding-line-between-statements': [

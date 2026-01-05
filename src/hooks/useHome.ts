@@ -12,6 +12,11 @@ interface UseHomeProps {
   setProfileCache: (profile: UserProfile) => void;
 }
 
+/**
+ * Hook personalizado para gerenciar o estado da página inicial.
+ * @param props - Propriedades incluindo biblioteca, caches e setters.
+ * @returns Estado e funções para trending, perfil e recomendações.
+ */
 export function useHome({
   games: library,
   trendingCache,
@@ -62,18 +67,18 @@ export function useHome({
 
   // Lógica de Negócios (Síncrona - Instantânea)
 
-  // 1. Stats
+  // Stats
   const totalGames = library.length;
   const totalPlaytime = library.reduce((acc, g) => acc + g.playtime, 0);
   const totalFavorites = library.filter(g => g.favorite).length;
 
-  // 2. Continue Jogando
+  // Continue Jogando
   const continuePlaying = library
     .filter(g => g.playtime > 0 && g.playtime < 50)
     .sort((a, b) => b.playtime - a.playtime)
     .slice(0, 5);
 
-  // 3. Recomendações
+  // Recomendações
   const backlogRecommendations = useMemo(() => {
     if (!profile) return [];
 
@@ -92,12 +97,12 @@ export function useHome({
       .slice(0, 5);
   }, [library, profile, calculateAffinity]);
 
-  // 4. Mais Jogados
+  // Mais Jogados
   const mostPlayed = [...library]
     .sort((a, b) => b.playtime - a.playtime)
     .slice(0, 3);
 
-  // 5. Gêneros Mais Comuns
+  // Gêneros Mais Comuns
   const genreStats = useMemo(
     () =>
       library.reduce(

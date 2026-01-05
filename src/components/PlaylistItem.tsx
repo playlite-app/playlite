@@ -136,7 +136,6 @@ export default function PlaylistItem({
           <Play size={11} className="fill-current lg:h-3 lg:w-3" />
           <span className="text-xs font-bold">Play</span>
         </Button>
-
         <Button
           variant="ghost"
           size="icon"

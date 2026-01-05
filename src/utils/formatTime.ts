@@ -1,3 +1,9 @@
+/**
+ * Formata o tempo em horas para uma string legível, como "0m", "5h" ou "30m".
+ * Trata valores undefined ou inválidos, convertendo para minutos e arredondando.
+ * @param hours - O número de horas a ser formatado, pode ser undefined.
+ * @returns Uma string representando o tempo formatado em horas ou minutos.
+ */
 export function formatTime(hours: number | undefined) {
   const numericHours = Number.isFinite(hours ?? NaN)
     ? (hours as number)

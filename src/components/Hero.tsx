@@ -33,16 +33,16 @@ export default function Hero({
 }: HeroProps) {
   return (
     <div className="bg-background group/hero relative h-125 overflow-hidden">
-      {/* 1. BACKGROUND (Blur) */}
+      {/* Background (Blur) */}
       <div
         className="absolute inset-0 scale-110 bg-cover bg-center blur-xl brightness-50 transition-all duration-700"
         style={{
           backgroundImage: `url(${backgroundUrl || coverUrl})`,
         }}
       />
-      <div className="from-background via-background/60 absolute inset-0 bg-gradient-to-t to-transparent" />
+      <div className="from-background via-background/60 absolute inset-0 bg-linear-to-t to-transparent" />
 
-      {/* 2. NAVEGAÇÃO (Setas) */}
+      {/* Navegação (Setas) */}
       {showNavigation && onPrev && onNext && (
         <>
           <button
@@ -60,7 +60,7 @@ export default function Hero({
         </>
       )}
 
-      {/* 3. CONTEÚDO PRINCIPAL */}
+      {/* Conteúdo principal */}
       <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-8">
         <div
           className="animate-in fade-in flex w-full flex-col items-center gap-8 duration-500 md:flex-row"

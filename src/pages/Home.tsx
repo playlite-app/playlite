@@ -170,9 +170,7 @@ export default function Home({
           }
         />
       )}
-
       <Separator className={'mb-3'} />
-
       {/* Conteúdo Principal da Home */}
       <div className="relative z-20 mx-auto max-w-7xl space-y-10 p-8">
         {/* Stats Cards */}
@@ -260,7 +258,6 @@ export default function Home({
               Ver Tudo
             </Button>
           </div>
-
           {backlogRecommendations.length > 0 ? (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {backlogRecommendations.slice(0, 5).map(game => (

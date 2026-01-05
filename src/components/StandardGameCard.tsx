@@ -91,12 +91,10 @@ export default function StandardGameCard({
         <h3 className="line-clamp-1 text-sm font-semibold" title={title}>
           {title}
         </h3>
-
         <div className="mt-auto flex items-center justify-between">
           <span className="text-muted-foreground max-w-30 truncate text-xs">
             {subtitle}
           </span>
-
           {rating && (
             <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-bold text-yellow-500">
               ★ {rating}

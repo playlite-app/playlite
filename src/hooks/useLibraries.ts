@@ -3,6 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { librariesService } from '../services/librariesService.ts';
 import { Game } from '../types';
 
+/**
+ * Hook personalizado para gerenciar a biblioteca de jogos.
+ * @returns Estado da biblioteca e funções para CRUD.
+ */
 export function useLibraries() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);

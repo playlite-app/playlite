@@ -5,13 +5,11 @@ import AddGameModal from './components/AddGameModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import GameDetailsModal from './components/GameDetailsModal.tsx';
 import Header from './components/Header';
-// Componentes
 import Sidebar from './components/Sidebar';
 import { useDebounce } from './hooks/useDebounce';
 import { useLibraries } from './hooks/useLibraries.ts';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
-// Páginas
 import Libraries from './pages/Libraries.tsx';
 import Playlist from './pages/Playlist';
 import Settings from './pages/Settings';
@@ -155,7 +153,6 @@ function App() {
         onSectionChange={setActiveSection}
         games={games}
       />
-
       <main className="flex min-w-0 flex-1 flex-col">
         <Header
           onAddGame={openAddModal}
@@ -163,17 +160,14 @@ function App() {
           onSearchChange={setSearchTerm}
           activeSection={activeSection}
         />
-
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>
-
       <AddGameModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveGameWrapper}
         gameToEdit={gameToEdit}
       />
-
       <GameDetailsModal
         isOpen={!!selectedGameId}
         onClose={closeDetails}
@@ -181,7 +175,6 @@ function App() {
         allGames={games}
         onSwitchGame={handleSwitchGame}
       />
-
       <Toaster />
     </div>
   );

@@ -137,7 +137,6 @@ export default function GameDetailsModal({
                   </div>
                 </div>
               </div>
-
               {/* Seção 2: Detalhes */}
               <div className="space-y-2 lg:space-y-3">
                 <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase lg:text-base">
@@ -184,7 +183,6 @@ export default function GameDetailsModal({
                   )}
                 </div>
               </div>
-
               {/* Seção 3: Tags */}
               {details?.tags && details.tags.length > 0 && (
                 <div className="space-y-2 lg:space-y-3">
@@ -204,7 +202,6 @@ export default function GameDetailsModal({
                   </div>
                 </div>
               )}
-
               {/* Seção 4: Links */}
               <div className="space-y-3 pt-2">
                 {siblings.length > 0 && (

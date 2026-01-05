@@ -6,10 +6,19 @@ import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
 import { ImportSummary, KeysBatch } from '../types';
 
 export const settingsService = {
+  /**
+   * Obtém as chaves secretas armazenadas (Steam ID, API Key, etc.).
+   * @returns Uma promessa que resolve para um objeto com as chaves secretas.
+   */
   getSecrets: async (): Promise<KeysBatch> => {
     return await invoke<KeysBatch>('get_secrets');
   },
 
+  /**
+   * Define as chaves secretas (Steam ID, API Key, etc.).
+   * @param keys - Objeto contendo steamId, steamApiKey e rawgApiKey.
+   * @returns Uma promessa que resolve quando as chaves são definidas.
+   */
   setSecrets: async (keys: {
     steamId: string | null;
     steamApiKey: string | null;
@@ -18,6 +27,12 @@ export const settingsService = {
     await invoke('set_secrets', keys);
   },
 
+  /**
+   * Importa a biblioteca do Steam usando o ID e chave da API.
+   * @param steamId - O ID do usuário no Steam.
+   * @param apiKey - A chave da API do Steam.
+   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   */
   importSteamLibrary: async (
     steamId: string,
     apiKey: string
@@ -25,10 +40,18 @@ export const settingsService = {
     return await invoke<string>('import_steam_library', { steamId, apiKey });
   },
 
+  /**
+   * Enriquece a biblioteca com dados adicionais.
+   * @returns Uma promessa que resolve para um resumo da importação.
+   */
   enrichLibrary: async (): Promise<ImportSummary> => {
     return await invoke<ImportSummary>('enrich_library');
   },
 
+  /**
+   * Exporta o banco de dados para um arquivo JSON.
+   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   */
   exportDatabase: async (): Promise<string> => {
     try {
       const filePath = await save({
@@ -63,6 +86,10 @@ export const settingsService = {
     }
   },
 
+  /**
+   * Importa o banco de dados de um arquivo JSON.
+   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   */
   importDatabase: async (): Promise<string> => {
     try {
       const selected = await open({

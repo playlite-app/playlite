@@ -64,7 +64,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             <Shield className="text-green-500" size={20} />
             <h3 className="text-lg font-semibold">Credenciais de API</h3>
           </div>
-
           {/* Steam ID */}
           <div className="grid gap-2">
             <Label>Steam ID</Label>
@@ -74,7 +73,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               placeholder="765..."
             />
           </div>
-
           {/* Steam API Key */}
           <div className="grid gap-2">
             <Label>Steam API Key</Label>
@@ -85,7 +83,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               placeholder="••••••••••••••••"
             />
           </div>
-
           {/* RAWG API Key */}
           <div className="grid gap-2">
             <Label>RAWG API Key</Label>
@@ -96,7 +93,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               placeholder="••••••••••••••••"
             />
           </div>
-
           {/* Botão Salvar */}
           <Button
             onClick={actions.saveKeys}
@@ -137,7 +133,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               )}
             </Button>
           </div>
-
           <div className="border-border bg-card rounded-xl border p-6">
             <div className="mb-4 flex items-center gap-2 text-purple-500">
               <Sparkles />
@@ -180,7 +175,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               )}
             </Button>
           </div>
-
           <div className="border-border bg-card rounded-xl border p-6">
             <div className="mb-4 flex items-center gap-2 text-cyan-500">
               <Upload />
