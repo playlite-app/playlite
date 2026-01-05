@@ -40,7 +40,7 @@ export default function GameDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-background h-[92vh] max-w-[92vw] overflow-hidden border-none p-0 shadow-2xl lg:max-w-7xl">
+      <DialogContent className="bg-background max-h-[92vh] max-w-[92vw] gap-0 overflow-hidden border-none p-0 shadow-2xl lg:max-w-7xl">
         {/* Header (Banner) - Cover, título, badges e close button */}
         <div className="bg-muted relative h-32 w-full shrink-0 overflow-hidden lg:h-40">
           <button
@@ -87,9 +87,9 @@ export default function GameDetailsModal({
         </div>
 
         {/* Corpo - Grid de 2 colunas */}
-        <div className="bg-background grid min-h-0 flex-1 grid-cols-12 overflow-hidden">
+        <div className="bg-background grid grid-cols-12 gap-0 overflow-hidden">
           {/* Coluna 1: Sidebar de Informações */}
-          <div className="border-border bg-muted/5 custom-scrollbar col-span-5 overflow-y-auto border-r xl:col-span-4">
+          <div className="border-border bg-muted/5 custom-scrollbar col-span-5 max-h-[calc(92vh-8rem)] overflow-y-auto border-r lg:max-h-[calc(92vh-10rem)] xl:col-span-4">
             <div className="space-y-5 p-5 lg:space-y-6 lg:p-6 xl:p-8">
               <div className="space-y-3">
                 {/* Seção 1: Dados */}
@@ -243,7 +243,7 @@ export default function GameDetailsModal({
           </div>
 
           {/* Coluna 2: Descrição dos jogos */}
-          <div className="bg-background custom-scrollbar col-span-7 overflow-y-auto p-5 lg:p-8 xl:col-span-8 xl:p-10">
+          <div className="bg-background custom-scrollbar col-span-7 max-h-[calc(92vh-8rem)] overflow-y-auto p-5 lg:max-h-[calc(92vh-10rem)] lg:p-8 xl:col-span-8 xl:p-10">
             <div className="mx-auto max-w-3xl space-y-4 pb-8 lg:space-y-6">
               <h3 className="mb-4 border-b pb-3 text-xl font-bold lg:mb-6 lg:pb-4 lg:text-2xl xl:text-3xl">
                 Sobre o Jogo
@@ -259,7 +259,7 @@ export default function GameDetailsModal({
                   </div>
                 </div>
               ) : details ? (
-                <div className="text-foreground/85 text-sm leading-relaxed whitespace-pre-line lg:text-base xl:text-lg">
+                <div className="text-foreground/85 text-sm leading-relaxed whitespace-pre-line lg:text-base">
                   {details.description_raw ||
                     'Nenhuma descrição fornecida pelo desenvolvedor.'}
                 </div>
