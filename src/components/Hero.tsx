@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface HeroProps {
   // Dados Básicos
@@ -32,28 +32,28 @@ export default function Hero({
   showNavigation = false,
 }: HeroProps) {
   return (
-    <div className="relative h-125 bg-background group/hero overflow-hidden">
+    <div className="bg-background group/hero relative h-125 overflow-hidden">
       {/* 1. BACKGROUND (Blur) */}
       <div
-        className="absolute inset-0 bg-cover bg-center transition-all duration-700 scale-110 blur-xl brightness-50"
+        className="absolute inset-0 scale-110 bg-cover bg-center blur-xl brightness-50 transition-all duration-700"
         style={{
           backgroundImage: `url(${backgroundUrl || coverUrl})`,
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+      <div className="from-background via-background/60 absolute inset-0 bg-gradient-to-t to-transparent" />
 
       {/* 2. NAVEGAÇÃO (Setas) */}
       {showNavigation && onPrev && onNext && (
         <>
           <button
             onClick={onPrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-sm transition z-20"
+            className="absolute top-1/2 left-4 z-20 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60"
           >
             <ChevronLeft size={24} />
           </button>
           <button
             onClick={onNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-sm transition z-20"
+            className="absolute top-1/2 right-4 z-20 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60"
           >
             <ChevronRight size={24} />
           </button>
@@ -61,16 +61,16 @@ export default function Hero({
       )}
 
       {/* 3. CONTEÚDO PRINCIPAL */}
-      <div className="relative h-full flex items-center px-8 max-w-7xl mx-auto z-10">
+      <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-8">
         <div
-          className="flex flex-col md:flex-row items-center gap-8 w-full animate-in fade-in duration-500"
+          className="animate-in fade-in flex w-full flex-col items-center gap-8 duration-500 md:flex-row"
           key={title}
         >
           {/* Capa */}
           <img
-            src={coverUrl || ""}
+            src={coverUrl || ''}
             alt={title}
-            className="w-64 md:w-80 aspect-3/4 object-cover rounded-lg shadow-2xl border border-white/10"
+            className="aspect-3/4 w-64 rounded-lg border border-white/10 object-cover shadow-2xl md:w-80"
           />
 
           {/* Coluna de Informações */}
@@ -78,17 +78,17 @@ export default function Hero({
             {/* Slot de Badges */}
             {badges && <div className="mb-2">{badges}</div>}
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+            <h1 className="text-4xl leading-tight font-bold text-white md:text-5xl">
               {title}
             </h1>
 
             {/* Lista de Gêneros */}
             {genres.length > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                {genres.map((g) => (
+              <div className="flex flex-wrap justify-center gap-2 md:justify-start">
+                {genres.map(g => (
                   <span
                     key={g}
-                    className="px-3 py-1 bg-white/10 rounded-full text-xs text-white"
+                    className="rounded-full bg-white/10 px-3 py-1 text-xs text-white"
                   >
                     {g}
                   </span>
@@ -98,14 +98,14 @@ export default function Hero({
 
             {/* Avaliação (Opcional) */}
             {rating && (
-              <div className="flex items-center gap-6 justify-center md:justify-start pt-2">
+              <div className="flex items-center justify-center gap-6 pt-2 md:justify-start">
                 <div className="flex items-center gap-2">
-                  <Star className="text-yellow-400 fill-yellow-400" size={24} />
+                  <Star className="fill-yellow-400 text-yellow-400" size={24} />
                   <div>
                     <span className="text-2xl font-bold text-white">
                       {rating}
                     </span>
-                    <span className="text-white/50 text-sm ml-1">/ 5.0</span>
+                    <span className="ml-1 text-sm text-white/50">/ 5.0</span>
                   </div>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export default function Hero({
 
             {/* Slot de Ações (Botões) */}
             {actions && (
-              <div className="flex gap-3 justify-center md:justify-start mt-6">
+              <div className="mt-6 flex justify-center gap-3 md:justify-start">
                 {actions}
               </div>
             )}

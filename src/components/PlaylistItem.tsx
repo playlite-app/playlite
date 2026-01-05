@@ -5,10 +5,12 @@ import {
   ImageOff,
   Play,
   Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Game } from "../types";
-import { launchGame } from "@/utils/launcher.ts";
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { launchGame } from '@/utils/launcher.ts';
+
+import { Game } from '../types';
 
 interface PlaylistItemProps {
   game: Game;
@@ -33,51 +35,54 @@ export default function PlaylistItem({
 }: PlaylistItemProps) {
   return (
     <div
-      className="group flex items-center gap-3 lg:gap-4 p-2.5 lg:p-3 bg-card border border-border rounded-xl hover:border-primary/50 transition-all hover:shadow-md animate-in fade-in slide-in-from-left-4 duration-300 cursor-grab active:cursor-grabbing"
+      className="group bg-card border-border hover:border-primary/50 animate-in fade-in slide-in-from-left-4 flex cursor-grab items-center gap-3 rounded-xl border p-2.5 transition-all duration-300 hover:shadow-md active:cursor-grabbing lg:gap-4 lg:p-3"
       onClick={onClick}
     >
       {/* Bloco de controle (Grip + Setas) */}
-      <div className="flex items-center gap-0 mr-1">
-        <GripVertical size={18} className="text-muted-foreground/40 lg:w-5 lg:h-5" />
+      <div className="mr-1 flex items-center gap-0">
+        <GripVertical
+          size={18}
+          className="text-muted-foreground/40 lg:h-5 lg:w-5"
+        />
 
         {/* Botões de mover na fila */}
-        <div className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground">
+        <div className="text-muted-foreground flex flex-col items-center justify-center gap-0.5">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 rounded-full hover:text-primary disabled:opacity-20"
-            onClick={(e) => {
+            className="hover:text-primary h-6 w-6 rounded-full disabled:opacity-20"
+            onClick={e => {
               e.stopPropagation();
               onMoveUp();
             }}
             disabled={index === 0}
             title="Mover para cima"
           >
-            <ArrowUp size={13} className="lg:w-3.5 lg:h-3.5" />
+            <ArrowUp size={13} className="lg:h-3.5 lg:w-3.5" />
           </Button>
 
-          <span className="text-[11px] lg:text-xs font-mono font-bold w-6 text-center select-none">
+          <span className="w-6 text-center font-mono text-[11px] font-bold select-none lg:text-xs">
             {index + 1}
           </span>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 rounded-full hover:text-primary disabled:opacity-20"
-            onClick={(e) => {
+            className="hover:text-primary h-6 w-6 rounded-full disabled:opacity-20"
+            onClick={e => {
               e.stopPropagation();
               onMoveDown();
             }}
             disabled={index === total - 1}
             title="Mover para baixo"
           >
-            <ArrowDown size={13} className="lg:w-3.5 lg:h-3.5" />
+            <ArrowDown size={13} className="lg:h-3.5 lg:w-3.5" />
           </Button>
         </div>
       </div>
 
       {/* Cover do jogo */}
-      <div className="relative h-14 w-10 lg:h-16 lg:w-12 shrink-0 rounded overflow-hidden bg-muted cursor-pointer group/img shadow-sm">
+      <div className="bg-muted group/img relative h-14 w-10 shrink-0 cursor-pointer overflow-hidden rounded shadow-sm lg:h-16 lg:w-12">
         {game.cover_url ? (
           <img
             src={game.cover_url}
@@ -86,33 +91,33 @@ export default function PlaylistItem({
             draggable={false}
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-[8px]">
-            <ImageOff className="opacity-50 w-4 h-4" />
+          <div className="flex h-full w-full items-center justify-center text-[8px]">
+            <ImageOff className="h-4 w-4 opacity-50" />
           </div>
         )}
         <div
-          className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"
-          onClick={(e) => {
+          className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/img:opacity-100"
+          onClick={e => {
             e.stopPropagation();
             onPlay();
           }}
         >
-          <Play size={15} className="fill-white text-white lg:w-4 lg:h-4" />
+          <Play size={15} className="fill-white text-white lg:h-4 lg:w-4" />
         </div>
       </div>
 
       {/* Info Principal */}
-      <div className="flex-1 min-w-0 cursor-pointer select-none">
-        <h4 className="font-semibold truncate group-hover:text-primary transition-colors text-sm">
+      <div className="min-w-0 flex-1 cursor-pointer select-none">
+        <h4 className="group-hover:text-primary truncate text-sm font-semibold transition-colors">
           {game.name}
         </h4>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-          <span className="bg-secondary/50 px-1.5 py-0.5 rounded text-secondary-foreground border border-border/50 truncate max-w-[100px] lg:max-w-none">
-            {game.genre || "Geral"}
+        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+          <span className="bg-secondary/50 text-secondary-foreground border-border/50 max-w-[100px] truncate rounded border px-1.5 py-0.5 lg:max-w-none">
+            {game.genre || 'Geral'}
           </span>
           <span>•</span>
           <span>
-            {game.playtime > 0 ? `${Math.floor(game.playtime / 60)}h` : "0h"}
+            {game.playtime > 0 ? `${Math.floor(game.playtime / 60)}h` : '0h'}
           </span>
         </div>
       </div>
@@ -121,28 +126,28 @@ export default function PlaylistItem({
       <div className="flex items-center gap-1.5 lg:gap-2">
         <Button
           size="sm"
-          className="h-7 px-2 flex items-center gap-1 bg-primary/90 hover:bg-primary text-primary-foreground shadow-sm"
-          onClick={(e) => {
+          className="bg-primary/90 hover:bg-primary text-primary-foreground flex h-7 items-center gap-1 px-2 shadow-sm"
+          onClick={e => {
             e.stopPropagation();
             launchGame(game);
           }}
           title="Jogar Agora"
         >
-          <Play size={11} className="fill-current lg:w-3 lg:h-3" />
+          <Play size={11} className="fill-current lg:h-3 lg:w-3" />
           <span className="text-xs font-bold">Play</span>
         </Button>
 
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={(e) => {
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+          onClick={e => {
             e.stopPropagation();
             onRemove();
           }}
           title="Remover da fila"
         >
-          <Trash2 size={15} className="lg:w-4 lg:h-4" />
+          <Trash2 size={15} className="lg:h-4 lg:w-4" />
         </Button>
       </div>
     </div>

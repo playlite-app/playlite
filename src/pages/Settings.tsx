@@ -8,11 +8,13 @@ import {
   Shield,
   Sparkles,
   Upload,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useSettings } from "../hooks/useSettings";
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+import { useSettings } from '../hooks/useSettings';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;
@@ -25,8 +27,8 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
   if (loading.initial) {
     return (
       <div className="flex-1 p-8">
-        <h2 className="text-3xl font-bold mb-6">Configurações</h2>
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <h2 className="mb-6 text-3xl font-bold">Configurações</h2>
+        <div className="text-muted-foreground flex items-center gap-2">
           <Loader2 className="animate-spin" /> Carregando chaves...
         </div>
       </div>
@@ -34,19 +36,19 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
   }
 
   return (
-    <div className="flex-1 p-8 overflow-y-auto custom-scrollbar pb-20">
-      <h2 className="text-3xl font-bold mb-6">Configurações</h2>
+    <div className="custom-scrollbar flex-1 overflow-y-auto p-8 pb-20">
+      <h2 className="mb-6 text-3xl font-bold">Configurações</h2>
 
       {/* Feedback Visual */}
       {status.type && (
         <div
-          className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-            status.type === "success"
-              ? "bg-green-500/10 text-green-500 border border-green-500/20"
-              : "bg-red-500/10 text-red-500 border border-red-500/20"
+          className={`mb-6 flex items-center gap-3 rounded-lg p-4 ${
+            status.type === 'success'
+              ? 'border border-green-500/20 bg-green-500/10 text-green-500'
+              : 'border border-red-500/20 bg-red-500/10 text-red-500'
           }`}
         >
-          {status.type === "success" ? (
+          {status.type === 'success' ? (
             <CheckCircle size={20} />
           ) : (
             <AlertCircle size={20} />
@@ -57,7 +59,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
 
       {/* Formulário de Chaves */}
       <div className="space-y-6">
-        <div className="grid gap-6 border border-border rounded-xl bg-card p-6">
+        <div className="border-border bg-card grid gap-6 rounded-xl border p-6">
           <div className="flex items-center gap-2">
             <Shield className="text-green-500" size={20} />
             <h3 className="text-lg font-semibold">Credenciais de API</h3>
@@ -68,7 +70,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             <Label>Steam ID</Label>
             <Input
               value={keys.steamId}
-              onChange={(e) => setKeys({ ...keys, steamId: e.target.value })}
+              onChange={e => setKeys({ ...keys, steamId: e.target.value })}
               placeholder="765..."
             />
           </div>
@@ -79,9 +81,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             <Input
               type="password"
               value={keys.steamApiKey}
-              onChange={(e) =>
-                setKeys({ ...keys, steamApiKey: e.target.value })
-              }
+              onChange={e => setKeys({ ...keys, steamApiKey: e.target.value })}
               placeholder="••••••••••••••••"
             />
           </div>
@@ -92,7 +92,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             <Input
               type="password"
               value={keys.rawgApiKey}
-              onChange={(e) => setKeys({ ...keys, rawgApiKey: e.target.value })}
+              onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
               placeholder="••••••••••••••••"
             />
           </div>
@@ -100,11 +100,11 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           {/* Botão Salvar */}
           <Button
             onClick={actions.saveKeys}
-            className="w-full mt-2"
+            className="mt-2 w-full"
             disabled={loading.saving}
           >
             {loading.saving ? (
-              <Loader2 className="animate-spin mr-2" />
+              <Loader2 className="mr-2 animate-spin" />
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
@@ -113,15 +113,15 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </div>
 
         {/* Ações de Biblioteca */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="border border-border rounded-xl bg-card p-6">
-            <div className="flex items-center gap-2 mb-4 text-blue-500">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="border-border bg-card rounded-xl border p-6">
+            <div className="mb-4 flex items-center gap-2 text-blue-500">
               <CloudDownload />
-              <h3 className="font-semibold text-foreground">
+              <h3 className="text-foreground font-semibold">
                 Sincronizar Steam
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               Importa os jogos da sua conta.
             </p>
             <Button
@@ -131,19 +131,19 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               disabled={loading.importing}
             >
               {loading.importing ? (
-                <Loader2 className="animate-spin mr-2" />
+                <Loader2 className="mr-2 animate-spin" />
               ) : (
-                "Iniciar Importação"
+                'Iniciar Importação'
               )}
             </Button>
           </div>
 
-          <div className="border border-border rounded-xl bg-card p-6">
-            <div className="flex items-center gap-2 mb-4 text-purple-500">
+          <div className="border-border bg-card rounded-xl border p-6">
+            <div className="mb-4 flex items-center gap-2 text-purple-500">
               <Sparkles />
-              <h3 className="font-semibold text-foreground">Buscar Dados</h3>
+              <h3 className="text-foreground font-semibold">Buscar Dados</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               Busca gêneros e tags detalhados.
             </p>
             <Button
@@ -152,19 +152,19 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               className="w-full"
               disabled={loading.enriching}
             >
-              {loading.enriching ? "Processando..." : "Buscar Metadados"}
+              {loading.enriching ? 'Processando...' : 'Buscar Metadados'}
             </Button>
           </div>
         </div>
 
         {/* Ações de Backup */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="border border-border rounded-xl bg-card p-6">
-            <div className="flex items-center gap-2 mb-4 text-orange-500">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="border-border bg-card rounded-xl border p-6">
+            <div className="mb-4 flex items-center gap-2 text-orange-500">
               <Download />
-              <h3 className="font-semibold text-foreground">Exportar Backup</h3>
+              <h3 className="text-foreground font-semibold">Exportar Backup</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               Salva todos os seus dados em arquivo JSON.
             </p>
             <Button
@@ -174,19 +174,19 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               disabled={loading.exporting}
             >
               {loading.exporting ? (
-                <Loader2 className="animate-spin mr-2" />
+                <Loader2 className="mr-2 animate-spin" />
               ) : (
-                "Exportar Database"
+                'Exportar Database'
               )}
             </Button>
           </div>
 
-          <div className="border border-border rounded-xl bg-card p-6">
-            <div className="flex items-center gap-2 mb-4 text-cyan-500">
+          <div className="border-border bg-card rounded-xl border p-6">
+            <div className="mb-4 flex items-center gap-2 text-cyan-500">
               <Upload />
-              <h3 className="font-semibold text-foreground">Importar Backup</h3>
+              <h3 className="text-foreground font-semibold">Importar Backup</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               Restaura seus dados de um arquivo JSON.
             </p>
             <Button
@@ -196,9 +196,9 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               disabled={loading.importingBackup}
             >
               {loading.importingBackup ? (
-                <Loader2 className="animate-spin mr-2" />
+                <Loader2 className="mr-2 animate-spin" />
               ) : (
-                "Importar Database"
+                'Importar Database'
               )}
             </Button>
           </div>

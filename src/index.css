@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -7,7 +7,7 @@
   --color-primary: #3b82f6;
   --color-secondary: #8b5cf6;
 
-  --font-display: "Inter", sans-serif;
+  --font-display: 'Inter', sans-serif;
   --breakpoint-3xl: 1920px;
 }
 

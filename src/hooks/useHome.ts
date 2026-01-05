@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Game, RawgGame, UserProfile } from "../types";
-import { useRecommendation } from "./useRecommendation";
-import { trendingService } from "../services/trendingService";
+import { useEffect, useMemo, useState } from 'react';
+
+import { trendingService } from '../services/trendingService';
+import { Game, RawgGame, UserProfile } from '../types';
+import { useRecommendation } from './useRecommendation';
 
 interface UseHomeProps {
   games: Game[];
@@ -35,19 +36,22 @@ export function useHome({
       if (trendingCache.length > 0) {
         setTrending(trendingCache);
         setLoadingTrending(false);
+
         return;
       }
 
       setLoadingTrending(true);
+
       try {
         const apiKey = await trendingService.getApiKey();
-        if (apiKey && apiKey.trim() !== "") {
+
+        if (apiKey && apiKey.trim() !== '') {
           const result = await trendingService.getTrending(apiKey);
           setTrending(result);
           setTrendingCache(result);
         }
       } catch (e) {
-        console.warn("Home: Falha ao buscar trending", e);
+        console.warn('Home: Falha ao buscar trending', e);
       } finally {
         setLoadingTrending(false);
       }
@@ -61,11 +65,11 @@ export function useHome({
   // 1. Stats
   const totalGames = library.length;
   const totalPlaytime = library.reduce((acc, g) => acc + g.playtime, 0);
-  const totalFavorites = library.filter((g) => g.favorite).length;
+  const totalFavorites = library.filter(g => g.favorite).length;
 
   // 2. Continue Jogando
   const continuePlaying = library
-    .filter((g) => g.playtime > 0 && g.playtime < 50)
+    .filter(g => g.playtime > 0 && g.playtime < 50)
     .sort((a, b) => b.playtime - a.playtime)
     .slice(0, 5);
 
@@ -74,14 +78,15 @@ export function useHome({
     if (!profile) return [];
 
     return library
-      .filter((g) => g.playtime === 0)
+      .filter(g => g.playtime === 0)
       .sort((a, b) => {
         const genresA = a.genre
-          ? a.genre.split(",").map((n) => ({ name: n.trim() }))
+          ? a.genre.split(',').map(n => ({ name: n.trim() }))
           : [];
         const genresB = b.genre
-          ? b.genre.split(",").map((n) => ({ name: n.trim() }))
+          ? b.genre.split(',').map(n => ({ name: n.trim() }))
           : [];
+
         return calculateAffinity(genresB) - calculateAffinity(genresA);
       })
       .slice(0, 5);
@@ -95,17 +100,22 @@ export function useHome({
   // 5. Gêneros Mais Comuns
   const genreStats = useMemo(
     () =>
-      library.reduce((acc, game) => {
-        if (game.genre) {
-          game.genre.split(",").forEach((g) => {
-            const clean = g.trim();
-            if (clean !== "Desconhecido") {
-              acc[clean] = (acc[clean] || 0) + 1;
-            }
-          });
-        }
-        return acc;
-      }, {} as Record<string, number>),
+      library.reduce(
+        (acc, game) => {
+          if (game.genre) {
+            game.genre.split(',').forEach(g => {
+              const clean = g.trim();
+
+              if (clean !== 'Desconhecido') {
+                acc[clean] = (acc[clean] || 0) + 1;
+              }
+            });
+          }
+
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
     [library]
   );
 

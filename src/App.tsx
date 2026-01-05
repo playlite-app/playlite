@@ -1,37 +1,36 @@
-import { useMemo, useState } from "react";
-import { toast, Toaster } from "sonner";
-import { Game, RawgGame, UserProfile } from "./types";
-import { useLibraries } from "./hooks/useLibraries.ts";
-import { useDebounce } from "./hooks/useDebounce";
+import { useMemo, useState } from 'react';
+import { toast, Toaster } from 'sonner';
 
+import AddGameModal from './components/AddGameModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import GameDetailsModal from './components/GameDetailsModal.tsx';
+import Header from './components/Header';
 // Componentes
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import AddGameModal from "./components/AddGameModal";
-import GameDetailsModal from "./components/GameDetailsModal.tsx";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-
+import Sidebar from './components/Sidebar';
+import { useDebounce } from './hooks/useDebounce';
+import { useLibraries } from './hooks/useLibraries.ts';
+import Favorites from './pages/Favorites';
+import Home from './pages/Home';
 // Páginas
-import Libraries from "./pages/Libraries.tsx";
-import Favorites from "./pages/Favorites";
-import Settings from "./pages/Settings";
-import Home from "./pages/Home";
-import Trending from "./pages/Trending";
-import Wishlist from "./pages/Wishlist";
-import Playlist from "./pages/Playlist";
+import Libraries from './pages/Libraries.tsx';
+import Playlist from './pages/Playlist';
+import Settings from './pages/Settings';
+import Trending from './pages/Trending';
+import Wishlist from './pages/Wishlist';
+import { Game, RawgGame, UserProfile } from './types';
 
 function App() {
   // Estado Global de Jogos e UI
   const { games, refreshGames, saveGame, removeGame, toggleFavorite } =
     useLibraries();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [activeSection, setActiveSection] = useState("home");
+  const [activeSection, setActiveSection] = useState('home');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gameToEdit, setGameToEdit] = useState<Game | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const selectedGame = useMemo(
-    () => games.find((g) => g.id === selectedGameId) || null,
+    () => games.find(g => g.id === selectedGameId) || null,
     [games, selectedGameId]
   );
   const [trendingCache, setTrendingCache] = useState<RawgGame[]>([]);
@@ -42,7 +41,7 @@ function App() {
   const handleSettingsUpdate = () => {
     refreshGames();
     setTrendingCache([]);
-    setTrendingKey((k) => k + 1);
+    setTrendingKey(k => k + 1);
   };
 
   const openAddModal = () => {
@@ -61,12 +60,12 @@ function App() {
       setIsModalOpen(false);
       setGameToEdit(null);
     } catch (e) {
-      toast.error("Erro ao salvar: " + e);
+      toast.error('Erro ao salvar: ' + e);
     }
   };
 
   const handleDeleteWrapper = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir?")) {
+    if (confirm('Tem certeza que deseja excluir?')) {
       await removeGame(id);
     }
   };
@@ -94,7 +93,7 @@ function App() {
   // Roteamento Simples
   const renderContent = () => {
     switch (activeSection) {
-      case "home":
+      case 'home':
         return (
           <Home
             onChangeTab={setActiveSection}
@@ -106,7 +105,7 @@ function App() {
             onGameClick={handleGameClick}
           />
         );
-      case "libraries":
+      case 'libraries':
         return (
           <Libraries
             games={games}
@@ -114,7 +113,7 @@ function App() {
             {...commonGameActions}
           />
         );
-      case "favorites":
+      case 'favorites':
         return (
           <Favorites
             games={games}
@@ -122,7 +121,7 @@ function App() {
             {...commonGameActions}
           />
         );
-      case "playlist":
+      case 'playlist':
         return (
           <Playlist
             allGames={games}
@@ -130,7 +129,7 @@ function App() {
             profileCache={profileCache}
           />
         );
-      case "trending":
+      case 'trending':
         return (
           <Trending
             key={trendingKey}
@@ -140,9 +139,9 @@ function App() {
             setCachedGames={setTrendingCache}
           />
         );
-      case "wishlist":
+      case 'wishlist':
         return <Wishlist />;
-      case "settings":
+      case 'settings':
         return <Settings onLibraryUpdate={handleSettingsUpdate} />;
       default:
         return <div className="p-10 text-center">Página não encontrada</div>;
@@ -150,14 +149,14 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="bg-background text-foreground flex h-screen overflow-hidden">
       <Sidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         games={games}
       />
 
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex min-w-0 flex-1 flex-col">
         <Header
           onAddGame={openAddModal}
           searchTerm={searchTerm}

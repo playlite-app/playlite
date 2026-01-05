@@ -1,6 +1,7 @@
-import { Component, ErrorInfo, ReactNode } from "react";
-import { ErrorState } from "./ErrorState";
-import { ERROR_MESSAGES } from "../constants/errorMessages";
+import { Component, ErrorInfo, ReactNode } from 'react';
+
+import { ERROR_MESSAGES } from '../constants/errorMessages';
+import { ErrorState } from './ErrorState';
 
 interface Props {
   children: ReactNode;
@@ -22,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
   }
 
   handleRetry = () => {
@@ -32,15 +33,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
   // Traduz mensagens técnicas para as constantes
   getFriendlyMessage = (originalMessage: string) => {
-    if (originalMessage.includes("Rendered fewer hooks")) {
+    if (originalMessage.includes('Rendered fewer hooks')) {
       return ERROR_MESSAGES.RENDER_HOOKS_ERROR;
     }
 
-    if (originalMessage.includes("is not a function")) {
+    if (originalMessage.includes('is not a function')) {
       return ERROR_MESSAGES.RENDER_FUNCTION_ERROR;
     }
 
-    if (originalMessage.includes("is not defined")) {
+    if (originalMessage.includes('is not defined')) {
       return ERROR_MESSAGES.RENDER_VARIABLE_ERROR;
     }
 
@@ -50,11 +51,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const originalMsg = this.state.error?.message || "";
+      const originalMsg = this.state.error?.message || '';
       const friendlyMsg = this.getFriendlyMessage(originalMsg);
 
       return (
-        <div className="h-full flex flex-col items-center justify-center p-8 animate-in fade-in">
+        <div className="animate-in fade-in flex h-full flex-col items-center justify-center p-8">
           <ErrorState
             type="generic"
             message={friendlyMsg}

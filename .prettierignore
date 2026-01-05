@@ -1,0 +1,16 @@
+# Build outputs
+dist
+coverage
+node_modules
+package-lock.json
+
+# Rust/Tauri files (não formatar com Prettier)
+src-tauri/**/*.rs
+src-tauri/target
+src-tauri/Cargo.toml
+
+# Lock files
+*.lock
+# Config files that should not be formatted
+.cargo/**
+

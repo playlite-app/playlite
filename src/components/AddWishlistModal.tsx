@@ -1,18 +1,20 @@
-import { useState } from "react";
+import { ImageOff, Loader2, Plus, Search } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Search, Plus, ImageOff } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+
 import {
-  wishlistService,
   SteamSearchResult,
-} from "../services/wishlistService";
+  wishlistService,
+} from '../services/wishlistService';
 
 interface AddWishlistModalProps {
   isOpen: boolean;
@@ -25,19 +27,21 @@ export default function AddWishlistModal({
   onClose,
   onSuccess,
 }: AddWishlistModalProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<SteamSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState<number | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
+
     setLoading(true);
+
     try {
       const data = await wishlistService.searchWishlistGame(query);
       setResults(data);
     } catch (e) {
-      toast.error("Erro ao buscar jogos");
+      toast.error('Erro ao buscar jogos');
     } finally {
       setLoading(false);
     }
@@ -45,15 +49,16 @@ export default function AddWishlistModal({
 
   const handleAdd = async (game: SteamSearchResult) => {
     setAddingId(game.id);
+
     try {
       await wishlistService.addToWishlist(game);
-      toast.success("Adicionado à lista!");
+      toast.success('Adicionado à lista!');
       onSuccess();
       onClose();
       setResults([]);
-      setQuery("");
+      setQuery('');
     } catch (e) {
-      toast.error("Erro ao adicionar jogo");
+      toast.error('Erro ao adicionar jogo');
     } finally {
       setAddingId(null);
     }
@@ -66,12 +71,12 @@ export default function AddWishlistModal({
           <DialogTitle>Adicionar à Lista de Desejos</DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-2 my-2">
+        <div className="my-2 flex gap-2">
           <Input
             placeholder="Nome do jogo..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
           <Button onClick={handleSearch} disabled={loading}>
             {loading ? (
@@ -82,28 +87,28 @@ export default function AddWishlistModal({
           </Button>
         </div>
 
-        <div className="max-h-75 overflow-y-auto custom-scrollbar space-y-2">
-          {results.map((game) => (
+        <div className="custom-scrollbar max-h-75 space-y-2 overflow-y-auto">
+          {results.map(game => (
             <div
               key={game.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border transition-colors mr-2"
+              className="hover:bg-muted/50 hover:border-border mr-2 flex items-center gap-3 rounded-lg border border-transparent p-2 transition-colors"
             >
-              <div className="w-12 h-12 shrink-0 bg-background rounded overflow-hidden">
+              <div className="bg-background h-12 w-12 shrink-0 overflow-hidden rounded">
                 {game.tiny_image ? (
                   <img
                     src={game.tiny_image}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="flex h-full w-full items-center justify-center">
                     <ImageOff size={16} />
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate text-sm">{game.name}</p>
-                <p className="text-xs text-muted-foreground">ID: {game.id}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{game.name}</p>
+                <p className="text-muted-foreground text-xs">ID: {game.id}</p>
               </div>
               <Button
                 size="sm"
@@ -111,7 +116,7 @@ export default function AddWishlistModal({
                 onClick={() => handleAdd(game)}
               >
                 {addingId === game.id ? (
-                  <Loader2 className="animate-spin h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus size={18} />
                 )}
@@ -119,7 +124,7 @@ export default function AddWishlistModal({
             </div>
           ))}
           {results.length === 0 && !loading && query && (
-            <p className="text-center text-sm text-muted-foreground py-4">
+            <p className="text-muted-foreground py-4 text-center text-sm">
               Nenhum jogo encontrado.
             </p>
           )}

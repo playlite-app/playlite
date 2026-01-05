@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { WishlistGame } from "../types";
-import { wishlistService } from "../services/wishlistService";
+import { useCallback, useEffect, useState } from 'react';
+
+import { wishlistService } from '../services/wishlistService';
+import { WishlistGame } from '../types';
 
 export function useWishlist() {
   const [games, setGames] = useState<WishlistGame[]>([]);
@@ -12,7 +13,7 @@ export function useWishlist() {
       const result = await wishlistService.getWishlist();
       setGames(result);
     } catch (error) {
-      console.error("Erro ao buscar wishlist:", error);
+      console.error('Erro ao buscar wishlist:', error);
     } finally {
       setIsLoading(false);
     }
@@ -26,21 +27,22 @@ export function useWishlist() {
     try {
       await wishlistService.removeFromWishlist(id);
       // Atualização otimista: remove da lista visual imediatamente
-      setGames((prev) => prev.filter((g) => g.id !== id));
+      setGames(prev => prev.filter(g => g.id !== id));
     } catch (error) {
       console.error(error);
-      throw new Error("Erro ao remover jogo.");
+      throw new Error('Erro ao remover jogo.');
     }
   };
 
   const refreshPrices = async () => {
     setIsRefreshing(true);
+
     try {
       await wishlistService.refreshPrices();
       await fetchWishlist();
     } catch (error) {
       console.error(error);
-      throw new Error("Erro ao atualizar preços.");
+      throw new Error('Erro ao atualizar preços.');
     } finally {
       setIsRefreshing(false);
     }

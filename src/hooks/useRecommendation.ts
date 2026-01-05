@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { UserProfile } from "../types";
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
+
+import { UserProfile } from '../types';
 
 interface Genre {
   name: string;
@@ -24,20 +25,22 @@ export function useRecommendation({
   useEffect(() => {
     if (profileCache) {
       setLoading(false);
+
       return;
     }
 
     async function loadProfile() {
       setLoading(true);
+
       try {
-        const data = await invoke<UserProfile>("get_user_profile");
+        const data = await invoke<UserProfile>('get_user_profile');
         setProfile(data);
 
         if (setProfileCache) {
           setProfileCache(data);
         }
       } catch (error) {
-        console.error("Falha ao carregar perfil:", error);
+        console.error('Falha ao carregar perfil:', error);
       } finally {
         setLoading(false);
       }
@@ -51,11 +54,12 @@ export function useRecommendation({
    */
   const calculateAffinity = (gameGenres: Genre[]) => {
     if (!profile || !gameGenres) return 0;
+
     let totalScore = 0;
-    gameGenres.forEach((g) => {
+    gameGenres.forEach(g => {
       // Busca se o gênero do jogo existe no perfil do usuário (case insensitive)
       const userGenre = profile.top_genres.find(
-        (ug) => ug.name.toLowerCase() === g.name.toLowerCase()
+        ug => ug.name.toLowerCase() === g.name.toLowerCase()
       );
 
       if (userGenre) {

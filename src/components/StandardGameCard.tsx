@@ -1,7 +1,9 @@
-import { ReactNode, useState } from "react";
-import { Play, ImageOff } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ActionButton } from "./ActionButton";
+import { ImageOff, Play } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+
+import { cn } from '@/lib/utils';
+
+import { ActionButton } from './ActionButton';
 
 interface StandardGameCardProps {
   title: string;
@@ -32,33 +34,33 @@ export default function StandardGameCard({
   return (
     <div
       className={cn(
-        "group relative bg-card rounded-xl overflow-hidden border border-border hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer flex flex-col h-full",
+        'group bg-card border-border relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border transition-all hover:-translate-y-1 hover:shadow-lg',
         className
       )}
       onClick={onClick}
     >
       {/* Container da Imagem (Aspect Ratio fixo 3/4 para capas verticais) */}
-      <div className="aspect-3/4 bg-muted relative overflow-hidden">
+      <div className="bg-muted relative aspect-3/4 overflow-hidden">
         {/* Lógica de Imagem com Fallback */}
         {coverUrl && !imageError ? (
           <img
             src={coverUrl}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={() => setImageError(true)} // Ativa o fallback se falhar
           />
         ) : (
           /* Fallback Visual (Gradiente + Ícone + Nome) */
-          <div className="w-full h-full bg-linear-to-br from-secondary/50 via-muted to-background flex flex-col items-center justify-center p-4 text-center">
-            <ImageOff className="w-10 h-10 opacity-20 mb-3" />
-            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest line-clamp-2">
+          <div className="from-secondary/50 via-muted to-background flex h-full w-full flex-col items-center justify-center bg-linear-to-br p-4 text-center">
+            <ImageOff className="mb-3 h-10 w-10 opacity-20" />
+            <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
               {title}
             </span>
           </div>
         )}
 
         {/* Overlay de Ações (Hover) */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-4 z-20">
+        <div className="absolute inset-0 z-20 flex items-center justify-center gap-2 bg-black/60 p-4 opacity-0 transition-opacity group-hover:opacity-100">
           {onPlay && (
             <ActionButton
               icon={Play}
@@ -78,25 +80,25 @@ export default function StandardGameCard({
 
         {/* Badge (Canto Superior Esquerdo) */}
         {badge && (
-          <div className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10 border border-purple-400/30 backdrop-blur-md">
+          <div className="absolute top-2 left-2 z-10 rounded-full border border-purple-400/30 bg-purple-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg backdrop-blur-md">
             {badge}
           </div>
         )}
       </div>
 
       {/* Conteúdo (Título e Subtítulo) */}
-      <div className="p-3 flex flex-col flex-1 gap-1">
-        <h3 className="font-semibold text-sm line-clamp-1" title={title}>
+      <div className="flex flex-1 flex-col gap-1 p-3">
+        <h3 className="line-clamp-1 text-sm font-semibold" title={title}>
           {title}
         </h3>
 
-        <div className="flex justify-between items-center mt-auto">
-          <span className="text-xs text-muted-foreground truncate max-w-30">
+        <div className="mt-auto flex items-center justify-between">
+          <span className="text-muted-foreground max-w-30 truncate text-xs">
             {subtitle}
           </span>
 
           {rating && (
-            <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+            <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-bold text-yellow-500">
               ★ {rating}
             </span>
           )}

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { Game } from "../types";
-import { librariesService } from "../services/librariesService.ts";
+import { useCallback, useEffect, useState } from 'react';
+
+import { librariesService } from '../services/librariesService.ts';
+import { Game } from '../types';
 
 export function useLibraries() {
   const [games, setGames] = useState<Game[]>([]);
@@ -12,7 +13,7 @@ export function useLibraries() {
       const result = await librariesService.getGames();
       setGames(result);
     } catch (error) {
-      console.error("Erro ao buscar jogos:", error);
+      console.error('Erro ao buscar jogos:', error);
     }
   }, []);
 
@@ -23,7 +24,7 @@ export function useLibraries() {
         await librariesService.initDb();
         await refreshGames();
       } catch (error) {
-        console.error("Erro ao iniciar DB:", error);
+        console.error('Erro ao iniciar DB:', error);
       } finally {
         setIsLoading(false);
       }
@@ -35,9 +36,9 @@ export function useLibraries() {
   const saveGame = async (gameData: Partial<Game>, editingId?: string) => {
     const payload = {
       id: editingId || crypto.randomUUID(),
-      name: gameData.name || "Sem Nome",
-      genre: gameData.genre || "Desconhecido",
-      platform: gameData.platform || "Manual",
+      name: gameData.name || 'Sem Nome',
+      genre: gameData.genre || 'Desconhecido',
+      platform: gameData.platform || 'Manual',
       coverUrl: gameData.cover_url || null,
       playtime: gameData.playtime || 0,
       rating: gameData.rating || null,
@@ -48,6 +49,7 @@ export function useLibraries() {
     } else {
       await librariesService.addGame(payload);
     }
+
     await refreshGames();
   };
 
@@ -58,8 +60,8 @@ export function useLibraries() {
 
   const toggleFavorite = async (id: string) => {
     // Atualização otimista na UI
-    setGames((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, favorite: !g.favorite } : g))
+    setGames(prev =>
+      prev.map(g => (g.id === id ? { ...g, favorite: !g.favorite } : g))
     );
     await librariesService.toggleFavorite(id);
   };

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Store } from "@tauri-apps/plugin-store";
-import { Game } from "../types";
+import { Store } from '@tauri-apps/plugin-store';
+import { useEffect, useState } from 'react';
 
-const STORE_FILENAME = "playlist.store";
-const STORE_KEY = "user_playlist_queue";
+import { Game } from '../types';
+
+const STORE_FILENAME = 'playlist.store';
+const STORE_KEY = 'user_playlist_queue';
 
 export function usePlaylist(allGames: Game[]) {
   const [queueIds, setQueueIds] = useState<string[]>([]);
@@ -14,11 +15,12 @@ export function usePlaylist(allGames: Game[]) {
       try {
         const store = await Store.load(STORE_FILENAME);
         const saved = await store.get<string[]>(STORE_KEY);
+
         if (saved) {
           setQueueIds(saved);
         }
       } catch (e) {
-        console.error("Erro ao carregar playlist:", e);
+        console.error('Erro ao carregar playlist:', e);
       } finally {
         setIsLoading(false);
       }
@@ -29,12 +31,13 @@ export function usePlaylist(allGames: Game[]) {
 
   const saveQueue = async (newQueue: string[]) => {
     setQueueIds(newQueue);
+
     try {
       const store = await Store.load(STORE_FILENAME);
       await store.set(STORE_KEY, newQueue);
       await store.save();
     } catch (e) {
-      console.error("Erro ao salvar playlist:", e);
+      console.error('Erro ao salvar playlist:', e);
     }
   };
 
@@ -45,11 +48,12 @@ export function usePlaylist(allGames: Game[]) {
   };
 
   const removeFromPlaylist = (gameId: string) => {
-    saveQueue(queueIds.filter((id) => id !== gameId));
+    saveQueue(queueIds.filter(id => id !== gameId));
   };
 
   const moveUp = (index: number) => {
     if (index === 0) return;
+
     const newQueue = [...queueIds];
     [newQueue[index - 1], newQueue[index]] = [
       newQueue[index],
@@ -60,6 +64,7 @@ export function usePlaylist(allGames: Game[]) {
 
   const moveDown = (index: number) => {
     if (index === queueIds.length - 1) return;
+
     const newQueue = [...queueIds];
     [newQueue[index + 1], newQueue[index]] = [
       newQueue[index],
@@ -76,7 +81,7 @@ export function usePlaylist(allGames: Game[]) {
   };
 
   const playlistGames = queueIds
-    .map((id) => allGames.find((g) => g.id === id))
+    .map(id => allGames.find(g => g.id === id))
     .filter((g): g is Game => !!g);
 
   return {

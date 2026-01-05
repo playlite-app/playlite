@@ -1,18 +1,20 @@
-import { Gamepad2, PlusCircle, Sparkles } from "lucide-react";
-import { Game, UserProfile } from "../types";
-import { usePlaylist } from "../hooks/usePlaylist";
-import { useRecommendation } from "../hooks/useRecommendation";
-import PlaylistItem from "../components/PlaylistItem";
-import StandardGameCard from "@/components/StandardGameCard";
-import { Button } from "@/components/ui/button";
-import { launchGame } from "../utils/launcher";
-import { toast } from "sonner";
 import {
   DragDropContext,
   Draggable,
   Droppable,
   DropResult,
-} from "@hello-pangea/dnd";
+} from '@hello-pangea/dnd';
+import { Gamepad2, PlusCircle, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+
+import StandardGameCard from '@/components/StandardGameCard';
+import { Button } from '@/components/ui/button';
+
+import PlaylistItem from '../components/PlaylistItem';
+import { usePlaylist } from '../hooks/usePlaylist';
+import { useRecommendation } from '../hooks/useRecommendation';
+import { Game, UserProfile } from '../types';
+import { launchGame } from '../utils/launcher';
 
 interface PlaylistProps {
   allGames: Game[];
@@ -38,37 +40,37 @@ export default function Playlist({
   const { calculateAffinity } = useRecommendation({ profileCache });
 
   const suggestions = allGames
-    .filter((g) => !isInPlaylist(g.id) && g.playtime < 60)
+    .filter(g => !isInPlaylist(g.id) && g.playtime < 60)
     .sort((a, b) => {
       const genresA = a.genre
-        ? a.genre.split(",").map((n) => ({ name: n.trim() }))
+        ? a.genre.split(',').map(n => ({ name: n.trim() }))
         : [];
       const genresB = b.genre
-        ? b.genre.split(",").map((n) => ({ name: n.trim() }))
+        ? b.genre.split(',').map(n => ({ name: n.trim() }))
         : [];
+
       return calculateAffinity(genresB) - calculateAffinity(genresA);
     })
     .slice(0, 10);
 
   const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
+
     reorderPlaylist(result.source.index, result.destination.index);
   };
 
   return (
-    <div className="flex flex-row h-full overflow-hidden bg-background">
-
+    <div className="bg-background flex h-full flex-row overflow-hidden">
       {/* Coluna esquerda: Fila (Playlist) */}
-      <div className="flex-1 flex flex-col min-w-0 border-r border-border/50 bg-background/50 overflow-hidden">
-
+      <div className="border-border/50 bg-background/50 flex min-w-0 flex-1 flex-col overflow-hidden border-r">
         {/* Header da Playlist */}
-        <div className="px-5 lg:px-8 pt-5 lg:pt-6 pb-3 lg:pb-4 shrink-0 border-b border-border/40">
-          <div className="flex items-center gap-2.5 lg:gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <Gamepad2 size={22} className="lg:w-6 lg:h-6" />
+        <div className="border-border/40 shrink-0 border-b px-5 pt-5 pb-3 lg:px-8 lg:pt-6 lg:pb-4">
+          <div className="mb-2 flex items-center gap-2.5 lg:gap-3">
+            <div className="bg-primary/10 text-primary rounded-lg p-2">
+              <Gamepad2 size={22} className="lg:h-6 lg:w-6" />
             </div>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold">Sua Playlist</h1>
+              <h1 className="text-xl font-bold lg:text-2xl">Sua Playlist</h1>
               <p className="text-muted-foreground text-sm">
                 Organize sua próxima aventura. {playlistGames.length} jogos na
                 fila.
@@ -78,13 +80,13 @@ export default function Playlist({
         </div>
 
         {/* Lista de jogos com Drag and Drop */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-6 pt-3 lg:pt-4 pb-6 custom-scrollbar">
+        <div className="custom-scrollbar flex-1 overflow-y-auto px-4 pt-3 pb-6 lg:px-6 lg:pt-4">
           {playlistGames.length > 0 ? (
             <DragDropContext onDragEnd={handleOnDragEnd}>
               <Droppable droppableId="playlist-queue">
-                {(provided) => (
+                {provided => (
                   <div
-                    className="space-y-2.5 lg:space-y-3 w-full pb-10"
+                    className="w-full space-y-2.5 pb-10 lg:space-y-3"
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                   >
@@ -102,7 +104,7 @@ export default function Playlist({
                             style={{
                               ...provided.draggableProps.style,
                               opacity: snapshot.isDragging ? 0.8 : 1,
-                              zIndex: snapshot.isDragging ? 50 : "auto",
+                              zIndex: snapshot.isDragging ? 50 : 'auto',
                             }}
                           >
                             <PlaylistItem
@@ -128,8 +130,8 @@ export default function Playlist({
               </Droppable>
             </DragDropContext>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-60">
-              <Gamepad2 className="w-14 h-14 lg:w-16 lg:h-16 mb-3 lg:mb-4 opacity-20" />
+            <div className="text-muted-foreground flex h-full flex-col items-center justify-center opacity-60">
+              <Gamepad2 className="mb-3 h-14 w-14 opacity-20 lg:mb-4 lg:h-16 lg:w-16" />
               <p className="text-lg font-medium">Sua fila está vazia.</p>
               <p className="text-sm">
                 Adicione jogos da biblioteca ou das sugestões.
@@ -140,13 +142,12 @@ export default function Playlist({
       </div>
 
       {/* Coluna direita: Sugestões */}
-      <div className="w-72 md:w-80 lg:w-80 xl:w-96 2xl:w-120 shrink-0 bg-muted/10 flex flex-col border-l border-border backdrop-blur-sm overflow-hidden">
-
+      <div className="bg-muted/10 border-border flex w-72 shrink-0 flex-col overflow-hidden border-l backdrop-blur-sm md:w-80 lg:w-80 xl:w-96 2xl:w-120">
         {/* Header das sugestões */}
-        <div className="p-5 lg:p-6 shrink-0 border-b border-border/40 bg-muted/20">
-          <div className="flex items-center gap-2 mb-1 text-purple-500">
-            <Sparkles size={19} className="fill-purple-500/20 lg:w-5 lg:h-5" />
-            <h2 className="font-bold text-lg">Recomendados</h2>
+        <div className="border-border/40 bg-muted/20 shrink-0 border-b p-5 lg:p-6">
+          <div className="mb-1 flex items-center gap-2 text-purple-500">
+            <Sparkles size={19} className="fill-purple-500/20 lg:h-5 lg:w-5" />
+            <h2 className="text-lg font-bold">Recomendados</h2>
           </div>
           <p className="text-muted-foreground text-sm">
             Baseado no seu perfil.
@@ -154,10 +155,10 @@ export default function Playlist({
         </div>
 
         {/* Área de Scroll das Sugestões */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-5 custom-scrollbar">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5 lg:gap-4">
-            {suggestions.map((game) => (
-              <div key={game.id} className="relative group">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-4 lg:p-5">
+          <div className="grid grid-cols-1 gap-3.5 lg:gap-4 xl:grid-cols-2">
+            {suggestions.map(game => (
+              <div key={game.id} className="group relative">
                 <StandardGameCard
                   title={game.name}
                   coverUrl={game.cover_url}
@@ -165,8 +166,8 @@ export default function Playlist({
                   actions={
                     <Button
                       size="sm"
-                      className="w-full h-8 gap-1 shadow-lg bg-white/90 text-black hover:bg-white"
-                      onClick={(e) => {
+                      className="h-8 w-full gap-1 bg-white/90 text-black shadow-lg hover:bg-white"
+                      onClick={e => {
                         e.stopPropagation();
                         addToPlaylist(game.id);
                         toast.success(`${game.name} na fila!`);
@@ -184,8 +185,8 @@ export default function Playlist({
           </div>
 
           {suggestions.length === 0 && (
-            <div className="text-center py-10 space-y-2">
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-2 py-10 text-center">
+              <p className="text-muted-foreground text-sm">
                 Sem sugestões novas.
               </p>
               <Button

@@ -5,15 +5,17 @@ import {
   RefreshCw,
   ShoppingCart,
   Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useWishlist } from "../hooks/useWishlist";
-import { openExternalLink } from "../utils/navigation";
-import StandardGameCard from "@/components/StandardGameCard";
-import { toast } from "sonner";
-import AddWishlistModal from "@/components/AddWishlistModal";
-import { useState } from "react";
-import { ActionButton } from "@/components/ActionButton.tsx";
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { ActionButton } from '@/components/ActionButton.tsx';
+import AddWishlistModal from '@/components/AddWishlistModal';
+import StandardGameCard from '@/components/StandardGameCard';
+import { Button } from '@/components/ui/button';
+
+import { useWishlist } from '../hooks/useWishlist';
+import { openExternalLink } from '../utils/navigation';
 
 export default function Wishlist() {
   const {
@@ -29,10 +31,11 @@ export default function Wishlist() {
 
   const handleRemoveClick = async (id: string, name: string) => {
     if (!confirm(`Remover ${name} da lista de desejos?`)) return;
+
     try {
       await removeGame(id);
     } catch {
-      toast.error("Erro ao remover jogo.");
+      toast.error('Erro ao remover jogo.');
     }
   };
 
@@ -40,14 +43,14 @@ export default function Wishlist() {
     try {
       await refreshPrices();
     } catch {
-      toast.error("Erro ao atualizar preços.");
+      toast.error('Erro ao atualizar preços.');
     }
   };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <Loader2 className="animate-spin" />
       </div>
     );
@@ -56,10 +59,10 @@ export default function Wishlist() {
   // Empty state
   if (games.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-        <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
+      <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center">
+        <ShoppingCart className="mb-4 h-16 w-16 opacity-20" />
         <h3 className="text-lg font-medium">Sua lista está vazia</h3>
-        <p className="text-sm mb-4">
+        <p className="mb-4 text-sm">
           Vá para a aba "Em Alta" para descobrir novos jogos.
         </p>
         <Button onClick={() => setShowAddModal(true)} variant="outline">
@@ -76,16 +79,16 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+    <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+          <div className="rounded-lg bg-red-500/10 p-2 text-red-500">
             <ShoppingCart size={24} />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Lista de Desejos</h1>
             <p className="text-muted-foreground text-sm">
-              Monitorando {games.length} {games.length === 1 ? "jogo" : "jogos"}
+              Monitorando {games.length} {games.length === 1 ? 'jogo' : 'jogos'}
             </p>
           </div>
         </div>
@@ -94,8 +97,8 @@ export default function Wishlist() {
           disabled={isRefreshing || games.length === 0}
           variant="outline"
         >
-          <RefreshCw className={`${isRefreshing ? "animate-spin" : ""}`} />
-          {isRefreshing ? "Buscando Ofertas..." : "Atualizar Preços"}
+          <RefreshCw className={`${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Buscando Ofertas...' : 'Atualizar Preços'}
         </Button>
 
         <Button onClick={() => setShowAddModal(true)} variant="outline">
@@ -103,18 +106,18 @@ export default function Wishlist() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {games.map((game) => {
-          let priceDisplay = "Aguardando preço...";
+      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {games.map(game => {
+          let priceDisplay = 'Aguardando preço...';
 
           if (
             game.localized_price !== null &&
             game.localized_price !== undefined
           ) {
             const currency =
-              game.localized_currency === "BRL"
-                ? "R$"
-                : game.localized_currency || "R$";
+              game.localized_currency === 'BRL'
+                ? 'R$'
+                : game.localized_currency || 'R$';
             priceDisplay = `${currency} ${game.localized_price.toFixed(2)}`;
           } else if (
             game.current_price !== null &&
@@ -133,7 +136,7 @@ export default function Wishlist() {
               title={game.name}
               coverUrl={game.cover_url}
               subtitle={priceDisplay}
-              badge={game.on_sale ? "OFERTA!" : undefined}
+              badge={game.on_sale ? 'OFERTA!' : undefined}
               actions={
                 <>
                   <ActionButton
@@ -153,7 +156,7 @@ export default function Wishlist() {
                       if (targetUrl) openExternalLink(targetUrl);
                     }}
                     tooltip={
-                      game.steam_app_id ? "Abrir na Steam" : "Ir para Loja"
+                      game.steam_app_id ? 'Abrir na Steam' : 'Ir para Loja'
                     }
                   />
                 </>

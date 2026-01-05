@@ -1,5 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
-import { WishlistGame } from "../types";
+import { invoke } from '@tauri-apps/api/core';
+
+import { WishlistGame } from '../types';
 
 export interface SteamSearchResult {
   id: number;
@@ -18,23 +19,23 @@ export interface AddToWishlistParams {
 
 export const wishlistService = {
   getWishlist: async (): Promise<WishlistGame[]> => {
-    return await invoke<WishlistGame[]>("get_wishlist");
+    return await invoke<WishlistGame[]>('get_wishlist');
   },
 
   removeFromWishlist: async (id: string): Promise<void> => {
-    await invoke("remove_from_wishlist", { id });
+    await invoke('remove_from_wishlist', { id });
   },
 
   refreshPrices: async (): Promise<void> => {
-    await invoke("refresh_prices");
+    await invoke('refresh_prices');
   },
 
   searchWishlistGame: async (query: string): Promise<SteamSearchResult[]> => {
-    return await invoke<SteamSearchResult[]>("search_wishlist_game", { query });
+    return await invoke<SteamSearchResult[]>('search_wishlist_game', { query });
   },
 
   addToWishlist: async (game: SteamSearchResult): Promise<void> => {
-    await invoke("add_to_wishlist", {
+    await invoke('add_to_wishlist', {
       id: game.id.toString(),
       name: game.name,
       coverUrl: game.tiny_image,
