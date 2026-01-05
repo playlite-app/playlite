@@ -11,7 +11,6 @@ use crate::utils::logger;
 use rusqlite::Connection;
 use std::sync::Mutex;
 use tauri::Manager;
-use tauri_plugin_shell;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -37,7 +36,7 @@ pub fn run() {
             tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
 
             // Inicializa o sistema de segurança (derivação de chave)
-            security::init_security(&app_handle)
+            security::init_security(app_handle)
                 .expect("Falha ao inicializar sistema de segurança");
 
             tracing::info!("Sistema de segurança inicializado");
@@ -52,7 +51,7 @@ pub fn run() {
             let db_path = app_data_dir.join("library.db");
 
             let conn =
-                Connection::open(&db_path).expect(&format!("Erro ao abrir banco em {:?}", db_path));
+                Connection::open(&db_path).unwrap_or_else(|_| panic!("Erro ao abrir banco em {:?}", db_path));
 
             let _ = conn.execute("PRAGMA journal_mode=WAL", []);
 

@@ -71,7 +71,7 @@ pub fn add_game(
     }
 
     if let Some(r) = rating {
-        if r < constants::MIN_RATING || r > constants::MAX_RATING {
+        if !(constants::MIN_RATING..=constants::MAX_RATING).contains(&r) {
             return Err(format!(
                 "Avaliação deve estar entre {} e {}",
                 constants::MIN_RATING,
@@ -191,7 +191,7 @@ pub fn update_game(
     }
 
     if let Some(r) = rating {
-        if r < constants::MIN_RATING || r > constants::MAX_RATING {
+        if !(constants::MIN_RATING..=constants::MAX_RATING).contains(&r) {
             return Err(format!(
                 "Avaliação deve estar entre {} e {}",
                 constants::MIN_RATING,
