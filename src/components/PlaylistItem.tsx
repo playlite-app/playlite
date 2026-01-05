@@ -23,6 +23,29 @@ interface PlaylistItemProps {
   onClick: () => void;
 }
 
+/**
+ * Item individual da fila de jogos (Playlist).
+ * Suporta drag & drop e reordenação manual via setas.
+ *
+ * Layout horizontal compacto:
+ * - Grip icon (indicador de drag)
+ * - Setas de reordenação + número da posição
+ * - Miniatura da capa com overlay de Play
+ * - Info do jogo (nome, gênero, tempo jogado)
+ * - Botão Play principal + botão Remover
+ *
+ * Cursor muda para 'grab' no hover e 'grabbing' ao arrastar.
+ * Botões de seta desabilitam automaticamente nos extremos (primeiro/último).
+ *
+ * @param game - Dados completos do jogo
+ * @param index - Posição atual na fila (0-based)
+ * @param total - Total de itens na fila (para desabilitar seta baixo no último)
+ * @param onMoveUp - Callback para mover uma posição acima
+ * @param onMoveDown - Callback para mover uma posição abaixo
+ * @param onRemove - Callback para remover da fila
+ * @param onPlay - Callback do overlay da capa (lança o jogo)
+ * @param onClick - Callback ao clicar no card (abre detalhes)
+ */
 export default function PlaylistItem({
   game,
   index,

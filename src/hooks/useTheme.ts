@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Hook personalizado para gerenciar o tema (claro/escuro) do aplicativo.
- * @returns Estado do tema e função para alternar.
+ * Gerencia tema claro/escuro com persistência em localStorage.
+ * Detecta preferência inicial do sistema ou valor salvo.
+ *
+ * @returns Objeto com:
+ *   - isDark: true se modo escuro ativo
+ *   - toggleTheme: Alterna tema e salva preferência
  */
 export function useTheme() {
   const [isDark, setIsDark] = useState(() => {

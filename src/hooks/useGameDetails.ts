@@ -4,10 +4,15 @@ import { detailsService } from '../services/detailsService';
 import { Game, GameDetails, GamePlatformLink } from '../types';
 
 /**
- * Hook personalizado para buscar detalhes de um jogo selecionado.
- * @param selectedGame - O jogo selecionado, ou null se nenhum.
- * @param allGames - A lista completa de jogos para encontrar irmãos.
- * @returns Um objeto contendo detalhes, loading e siblings.
+/**
+ * Busca detalhes enriquecidos de um jogo na API RAWG e identifica versões em outras plataformas.
+ *
+ * @param selectedGame - Jogo para buscar detalhes, ou null
+ * @param allGames - Lista completa para identificar versões multiplataforma
+ * @returns Objeto com:
+ *   - details: Dados da RAWG (descrição, screenshots, metacritic, etc)
+ *   - loading: Estado da requisição
+ *   - siblings: Mesmo jogo em outras plataformas (array de {id, platform})
  */
 export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
   const [details, setDetails] = useState<GameDetails | null>(null);

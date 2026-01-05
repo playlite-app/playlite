@@ -13,9 +13,22 @@ interface UseHomeProps {
 }
 
 /**
- * Hook personalizado para gerenciar o estado da página inicial.
- * @param props - Propriedades incluindo biblioteca, caches e setters.
- * @returns Estado e funções para trending, perfil e recomendações.
+ * Gerencia a lógica de negócio da página inicial (Home/Dashboard).
+ * Calcula estatísticas, seções de jogos e busca trending da RAWG (com cache).
+ *
+ * @param props.games - Biblioteca completa do usuário
+ * @param props.trendingCache - Cache de jogos em tendência da RAWG
+ * @param props.setTrendingCache - Função para atualizar o cache
+ * @param props.profileCache - Cache do perfil de gêneros do usuário
+ * @param props.setProfileCache - Função para atualizar o perfil
+ *
+ * @returns Objeto com:
+ *   - trending: Jogos populares da RAWG
+ *   - profile: Perfil de preferências do usuário
+ *   - totalGames, totalPlaytime, totalFavorites: Estatísticas
+ *   - continuePlaying: Jogos com progresso entre 0-50h
+ *   - backlogRecommendations: Top 5 jogos não jogados por afinidade de gênero
+ *   - mostPlayed: Top jogos por tempo de jogo
  */
 export function useHome({
   games: library,

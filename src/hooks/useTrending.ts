@@ -10,9 +10,22 @@ interface UseTrendingProps {
 }
 
 /**
- * Hook personalizado para gerenciar jogos em tendência.
- * @param props - Propriedades incluindo jogos do usuário, cache e setter.
- * @returns Estado de loading, erro, gênero selecionado e jogos filtrados.
+ * Busca jogos em tendência da RAWG e filtra por gênero.
+ * Remove automaticamente jogos que o usuário já possui na biblioteca.
+ * Usa cache global para evitar requisições desnecessárias.
+ *
+ * @param props.userGames - Biblioteca local para filtrar duplicatas
+ * @param props.cachedGames - Cache de jogos da RAWG
+ * @param props.setCachedGames - Atualiza cache global após busca
+ *
+ * @returns Objeto com:
+ *   - games: Jogos filtrados (sem os que o usuário tem)
+ *   - allGenres: Gêneros únicos para o filtro
+ *   - loading, error: Estados da requisição
+ *   - selectedGenre: Gênero ativo no filtro
+ *   - setSelectedGenre: Muda filtro
+ *   - retry: Reexecuta busca em caso de erro
+ *   - addToWishlist: Função helper do service
  */
 export function useTrending({
   userGames,

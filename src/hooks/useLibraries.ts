@@ -4,8 +4,16 @@ import { librariesService } from '../services/librariesService.ts';
 import { Game } from '../types';
 
 /**
- * Hook personalizado para gerenciar a biblioteca de jogos.
- * @returns Estado da biblioteca e funções para CRUD.
+ * Gerencia a biblioteca de jogos do usuário com operações CRUD.
+ * Inicializa o banco SQLite e mantém estado sincronizado.
+ *
+ * @returns Objeto com:
+ *   - games: Array de jogos na biblioteca
+ *   - isLoading: true durante inicialização do DB
+ *   - refreshGames: Recarrega lista do banco
+ *   - saveGame: Adiciona ou atualiza jogo
+ *   - removeGame: Remove jogo por ID
+ *   - toggleFavorite: Marca/desmarca favorito (atualização otimista)
  */
 export function useLibraries() {
   const [games, setGames] = useState<Game[]>([]);

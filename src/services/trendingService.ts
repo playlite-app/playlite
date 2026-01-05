@@ -3,36 +3,38 @@ import { invoke } from '@tauri-apps/api/core';
 import { RawgGame } from '../types';
 
 export const trendingService = {
-  /**
-   * Obtém a chave da API RAWG armazenada de forma segura.
-   * @returns Uma promessa que resolve para a chave da API como string.
-   */
   getApiKey: async (): Promise<string> => {
     return await invoke<string>('get_secret', { keyName: 'rawg_api_key' });
   },
 
   /**
-   * Busca jogos em tendência usando a API RAWG.
-   * @param apiKey - A chave da API RAWG.
-   * @returns Uma promessa que resolve para uma lista de jogos em tendência.
+   * Busca jogos em alta (trending) da API RAWG.
+   * Retorna jogos populares baseados em popularidade recente e avaliações.
+   *
+   * @param apiKey - RAWG API key válida
+   * @returns Lista de jogos em tendência
    */
   getTrending: async (apiKey: string): Promise<RawgGame[]> => {
     return await invoke<RawgGame[]>('get_trending_games', { apiKey });
   },
 
   /**
-   * Busca jogos futuros (upcoming) usando a API RAWG.
-   * @param apiKey - A chave da API RAWG.
-   * @returns Uma promessa que resolve para uma lista de jogos futuros.
+   * Busca próximos lançamentos da API RAWG.
+   * Retorna jogos com data de lançamento futura.
+   *
+   * @param apiKey - RAWG API key válida
+   * @returns Lista de jogos a serem lançados
    */
   getUpcoming: async (apiKey: string): Promise<RawgGame[]> => {
     return await invoke<RawgGame[]>('get_upcoming_games', { apiKey });
   },
 
   /**
-   * Adiciona um jogo à lista de desejos, tentando buscar o ID do Steam se possível.
-   * @param game - O jogo RAWG a ser adicionado à lista de desejos.
-   * @returns Uma promessa que resolve quando o jogo é adicionado.
+   * Adiciona jogo da RAWG à wishlist com busca automática de Steam App ID.
+   * Tenta encontrar correspondência no Steam para ‘tracking’ de preços.
+   * Continua normalmente se não encontrar correspondência no Steam (steamAppId será null).
+   *
+   * @param game - Jogo da RAWG (trending ou busca manual)
    */
   addToWishlist: async (game: RawgGame): Promise<void> => {
     let steamAppId: number | null = null;

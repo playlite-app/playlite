@@ -7,9 +7,18 @@ const STORE_FILENAME = 'playlist.store';
 const STORE_KEY = 'user_playlist_queue';
 
 /**
- * Hook personalizado para gerenciar a playlist de jogos.
- * @param allGames - Lista completa de jogos para referência.
- * @returns Estado da playlist e funções para manipulação.
+ * Gerencia a fila de jogos a jogar com persistência local (Tauri Store).
+ * Suporta reordenação manual e drag & drop.
+ *
+ * @param allGames - Lista completa para popular detalhes dos IDs salvos
+ * @returns Objeto com:
+ *   - playlistGames: Jogos completos na ordem da fila
+ *   - isLoading: Estado de carregamento inicial
+ *   - addToPlaylist: Adiciona jogo (evita duplicatas)
+ *   - removeFromPlaylist: Remove da fila
+ *   - moveUp/moveDown: Move posição individual
+ *   - reorderPlaylist: Reordena via índices (para drag & drop)
+ *   - isInPlaylist: Verifica se jogo está na fila
  */
 export function usePlaylist(allGames: Game[]) {
   const [queueIds, setQueueIds] = useState<string[]>([]);

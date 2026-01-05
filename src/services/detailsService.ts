@@ -4,9 +4,11 @@ import { GameDetails } from '../types';
 
 export const detailsService = {
   /**
-   * Busca detalhes extras do jogo na API RAWG baseado no nome.
-   * @param gameName - O nome do jogo para buscar detalhes.
-   * @returns Uma promessa que resolve para os detalhes do jogo ou null em caso de erro.
+   * Busca detalhes enriquecidos de um jogo na API RAWG (descrição, metacritic, etc).
+   * Retorna null silenciosamente em caso de erro (rede, jogo não encontrado, API indisponível).
+   *
+   * @param gameName - Nome do jogo para buscar (matching fuzzy no backend)
+   * @returns Detalhes completos do jogo ou null se falhar
    */
   getGameDetails: async (gameName: string): Promise<GameDetails | null> => {
     try {

@@ -19,6 +19,24 @@ interface HeroProps {
   showNavigation?: boolean;
 }
 
+/**
+ * Banner hero fullwidth com background desfocado usado no topo das páginas Início e Em Alta.
+ * Suporta navegação entre itens e composição via slots (badges/actions).
+ *
+ * Layout responsivo que se adapta a telas menores.
+ * Background usa a mesma imagem da capa com blur e escurecimento.
+ *
+ * @param title - Nome do jogo/item principal
+ * @param backgroundUrl - URL para background (fallback para coverUrl se ausente)
+ * @param coverUrl - URL da capa vertical do jogo
+ * @param genres - Array de gêneros exibidos como tags
+ * @param rating - Nota de 0-5 exibida com estrela (opcional)
+ * @param badges - Slot para badges customizados (ex: "Favorito", "Não Jogado")
+ * @param actions - Slot para botões de ação (ex: "Seu Campeão", "Em Alta", "Sugestão")
+ * @param showNavigation - Exibe setas de navegação esquerda/direita
+ * @param onNext - Callback para seta direita (próximo item)
+ * @param onPrev - Callback para seta esquerda (item anterior)
+ */
 export default function Hero({
   title,
   backgroundUrl,

@@ -13,9 +13,15 @@ interface UseRecommendationProps {
 }
 
 /**
- * Hook personalizado para gerenciar recomendações baseadas no perfil do usuário.
- * @param props - Propriedades opcionais para cache do perfil.
- * @returns Perfil, função de afinidade e estado de loading.
+ * Gerencia sistema de recomendações baseado no perfil de gêneros do usuário.
+ * Busca perfil do backend (Rust) e fornece função de scoring.
+ *
+ * @param props.profileCache - Perfil em cache (evita requisição)
+ * @param props.setProfileCache - Callback para salvar perfil em cache global
+ * @returns Objeto com:
+ *   - profile: Perfil com top_genres ordenados por score
+ *   - loading: Estado da requisição
+ *   - calculateAffinity: Função que calcula score de compatibilidade
  */
 export function useRecommendation({
   profileCache,
@@ -54,8 +60,12 @@ export function useRecommendation({
   }, [profileCache]);
 
   /**
-   * Calcula uma pontuação de afinidade para um jogo baseada nos gêneros dele.
-   * Quanto maior o número, mais recomendado é o jogo.
+   * Calcula pontuação de afinidade somando scores dos gêneros em comum.
+   *
+   * @param gameGenres - Array de objetos {name: string} do jogo
+   * @returns Score total (quanto maior, mais recomendado)
+   * @example
+   * calculateAffinity([{name: 'Action'}, {name: 'RPG'}]) // => 150
    */
   const calculateAffinity = (gameGenres: Genre[]) => {
     if (!profile || !gameGenres) return 0;

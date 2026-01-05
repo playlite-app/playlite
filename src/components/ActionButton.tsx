@@ -18,6 +18,23 @@ interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
   tooltip?: string;
 }
 
+/**
+ * Botão circular de ação rápida usado em overlays de cards e menus.
+ * Estende o Button do Shadcn/UI com variantes customizadas de vidro (glass).
+ *
+ * Usado principalmente em:
+ * - Overlay de cards (Jogar, Favoritar, Menu)
+ * - GameActionsMenu (trigger do dropdown)
+ *
+ * Bloqueia propagação de cliques automaticamente para evitar conflitos com cards clicáveis.
+ *
+ * @param icon - Componente de ícone do Lucide React
+ * @param variant - Estilo visual. Variantes customizadas:
+ *   - 'glass': fundo preto semi-transparente com blur (hover em cards)
+ *   - 'glass-destructive': igual glass mas com ícone vermelho (favorito ativo)
+ * @param size - Tamanho do ícone em pixels (padrão: 18)
+ * @param tooltip - Texto exibido no hover (atributo title)
+ */
 export function ActionButton({
   icon: Icon,
   className,

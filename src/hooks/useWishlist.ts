@@ -4,8 +4,16 @@ import { wishlistService } from '../services/wishlistService';
 import { WishlistGame } from '../types';
 
 /**
- * Hook personalizado para gerenciar a lista de desejos.
- * @returns Estado da wishlist e funções para manipulação.
+ * Gerencia lista de desejos (jogos desejados) com preços da Steam.
+ * Remove usa atualização otimista para feedback instantâneo.
+ *
+ * @returns Objeto com:
+ *   - games: Lista de jogos desejados com preços
+ *   - isLoading: Carregamento inicial
+ *   - isRefreshing: true durante atualização de preços
+ *   - removeGame: Remove e atualiza UI imediatamente
+ *   - refreshPrices: Busca preços atualizados de todos os jogos (pode demorar)
+ *   - refreshList: Recarrega lista do banco
  */
 export function useWishlist() {
   const [games, setGames] = useState<WishlistGame[]>([]);

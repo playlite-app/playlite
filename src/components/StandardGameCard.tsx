@@ -17,6 +17,26 @@ interface StandardGameCardProps {
   onPlay?: () => void;
 }
 
+/**
+ * Card padrão para exibição de jogos em grades (Início, Biblioteca, Favoritos, Em Alta e Lista de Desejos).
+ * Aspect ratio fixo 3:4 (capa vertical de jogo).
+ *
+ * Features:
+ * - Fallback automático se imagem falhar: exibe gradiente + nome do jogo em maiúsculas
+ * - Overlay de ações aparece no hover (botão Play + ações customizadas)
+ * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
+ * - Efeito hover: elevação + zoom suave na imagem
+ *
+ * @param title - Nome do jogo (exibido embaixo e no fallback)
+ * @param coverUrl - URL da capa. Se falhar ou for null, ativa fallback visual
+ * @param subtitle - Texto secundário (ex: gênero, plataforma)
+ * @param badge - Texto do badge flutuante (opcional)
+ * @param rating - Nota 0-5 exibida com estrela amarela (opcional)
+ * @param onClick - Callback ao clicar no card (geralmente abre modal de detalhes)
+ * @param onPlay - Callback do botão Play no overlay (lança o jogo)
+ * @param actions - Slot para botões adicionais no overlay (Favoritar, Menu, etc)
+ * @param className - Classes Tailwind extras para customização
+ */
 export default function StandardGameCard({
   title,
   coverUrl,

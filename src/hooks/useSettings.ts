@@ -4,9 +4,17 @@ import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { settingsService } from '../services/settingsService';
 
 /**
- * Hook personalizado para gerenciar configurações do aplicativo.
- * @param onLibraryUpdate - Callback chamado quando a biblioteca é atualizada.
- * @returns Estado das chaves, loading, status e funções de ação.
+ * Gerencia configurações, importações e backups do aplicativo.
+ * Mantém API keys seguras e coordena operações de longa duração.
+ * Mensagens de status desaparecem automaticamente após 5 segundos.
+ *
+ * @param onLibraryUpdate - Callback executado após importar/enriquecer biblioteca
+ * @returns Objeto com:
+ *   - keys: {steamId, steamApiKey, rawgApiKey}
+ *   - setKeys: Atualiza state local (não salva automaticamente)
+ *   - loading: Estados individuais para cada operação
+ *   - status: {type: 'success'|'error'|null, message: string}
+ *   - actions: {saveKeys, importLibrary, enrichLibrary, exportDatabase, importDatabase}
  */
 export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({

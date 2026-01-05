@@ -6,19 +6,10 @@ import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
 import { ImportSummary, KeysBatch } from '../types';
 
 export const settingsService = {
-  /**
-   * Obtém as chaves secretas armazenadas (Steam ID, API Key, etc.).
-   * @returns Uma promessa que resolve para um objeto com as chaves secretas.
-   */
   getSecrets: async (): Promise<KeysBatch> => {
     return await invoke<KeysBatch>('get_secrets');
   },
 
-  /**
-   * Define as chaves secretas (Steam ID, API Key, etc.).
-   * @param keys - Objeto contendo steamId, steamApiKey e rawgApiKey.
-   * @returns Uma promessa que resolve quando as chaves são definidas.
-   */
   setSecrets: async (keys: {
     steamId: string | null;
     steamApiKey: string | null;
@@ -28,10 +19,11 @@ export const settingsService = {
   },
 
   /**
-   * Importa a biblioteca do Steam usando o ID e chave da API.
-   * @param steamId - O ID do usuário no Steam.
-   * @param apiKey - A chave da API do Steam.
-   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   * Importa jogos do Steam e adiciona à biblioteca.
+   * Requer Steam ID público e API key válida.
+   * Pode demorar vários segundos dependendo do tamanho da biblioteca.
+   *
+   * @throws Se as credenciais forem inválidas ou a API estiver indisponível
    */
   importSteamLibrary: async (
     steamId: string,
@@ -41,16 +33,20 @@ export const settingsService = {
   },
 
   /**
-   * Enriquece a biblioteca com dados adicionais.
-   * @returns Uma promessa que resolve para um resumo da importação.
+   * Enriquece jogos existentes com dados de gênero na Steam, buscados diretamente da API da Steam.
+   * Processa apenas jogos sem dados completos.
+   * Operação pode ser lenta para bibliotecas grandes.
+   * Os dados são usados para o sistema de recomendação.
    */
   enrichLibrary: async (): Promise<ImportSummary> => {
     return await invoke<ImportSummary>('enrich_library');
   },
 
   /**
-   * Exporta o banco de dados para um arquivo JSON.
-   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   * Exporta toda a biblioteca para JSON.
+   * Abre diálogo nativo para escolher local de salvamento.
+   *
+   * @throws Se o usuário cancelar ou não tiver permissões de escrita
    */
   exportDatabase: async (): Promise<string> => {
     try {
@@ -87,8 +83,11 @@ export const settingsService = {
   },
 
   /**
-   * Importa o banco de dados de um arquivo JSON.
-   * @returns Uma promessa que resolve para uma mensagem de sucesso.
+   * Importa biblioteca de um backup JSON.
+   * SOBRESCREVE todos os dados existentes sem confirmação.
+   * Valida formato antes de importar.
+   *
+   * @throws Se o arquivo for inválido ou corrompido
    */
   importDatabase: async (): Promise<string> => {
     try {
