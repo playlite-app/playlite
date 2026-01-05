@@ -34,8 +34,6 @@ pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
 
         // Distribuir o Score para os Gêneros do Jogo
         if let Some(genre_str) = &game.genre {
-            // Se houver múltiplos gêneros separados por vírgula (ex: "RPG, Action")
-            // Na Steam geralmente vem um principal, mas vamos preparar para split
             let genres: Vec<&str> = genre_str.split(',').map(|s| s.trim()).collect();
 
             for genre in genres {

@@ -1,13 +1,13 @@
 use crate::constants;
+use crate::constants::STEAM_RATE_LIMIT_MS;
 use crate::database::AppState;
 use crate::services::{rawg, steam};
 use crate::storage;
-use tracing::{info, error};
 use rusqlite::params;
 use std::time::Duration;
 use tauri::{AppHandle, State};
 use tokio::time::sleep;
-use crate::constants::STEAM_RATE_LIMIT_MS;
+use tracing::{error, info};
 
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
@@ -148,11 +148,23 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
                 Ok(metadata) => {
                     batch_updates.push((id_str.clone(), metadata.genre.clone()));
                     // Log menos verboso no console, detalhado no arquivo
-                    info!("Metadata OK ({}/{}): {} -> {}", i+1, total, name, metadata.genre);
+                    info!(
+                        "Metadata OK ({}/{}): {} -> {}",
+                        i + 1,
+                        total,
+                        name,
+                        metadata.genre
+                    );
                     success_count += 1;
                 }
                 Err(e) => {
-                    error!("Falha metadata ({}/{}): {} - Erro: {}", i+1, total, name, e);
+                    error!(
+                        "Falha metadata ({}/{}): {} - Erro: {}",
+                        i + 1,
+                        total,
+                        name,
+                        e
+                    );
                     failed_games.push(format!("{} ({})", name, e));
                 }
             }
@@ -164,7 +176,8 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
     // Salvar no Banco
     if !batch_updates.is_empty() {
         let conn = state.db.lock().map_err(|_| "Mutex error ao salvar")?;
-        conn.execute("BEGIN TRANSACTION", []).map_err(|e| e.to_string())?;
+        conn.execute("BEGIN TRANSACTION", [])
+            .map_err(|e| e.to_string())?;
 
         for (id, genre) in batch_updates {
             let _ = conn.execute(
@@ -174,14 +187,22 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
         }
 
         conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
-        info!("Processamento concluído: {} sucessos e {} falhas.", success_count, failed_games.len());
+        info!(
+            "Processamento concluído: {} sucessos e {} falhas.",
+            success_count,
+            failed_games.len()
+        );
     }
 
     let summary = ImportSummary {
         success_count,
         error_count: failed_games.len() as i32,
         total_processed: total as i32,
-        message: format!("Processamento concluído: {} sucessos e {} falhas.", success_count, failed_games.len()),
+        message: format!(
+            "Processamento concluído: {} sucessos e {} falhas.",
+            success_count,
+            failed_games.len()
+        ),
         errors: failed_games,
     };
 

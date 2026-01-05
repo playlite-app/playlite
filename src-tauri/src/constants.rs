@@ -5,7 +5,8 @@ pub const STEAM_CDN_URL: &str = "https://cdn.cloudflare.steamstatic.com";
 #[allow(dead_code)]
 pub const STEAM_STORE_API_URL: &str = "https://store.steampowered.com/api/appdetails";
 #[allow(dead_code)]
-pub const STEAM_PLAYER_API_URL: &str = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001";
+pub const STEAM_PLAYER_API_URL: &str =
+    "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001";
 #[allow(dead_code)]
 pub const RAWG_API_URL: &str = "https://api.rawg.io/api/games";
 

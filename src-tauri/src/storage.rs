@@ -1,7 +1,7 @@
+use crate::constants::DB_FILENAME_SECRETS;
 use crate::security;
 use rusqlite::{params, Connection};
 use tauri::{AppHandle, Manager};
-use crate::constants::DB_FILENAME_SECRETS;
 
 /// Obtém a conexão com o banco de dados de secrets
 fn db(app: &AppHandle) -> Result<Connection, String> {

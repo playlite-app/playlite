@@ -5,7 +5,7 @@ use rusqlite::params;
 use std::time::Duration;
 use tauri::State;
 use tokio::time::sleep;
-use tracing::{info, error};
+use tracing::{error, info};
 
 #[tauri::command]
 pub async fn search_wishlist_game(query: String) -> Result<Vec<StoreSearchItem>, String> {
@@ -22,7 +22,10 @@ pub fn add_to_wishlist(
     current_price: Option<f64>,
     steam_app_id: Option<i32>,
 ) -> Result<String, String> {
-    info!("Tentando adicionar à Wishlist: ID={}, Nome={}, SteamID={:?}", id, name, steam_app_id);
+    info!(
+        "Tentando adicionar à Wishlist: ID={}, Nome={}, SteamID={:?}",
+        id, name, steam_app_id
+    );
 
     let conn = state.db.lock().map_err(|e| {
         error!("Erro de Mutex na Wishlist: {}", e);
@@ -128,7 +131,7 @@ pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String
     for (id, steam_app_id, name) in games {
         let mut current_app_id = steam_app_id;
 
-        // 1. Se não tem AppID, tenta descobrir pelo nome (Auto-healing)
+        // Se não tem AppID, tenta descobrir pelo nome (Auto-healing)
         if current_app_id.is_none() {
             // Nota: search_store retorna lista, pegamos o primeiro para auto-healing
             if let Ok(results) = steam::search_store(&name).await {
@@ -143,7 +146,7 @@ pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String
             }
         }
 
-        // 2. Busca Preço na Steam
+        // Busca Preço na Steam
         if let Some(app_id_val) = current_app_id {
             match steam::fetch_price(app_id_val as u32).await {
                 Ok(Some(price)) => {
@@ -165,15 +168,12 @@ pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String
                     updated_count += 1;
                 }
                 Ok(None) => {
-                    // Opcional: Aqui você poderia implementar o fallback para USD
-                    // chamando steam::fetch_price_usd se o BRL falhar.
                     println!("Jogo indisponível na loja BR: {}", name);
                 }
                 Err(_) => {}
             }
         }
 
-        // Rate limit simples para não tomar ban da Steam
         sleep(Duration::from_millis(500)).await;
     }
 

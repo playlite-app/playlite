@@ -116,7 +116,6 @@ pub async fn fetch_upcoming_games(api_key: &str) -> Result<Vec<RawgGame>, String
     let current_date = chrono::Utc::now();
     let next_year = current_date.year() + 1;
 
-    // Formata datas: YYYY-MM-DD
     let date_start = current_date.format("%Y-%m-%d").to_string();
     let date_end = format!("{}-12-31", next_year);
 

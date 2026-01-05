@@ -41,9 +41,7 @@ pub fn init_security(app: &AppHandle) -> Result<(), String> {
         .get_machine_uid()
         .map_err(|e| e.to_string())?;
 
-    let machine_uid = machine_uid_result
-        .id
-        .ok_or("Machine UID indisponível")?;
+    let machine_uid = machine_uid_result.id.ok_or("Machine UID indisponível")?;
 
     let username = whoami::username().map_err(|e| e.to_string())?;
     let app_id = app.config().identifier.clone();
@@ -56,9 +54,7 @@ pub fn init_security(app: &AppHandle) -> Result<(), String> {
     hasher.update(salt);
 
     let key: [u8; 32] = hasher.finalize().into();
-    MASTER_KEY
-        .set(key)
-        .map_err(|_| "Chave já inicializada")?;
+    MASTER_KEY.set(key).map_err(|_| "Chave já inicializada")?;
 
     Ok(())
 }
