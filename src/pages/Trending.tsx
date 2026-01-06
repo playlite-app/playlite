@@ -20,6 +20,7 @@ import { ErrorState } from '../components/ErrorState';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useRecommendation } from '../hooks/useRecommendation';
 import { useTrending } from '../hooks/useTrending';
+import { useWishlist } from '../hooks/useWishlist';
 import { trendingService } from '../services/trendingService';
 import { Game, RawgGame } from '../types';
 import { openExternalLink } from '../utils/navigation';
@@ -45,6 +46,7 @@ export default function Trending(props: TrendingProps) {
   } = useTrending(props);
 
   const { calculateAffinity, profile } = useRecommendation();
+  const { games: wishlistGames } = useWishlist();
   const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
 
@@ -120,6 +122,9 @@ export default function Trending(props: TrendingProps) {
   // Lógica do Hero e Grid
   const heroGames = games.slice(0, 5);
   const currentHero = heroGames[heroIndex];
+  const isHeroInWishlist = wishlistGames.some(
+    w => w.id === currentHero?.id.toString()
+  );
   const nextHero = () => setHeroIndex(prev => (prev + 1) % heroGames.length);
   const prevHero = () =>
     setHeroIndex(prev => (prev - 1 + heroGames.length) % heroGames.length);
@@ -181,7 +186,11 @@ export default function Trending(props: TrendingProps) {
               className="gap-2"
               onClick={() => handleWishlistClick(currentHero)}
             >
-              <Heart size={18} className="text-red-500" /> Lista de Desejos
+              <Heart
+                size={18}
+                className={`text-red-500 ${isHeroInWishlist ? 'fill-current' : ''}`}
+              />{' '}
+              Lista de Desejos
             </Button>
 
             <Button
@@ -238,6 +247,9 @@ export default function Trending(props: TrendingProps) {
             // Lógica de badge baseada no perfil
             const affinity = calculateAffinity(game.genres);
             const isRecommended = affinity > 100;
+            const isInWishlist = wishlistGames.some(
+              w => w.id === game.id.toString()
+            );
 
             return (
               <StandardGameCard
@@ -256,7 +268,7 @@ export default function Trending(props: TrendingProps) {
                     {/* Botões Wishlist e Detalhes */}
                     <ActionButton
                       icon={Heart}
-                      variant="secondary"
+                      variant={isInWishlist ? 'glass-destructive' : 'glass'}
                       onClick={() => handleWishlistClick(game)}
                       tooltip="Lista de Desejos"
                     />
@@ -291,6 +303,9 @@ export default function Trending(props: TrendingProps) {
             {upcomingGames.map(game => {
               const affinity = calculateAffinity(game.genres);
               const isMatch = affinity > 50;
+              const isInWishlist = wishlistGames.some(
+                w => w.id === game.id.toString()
+              );
 
               return (
                 <StandardGameCard
@@ -308,7 +323,7 @@ export default function Trending(props: TrendingProps) {
                       {/* Botões Wishlist e Detalhes */}
                       <ActionButton
                         icon={Heart}
-                        variant="secondary"
+                        variant={isInWishlist ? 'glass-destructive' : 'glass'}
                         onClick={() => handleWishlistClick(game)}
                         tooltip="Lista de Desejos"
                       />
