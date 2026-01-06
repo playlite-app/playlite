@@ -24,6 +24,7 @@
 //! Err(err) => eprintln!("Erro ao inicializar banco: {}", err),
 //! }
 //! ```
+//!
 //! # Nota
 //! Este módulo deve ser inicializado durante o setup da aplicação
 //! para garantir que os bancos estejam prontos antes do uso.
@@ -49,12 +50,7 @@ pub struct AppState {
 
 /// Inicializa o banco de dados de gerenciamento de jogos.
 ///
-/// Cria as tabelas `games` e `wishlist` se não existirem,
-/// além de índices otimizados para consultas frequentes.
-///
-/// # Erros
-/// - Se não conseguir adquirir o lock do mutex do banco
-/// - Se qualquer comando SQL falhar
+/// Cria as tabelas `games` e `wishlist` se não existirem, e índices otimizados para consultas frequentes.
 ///
 /// # Retorna
 /// - `Ok(String)` com mensagem de sucesso
@@ -82,6 +78,10 @@ pub struct AppState {
 ///   Err(err) => eprintln!("Erro ao inicializar banco: {}", err),
 /// }
 /// ```
+///
+/// # Erros
+/// - Se não conseguir adquirir o lock do mutex do banco
+/// - Se qualquer comando SQL falhar
 ///
 /// # Nota
 /// Esta função deve ser chamada apenas uma vez durante a inicialização da aplicação.

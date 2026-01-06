@@ -1,3 +1,19 @@
+//! Módulo de gerenciamento da biblioteca de jogos.
+//!
+//! Implementa operações CRUD (Create, Read, Update, Delete) para jogos,
+//! incluindo validações completas de dados e gerenciamento de favoritos.
+//!
+//! # Validações
+//! Todas as operações de escrita validam:
+//! - Comprimento de campos (nomes, URLs, gêneros)
+//! - Formato de URLs (apenas HTTP/HTTPS)
+//! - Ranges de valores numéricos
+//! - Duplicação de IDs
+//!
+//! # Tauri Commands
+//! Todas as funções públicas são expostas como comandos Tauri invocáveis
+//! pelo frontend via IPC (Inter-Process Communication).
+
 use crate::constants;
 use crate::database::AppState;
 use crate::models;
@@ -5,29 +21,90 @@ use rusqlite::params;
 use tauri::State;
 use url::Url;
 
+use serde::Deserialize;
+
+/// Dados de entrada para criar ou atualizar um jogo.
+///
+/// Usado tanto em `add_game` quanto em `update_game`.
+/// Campos opcionais permitem flexibilidade na entrada de dados.
+#[derive(Debug, Deserialize)]
+pub struct GameInput {
+    /// ID único do jogo (geralmente app_id da Steam ou slug)
+    pub id: String,
+    /// Nome do jogo
+    pub name: String,
+    /// Gênero(s) do jogo (pode ser lista separada por vírgula)
+    pub genre: Option<String>,
+    /// Plataforma (Steam, Epic, Xbox, etc.)
+    pub platform: Option<String>,
+
+    /// URL da imagem de capa
+    #[serde(rename = "coverUrl")]
+    pub cover_url: Option<String>,
+
+    /// Tempo jogado em minutos
+    pub playtime: Option<i32>,
+    /// Avaliação do usuário (1-5 estrelas)
+    pub rating: Option<i32>,
+}
+
+/// Adiciona um novo jogo à biblioteca.
+///
+/// Realiza validações completas dos dados antes da inserção e verifica
+/// duplicação de ID para evitar conflitos.
+///
+/// # Validações Realizadas
+/// - **Nome**: Não vazio, máximo 200 caracteres
+/// - **URL da capa**: Formato válido, apenas HTTP/HTTPS, máximo 500 caracteres
+/// - **Gênero**: Máximo 100 caracteres
+/// - **Plataforma**: Máximo 50 caracteres
+/// - **Playtime**: Não negativo, máximo 999999 minutos
+/// - **Rating**: Entre 1 e 5 estrelas
+/// - **ID único**: Não pode existir outro jogo com mesmo ID
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado contendo conexão do banco
+/// * `game` - Dados do jogo a ser adicionado
+///
+/// # Retorna
+/// * `Ok(())` - Jogo adicionado com sucesso
+/// * `Err(String)` - Erro de validação ou duplicação
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke do frontend
+/// invoke('add_game', {
+///     game: {
+///         id: '730',
+///         name: 'Counter-Strike 2',
+///         genre: 'FPS, Action',
+///         platform: 'Steam',
+///         coverUrl: 'https://...',
+///         playtime: 1200,
+///         rating: 5
+///     }
+/// })
+/// ```
+///
+/// # Erros Comuns
+/// - "Nome do jogo não pode ser vazio"
+/// - "Já existe um jogo com este ID"
+/// - "URL inválida ou mal formatada"
+/// - "Avaliação deve estar entre 1 e 5"
 #[tauri::command]
-pub fn add_game(
-    state: State<AppState>,
-    id: String,
-    name: String,
-    genre: Option<String>,
-    platform: Option<String>,
-    cover_url: Option<String>,
-    playtime: Option<i32>,
-    rating: Option<i32>,
-) -> Result<(), String> {
-    if name.trim().is_empty() {
+pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+    if game.name.trim().is_empty() {
         return Err("Nome do jogo não pode ser vazio".to_string());
     }
 
-    if name.len() > constants::MAX_NAME_LENGTH {
+    if game.name.len() > constants::MAX_NAME_LENGTH {
         return Err(format!(
             "Nome do jogo muito longo (máximo {} caracteres)",
             constants::MAX_NAME_LENGTH
         ));
     }
 
-    if let Some(ref url_str) = cover_url {
+    if let Some(ref url_str) = game.cover_url {
         if url_str.len() > constants::MAX_URL_LENGTH {
             return Err(format!(
                 "URL da capa muito longa (máximo {} caracteres)",
@@ -40,7 +117,7 @@ pub fn add_game(
         }
     }
 
-    if let Some(ref g) = genre {
+    if let Some(ref g) = game.genre {
         if g.len() > constants::MAX_GENRE_LENGTH {
             return Err(format!(
                 "Gênero muito longo (máximo {} caracteres)",
@@ -49,7 +126,7 @@ pub fn add_game(
         }
     }
 
-    if let Some(ref p) = platform {
+    if let Some(ref p) = game.platform {
         if p.len() > constants::MAX_PLATFORM_LENGTH {
             return Err(format!(
                 "Plataforma muito longa (máximo {} caracteres)",
@@ -58,7 +135,7 @@ pub fn add_game(
         }
     }
 
-    if let Some(time) = playtime {
+    if let Some(time) = game.playtime {
         if time < 0 {
             return Err("Tempo jogado não pode ser negativo".to_string());
         }
@@ -70,7 +147,7 @@ pub fn add_game(
         }
     }
 
-    if let Some(r) = rating {
+    if let Some(r) = game.rating {
         if !(constants::MIN_RATING..=constants::MAX_RATING).contains(&r) {
             return Err(format!(
                 "Avaliação deve estar entre {} e {}",
@@ -85,7 +162,7 @@ pub fn add_game(
     let exists: bool = conn
         .query_row(
             "SELECT EXISTS(SELECT 1 FROM games WHERE id = ?1)",
-            params![id],
+            params![game.id],
             |row| row.get(0),
         )
         .map_err(|e| format!("Erro ao verificar duplicata: {}", e))?;
@@ -95,14 +172,32 @@ pub fn add_game(
     }
 
     conn.execute(
-            "INSERT INTO games (id, name, genre, platform, cover_url, playtime, rating) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![id, name, genre, platform, cover_url, playtime, rating],
-        )
-            .map_err(|e| e.to_string())?;
+        "INSERT INTO games (id, name, genre, platform, cover_url, playtime, rating) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![game.id, game.name, game.genre, game.platform, game.cover_url, game.playtime, game.rating],
+    )
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
 
+/// Recupera todos os jogos da biblioteca.
+///
+/// Retorna a lista completa de jogos ordenada conforme armazenada no banco.
+/// Inclui todos os campos, inclusive o status de favorito.
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado contendo conexão do banco
+///
+/// # Retorna
+/// * `Ok(Vec<Game>)` - Lista de todos os jogos
+/// * `Err(String)` - Erro ao acessar banco ou mapear dados
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke do frontend
+/// let games = await invoke('get_games');
+/// console.log(`Total de jogos: ${games.length}`);
+/// ```
 #[tauri::command]
 pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
@@ -133,6 +228,28 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     Ok(games)
 }
 
+/// Alterna o status de favorito de um jogo.
+///
+/// Inverte o valor booleano do campo `favorite` usando NOT lógico.
+/// Se era favorito, deixa de ser; se não era, passa a ser.
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado contendo conexão do banco
+/// * `id` - ID do jogo a ter o status alterado
+///
+/// # Retorna
+/// * `Ok(())` - Status alterado com sucesso
+/// * `Err(String)` - Erro ao acessar banco
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke do frontend
+/// await invoke('toggle_favorite', { id: '730' });
+/// ```
+///
+/// # Comportamento
+/// - Não retorna erro se o ID não existir (UPDATE silencioso)
+/// - Operação idempotente: pode ser chamada múltiplas vezes
 #[tauri::command]
 pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String> {
     let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
@@ -146,6 +263,30 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
     Ok(())
 }
 
+/// Remove permanentemente um jogo da biblioteca.
+///
+/// **Atenção**: Esta operação é irreversível. O jogo é completamente
+/// removido do banco de dados.
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado contendo conexão do banco
+/// * `id` - ID do jogo a ser deletado
+///
+/// # Retorna
+/// * `Ok(())` - Jogo deletado com sucesso
+/// * `Err(String)` - Erro ao acessar banco
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke do frontend
+/// await invoke('delete_game', { id: '730' });
+/// ```
+///
+/// # Comportamento
+/// - Não retorna erro se o ID não existir (DELETE silencioso)
+///
+/// # Considerações
+/// Para recuperação, certifique-se de ter backup antes de deletar.
 #[tauri::command]
 pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
     let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
@@ -156,29 +297,89 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Atualiza informações de um jogo existente.
+///
+/// Sobrescreve todos os campos (exceto ID) com os novos valores fornecidos.
+/// Realiza as mesmas validações de `add_game`.
+///
+/// # Validações Realizadas
+/// Idênticas a `add_game`:
+/// - Nome não vazio e dentro do limite
+/// - URL válida (se fornecida)
+/// - Campos dentro dos limites definidos
+/// - Valores numéricos em ranges válidos
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado contendo conexão do banco
+/// * `game` - Novos dados do jogo (ID identifica qual atualizar)
+///
+/// # Retorna
+/// * `Ok(())` - Jogo atualizado com sucesso
+/// * `Err(String)` - Erro de validação ou banco
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke do frontend
+/// await invoke('update_game', {
+///     game: {
+///         id: '730',
+///         name: 'CS2 - Updated',
+///         genre: 'FPS',
+///         playtime: 1500,
+///         rating: 5
+///     }
+/// });
+/// ```
+///
+/// # Comportamento
+/// - Não retorna erro se ID não existe (UPDATE silencioso)
+/// - Todos os campos são substituídos (não faz merge parcial)
+/// - Campo `favorite` não é alterado por esta função
 #[tauri::command]
-pub fn update_game(
-    state: State<AppState>,
-    id: String,
-    name: String,
-    genre: Option<String>,
-    platform: Option<String>,
-    cover_url: Option<String>,
-    playtime: Option<i32>,
-    rating: Option<i32>,
-) -> Result<(), String> {
-    if name.trim().is_empty() {
+pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+    if game.name.trim().is_empty() {
         return Err("Nome do jogo não pode ser vazio".to_string());
     }
 
-    if name.len() > constants::MAX_NAME_LENGTH {
+    if game.name.len() > constants::MAX_NAME_LENGTH {
         return Err(format!(
             "Nome do jogo muito longo (máximo {} caracteres)",
             constants::MAX_NAME_LENGTH
         ));
     }
 
-    if let Some(time) = playtime {
+    if let Some(ref url_str) = game.cover_url {
+        if url_str.len() > constants::MAX_URL_LENGTH {
+            return Err(format!(
+                "URL da capa muito longa (máximo {} caracteres)",
+                constants::MAX_URL_LENGTH
+            ));
+        }
+        let url = Url::parse(url_str).map_err(|_| "URL inválida ou mal formatada.")?;
+        if url.scheme() != "http" && url.scheme() != "https" {
+            return Err("A URL deve ser HTTP ou HTTPS.".to_string());
+        }
+    }
+
+    if let Some(ref g) = game.genre {
+        if g.len() > constants::MAX_GENRE_LENGTH {
+            return Err(format!(
+                "Gênero muito longo (máximo {} caracteres)",
+                constants::MAX_GENRE_LENGTH
+            ));
+        }
+    }
+
+    if let Some(ref p) = game.platform {
+        if p.len() > constants::MAX_PLATFORM_LENGTH {
+            return Err(format!(
+                "Plataforma muito longa (máximo {} caracteres)",
+                constants::MAX_PLATFORM_LENGTH
+            ));
+        }
+    }
+
+    if let Some(time) = game.playtime {
         if time < 0 {
             return Err("Tempo jogado não pode ser negativo".to_string());
         }
@@ -190,7 +391,7 @@ pub fn update_game(
         }
     }
 
-    if let Some(r) = rating {
+    if let Some(r) = game.rating {
         if !(constants::MIN_RATING..=constants::MAX_RATING).contains(&r) {
             return Err(format!(
                 "Avaliação deve estar entre {} e {}",
@@ -203,10 +404,10 @@ pub fn update_game(
     let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
 
     conn.execute(
-            "UPDATE games SET name = ?1, genre = ?2, platform = ?3, cover_url = ?4, playtime = ?5, rating = ?6 WHERE id = ?7",
-            params![name, genre, platform, cover_url, playtime, rating, id],
-        )
-            .map_err(|e| e.to_string())?;
+        "UPDATE games SET name = ?1, genre = ?2, platform = ?3, cover_url = ?4, playtime = ?5, rating = ?6 WHERE id = ?7",
+        params![game.name, game.genre, game.platform, game.cover_url, game.playtime, game.rating, game.id],
+    )
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }

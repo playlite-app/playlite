@@ -1,3 +1,18 @@
+//! Módulo de integrações com APIs externas.
+//!
+//! Coordena a comunicação com serviços de terceiros (Steam, RAWG) e
+//! orquestra operações complexas como importação em lote e enriquecimento
+//! automático de metadados.
+//!
+//! # Funcionalidades Principais
+//! - Importação completa da biblioteca Steam
+//! - Enriquecimento automático de metadados (gêneros)
+//! - Busca e exibição de jogos em tendência
+//! - Consulta de detalhes expandidos de jogos
+//!
+//! # Rate Limiting
+//! Implementa delays entre requisições para respeitar limites das APIs.
+
 use crate::constants;
 use crate::constants::STEAM_RATE_LIMIT_MS;
 use crate::database;
@@ -9,15 +24,75 @@ use tauri::{AppHandle, State};
 use tokio::time::sleep;
 use tracing::{error, info};
 
+/// Resumo de uma operação de importação/processamento em lote.
+///
+/// Fornece estatísticas detalhadas e lista de erros para feedback ao usuário.
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
+    /// Quantidade de itens processados com sucesso
     pub success_count: i32,
+    /// Quantidade de itens que falharam
     pub error_count: i32,
+    /// Total de itens processados (sucesso + erro)
     pub total_processed: i32,
+    /// Mensagem resumida do resultado
     pub message: String,
-    pub errors: Vec<String>, // Lista de nomes que falharam
+    /// Lista de nomes de jogos que falharam (com mensagem de erro)
+    pub errors: Vec<String>,
 }
 
+/// Importa toda a biblioteca de jogos Steam do usuário.
+///
+/// Conecta-se à API Steam para buscar a lista completa de jogos possuídos
+/// e adiciona todos ao banco de dados local com informações básicas.
+///
+/// # Processo
+/// 1. Busca jogos via Steam Web API (`IPlayerService/GetOwnedGames`)
+/// 2. Monta URLs de capas usando CDN da Steam
+/// 3. Converte playtime de minutos para horas
+/// 4. Insere em lote usando transação SQL
+/// 5. Usa `INSERT OR IGNORE` para evitar duplicatas
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado com conexão do banco
+/// * `api_key` - Steam Web API Key do usuário
+/// * `steam_id` - Steam ID do usuário (formato SteamID64)
+///
+/// # Retorna
+/// * `Ok(String)` - Mensagem de sucesso com contador de jogos adicionados
+/// * `Err(String)` - Erro na API Steam, banco ou autenticação
+///
+/// # Comportamento
+/// - **Duplicatas**: Jogos já existentes são ignorados silenciosamente
+/// - **Gêneros**: Todos iniciam como "Desconhecido" (usar `enrich_library` depois)
+/// - **Plataforma**: Definida como "Steam" para todos
+/// - **Transação**: Rollback automático em caso de erro
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke
+/// let result = await invoke('import_steam_library', {
+///     apiKey: 'XXXXXXXXXXXXXXXXXXXXXXX',
+///     steamId: '76561198012345678'
+/// });
+/// // Retorna: "Importação concluída! 150 novos jogos adicionados."
+/// ```
+///
+/// # Logs
+/// Imprime no console:
+/// - Quantidade de jogos encontrados
+/// - Warnings para jogos que falharam inserção individual
+/// - Estatísticas finais (inseridos vs já existentes)
+///
+/// # Rate Limiting
+/// Esta operação não aplica rate limit por usar apenas uma chamada de API.
+///
+/// # Observações
+/// - Biblioteca privada retorna erro de autenticação
+/// - Jogos gratuitos jogados são incluídos automaticamente
+/// - Jogos gratuitos não jogados ou que foram desinstalados podem não são serem retornados pela API
+/// - Tempo de jogo é arredondado para horas inteiras
+/// - Para atualizar metadados, use `enrich_library` após importar.
 #[tauri::command]
 pub async fn import_steam_library(
     state: State<'_, AppState>,
@@ -101,6 +176,67 @@ pub async fn import_steam_library(
     ))
 }
 
+/// Enriquece biblioteca com metadados detalhados da Steam Store API.
+///
+/// Busca e atualiza informações faltantes (principalmente gêneros) para
+/// jogos importados da Steam que ainda têm dados padrão.
+///
+/// # Processo
+/// 1. Identifica jogos com metadados pendentes (gênero "Desconhecido")
+/// 2. Para cada jogo, consulta Steam Store API
+/// 3. Extrai gênero e outros metadados
+/// 4. Atualiza banco em lote ao final
+/// 5. Aplica rate limiting entre requisições
+///
+/// # Parâmetros
+/// * `state` - Estado compartilhado com conexão do banco
+///
+/// # Retorna
+/// * `Ok(ImportSummary)` - Estatísticas completas do processamento
+/// * `Err(String)` - Erro crítico de banco ou sistema
+///
+/// # Rate Limiting
+/// Aguarda `STEAM_RATE_LIMIT_MS` (500ms) entre cada requisição para
+/// respeitar os limites da Steam Store API e evitar bloqueio temporário.
+///
+/// # Logging
+/// - **Info**: Progresso e sucessos (arquivo de log)
+/// - **Error**: Falhas individuais com detalhes
+/// - **Console**: Resumo final do processamento
+///
+/// # Exemplo de Uso
+/// ```rust
+/// // Chamado via Tauri invoke (operação longa)
+/// const summary = await invoke('enrich_library');
+/// console.log(`${summary.success_count} jogos atualizados`);
+/// console.log(`${summary.error_count} falhas`);
+/// summary.errors.forEach(err => console.warn(err));
+/// ```
+///
+/// # Performance
+/// Devido ao rate limiting obrigatório, a operação é naturalmente lenta.
+///
+/// # Estrutura do Retorno
+/// ```json
+/// {
+///   "success_count": 145,
+///   "error_count": 5,
+///   "total_processed": 150,
+///   "message": "Processamento concluído: 145 sucessos e 5 falhas.",
+///   "errors": [
+///     "Half-Life 3 (Dados não encontrados)",
+///     "Game XYZ (Timeout na API)"
+///   ]
+/// }
+/// ```
+///
+/// # Tratamento de Erros
+/// Erros individuais não interrompem o processo. Jogos que falharem
+/// mantêm seus dados originais e são relatados na lista de erros.
+///
+/// # Transação
+/// Atualiza todos os sucessos em uma única transação ao final para
+/// garantir atomicidade e melhor performance.
 #[tauri::command]
 pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary, String> {
     info!("Iniciando processo de enriquecimento de biblioteca...");
@@ -209,10 +345,42 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
     Ok(summary)
 }
 
+/// Recupera a API Key da RAWG armazenada (função auxiliar interna).
+///
+/// # Parâmetros
+/// * `app_handle` - Handle da aplicação Tauri
+///
+/// # Retorna
+/// * `Ok(String)` - API Key descriptografada
+/// * `Err(String)` - Chave não configurada ou erro de descriptografia
 fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
 
+/// Busca detalhes completos de um jogo específico na RAWG.
+///
+/// Retorna informações expandidas incluindo descrição, desenvolvedoras,
+/// publicadoras, tags, metacritic score e mais.
+///
+/// # Parâmetros
+/// * `app_handle` - Handle da aplicação (para acessar API key)
+/// * `query` - Nome do jogo para buscar
+///
+/// # Retorna
+/// * `Ok(GameDetails)` - Detalhes completos do jogo
+/// * `Err(String)` - API key não configurada ou jogo não encontrado
+///
+/// # Validação
+/// Verifica se a API Key da RAWG está configurada antes de fazer requisição.
+///
+/// # Exemplo de Uso
+/// ```rust
+/// const details = await invoke('fetch_game_details', {
+///     query: 'The Witcher 3'
+/// });
+/// console.log(details.description_raw);
+/// console.log(details.metacritic);
+/// ```
 #[tauri::command]
 pub async fn fetch_game_details(
     app_handle: AppHandle,
@@ -227,12 +395,53 @@ pub async fn fetch_game_details(
     rawg::fetch_game_details(&api_key, query).await
 }
 
+/// Busca jogos em tendência/populares do momento.
+///
+/// Retorna lista de jogos mais adicionados recentemente à plataforma RAWG,
+/// indicando popularidade atual.
+///
+/// # Parâmetros
+/// * `app_handle` - Handle da aplicação (para acessar API key)
+///
+/// # Retorna
+/// * `Ok(Vec<RawgGame>)` - Lista de até 20 jogos populares
+/// * `Err(String)` - API key não configurada ou erro na requisição
+///
+/// # Exemplo de Uso
+/// ```rust
+/// const trending = await invoke('get_trending_games');
+/// trending.forEach(game => {
+///     console.log(`${game.name} - Rating: ${game.rating}`);
+/// });
+/// ```
 #[tauri::command]
 pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
     let api_key = get_api_key(&app_handle)?;
     rawg::fetch_trending_games(&api_key).await
 }
 
+/// Busca jogos com lançamento futuro.
+///
+/// Retorna lista de jogos que ainda serão lançados, do presente até
+/// o final do próximo ano.
+///
+/// # Parâmetros
+/// * `api_key` - API Key da RAWG (passada diretamente)
+///
+/// # Retorna
+/// * `Ok(Vec<RawgGame>)` - Lista de até 10 jogos futuros
+/// * `Err(String)` - API key inválida ou erro na requisição
+///
+/// # Observação
+/// Ao contrário de outros comandos, este recebe a API key diretamente
+/// como parâmetro ao invés de buscá-la dos secrets.
+///
+/// # Exemplo de Uso
+/// ```rust
+/// const upcoming = await invoke('get_upcoming_games', {
+///     apiKey: 'your_key_here'
+/// });
+/// ```
 #[tauri::command]
 pub async fn get_upcoming_games(api_key: String) -> Result<Vec<rawg::RawgGame>, String> {
     rawg::fetch_upcoming_games(&api_key).await
