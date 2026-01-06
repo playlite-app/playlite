@@ -53,7 +53,7 @@ pub struct ImportSummary {
 /// - **Transação**: Rollback automático em caso de erro
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Chamado via Tauri invoke
 /// let result = await invoke('import_steam_library', {
 ///     apiKey: 'XXXXXXXXXXXXXXXXXXXXXXX',
@@ -171,7 +171,7 @@ pub async fn import_steam_library(
 /// * `Err(String)` - Erro crítico de banco ou sistema
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Chamado via Tauri invoke (operação longa)
 /// const summary = await invoke('enrich_library');
 /// console.log(`${summary.success_count} jogos atualizados`);
@@ -311,7 +311,7 @@ fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
 /// Verifica se a API Key da RAWG está configurada antes de fazer requisição.
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// const details = await invoke('fetch_game_details', {
 ///     query: 'The Witcher 3'
 /// });
@@ -342,7 +342,7 @@ pub async fn fetch_game_details(
 /// * `Err(String)` - API key não configurada ou erro na requisição
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// const trending = await invoke('get_trending_games');
 /// trending.forEach(game => {
 ///     console.log(`${game.name} - Rating: ${game.rating}`);
@@ -363,7 +363,7 @@ pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgG
 /// * `Err(String)` - API key inválida ou erro na requisição
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// const upcoming = await invoke('get_upcoming_games', {
 ///     apiKey: 'your_key_here'
 /// });

@@ -47,7 +47,7 @@ pub struct GameInput {
 /// * `Err(String)` - Erro de validação ou duplicação
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Chamado via Tauri invoke do frontend
 /// invoke('add_game', {
 ///     game: {
@@ -163,7 +163,7 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// * `Err(String)` - Erro ao acessar banco ou mapear dados
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Chamado via Tauri invoke do frontend
 /// let games = await invoke('get_games');
 /// console.log(`Total de jogos: ${games.length}`);
@@ -232,14 +232,14 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
 /// * `Err(String)` - Erro ao acessar banco
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript
 /// // Chamado via Tauri invoke do frontend
 /// await invoke('delete_game', { id: '730' });
 /// ```
 ///
 /// # Nota
 /// - Não retorna erro se o ID não existir (DELETE silencioso)
-/// - Esta operação é irreversível. Para recuperar, certifique-se de ter ‘backup’ antes de deletar.
+/// - Esta operação é irreversível. Para recuperar, certifique-se de ter backup antes de deletar.
 #[tauri::command]
 pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
     let conn = state
@@ -263,7 +263,7 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
 /// * `Err(String)` - Erro de validação ou banco
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Chamado via Tauri invoke do frontend
 /// await invoke('update_game', {
 ///     game: {

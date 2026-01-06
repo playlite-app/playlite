@@ -35,7 +35,7 @@ use tracing::{error, info};
 /// * `Err(String)` - Erro na comunicação com Steam Store API
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// const results = await invoke('search_wishlist_game', {
 ///     query: 'cyberpunk'
 /// });
@@ -192,7 +192,7 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
 /// * `Err(String)` - Erro crítico de banco ou sistema
 ///
 /// # Exemplo de Uso
-/// ```rust
+/// ```typescript,ignore
 /// // Iniciar atualização (operação longa)
 /// const result = await invoke('refresh_prices');
 /// console.log(result); // "Preços atualizados: 23/25"

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, UserProfile } from '@/types';
 
 import PlaylistItem from '../components/PlaylistItem';
@@ -37,7 +38,22 @@ export default function Playlist({
     reorderPlaylist,
   } = usePlaylist(allGames);
 
+  const { confirm } = useConfirm();
   const { calculateAffinity } = useRecommendation({ profileCache });
+
+  const handleRemoveFromPlaylist = async (game: Game) => {
+    const confirmed = await confirm({
+      title: 'Remover da Playlist',
+      description: `Deseja remover ${game.name} da sua fila de jogos?`,
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+    });
+
+    if (confirmed) {
+      removeFromPlaylist(game.id);
+      toast.info(`${game.name} removido da fila.`);
+    }
+  };
 
   const suggestions = allGames
     .filter(g => !isInPlaylist(g.id) && g.playtime < 60)
@@ -113,10 +129,7 @@ export default function Playlist({
                               total={playlistGames.length}
                               onMoveUp={() => moveUp(index)}
                               onMoveDown={() => moveDown(index)}
-                              onRemove={() => {
-                                removeFromPlaylist(game.id);
-                                toast.info(`${game.name} removido da fila.`);
-                              }}
+                              onRemove={() => handleRemoveFromPlaylist(game)}
                               onPlay={() => launchGame(game)}
                               onClick={() => onGameClick(game)}
                             />

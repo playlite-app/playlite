@@ -7,13 +7,13 @@
 //! - Armazenamento seguro de API keys
 //! - Busca de jogos em tendência (RAWG API)
 
-mod commands;
+pub mod commands;
 mod constants;
 mod database;
-mod models;
+pub mod models;
 mod security;
-mod services;
-mod utils;
+pub mod services;
+pub mod utils;
 
 use crate::utils::logger;
 use tauri::Manager;

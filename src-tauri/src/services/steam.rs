@@ -5,7 +5,8 @@
 //! - **Store API**: Detalhes, preços e busca de jogos na loja
 //!
 //! # Autenticação
-//! Requer Steam Web API Key obtida em: <https://steamcommunity.com/dev/apikey>
+//! Requer Steam Web API Key para acesso à Player Service API.
+//! A Store API é pública e não necessita de autenticação.
 
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};

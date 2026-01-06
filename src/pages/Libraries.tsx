@@ -3,10 +3,10 @@ import { useMemo } from 'react';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import { GameActionsMenu } from '@/components/GameActionsMenu';
+import { Game, GameActions } from '@/types';
 
 import StandardGameCard from '../components/StandardGameCard';
 import { usePlaylist } from '../hooks/usePlaylist';
-import { Game, GameActions } from '../types';
 import { launchGame } from '../utils/launcher';
 
 interface LibraryProps extends GameActions {

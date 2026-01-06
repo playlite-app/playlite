@@ -1,4 +1,4 @@
-//! Constantes da aplicação para facilitar manutenção
+// Constantes da aplicação para facilitar manutenção
 
 // URLs e endpoints
 pub const STEAM_CDN_URL: &str = "https://cdn.cloudflare.steamstatic.com";
