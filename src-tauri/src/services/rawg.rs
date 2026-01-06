@@ -1,7 +1,16 @@
+//! Módulo de integração com a API RAWG.
+//!
+//! Fornece funcionalidades para buscar informações sobre jogos, incluindo
+//! tendências, detalhes específicos e lançamentos futuros.
+//!
+//! A RAWG é um banco de dados abrangente de jogos que fornece metadados,
+//! ratings, gêneros e outras informações relevantes.
+
 use crate::utils::http_client::HTTP_CLIENT;
 use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 
+/// Representa uma tag/categoria da RAWG.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgTag {
     pub id: i32,
@@ -12,6 +21,7 @@ pub struct RawgTag {
     pub image_background: Option<String>,
 }
 
+/// Informações sobre desenvolvedora de um jogo.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgDeveloper {
     pub id: i32,
@@ -19,6 +29,7 @@ pub struct RawgDeveloper {
     pub slug: String,
 }
 
+/// Informações sobre publicadora de um jogo.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgPublisher {
     pub id: i32,
@@ -26,6 +37,10 @@ pub struct RawgPublisher {
     pub slug: String,
 }
 
+/// Detalhes completos de um jogo na RAWG.
+///
+/// Inclui informações expandidas como descrição, metacritic score,
+/// desenvolvedoras, publicadoras e tags.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameDetails {
     pub id: i32,
@@ -38,6 +53,9 @@ pub struct GameDetails {
     pub publishers: Vec<RawgPublisher>,
 }
 
+/// Representação básica de um jogo na RAWG.
+///
+/// Contém informações essenciais para listagens e busca.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawgGame {
     pub id: u32,
@@ -48,19 +66,36 @@ pub struct RawgGame {
     pub genres: Vec<RawgGenre>,
 }
 
+/// Gênero de um jogo.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawgGenre {
     pub name: String,
 }
 
+/// Resposta da API RAWG para listagens de jogos.
 #[derive(Debug, Deserialize, Serialize)]
 struct RawgResponse {
     results: Vec<RawgGame>,
 }
 
-// Busca os jogos mais populares do momento
+/// Busca os jogos mais populares do momento.
+///
+/// Retorna até 20 jogos lançados entre o ano passado e o ano atual,
+/// ordenados por popularidade (adições recentes).
+///
+/// # Parâmetros
+/// * `api_key` - Chave de autenticação da API RAWG
+///
+/// # Retorna
+/// * `Ok(Vec<RawgGame>)` - Lista de jogos populares
+/// * `Err(String)` - Erro na requisição ou resposta não-sucesso
+///
+/// # Exemplo
+/// ```rust
+/// let trending = fetch_trending_games("sua_api_key").await?;
+/// println!("Jogos populares: {}", trending.len());
+/// ```
 pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
-    // Ordena por rating, filtrando datas recentes
     let current_year = chrono::Utc::now().year();
     let last_year = current_year - 1;
 
@@ -84,6 +119,27 @@ pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String
     Ok(data.results)
 }
 
+/// Busca detalhes completos de um jogo específico.
+///
+/// Converte o nome do jogo em slug (formato URL-friendly) e busca
+/// informações detalhadas incluindo descrição, desenvolvedoras,
+/// publicadoras, tags e metacritic score.
+///
+/// # Parâmetros
+/// * `api_key` - Chave de autenticação da API RAWG
+/// * `query` - Nome do jogo para buscar
+///
+/// # Conversão de Slug
+/// Remove espaços, pontuação e caracteres especiais para criar
+/// um identificador válido (ex: "God of War: Ragnarök" → "god-of-war-ragnarok")
+///
+/// # Retorna
+/// * `Ok(GameDetails)` - Detalhes completos do jogo
+/// * `Err(String)` - Jogo não encontrado ou erro na API
+///
+/// # Erros
+/// * Status 404 - Jogo não encontrado na base de dados
+/// * Outros códigos - Erro na comunicação com a API
 pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDetails, String> {
     // Transforma o nome em slug (Lógica de negócio)
     let slug = query
@@ -112,6 +168,28 @@ pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDeta
     }
 }
 
+/// Busca jogos com lançamento futuro.
+///
+/// Retorna até 10 jogos que ainda serão lançados, desde a data atual
+/// até o final do próximo ano, ordenados por popularidade.
+///
+/// # Parâmetros
+/// * `api_key` - Chave de autenticação da API RAWG
+///
+/// # Intervalo de Busca
+/// Data atual até 31 de dezembro do ano seguinte.
+///
+/// # Retorna
+/// * `Ok(Vec<RawgGame>)` - Lista de jogos futuros ordenados por popularidade
+/// * `Err(String)` - Erro na requisição ou resposta não-sucesso
+///
+/// # Exemplo
+/// ```rust
+/// let upcoming = fetch_upcoming_games("sua_api_key").await?;
+/// for game in upcoming {
+///     println!("{} - Lançamento: {:?}", game.name, game.released);
+/// }
+/// ```
 pub async fn fetch_upcoming_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
     let current_date = chrono::Utc::now();
     let next_year = current_date.year() + 1;

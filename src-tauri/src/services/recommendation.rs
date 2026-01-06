@@ -1,13 +1,79 @@
+//! Módulo de sistema de recomendação personalizado.
+//!
+//! Implementa algoritmo de análise de perfil baseado em múltiplos fatores:
+//! tempo de jogo, avaliações, favoritos e gêneros preferidos.
+//!
+//! O sistema calcula scores ponderados para cada gênero e gera um perfil
+//! do usuário que pode ser usado para ranquear e recomendar novos jogos.
+
 use crate::models::{Game, GenreScore, UserProfile};
 use std::collections::HashMap;
 
-// Pesos para o algoritmo (Configurável futuramente)
-const WEIGHT_PLAYTIME_HOUR: f32 = 2.0; // 2 pontos por hora jogada
-const WEIGHT_FAVORITE: f32 = 50.0; // 50 pontos se for favorito
-const WEIGHT_RATING_STAR: f32 = 10.0; // 10 pontos por estrela (ex: 5 estrelas = 50 pts)
-#[allow(dead_code)]
-const DECAY_FACTOR: f32 = 0.95; // (Futuro) Para jogos muito antigos
+// === Configuração de Pesos do Algoritmo ===
 
+/// Pontos atribuídos por hora jogada.
+///
+/// Cada hora de jogo adiciona 2 pontos ao score do jogo.
+/// Limitado a 100 horas para evitar distorções em jogos com tempo extremo.
+const WEIGHT_PLAYTIME_HOUR: f32 = 2.0;
+
+/// Pontos de bônus para jogos marcados como favorito.
+///
+/// Jogos favoritos recebem 50 pontos adicionais, indicando
+/// forte preferência do usuário independente de outras métricas.
+const WEIGHT_FAVORITE: f32 = 50.0;
+
+/// Pontos atribuídos por estrela de avaliação.
+///
+/// Sistema de 5 estrelas onde cada estrela vale 10 pontos.
+/// Exemplo: 5 estrelas = 50 pontos totais.
+const WEIGHT_RATING_STAR: f32 = 10.0;
+
+/// Fator de decaimento temporal para jogos antigos (não implementado).
+///
+/// Planejado para reduzir gradualmente a influência de jogos
+/// jogados há muito tempo. Valor de 0.95 significa 5% de redução
+/// por período de tempo definido.
+#[allow(dead_code)]
+const DECAY_FACTOR: f32 = 0.95;
+
+/// Calcula o perfil de preferências do usuário.
+///
+/// Analisa a biblioteca de jogos do usuário e gera um perfil baseado em:
+/// - **Tempo de jogo**: Maior peso para jogos mais jogados (até 100h)
+/// - **Favoritos**: Bônus significativo para jogos marcados
+/// - **Avaliações**: Score baseado em estrelas atribuídas
+/// - **Gêneros**: Distribuição dos scores pelos gêneros dos jogos
+///
+/// # Algoritmo
+///
+/// Para cada jogo:
+/// 1. Calcula score base: `(horas * 2) + (favorito * 50) + (estrelas * 10)`
+/// 2. Distribui esse score entre todos os gêneros do jogo
+/// 3. Acumula scores e contadores por gênero
+///
+/// # Parâmetros
+/// * `games` - Slice de jogos da biblioteca do usuário
+///
+/// # Retorna
+/// `UserProfile` contendo:
+/// - `top_genres`: Gêneros ordenados por score (maior → menor)
+/// - `total_playtime`: Soma total de minutos jogados
+/// - `total_games`: Quantidade de jogos analisados
+///
+/// # Exemplo
+/// ```rust
+/// let profile = calculate_user_profile(&user_games);
+///
+/// println!("Gênero favorito: {}", profile.top_genres[0].name);
+/// println!("Score do gênero: {}", profile.top_genres[0].score);
+/// println!("Total de horas: {}", profile.total_playtime / 60);
+/// ```
+///
+/// # Observações
+/// - Jogos sem gênero ou com gênero "Desconhecido" são ignorados
+/// - Tempo de jogo é limitado a 100h por jogo para evitar outliers
+/// - Se um jogo tem múltiplos gêneros, o score é distribuído igualmente
 pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
     let mut genre_scores: HashMap<String, (f32, i32)> = HashMap::new();
     let mut total_playtime = 0;
@@ -72,5 +138,18 @@ pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
     }
 }
 
-// Futuro: Função para cruzar perfil com novos jogos
-// pub fn rank_games(profile: &UserProfile, candidates: Vec<Game>) -> Vec<Game> { ... }
+// TODO: Implementar sistema de ranqueamento de novos jogos
+//
+// Funcionalidade planejada para cruzar o perfil do usuário com
+// uma lista de jogos candidatos (ex: lançamentos futuros, jogos em promoção)
+// e ranqueá-los por compatibilidade com as preferências do usuário.
+//
+// Estratégias a considerar:
+// - Matching de gêneros com weights do perfil
+// - Boost para jogos de desenvolvedoras favoritas
+// - Penalidade para gêneros que o usuário evita
+// - Integração com ratings externos (Metacritic, Steam)
+//
+// pub fn rank_games(profile: &UserProfile, candidates: Vec<Game>) -> Vec<Game> {
+//     // Implementação futura
+// }

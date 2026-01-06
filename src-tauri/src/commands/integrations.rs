@@ -1,8 +1,8 @@
 use crate::constants;
 use crate::constants::STEAM_RATE_LIMIT_MS;
+use crate::database;
 use crate::database::AppState;
 use crate::services::{rawg, steam};
-use crate::storage;
 use rusqlite::params;
 use std::time::Duration;
 use tauri::{AppHandle, State};
@@ -210,7 +210,7 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
 }
 
 fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
-    storage::get_secret(app_handle, "rawg_api_key")
+    database::get_secret(app_handle, "rawg_api_key")
 }
 
 #[tauri::command]

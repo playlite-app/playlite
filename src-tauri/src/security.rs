@@ -1,3 +1,8 @@
+//! Módulo de segurança para criptografia de dados sensíveis.
+//!
+//! Utiliza AES-256-GCM com chave derivada de dados únicos da máquina.
+//! A chave é gerada uma vez por instalação e persiste entre sessões.
+
 use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
@@ -14,8 +19,17 @@ static MASTER_KEY: OnceCell<[u8; 32]> = OnceCell::new();
 
 const SALT_FILE: &str = "crypto_salt.bin";
 
-/// Inicializa o sistema de segurança derivando a chave mestre dos dados da máquina
-/// Deve ser chamado UMA vez na inicialização do app
+/// Inicializa o sistema de criptografia derivando chave mestre.
+///
+/// A chave é derivada de dados únicos da máquina (machine UID, username, app ID)
+/// combinados com um salt persistido.
+///
+/// # Importante
+/// Deve ser chamado EXATAMENTE UMA VEZ durante o startup.
+///
+/// # Erros
+/// Retorna erro se: app_data_dir inacessível, falha I/O, machine UID indisponível,
+/// ou se já foi inicializado anteriormente.
 pub fn init_security(app: &AppHandle) -> Result<(), String> {
     let app_dir = app
         .path()
@@ -42,7 +56,6 @@ pub fn init_security(app: &AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     let machine_uid = machine_uid_result.id.ok_or("Machine UID indisponível")?;
-
     let username = whoami::username().map_err(|e| e.to_string())?;
     let app_id = app.config().identifier.clone();
 
@@ -66,7 +79,13 @@ fn cipher() -> Aes256Gcm {
     Aes256Gcm::new_from_slice(key).unwrap()
 }
 
-/// Encripta uma string e retorna Base64 (formato: ciphertext_b64:nonce_b64)
+/// Encripta texto usando AES-256-GCM.
+///
+/// # Formato
+/// Retorna `"ciphertext_base64:nonce_base64"`
+///
+/// # Panics
+/// Se `init_security()` não foi chamado.
 pub fn encrypt(data: &str) -> String {
     let cipher = cipher();
 
@@ -83,7 +102,13 @@ pub fn encrypt(data: &str) -> String {
     )
 }
 
-/// Decripta uma string Base64 para o texto original
+/// Decripta string encriptada por `encrypt()`.
+///
+/// # Erros
+/// - Formato inválido (não contém `:`)
+/// - Base64 inválido
+/// - Falha na decriptação (chave incorreta/dados corrompidos)
+/// - UTF-8 inválido
 pub fn decrypt(data: &str) -> Result<String, String> {
     let cipher = cipher();
 
@@ -95,9 +120,11 @@ pub fn decrypt(data: &str) -> Result<String, String> {
     let ciphertext = base64::engine::general_purpose::STANDARD
         .decode(parts[0])
         .map_err(|e| e.to_string())?;
+
     let nonce_bytes = base64::engine::general_purpose::STANDARD
         .decode(parts[1])
         .map_err(|e| e.to_string())?;
+
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let plain = cipher

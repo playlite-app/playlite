@@ -1,10 +1,32 @@
+//! # Playlite - Game Manager Library
+//!
+//! Biblioteca backend para gerenciamento de bibliotecas de jogos.
+//!
+//! Fornece funcionalidades para:
+//! - Importar jogos do Steam
+//! - Gerenciar biblioteca pessoal
+//! - Wishlist com tracking de preços
+//! - Armazenamento seguro de API keys
+//! - Busca de jogos em tendência (RAWG API)
+//!
+//! ## Exemplo de Uso
+//!
+//! ```no_run
+//! use game_manager_lib::commands;
+//!
+//! // Inicializar banco de dados
+//! commands::init_db().await?;
+//!
+//! // Buscar jogos da biblioteca
+//! let games = commands::get_games().await?;
+//! ```
+
 mod commands;
 mod constants;
 mod database;
 mod models;
 mod security;
 mod services;
-mod storage;
 mod utils;
 
 use crate::utils::logger;
@@ -36,8 +58,7 @@ pub fn run() {
             tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
 
             // Inicializa o sistema de segurança (derivação de chave)
-            security::init_security(app_handle)
-                .expect("Falha ao inicializar sistema de segurança");
+            security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
 
             tracing::info!("Sistema de segurança inicializado");
 
@@ -50,8 +71,8 @@ pub fn run() {
 
             let db_path = app_data_dir.join("library.db");
 
-            let conn =
-                Connection::open(&db_path).unwrap_or_else(|_| panic!("Erro ao abrir banco em {:?}", db_path));
+            let conn = Connection::open(&db_path)
+                .unwrap_or_else(|_| panic!("Erro ao abrir banco em {:?}", db_path));
 
             let _ = conn.execute("PRAGMA journal_mode=WAL", []);
 

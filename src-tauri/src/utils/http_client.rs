@@ -1,3 +1,26 @@
+//! Módulo utilitário para fornecer um cliente HTTP configurado.
+//!
+//! Utiliza `reqwest` para criar um cliente com timeout e headers padrão.
+//!
+//! # Exemplo no Frontend
+//! ```js
+//! import { invoke } from '@tauri-apps/api/tauri';
+//! invoke('some_command_that_uses_http_client')
+//! ```
+//!
+//! # Uso//!
+//! - O cliente HTTP pode ser acessado via `HTTP_CLIENT`.
+//! - Use em outros módulos para fazer requisições HTTP.
+//!
+//! ```rust
+//! let response = HTTP_CLIENT.get("https://api.example.com/data")
+//!     .send()
+//!     .await?;
+//! ```
+//!
+//! # Erros
+//! - Se a criação do cliente falhar, o programa irá panic com uma mensagem de erro
+
 use reqwest::Client;
 use std::time::Duration;
 
