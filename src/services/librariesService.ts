@@ -1,16 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { Game } from '../types';
-
-export interface GameInput {
-  id: string;
-  name: string;
-  genre: string;
-  platform: string;
-  coverUrl: string | null;
-  playtime: number;
-  rating: number | null;
-}
+import { Game, GameInput } from '@/types';
 
 export const librariesService = {
   initDb: async (): Promise<void> => {
