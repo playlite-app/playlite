@@ -1,18 +1,7 @@
 //! Módulo de gerenciamento da biblioteca de jogos.
 //!
 //! Implementa operações CRUD (Create, Read, Update, Delete) para jogos,
-//! incluindo validações completas de dados e gerenciamento de favoritos.
-//!
-//! # Validações
-//! Todas as operações de escrita validam:
-//! - Comprimento de campos (nomes, URLs, gêneros)
-//! - Formato de URLs (apenas HTTP/HTTPS)
-//! - Ranges de valores numéricos
-//! - Duplicação de IDs
-//!
-//! # Tauri Commands
-//! Todas as funções públicas são expostas como comandos Tauri invocáveis
-//! pelo frontend via IPC (Inter-Process Communication).
+//! incluindo validações de dados e gerenciamento de favoritos.
 
 use crate::constants;
 use crate::database::AppState;
@@ -29,28 +18,19 @@ use serde::Deserialize;
 /// Campos opcionais permitem flexibilidade na entrada de dados.
 #[derive(Debug, Deserialize)]
 pub struct GameInput {
-    /// ID único do jogo (geralmente app_id da Steam ou slug)
     pub id: String,
-    /// Nome do jogo
     pub name: String,
-    /// Gênero(s) do jogo (pode ser lista separada por vírgula)
     pub genre: Option<String>,
-    /// Plataforma (Steam, Epic, Xbox, etc.)
     pub platform: Option<String>,
-
-    /// URL da imagem de capa
     #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
-
-    /// Tempo jogado em minutos
     pub playtime: Option<i32>,
-    /// Avaliação do usuário (1-5 estrelas)
     pub rating: Option<i32>,
 }
 
 /// Adiciona um novo jogo à biblioteca.
 ///
-/// Realiza validações completas dos dados antes da inserção e verifica
+/// Realiza validações dos dados antes da inserção e verifica
 /// duplicação de ID para evitar conflitos.
 ///
 /// # Validações Realizadas
@@ -61,10 +41,6 @@ pub struct GameInput {
 /// - **Playtime**: Não negativo, máximo 999999 minutos
 /// - **Rating**: Entre 1 e 5 estrelas
 /// - **ID único**: Não pode existir outro jogo com mesmo ID
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado contendo conexão do banco
-/// * `game` - Dados do jogo a ser adicionado
 ///
 /// # Retorna
 /// * `Ok(())` - Jogo adicionado com sucesso
@@ -85,12 +61,6 @@ pub struct GameInput {
 ///     }
 /// })
 /// ```
-///
-/// # Erros Comuns
-/// - "Nome do jogo não pode ser vazio"
-/// - "Já existe um jogo com este ID"
-/// - "URL inválida ou mal formatada"
-/// - "Avaliação deve estar entre 1 e 5"
 #[tauri::command]
 pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
     if game.name.trim().is_empty() {
@@ -157,7 +127,10 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
         }
     }
 
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     let exists: bool = conn
         .query_row(
@@ -185,9 +158,6 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// Retorna a lista completa de jogos ordenada conforme armazenada no banco.
 /// Inclui todos os campos, inclusive o status de favorito.
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado contendo conexão do banco
-///
 /// # Retorna
 /// * `Ok(Vec<Game>)` - Lista de todos os jogos
 /// * `Err(String)` - Erro ao acessar banco ou mapear dados
@@ -200,7 +170,10 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// ```
 #[tauri::command]
 pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     let mut stmt = conn
         .prepare(
@@ -233,26 +206,15 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
 /// Inverte o valor booleano do campo `favorite` usando NOT lógico.
 /// Se era favorito, deixa de ser; se não era, passa a ser.
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado contendo conexão do banco
-/// * `id` - ID do jogo a ter o status alterado
-///
-/// # Retorna
-/// * `Ok(())` - Status alterado com sucesso
-/// * `Err(String)` - Erro ao acessar banco
-///
-/// # Exemplo de Uso
-/// ```rust
-/// // Chamado via Tauri invoke do frontend
-/// await invoke('toggle_favorite', { id: '730' });
-/// ```
-///
-/// # Comportamento
+/// # Nota
 /// - Não retorna erro se o ID não existir (UPDATE silencioso)
 /// - Operação idempotente: pode ser chamada múltiplas vezes
 #[tauri::command]
 pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     conn.execute(
         "UPDATE games SET favorite = NOT favorite WHERE id = ?1",
@@ -265,13 +227,6 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
 
 /// Remove permanentemente um jogo da biblioteca.
 ///
-/// **Atenção**: Esta operação é irreversível. O jogo é completamente
-/// removido do banco de dados.
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado contendo conexão do banco
-/// * `id` - ID do jogo a ser deletado
-///
 /// # Retorna
 /// * `Ok(())` - Jogo deletado com sucesso
 /// * `Err(String)` - Erro ao acessar banco
@@ -282,14 +237,15 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
 /// await invoke('delete_game', { id: '730' });
 /// ```
 ///
-/// # Comportamento
+/// # Nota
 /// - Não retorna erro se o ID não existir (DELETE silencioso)
-///
-/// # Considerações
-/// Para recuperação, certifique-se de ter backup antes de deletar.
+/// - Esta operação é irreversível. Para recuperar, certifique-se de ter ‘backup’ antes de deletar.
 #[tauri::command]
 pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     conn.execute("DELETE FROM games WHERE id = ?1", params![id])
         .map_err(|e| e.to_string())?;
@@ -301,17 +257,6 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
 ///
 /// Sobrescreve todos os campos (exceto ID) com os novos valores fornecidos.
 /// Realiza as mesmas validações de `add_game`.
-///
-/// # Validações Realizadas
-/// Idênticas a `add_game`:
-/// - Nome não vazio e dentro do limite
-/// - URL válida (se fornecida)
-/// - Campos dentro dos limites definidos
-/// - Valores numéricos em ranges válidos
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado contendo conexão do banco
-/// * `game` - Novos dados do jogo (ID identifica qual atualizar)
 ///
 /// # Retorna
 /// * `Ok(())` - Jogo atualizado com sucesso
@@ -331,7 +276,7 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
 /// });
 /// ```
 ///
-/// # Comportamento
+/// # Nota
 /// - Não retorna erro se ID não existe (UPDATE silencioso)
 /// - Todos os campos são substituídos (não faz merge parcial)
 /// - Campo `favorite` não é alterado por esta função
@@ -401,7 +346,10 @@ pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String
         }
     }
 
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     conn.execute(
         "UPDATE games SET name = ?1, genre = ?2, platform = ?3, cover_url = ?4, playtime = ?5, rating = ?6 WHERE id = ?7",

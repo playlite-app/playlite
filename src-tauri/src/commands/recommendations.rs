@@ -47,28 +47,7 @@ use tauri::State;
 ///   - Cada gênero tem: nome, score calculado, quantidade de jogos
 /// - **total_playtime**: Soma de minutos jogados em todos os jogos
 /// - **total_games**: Quantidade total de jogos na biblioteca
-///
-/// # Exemplo de Uso (Frontend)
-/// ```javascript
-/// const profile = await invoke('get_user_profile');
-///
-/// console.log(`Gênero favorito: ${profile.top_genres[0].name}`);
-/// console.log(`Score: ${profile.top_genres[0].score}`);
-/// console.log(`Total de horas jogadas: ${profile.total_playtime / 60}`);
-/// ```
-///
-/// # Exemplo de Resposta
-/// ```json
-/// {
-///   "top_genres": [
-///     { "name": "RPG", "score": 450.5, "game_count": 15 },
-///     { "name": "Action", "score": 320.0, "game_count": 22 },
-///     { "name": "Strategy", "score": 180.0, "game_count": 8 }
-///   ],
-///   "total_playtime": 125400,
-///   "total_games": 150
-/// }
-/// ```
+/// - **`Err(String)`**: Falha ao acessar banco de dados ou processar jogos
 ///
 /// # Algoritmo de Score
 /// Para cada jogo, o score é calculado como:
@@ -79,25 +58,14 @@ use tauri::State;
 ///
 /// Esse score é distribuído entre todos os gêneros do jogo.
 /// ```
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado da aplicação com conexão do banco
-///
-/// # Erros
-/// * `Err(String)` - Falha ao acessar banco de dados ou processar jogos
-///   - "Falha ao bloquear mutex" - Problema de concorrência
-///   - Erros SQL - Problemas na query
-///   - Erros de mapeamento - Dados corrompidos no banco
-///
-/// # Uso Futuro
-/// Este perfil pode ser usado para:
-/// - Recomendar novos jogos compatíveis
-/// - Filtrar listas de lançamentos
 #[tauri::command]
 pub fn get_user_profile(state: State<AppState>) -> Result<UserProfile, String> {
     // Busca todos os jogos do banco (Database Layer)
     let games = {
-        let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+        let conn = state
+            .library_db
+            .lock()
+            .map_err(|_| "Falha ao bloquear mutex")?;
         let mut stmt = conn
             .prepare("SELECT id, name, genre, platform, cover_url, playtime, rating, favorite FROM games")
             .map_err(|e| e.to_string())?;

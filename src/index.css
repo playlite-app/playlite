@@ -125,13 +125,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
-  /* Scrollbar customizada fina e discreta */
+  /* Scrollbar customizada */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px; /* Largura vertical */
     height: 6px; /* Altura horizontal */
@@ -142,7 +143,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    /* Usa a cor do seu tema com 70% de transparência */
+    /* Usa a cor do tema com 70% de transparência */
     background-color: color-mix(
       in srgb,
       var(--muted-foreground),

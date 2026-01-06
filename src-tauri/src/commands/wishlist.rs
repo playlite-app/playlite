@@ -1,7 +1,7 @@
 //! Módulo de gerenciamento de lista de desejos (wishlist).
 //!
 //! Implementa funcionalidades para rastreamento de jogos desejados,
-//! incluindo busca, adição, remoção e monitoramento automático de preços.
+//! incluindo busca, adição, remoção e monitoramento de preços.
 //!
 //! # Funcionalidades Principais
 //! - Busca de jogos na loja Steam
@@ -30,9 +30,6 @@ use tracing::{error, info};
 /// Retorna lista de resultados da Steam Store para seleção pelo usuário.
 /// Usado no modal de "Adicionar à Wishlist".
 ///
-/// # Parâmetros
-/// * `query` - Termo de busca (nome do jogo, palavra-chave, etc.)
-///
 /// # Retorna
 /// * `Ok(Vec<StoreSearchItem>)` - Lista de jogos encontrados (vazia se nenhum)
 /// * `Err(String)` - Erro na comunicação com Steam Store API
@@ -49,7 +46,7 @@ use tracing::{error, info};
 /// });
 /// ```
 ///
-/// # Observação
+/// # Nota
 /// Esta é uma busca direta na Store, não requer autenticação.
 /// Retorna jogos de todas as regiões, mas priorizados para região BR.
 #[tauri::command]
@@ -61,42 +58,6 @@ pub async fn search_wishlist_game(query: String) -> Result<Vec<StoreSearchItem>,
 ///
 /// Insere ou atualiza um jogo na wishlist com informações básicas.
 /// Usa `INSERT OR REPLACE` para permitir re-adicionar jogos removidos.
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-/// * `id` - ID único do jogo (geralmente combinação de store+app_id)
-/// * `name` - Nome do jogo
-/// * `cover_url` - URL da imagem de capa (opcional)
-/// * `store_url` - URL para página do jogo na loja (opcional)
-/// * `current_price` - Preço atual em reais (opcional)
-/// * `steam_app_id` - Steam App ID para rastreamento de preços (opcional)
-///
-/// # Retorna
-/// * `Ok(String)` - Mensagem de sucesso
-/// * `Err(String)` - Erro ao acessar banco ou inserir dados
-///
-/// # Comportamento
-/// - **INSERT OR REPLACE**: Substitui se ID já existir
-/// - **added_at**: Definido automaticamente como CURRENT_TIMESTAMP
-/// - **Logging detalhado**: Info para sucessos, Error para falhas
-///
-/// # Exemplo de Uso
-/// ```rust
-/// await invoke('add_to_wishlist', {
-///     id: 'steam_1091500',
-///     name: 'Cyberpunk 2077',
-///     coverUrl: 'https://...',
-///     storeUrl: 'https://store.steampowered.com/app/1091500/',
-///     currentPrice: 199.99,
-///     steamAppId: 1091500
-/// });
-/// ```
-///
-/// # Rastreamento de Preços
-/// Se `steam_app_id` for fornecido, o jogo pode ter preços atualizados via `refresh_prices()`.
-///
-/// # Logging
-/// Registra tentativas e resultados para facilitar debugging de problemas de inserção ou conflitos de ID.
 #[tauri::command]
 pub fn add_to_wishlist(
     state: State<AppState>,
@@ -112,7 +73,7 @@ pub fn add_to_wishlist(
         id, name, steam_app_id
     );
 
-    let conn = state.db.lock().map_err(|e| {
+    let conn = state.library_db.lock().map_err(|e| {
         error!("Erro de Mutex na Wishlist: {}", e);
         "Falha interna ao acessar banco".to_string()
     })?;
@@ -136,27 +97,13 @@ pub fn add_to_wishlist(
 
 /// Remove um jogo da lista de desejos.
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-/// * `id` - ID do jogo a ser removido
-///
-/// # Retorna
-/// * `Ok(String)` - Mensagem de confirmação
-/// * `Err(String)` - Erro ao acessar banco
-///
-/// # Comportamento
-/// - Não retorna erro se ID não existir (DELETE silencioso)
-/// - Remove apenas da wishlist, não afeta biblioteca principal
-///
-/// # Exemplo de Uso
-/// ```rust
-/// await invoke('remove_from_wishlist', {
-///     id: 'steam_1091500'
-/// });
-/// ```
+/// Remove o jogo identificado pelo ID fornecido da wishlist.
 #[tauri::command]
 pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String, String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     conn.execute("DELETE FROM wishlist WHERE id = ?1", params![id])
         .map_err(|e| e.to_string())?;
@@ -167,36 +114,12 @@ pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String
 /// Recupera todos os jogos da lista de desejos.
 ///
 /// Retorna a wishlist completa ordenada por data de adição (mais recentes primeiro).
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-///
-/// # Retorna
-/// * `Ok(Vec<WishlistGame>)` - Lista completa da wishlist
-/// * `Err(String)` - Erro ao acessar banco ou mapear dados
-///
-/// # Ordenação
-/// Jogos são retornados em ordem decrescente de `added_at` (mais novos primeiro).
-///
-/// # Exemplo de Uso
-/// ```rust
-/// const wishlist = await invoke('get_wishlist');
-/// wishlist.forEach(game => {
-///     if (game.on_sale) {
-///         console.log(`${game.name} está em promoção!`);
-///     }
-/// });
-/// ```
-///
-/// # Campos Retornados
-/// Cada item contém:
-/// - Identificação: id, name, cover_url
-/// - Loja: store_url, steam_app_id
-/// - Preços: current_price, lowest_price, localized_price/currency
-/// - Status: on_sale, added_at
 #[tauri::command]
 pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     let mut stmt = conn
         .prepare("SELECT id, name, cover_url, store_url, current_price, lowest_price, on_sale, localized_price, localized_currency, steam_app_id, added_at FROM wishlist ORDER BY added_at DESC")
@@ -232,28 +155,12 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
 ///
 /// Consulta rápida para verificar presença na wishlist, útil para
 /// atualizar UI (ex: mudar ícone de "adicionar" para "remover").
-///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-/// * `id` - ID do jogo a verificar
-///
-/// # Retorna
-/// * `Ok(true)` - Jogo está na wishlist
-/// * `Ok(false)` - Jogo não está na wishlist
-/// * `Err(String)` - Erro ao acessar banco
-///
-/// # Exemplo de Uso
-/// ```rust
-/// const isInWishlist = await invoke('check_wishlist_status', {
-///     id: 'steam_1091500'
-/// });
-///
-/// // Atualizar botão
-/// button.textContent = isInWishlist ? 'Na Wishlist' : 'Adicionar';
-/// ```
 #[tauri::command]
 pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool, String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex")?;
 
     let count: i32 = conn
         .query_row(
@@ -280,31 +187,9 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
 ///    - Atualiza banco com novos dados
 ///    - Aguarda 500ms (rate limiting)
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-///
 /// # Retorna
 /// * `Ok(String)` - Mensagem com contador de atualizações
 /// * `Err(String)` - Erro crítico de banco ou sistema
-///
-/// # Rate Limiting
-/// Aguarda 500ms entre cada requisição para respeitar limites da
-/// Steam Store API e evitar bloqueio temporário.
-///
-/// # Auto-Healing
-/// Se um jogo não tem `steam_app_id`, o sistema tenta descobrir
-/// automaticamente fazendo busca pelo nome e associando o primeiro resultado.
-///
-/// # Campos Atualizados
-/// - `localized_price`: Preço em BRL
-/// - `localized_currency`: Moeda (BRL)
-/// - `on_sale`: Boolean indicando se está em promoção
-/// - `store_url`: URL atualizada da página do jogo
-/// - `lowest_price`: Mantém o menor preço já registrado (usando MIN SQL)
-/// - `steam_app_id`: Preenchido automaticamente se estava faltando
-///
-/// # Nota
-/// - Operação naturalmente lenta devido ao rate limiting obrigatório.
 ///
 /// # Exemplo de Uso
 /// ```rust
@@ -316,23 +201,18 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
 /// const updated = await invoke('get_wishlist');
 /// ```
 ///
-/// # Tratamento de Erros
-/// Erros individuais não interrompem o processo. Se um jogo falhar:
-/// - Mantém dados existentes
-/// - Imprime mensagem no console
-/// - Continua para próximo jogo
-///
-/// # SQL Especial
-/// Usa `MIN(IFNULL(lowest_price, 9999), preço_novo)` para garantir
-/// que o menor preço histórico nunca aumenta, apenas diminui.
-///
-/// # Observações
-/// - Jogos sem Steam App ID que não são encontrados na busca são ignorados
+/// # Nota
+/// - Operação naturalmente lenta devido ao rate limiting (500ms) obrigatório.
+/// - Erros individuais não interrompem o processo.
+/// - Jogos sem Steam App ID que não são encontrados na busca são ignorados.
 #[tauri::command]
 pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String> {
     // Busca dados básicos do banco
     let games: Vec<(String, Option<i32>, String)> = {
-        let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+        let conn = state
+            .library_db
+            .lock()
+            .map_err(|_| "Falha ao bloquear mutex")?;
         let mut stmt = conn
             .prepare("SELECT id, steam_app_id, name FROM wishlist")
             .map_err(|e| e.to_string())?;
@@ -357,7 +237,7 @@ pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String
             if let Ok(results) = steam::search_store(&name).await {
                 if let Some(first) = results.first() {
                     current_app_id = Some(first.id as i32);
-                    let conn = state.db.lock().map_err(|_| "Falha mutex")?;
+                    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
                     let _ = conn.execute(
                         "UPDATE wishlist SET steam_app_id = ?1 WHERE id = ?2",
                         params![current_app_id, &id],
@@ -370,7 +250,7 @@ pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String
         if let Some(app_id_val) = current_app_id {
             match steam::fetch_price(app_id_val as u32).await {
                 Ok(Some(price)) => {
-                    let conn = state.db.lock().map_err(|_| "Falha mutex")?;
+                    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
                     let on_sale = price.discount_percent > 0;
 
                     // URL da loja Steam para o botão "Ir para Loja"

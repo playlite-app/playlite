@@ -129,17 +129,15 @@ pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String
 /// * `api_key` - Chave de autenticação da API RAWG
 /// * `query` - Nome do jogo para buscar
 ///
-/// # Conversão de Slug
-/// Remove espaços, pontuação e caracteres especiais para criar
-/// um identificador válido (ex: "God of War: Ragnarök" → "god-of-war-ragnarok")
-///
 /// # Retorna
 /// * `Ok(GameDetails)` - Detalhes completos do jogo
 /// * `Err(String)` - Jogo não encontrado ou erro na API
 ///
-/// # Erros
-/// * Status 404 - Jogo não encontrado na base de dados
-/// * Outros códigos - Erro na comunicação com a API
+/// # Exemplo
+/// ```rust
+/// let details = fetch_game_details("sua_api_key", "The Witcher 3: Wild Hunt".into()).await?;
+/// println!("Descrição: {}", details.description_raw);
+/// ```
 pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDetails, String> {
     // Transforma o nome em slug (Lógica de negócio)
     let slug = query
@@ -175,9 +173,6 @@ pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDeta
 ///
 /// # Parâmetros
 /// * `api_key` - Chave de autenticação da API RAWG
-///
-/// # Intervalo de Busca
-/// Data atual até 31 de dezembro do ano seguinte.
 ///
 /// # Retorna
 /// * `Ok(Vec<RawgGame>)` - Lista de jogos futuros ordenados por popularidade

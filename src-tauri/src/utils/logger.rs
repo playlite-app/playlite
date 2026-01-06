@@ -2,22 +2,6 @@
 //!
 //! Utiliza a crate `tracing` para capturar e formatar logs, com suporte a rotação de arquivos diários.
 //! Níveis de log configuráveis via variáveis de ambiente.
-//!
-//! # Funções
-//! - `init_logging(log_dir: PathBuf) -> WorkerGuard`: Inicializa o sistema de logging.
-//!
-//! # Retorno
-//! - `WorkerGuard` para garantir que os logs sejam escritos corretamente antes do encerramento da aplicação.
-//!
-//! # Exemplo de Uso
-//! ```no_run
-//! use std::path::PathBuf;
-//! use your_crate::utils::logger;
-//! let log_dir = PathBuf::from("/caminho/para/logs");
-//!
-//! let _guard = logger::init_logging(log_dir);
-//!
-//! ```
 
 use std::path::PathBuf;
 use tracing_appender::non_blocking::WorkerGuard;

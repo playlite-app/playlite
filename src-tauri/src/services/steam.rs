@@ -5,7 +5,7 @@
 //! - **Store API**: Detalhes, preços e busca de jogos na loja
 //!
 //! # Autenticação
-//! Requer Steam Web API Key obtida em: https://steamcommunity.com/dev/apikey
+//! Requer Steam Web API Key obtida em: <https://steamcommunity.com/dev/apikey>
 
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
@@ -153,7 +153,7 @@ struct SteamSearchResult {
 ///
 /// # Exemplo
 /// ```rust
-/// let games = list_steam_games("API_KEY", "76561198012345678").await?;
+/// let games = list_steam_games("API_KEY", "765999999999999").await?;
 /// for game in games {
 ///     println!("{} - {}h jogadas", game.name, game.playtime_forever / 60);
 /// }
@@ -189,10 +189,9 @@ pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<Steam
     Ok(api_data.response.games)
 }
 
-/// Busca metadados detalhados de um jogo específico.
+/// Busca dados detalhados de um jogo.
 ///
 /// Utiliza a Store API para obter gênero, descrição e data de lançamento.
-/// A API retorna dados em português brasileiro quando disponível.
 ///
 /// # Parâmetros
 /// * `app_id` - Steam App ID do jogo
@@ -297,7 +296,7 @@ pub async fn search_steam_app_id(game_name: &str) -> Result<Option<u32>, String>
 /// Busca informações de preço de um jogo.
 ///
 /// Retorna preço atual, moeda e percentual de desconto (se houver).
-/// Preços são retornados em reais (BRL) para região brasileira.
+/// Preços são retornados em reais (BRL).
 ///
 /// # Parâmetros
 /// * `app_id` - Steam App ID do jogo
@@ -366,8 +365,7 @@ pub async fn fetch_price(app_id: u32) -> Result<Option<SteamPrice>, String> {
 /// * `Err(String)` - Erro na requisição ou decodificação JSON
 ///
 /// # Uso
-/// Ideal para implementar funcionalidade de "Adicionar Jogo Manualmente"
-/// onde o usuário busca e seleciona de uma lista de resultados.
+/// Serve para "Adicionar Jogo Manualmente" na lista de desejos.
 ///
 /// # Exemplo
 /// ```rust

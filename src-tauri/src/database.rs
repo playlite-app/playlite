@@ -6,89 +6,88 @@
 //! # Bancos de Dados
 //! - library.db: armazena a biblioteca de jogos e wishlist do usuário.
 //! - secrets.db: armazena secrets encriptados com AES-256-GCM.
-//!
-//! # Funcionalidades
-//! - Inicialização do banco de dados com tabelas e índices otimizados.
-//! - Comandos Tauri para manipulação dos dados de jogos e lista de ddesejos (CRUD).
-//! - Armazenamento seguro de secrets com encriptação e decriptação.
-//!
-//! # Uso
-//! As funções deste módulo são expostas como comandos Tauri
-//! e podem ser invocadas do frontend para interagir com o banco de dados.
-//!
-//! # Exemplo
-//! ```no_run
-//! let result = app_handle.invoke::<String>("init_db", ());
-//! match result {
-//!   Ok(msg) => println!("Banco inicializado: {}", msg),
-//! Err(err) => eprintln!("Erro ao inicializar banco: {}", err),
-//! }
-//! ```
-//!
-//! # Nota
-//! Este módulo deve ser inicializado durante o setup da aplicação
-//! para garantir que os bancos estejam prontos antes do uso.
-//!
-//! # Segurança
-//! O módulo utiliza o sistema de segurança definido em `security.rs`.
-//! Este módulo armazena dados sensíveis em SQLite com criptografia AES-256-GCM.
-//! Todos os valores são encriptados antes de serem salvos e decriptados ao recuperar.
 
-use crate::constants::DB_FILENAME_SECRETS;
+use crate::constants::{DB_FILENAME_LIBRARY, DB_FILENAME_SECRETS, DB_JOURNAL_MODE};
 use crate::security;
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
 use tauri::State;
 use tauri::{AppHandle, Manager};
 
-/// Define o estado global da aplicação
+/// Define o estado global da aplicação com ambas as conexões
 pub struct AppState {
-    pub db: Mutex<Connection>,
+    pub library_db: Mutex<Connection>,
+    pub secrets_db: Mutex<Connection>,
 }
 
-// === BANCO DE DADOS PARA GERENCIAMENTO DE JOGOS ===
+// === INICIALIZAÇÃO CENTRALIZADA ===
+
+/// Inicializa ambos os bancos de dados e retorna o estado da aplicação
+///
+/// # Erros
+/// - Se não conseguir criar os diretórios
+/// - Se não conseguir abrir as conexões
+/// - Se falhar ao configurar WAL mode
+pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Falha ao obter app_data_dir: {}", e))?;
+
+    std::fs::create_dir_all(&app_data_dir)
+        .map_err(|e| format!("Falha ao criar diretório: {}", e))?;
+
+    // Conexão para library.db
+    let library_path = app_data_dir.join(DB_FILENAME_LIBRARY);
+    let library_conn = Connection::open(&library_path)
+        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_LIBRARY, e))?;
+
+    library_conn
+        .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
+        .map_err(|e| format!("Erro ao configurar WAL no library.db: {}", e))?;
+
+    tracing::info!(
+        "Banco {} inicializado em: {:?}",
+        DB_FILENAME_LIBRARY,
+        library_path
+    );
+
+    // Conexão para secrets.db
+    let secrets_path = app_data_dir.join(DB_FILENAME_SECRETS);
+    let secrets_conn = Connection::open(&secrets_path)
+        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_SECRETS, e))?;
+
+    secrets_conn
+        .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
+        .map_err(|e| format!("Erro ao configurar WAL no secrets.db: {}", e))?;
+
+    tracing::info!(
+        "Banco {} inicializado em: {:?}",
+        DB_FILENAME_SECRETS,
+        secrets_path
+    );
+
+    Ok(AppState {
+        library_db: Mutex::new(library_conn),
+        secrets_db: Mutex::new(secrets_conn),
+    })
+}
+
+// === BANCO DE DADOS PARA GERENCIAMENTO DE JOGOS (library.db) ===
 
 /// Inicializa o banco de dados de gerenciamento de jogos.
 ///
 /// Cria as tabelas `games` e `wishlist` se não existirem, e índices otimizados para consultas frequentes.
 ///
-/// # Retorna
-/// - `Ok(String)` com mensagem de sucesso
-/// - `Err(String)` com mensagem de erro
-///
-/// # Tabelas Criadas
-/// - `games`: Armazena a biblioteca de jogos do usuário.
-/// - `wishlist`: Armazena a lista de desejos com tracking de preços.
-///
-/// # Índices Criados
-/// - `idx_favorite`: Índice para filtrar jogos favoritos.
-/// - `idx_name`: Índice para busca case-insensitive por nome de jogo.
-/// - `idx_platform`: Índice para filtrar por plataforma.
-/// - `idx_wishlist_added`: Índice para ordenação por data de adição na wishlist.
-///
-/// # Uso
-/// Esta função é exposta como comando Tauri e pode ser chamada do frontend
-/// para garantir que o banco de dados esteja inicializado antes do uso.
-///
-/// # Exemplo
-/// ```no_run
-/// let result = app_handle.invoke::<String>("init_db", ());
-/// match result {
-///    Ok(msg) => println!("Banco inicializado: {}", msg),
-///   Err(err) => eprintln!("Erro ao inicializar banco: {}", err),
-/// }
-/// ```
-///
 /// # Erros
-/// - Se não conseguir adquirir o lock do mutex do banco
-/// - Se qualquer comando SQL falhar
-///
-/// # Nota
-/// Esta função deve ser chamada apenas uma vez durante a inicialização da aplicação.
-/// Chamar múltiplas vezes é seguro, mas desnecessário.
+/// - Se falhar ao bloquear o mutex do banco de dados.
+/// - Se falhar ao executar comandos SQL.
 #[tauri::command]
 pub fn init_db(state: State<AppState>) -> Result<String, String> {
-    let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex do library_db")?;
 
     // === TABELAS BÁSICAS ===
 
@@ -129,56 +128,51 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
 
     // === ÍNDICES OTIMIZADOS ===
 
-    // Índice para filtro de favoritos
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_favorite ON games(favorite)",
         [],
     )
     .map_err(|e| e.to_string())?;
 
-    // Índice para busca case-insensitive por nome
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",
         [],
     )
     .map_err(|e| e.to_string())?;
 
-    // Índice para filtro por plataforma
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_platform ON games(platform)",
         [],
     )
     .map_err(|e| e.to_string())?;
 
-    // Índice para ordenação por data de adição na wishlist
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_wishlist_added ON wishlist(added_at)",
         [],
     )
     .map_err(|e| e.to_string())?;
 
-    Ok("Banco inicializado com sucesso!".to_string())
+    Ok("Banco de jogos inicializado com sucesso!".to_string())
 }
 
-// === BANCO DE DADOS PARA GERENCIAMENTO DE APIs KEYS  ===
+// === BANCO DE DADOS PARA GERENCIAMENTO DE API KEYS (secrets.db) ===
 
-/// Obtém conexão com o banco de secrets e garante que a tabela existe.
+/// Obtém conexão com o banco de secrets a partir do AppState.
 ///
 /// Cria automaticamente a tabela `encrypted_keys` se não existir.
-/// O banco é armazenado em `app_data_dir/{DB_FILENAME_SECRETS}`.
 ///
 /// # Erros
-/// - Se `app_data_dir` não puder ser resolvido
-/// - Se não conseguir abrir/criar o arquivo SQLite
-/// - Se a criação da tabela falhar
-fn db(app: &AppHandle) -> Result<Connection, String> {
-    let app_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("app_data_dir não encontrado: {}", e))?;
+/// - Se falhar ao bloquear o mutex do banco de dados.
+/// - Se falhar ao executar comandos SQL.
+fn get_secrets_connection<'a>(
+    state: &'a State<AppState>,
+) -> Result<std::sync::MutexGuard<'a, Connection>, String> {
+    let conn = state
+        .secrets_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear mutex do secrets_db".to_string())?;
 
-    let conn = Connection::open(app_dir.join(DB_FILENAME_SECRETS)).map_err(|e| e.to_string())?;
-
+    // Garante que a tabela existe
     conn.execute(
         r#"
         CREATE TABLE IF NOT EXISTS encrypted_keys (
@@ -188,7 +182,7 @@ fn db(app: &AppHandle) -> Result<Connection, String> {
         "#,
         [],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|e: rusqlite::Error| e.to_string())?;
 
     Ok(conn)
 }
@@ -196,22 +190,12 @@ fn db(app: &AppHandle) -> Result<Connection, String> {
 /// Salva um secret encriptado no banco.
 ///
 /// Se a chave já existir, o valor é substituído (upsert).
-/// O valor é automaticamente encriptado antes de ser armazenado.
-///
-/// # Argumentos
-/// * `key_name` - Identificador único do secret (ex: "steam_api_key")
-/// * `value` - Valor em texto plano a ser encriptado e salvo
-///
-/// # Erros
-/// - Se o banco não puder ser acessado
-/// - Se a operação de insert/update falhar
-///
-/// # Exemplo
-/// ```no_run
-/// set_secret(&app, "appx_api_key", "ABC123XYZ")?;
-/// ```
+/// O valor é encriptado antes de ser armazenado.
 pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), String> {
-    let conn = db(app)?;
+    // Obtém o AppState
+    let state: tauri::State<AppState> = app.state();
+    let conn = get_secrets_connection(&state)?;
+
     let encrypted = security::encrypt(value);
 
     conn.execute(
@@ -226,34 +210,14 @@ pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), St
 /// Recupera e decripta um secret do banco.
 ///
 /// Se a chave não existir, retorna string vazia ao invés de erro.
-/// Isso permite verificar se um secret está configurado sem tratamento especial.
-///
-/// # Argumentos
-/// * `key_name` - Identificador do secret a recuperar
-///
-/// # Retorna
-/// - `Ok(String)` - Valor decriptado, ou string vazia se não existir
-/// - `Err(String)` - Se houver erro de banco ou decriptação
-///
-/// # Erros
-/// - Se o banco não puder ser acessado
-/// - Se a decriptação falhar (dados corrompidos ou chave inválida)
-/// - Outros erros de SQLite (exceto "não encontrado")
-///
-/// # Exemplo
-/// ```no_run
-/// let api_key = get_secret(&app, "steam_api_key")?;
-/// if api_key.is_empty() {
-///     println!("API key não configurada");
-/// }
-/// ```
 pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
-    let conn = db(app)?;
+    let state: tauri::State<AppState> = app.state();
+    let conn = get_secrets_connection(&state)?;
 
-    let result: Result<String, _> = conn.query_row(
+    let result: Result<String, rusqlite::Error> = conn.query_row(
         "SELECT value FROM encrypted_keys WHERE key = ?1",
         params![key_name],
-        |row| row.get(0),
+        |row| row.get::<_, String>(0),
     );
 
     match result {
@@ -267,37 +231,20 @@ pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
 }
 
 /// Remove um secret do banco permanentemente.
-///
-/// É uma operação silenciosa - não retorna erro se a chave não existir.
-///
-/// # Argumentos
-/// * `key_name` - Identificador do secret a remover
-///
-/// # Erros
-/// - Se o banco não puder ser acessado
-/// - Se a operação DELETE falhar
 pub fn delete_secret(app: &AppHandle, key_name: &str) -> Result<(), String> {
-    let conn = db(app)?;
+    let state: tauri::State<AppState> = app.state();
+    let conn = get_secrets_connection(&state)?;
 
     conn.execute(
         "DELETE FROM encrypted_keys WHERE key = ?1",
         params![key_name],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|e: rusqlite::Error| e.to_string())?;
 
     Ok(())
 }
 
 /// Retorna lista de chaves de secrets suportadas pela aplicação.
-///
-/// Útil para validação e geração de UI de configurações.
-/// Adicione novas chaves aqui quando integrar novos serviços.
-///
-/// # Retorna
-/// Vetor com identificadores de todos os secrets esperados:
-/// - `"steam_id"` - Steam User ID (público)
-/// - `"steam_api_key"` - Steam Web API Key
-/// - `"rawg_api_key"` - RAWG.io API Key
 pub fn list_supported_keys() -> Vec<&'static str> {
     vec!["steam_id", "steam_api_key", "rawg_api_key"]
 }

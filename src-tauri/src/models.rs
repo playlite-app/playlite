@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 /// # Campos
 /// * `id` - ID único (Steam App ID ou RAWG ID convertido para string)
 /// * `playtime` - Tempo jogado em horas
+/// * `rating` - Avaliação pessoal (1-5) ou `None` se não avaliado
 /// * `favorite` - Se o usuário marcou como favorito (usado para filtragem)
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Game {
@@ -104,9 +105,7 @@ impl From<rusqlite::Error> for AppError {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GenreScore {
     pub name: String,
-    /// Score calculado (0.0-100.0) baseado em playtime e quantidade
     pub score: f32,
-    /// Número de jogos desse gênero na biblioteca
     pub game_count: i32,
 }
 
@@ -116,10 +115,7 @@ pub struct GenreScore {
 /// Usado para exibir dashboard e recomendações personalizadas.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserProfile {
-    /// Top 5 gêneros ordenados por score (descendente)
     pub top_genres: Vec<GenreScore>,
-    /// Tempo total jogado em todas as bibliotecas (horas)
     pub total_playtime: i32,
-    /// Número total de jogos na biblioteca
     pub total_games: i32,
 }

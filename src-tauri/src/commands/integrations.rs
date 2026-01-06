@@ -1,14 +1,8 @@
 //! Módulo de integrações com APIs externas.
 //!
 //! Coordena a comunicação com serviços de terceiros (Steam, RAWG) e
-//! orquestra operações complexas como importação em lote e enriquecimento
-//! automático de metadados.
-//!
-//! # Funcionalidades Principais
-//! - Importação completa da biblioteca Steam
-//! - Enriquecimento automático de metadados (gêneros)
-//! - Busca e exibição de jogos em tendência
-//! - Consulta de detalhes expandidos de jogos
+//! orquestra operações complexas como importação em lote, enriquecimento
+//! automático de metadados busca e exibição de jogos em tendência.
 //!
 //! # Rate Limiting
 //! Implementa delays entre requisições para respeitar limites das APIs.
@@ -29,15 +23,10 @@ use tracing::{error, info};
 /// Fornece estatísticas detalhadas e lista de erros para feedback ao usuário.
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
-    /// Quantidade de itens processados com sucesso
     pub success_count: i32,
-    /// Quantidade de itens que falharam
     pub error_count: i32,
-    /// Total de itens processados (sucesso + erro)
     pub total_processed: i32,
-    /// Mensagem resumida do resultado
     pub message: String,
-    /// Lista de nomes de jogos que falharam (com mensagem de erro)
     pub errors: Vec<String>,
 }
 
@@ -53,11 +42,6 @@ pub struct ImportSummary {
 /// 4. Insere em lote usando transação SQL
 /// 5. Usa `INSERT OR IGNORE` para evitar duplicatas
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-/// * `api_key` - Steam Web API Key do usuário
-/// * `steam_id` - Steam ID do usuário (formato SteamID64)
-///
 /// # Retorna
 /// * `Ok(String)` - Mensagem de sucesso com contador de jogos adicionados
 /// * `Err(String)` - Erro na API Steam, banco ou autenticação
@@ -65,7 +49,7 @@ pub struct ImportSummary {
 /// # Comportamento
 /// - **Duplicatas**: Jogos já existentes são ignorados silenciosamente
 /// - **Gêneros**: Todos iniciam como "Desconhecido" (usar `enrich_library` depois)
-/// - **Plataforma**: Definida como "Steam" para todos
+/// - **Plataforma**: Definida como "Steam"
 /// - **Transação**: Rollback automático em caso de erro
 ///
 /// # Exemplo de Uso
@@ -73,26 +57,17 @@ pub struct ImportSummary {
 /// // Chamado via Tauri invoke
 /// let result = await invoke('import_steam_library', {
 ///     apiKey: 'XXXXXXXXXXXXXXXXXXXXXXX',
-///     steamId: '76561198012345678'
+///     steamId: '765999999999999'
 /// });
 /// // Retorna: "Importação concluída! 150 novos jogos adicionados."
 /// ```
 ///
-/// # Logs
-/// Imprime no console:
-/// - Quantidade de jogos encontrados
-/// - Warnings para jogos que falharam inserção individual
-/// - Estatísticas finais (inseridos vs já existentes)
-///
-/// # Rate Limiting
-/// Esta operação não aplica rate limit por usar apenas uma chamada de API.
-///
-/// # Observações
+/// # Nota
 /// - Biblioteca privada retorna erro de autenticação
 /// - Jogos gratuitos jogados são incluídos automaticamente
 /// - Jogos gratuitos não jogados ou que foram desinstalados podem não são serem retornados pela API
 /// - Tempo de jogo é arredondado para horas inteiras
-/// - Para atualizar metadados, use `enrich_library` após importar.
+/// - Esta operação não aplica rate limit por usar apenas uma chamada de API.
 #[tauri::command]
 pub async fn import_steam_library(
     state: State<'_, AppState>,
@@ -129,7 +104,10 @@ pub async fn import_steam_library(
     }
 
     let count = {
-        let conn = state.db.lock().map_err(|_| "Falha ao bloquear mutex")?;
+        let conn = state
+            .library_db
+            .lock()
+            .map_err(|_| "Falha ao bloquear mutex")?;
 
         // Inicia transação
         conn.execute("BEGIN TRANSACTION", [])
@@ -188,21 +166,9 @@ pub async fn import_steam_library(
 /// 4. Atualiza banco em lote ao final
 /// 5. Aplica rate limiting entre requisições
 ///
-/// # Parâmetros
-/// * `state` - Estado compartilhado com conexão do banco
-///
 /// # Retorna
 /// * `Ok(ImportSummary)` - Estatísticas completas do processamento
 /// * `Err(String)` - Erro crítico de banco ou sistema
-///
-/// # Rate Limiting
-/// Aguarda `STEAM_RATE_LIMIT_MS` (500ms) entre cada requisição para
-/// respeitar os limites da Steam Store API e evitar bloqueio temporário.
-///
-/// # Logging
-/// - **Info**: Progresso e sucessos (arquivo de log)
-/// - **Error**: Falhas individuais com detalhes
-/// - **Console**: Resumo final do processamento
 ///
 /// # Exemplo de Uso
 /// ```rust
@@ -213,36 +179,16 @@ pub async fn import_steam_library(
 /// summary.errors.forEach(err => console.warn(err));
 /// ```
 ///
-/// # Performance
-/// Devido ao rate limiting obrigatório, a operação é naturalmente lenta.
-///
-/// # Estrutura do Retorno
-/// ```json
-/// {
-///   "success_count": 145,
-///   "error_count": 5,
-///   "total_processed": 150,
-///   "message": "Processamento concluído: 145 sucessos e 5 falhas.",
-///   "errors": [
-///     "Half-Life 3 (Dados não encontrados)",
-///     "Game XYZ (Timeout na API)"
-///   ]
-/// }
-/// ```
-///
-/// # Tratamento de Erros
-/// Erros individuais não interrompem o processo. Jogos que falharem
-/// mantêm seus dados originais e são relatados na lista de erros.
-///
-/// # Transação
-/// Atualiza todos os sucessos em uma única transação ao final para
-/// garantir atomicidade e melhor performance.
+/// # Nota
+/// - Devido ao rate limiting (500ms) obrigatório, a operação é naturalmente lenta.
+/// - Erros individuais não interrompem o processo. São coletados e reportados no resumo.
+/// - Atualiza os dados numa única transação ao final para garantir atomicidade e melhor performance.
 #[tauri::command]
 pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary, String> {
     info!("Iniciando processo de enriquecimento de biblioteca...");
 
     let games_to_update = {
-        let conn = state.db.lock().map_err(|_| "Mutex error")?;
+        let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
         let mut stmt = conn
             .prepare("SELECT id, name FROM games WHERE genre = ?1 AND platform = ?2")
             .map_err(|e| e.to_string())?;
@@ -311,7 +257,10 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
 
     // Salvar no Banco
     if !batch_updates.is_empty() {
-        let conn = state.db.lock().map_err(|_| "Mutex error ao salvar")?;
+        let conn = state
+            .library_db
+            .lock()
+            .map_err(|_| "Mutex error ao salvar")?;
         conn.execute("BEGIN TRANSACTION", [])
             .map_err(|e| e.to_string())?;
 
@@ -345,14 +294,6 @@ pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary,
     Ok(summary)
 }
 
-/// Recupera a API Key da RAWG armazenada (função auxiliar interna).
-///
-/// # Parâmetros
-/// * `app_handle` - Handle da aplicação Tauri
-///
-/// # Retorna
-/// * `Ok(String)` - API Key descriptografada
-/// * `Err(String)` - Chave não configurada ou erro de descriptografia
 fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
@@ -360,11 +301,7 @@ fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
 /// Busca detalhes completos de um jogo específico na RAWG.
 ///
 /// Retorna informações expandidas incluindo descrição, desenvolvedoras,
-/// publicadoras, tags, metacritic score e mais.
-///
-/// # Parâmetros
-/// * `app_handle` - Handle da aplicação (para acessar API key)
-/// * `query` - Nome do jogo para buscar
+/// publicadoras, tags, metacritic score e mais, usados no modal de detalhes.
 ///
 /// # Retorna
 /// * `Ok(GameDetails)` - Detalhes completos do jogo
@@ -398,10 +335,7 @@ pub async fn fetch_game_details(
 /// Busca jogos em tendência/populares do momento.
 ///
 /// Retorna lista de jogos mais adicionados recentemente à plataforma RAWG,
-/// indicando popularidade atual.
-///
-/// # Parâmetros
-/// * `app_handle` - Handle da aplicação (para acessar API key)
+/// indicando popularidade atual exibidos nas páginas Início e Em Alta.
 ///
 /// # Retorna
 /// * `Ok(Vec<RawgGame>)` - Lista de até 20 jogos populares
@@ -422,19 +356,11 @@ pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgG
 
 /// Busca jogos com lançamento futuro.
 ///
-/// Retorna lista de jogos que ainda serão lançados, do presente até
-/// o final do próximo ano.
-///
-/// # Parâmetros
-/// * `api_key` - API Key da RAWG (passada diretamente)
+/// Retorna lista de jogos que ainda mais aguardados que serão lançados até o final do próximo ano.
 ///
 /// # Retorna
 /// * `Ok(Vec<RawgGame>)` - Lista de até 10 jogos futuros
 /// * `Err(String)` - API key inválida ou erro na requisição
-///
-/// # Observação
-/// Ao contrário de outros comandos, este recebe a API key diretamente
-/// como parâmetro ao invés de buscá-la dos secrets.
 ///
 /// # Exemplo de Uso
 /// ```rust

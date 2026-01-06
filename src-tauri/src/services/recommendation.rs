@@ -13,27 +13,23 @@ use std::collections::HashMap;
 
 /// Pontos atribuídos por hora jogada.
 ///
-/// Cada hora de jogo adiciona 2 pontos ao score do jogo.
-/// Limitado a 100 horas para evitar distorções em jogos com tempo extremo.
+/// Cada hora de jogo adiciona 2 pontos ao score do jogo, limitado a 100 horas para evitar outliers.
 const WEIGHT_PLAYTIME_HOUR: f32 = 2.0;
 
 /// Pontos de bônus para jogos marcados como favorito.
 ///
-/// Jogos favoritos recebem 50 pontos adicionais, indicando
-/// forte preferência do usuário independente de outras métricas.
+/// Jogos favoritos recebem 50 pontos adicionais, indicando preferência do usuário.
 const WEIGHT_FAVORITE: f32 = 50.0;
 
 /// Pontos atribuídos por estrela de avaliação.
 ///
 /// Sistema de 5 estrelas onde cada estrela vale 10 pontos.
-/// Exemplo: 5 estrelas = 50 pontos totais.
 const WEIGHT_RATING_STAR: f32 = 10.0;
 
 /// Fator de decaimento temporal para jogos antigos (não implementado).
 ///
-/// Planejado para reduzir gradualmente a influência de jogos
-/// jogados há muito tempo. Valor de 0.95 significa 5% de redução
-/// por período de tempo definido.
+/// Planejado para reduzir gradualmente a influência de títulos jogados há muito tempo.
+/// Valor de 0,95 - para 5% de redução por período definido.
 #[allow(dead_code)]
 const DECAY_FACTOR: f32 = 0.95;
 
@@ -69,11 +65,6 @@ const DECAY_FACTOR: f32 = 0.95;
 /// println!("Score do gênero: {}", profile.top_genres[0].score);
 /// println!("Total de horas: {}", profile.total_playtime / 60);
 /// ```
-///
-/// # Observações
-/// - Jogos sem gênero ou com gênero "Desconhecido" são ignorados
-/// - Tempo de jogo é limitado a 100h por jogo para evitar outliers
-/// - Se um jogo tem múltiplos gêneros, o score é distribuído igualmente
 pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
     let mut genre_scores: HashMap<String, (f32, i32)> = HashMap::new();
     let mut total_playtime = 0;

@@ -1,25 +1,11 @@
 //! # Playlite - Game Manager Library
 //!
-//! Biblioteca backend para gerenciamento de bibliotecas de jogos.
-//!
 //! Fornece funcionalidades para:
 //! - Importar jogos do Steam
 //! - Gerenciar biblioteca pessoal
 //! - Wishlist com tracking de preços
 //! - Armazenamento seguro de API keys
 //! - Busca de jogos em tendência (RAWG API)
-//!
-//! ## Exemplo de Uso
-//!
-//! ```no_run
-//! use game_manager_lib::commands;
-//!
-//! // Inicializar banco de dados
-//! commands::init_db().await?;
-//!
-//! // Buscar jogos da biblioteca
-//! let games = commands::get_games().await?;
-//! ```
 
 mod commands;
 mod constants;
@@ -30,8 +16,6 @@ mod services;
 mod utils;
 
 use crate::utils::logger;
-use rusqlite::Connection;
-use std::sync::Mutex;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -44,6 +28,8 @@ pub fn run() {
         .plugin(tauri_plugin_machine_uid::init())
         .setup(|app| {
             let app_handle = app.handle();
+
+            // === LOGGING ===
             let log_dir = app_handle
                 .path()
                 .app_log_dir()
@@ -52,37 +38,25 @@ pub fn run() {
             std::fs::create_dir_all(&log_dir).expect("Falha ao criar pasta de dev_logs");
 
             let _guard = logger::init_logging(log_dir.clone());
-            // Armazena o guard no state do Tauri para manter vivo durante toda execução
             app.manage(_guard);
 
             tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
 
-            // Inicializa o sistema de segurança (derivação de chave)
+            // === SEGURANÇA ===
             security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
 
             tracing::info!("Sistema de segurança inicializado");
 
-            let app_data_dir = app
-                .path()
-                .app_data_dir()
-                .expect("Falha ao obter diretório de dados da aplicação");
+            // === BANCOS DE DADOS ===
+            let db_state = database::initialize_databases(app_handle)
+                .expect("Falha ao inicializar bancos de dados");
 
-            std::fs::create_dir_all(&app_data_dir).expect("Falha ao criar diretório de dados");
+            app.manage(db_state);
 
-            let db_path = app_data_dir.join("library.db");
-
-            let conn = Connection::open(&db_path)
-                .unwrap_or_else(|_| panic!("Erro ao abrir banco em {:?}", db_path));
-
-            let _ = conn.execute("PRAGMA journal_mode=WAL", []);
-
-            app.manage(database::AppState {
-                db: Mutex::new(conn),
-            });
+            tracing::info!("Bancos de dados inicializados com sucesso");
 
             Ok(())
         })
-        // Registra todos os comandos chamando a partir dos módulos
         .invoke_handler(tauri::generate_handler![
             // Comando de Inicialização do Banco de Dados
             database::init_db,
