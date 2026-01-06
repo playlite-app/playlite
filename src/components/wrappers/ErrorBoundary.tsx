@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 
-import { ERROR_MESSAGES } from '../constants/errorMessages';
-import { ErrorState } from './ErrorState';
+import { ERROR_MESSAGES } from '../../constants/errorMessages.ts';
+import { ErrorState } from '../ErrorState.tsx';
 
 interface Props {
   children: ReactNode;

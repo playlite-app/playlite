@@ -15,9 +15,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { Game } from '@/types';
 
 import { useGameDetails } from '../hooks/useGameDetails';
-import { Game } from '../types';
 
 interface GameDetailsModalProps {
   game: Game | null;

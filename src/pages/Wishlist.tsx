@@ -13,6 +13,7 @@ import { ActionButton } from '@/components/ActionButton.tsx';
 import AddWishlistModal from '@/components/AddWishlistModal';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/providers/ConfirmProvider';
 
 import { useWishlist } from '../hooks/useWishlist';
 import { openExternalLink } from '../utils/navigation';
@@ -28,12 +29,23 @@ export default function Wishlist() {
   } = useWishlist();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const { confirm } = useConfirm();
 
   const handleRemoveClick = async (id: string, name: string) => {
-    if (!confirm(`Remover ${name} da lista de desejos?`)) return;
+    const confirmed = await confirm({
+      title: 'Remover da Lista de Desejos',
+      description: `Tem certeza que deseja remover ${name} da lista de desejos?`,
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+    });
+
+    if (!confirmed) return;
 
     try {
       await removeGame(id);
+      toast.success(
+        `O jogo ${name} foi removido com sucesso da sua lista de desejos!`
+      );
     } catch {
       toast.error('Erro ao remover jogo.');
     }

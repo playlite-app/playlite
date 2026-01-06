@@ -9,11 +9,11 @@ import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
+import { Game, UserProfile } from '@/types';
 
 import PlaylistItem from '../components/PlaylistItem';
 import { usePlaylist } from '../hooks/usePlaylist';
 import { useRecommendation } from '../hooks/useRecommendation';
-import { Game, UserProfile } from '../types';
 import { launchGame } from '../utils/launcher';
 
 interface PlaylistProps {

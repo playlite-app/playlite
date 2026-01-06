@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
 import AddGameModal from './components/AddGameModal';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import GameDetailsModal from './components/GameDetailsModal.tsx';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import { useDebounce } from './hooks/useDebounce';
 import { useLibraries } from './hooks/useLibraries.ts';
 import Favorites from './pages/Favorites';
@@ -15,9 +15,10 @@ import Playlist from './pages/Playlist';
 import Settings from './pages/Settings';
 import Trending from './pages/Trending';
 import Wishlist from './pages/Wishlist';
+import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
 import { Game, RawgGame, UserProfile } from './types';
 
-function App() {
+function AppContent() {
   // Estado Global de Jogos e UI
   const { games, refreshGames, saveGame, removeGame, toggleFavorite } =
     useLibraries();
@@ -34,6 +35,8 @@ function App() {
   const [trendingCache, setTrendingCache] = useState<RawgGame[]>([]);
   const [trendingKey, setTrendingKey] = useState(0);
   const [profileCache, setProfileCache] = useState<UserProfile | null>(null);
+
+  const { confirm } = useConfirm();
 
   // Handlers de UI e Ações
   const handleSettingsUpdate = () => {
@@ -63,8 +66,21 @@ function App() {
   };
 
   const handleDeleteWrapper = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir?')) {
-      await removeGame(id);
+    const confirmed = await confirm({
+      title: 'Excluir Jogo',
+      description:
+        'Tem certeza que deseja excluir este jogo? Esta ação não pode ser desfeita.',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+    });
+
+    if (confirmed) {
+      try {
+        await removeGame(id);
+        toast.success('Jogo excluído com sucesso!');
+      } catch {
+        toast.error('Erro ao excluir jogo.');
+      }
     }
   };
 
@@ -180,4 +196,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ConfirmProvider>
+      <AppContent />
+    </ConfirmProvider>
+  );
+}
