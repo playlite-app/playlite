@@ -18,8 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-import { Game } from '../types';
+import { Game } from '@/types';
 
 interface AddGameModalProps {
   isOpen: boolean;
@@ -30,7 +29,7 @@ interface AddGameModalProps {
 
 const INITIAL_STATE = {
   name: '',
-  cover_url: '',
+  coverUrl: '',
   genre: '',
   platform: 'Manual',
   playtime: '0',
@@ -50,7 +49,7 @@ export default function AddGameModal({
       if (gameToEdit) {
         setFormData({
           name: gameToEdit.name,
-          cover_url: gameToEdit.cover_url || '',
+          coverUrl: gameToEdit.coverUrl || '',
           genre: gameToEdit.genre || '',
           platform: gameToEdit.platform || 'Manual',
           playtime: gameToEdit.playtime?.toString() || '0',
@@ -131,8 +130,8 @@ export default function AddGameModal({
             <Label htmlFor="cover">Capa (URL)</Label>
             <Input
               id="cover"
-              value={formData.cover_url}
-              onChange={e => handleChange('cover_url', e.target.value)}
+              value={formData.coverUrl}
+              onChange={e => handleChange('coverUrl', e.target.value)}
               placeholder="https://..."
             />
           </div>

@@ -23,8 +23,11 @@ use tracing::{error, info};
 /// Fornece estatísticas detalhadas e lista de erros para feedback ao usuário.
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
+    #[serde(rename = "successCount")]
     pub success_count: i32,
+    #[serde(rename = "errorCount")]
     pub error_count: i32,
+    #[serde(rename = "totalProcessed")]
     pub total_processed: i32,
     pub message: String,
     pub errors: Vec<String>,

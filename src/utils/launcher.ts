@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 
-import { Game, RawgGame } from '../types';
+import { Game, RawgGame } from '@/types';
 
 export const launchGame = (game: Game | RawgGame | any) => {
   // Se for um jogo da biblioteca local da plataforma Steam e tivermos ID

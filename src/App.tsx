@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import { Game, RawgGame, UserProfile } from '@/types';
+
 import AddGameModal from './components/AddGameModal';
 import GameDetailsModal from './components/GameDetailsModal.tsx';
 import Header from './components/Header';
@@ -16,7 +18,6 @@ import Settings from './pages/Settings';
 import Trending from './pages/Trending';
 import Wishlist from './pages/Wishlist';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
-import { Game, RawgGame, UserProfile } from './types';
 
 function AppContent() {
   // Estado Global de Jogos e UI

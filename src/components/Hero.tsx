@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { ReactNode } from 'react';
+import { ChevronLeft, ChevronRight, ImageOff, Star } from 'lucide-react';
+import { ReactNode, useEffect, useState } from 'react';
 
 interface HeroProps {
   // Dados Básicos
@@ -49,6 +49,13 @@ export default function Hero({
   onPrev,
   showNavigation = false,
 }: HeroProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state quando coverUrl mudar
+  useEffect(() => {
+    setImageError(false);
+  }, [coverUrl]);
+
   return (
     <div className="bg-background group/hero relative h-125 overflow-hidden">
       {/* Background (Blur) */}
@@ -84,12 +91,23 @@ export default function Hero({
           className="animate-in fade-in flex w-full flex-col items-center gap-8 duration-500 md:flex-row"
           key={title}
         >
-          {/* Capa */}
-          <img
-            src={coverUrl || ''}
-            alt={title}
-            className="aspect-3/4 w-64 rounded-lg border border-white/10 object-cover shadow-2xl md:w-80"
-          />
+          {/* Capa com Fallback */}
+          {coverUrl && !imageError ? (
+            <img
+              src={coverUrl}
+              alt={title}
+              className="aspect-3/4 w-64 rounded-lg border border-white/10 object-cover shadow-2xl md:w-80"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            /* Fallback Visual (Gradiente + Ícone + Nome) */
+            <div className="from-secondary/50 via-muted to-background flex aspect-3/4 w-64 flex-col items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br p-4 text-center shadow-2xl md:w-80">
+              <ImageOff className="mb-3 h-10 w-10 opacity-20" />
+              <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
+                {title}
+              </span>
+            </div>
+          )}
 
           {/* Coluna de Informações */}
           <div className="flex-1 space-y-4 text-center md:text-left">

@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Game } from '@/types';
+import { Game } from '@/types/game';
 
 import { useGameDetails } from '../hooks/useGameDetails';
 
@@ -49,17 +49,17 @@ export default function GameDetailsModal({
           >
             <X size={16} />
           </button>
-          {game.cover_url && (
+          {game.coverUrl && (
             <div
               className="absolute inset-0 scale-110 bg-cover bg-center opacity-50 blur-2xl"
-              style={{ backgroundImage: `url(${game.cover_url})` }}
+              style={{ backgroundImage: `url(${game.coverUrl})` }}
             />
           )}
           <div className="to-background absolute inset-0 bg-linear-to-b from-black/20 via-transparent" />
           <div className="absolute bottom-0 left-0 z-10 flex w-full items-end p-5 lg:p-8">
-            {game.cover_url ? (
+            {game.coverUrl ? (
               <img
-                src={game.cover_url}
+                src={game.coverUrl}
                 alt=""
                 className="bg-muted mr-4 h-20 w-14 shrink-0 rounded object-cover lg:h-24 lg:w-16"
               />
@@ -257,7 +257,7 @@ export default function GameDetailsModal({
                 </div>
               ) : details ? (
                 <div className="text-foreground/85 text-sm leading-relaxed whitespace-pre-line lg:text-base">
-                  {details.description_raw ||
+                  {details.descriptionRaw ||
                     'Nenhuma descrição fornecida pelo desenvolvedor.'}
                 </div>
               ) : (

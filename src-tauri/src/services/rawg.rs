@@ -45,6 +45,7 @@ pub struct RawgPublisher {
 pub struct GameDetails {
     pub id: i32,
     pub name: String,
+    #[serde(rename(deserialize = "description_raw", serialize = "descriptionRaw"))]
     pub description_raw: String,
     pub metacritic: Option<i32>,
     pub website: String,
@@ -60,6 +61,7 @@ pub struct GameDetails {
 pub struct RawgGame {
     pub id: u32,
     pub name: String,
+    #[serde(rename(deserialize = "background_image", serialize = "backgroundImage"))]
     pub background_image: Option<String>,
     pub rating: f32,
     pub released: Option<String>,

@@ -20,6 +20,7 @@ pub struct Game {
     pub name: String,
     pub genre: Option<String>,
     pub platform: Option<String>,
+    #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
     pub playtime: i32,
     pub rating: Option<i32>,
@@ -44,14 +45,23 @@ pub struct Game {
 pub struct WishlistGame {
     pub id: String,
     pub name: String,
+    #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
+    #[serde(rename = "storeUrl")]
     pub store_url: Option<String>,
+    #[serde(rename = "currentPrice")]
     pub current_price: Option<f64>,
+    #[serde(rename = "lowestPrice")]
     pub lowest_price: Option<f64>,
+    #[serde(rename = "onSale")]
     pub on_sale: bool,
+    #[serde(rename = "localizedPrice")]
     pub localized_price: Option<f64>,
+    #[serde(rename = "localizedCurrency")]
     pub localized_currency: Option<String>,
+    #[serde(rename = "steamAppId")]
     pub steam_app_id: Option<i32>,
+    #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
 }
 
@@ -106,6 +116,7 @@ impl From<rusqlite::Error> for AppError {
 pub struct GenreScore {
     pub name: String,
     pub score: f32,
+    #[serde(rename = "gameCount")]
     pub game_count: i32,
 }
 
@@ -115,7 +126,10 @@ pub struct GenreScore {
 /// Usado para exibir dashboard e recomendações personalizadas.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserProfile {
+    #[serde(rename = "topGenres")]
     pub top_genres: Vec<GenreScore>,
+    #[serde(rename = "totalPlaytime")]
     pub total_playtime: i32,
+    #[serde(rename = "totalGames")]
     pub total_games: i32,
 }

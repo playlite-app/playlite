@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { GameDetails } from '../types';
+import { GameDetails } from '@/types';
 
 export const detailsService = {
   /**

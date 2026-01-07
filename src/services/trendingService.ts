@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { RawgGame } from '../types';
+import { RawgGame } from '@/types';
 
 export const trendingService = {
   getApiKey: async (): Promise<string> => {
@@ -50,7 +50,7 @@ export const trendingService = {
     await invoke('add_to_wishlist', {
       id: game.id.toString(),
       name: game.name,
-      coverUrl: game.background_image,
+      coverUrl: game.backgroundImage,
       storeUrl: null,
       currentPrice: null,
       steamAppId: steamAppId,

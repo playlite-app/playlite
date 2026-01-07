@@ -8,7 +8,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-import { Game } from '../types';
+import { Game } from '@/types';
 
 interface SidebarProps {
   activeSection: string;

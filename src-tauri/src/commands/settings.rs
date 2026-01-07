@@ -14,8 +14,11 @@ use tauri::AppHandle;
 /// Usado para retornar múltiplos secrets de uma vez para o frontend.
 #[derive(Serialize)]
 pub struct KeysBatch {
+    #[serde(rename = "steamId")]
     pub steam_id: String,
+    #[serde(rename = "steamApiKey")]
     pub steam_api_key: String,
+    #[serde(rename = "rawgApiKey")]
     pub rawg_api_key: String,
 }
 

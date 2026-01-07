@@ -3,7 +3,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 
 import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
 
-import { ImportSummary, KeysBatch } from '../types';
+import { ImportSummary, KeysBatch } from '../types/integration';
 
 export const settingsService = {
   getSecrets: async (): Promise<KeysBatch> => {

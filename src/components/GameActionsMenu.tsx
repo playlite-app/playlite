@@ -8,8 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import { Game } from '../types';
+import { Game } from '@/types';
 
 interface GameActionsMenuProps {
   game: Game;

@@ -3,7 +3,7 @@ export interface Game {
   name: string;
   genre: string;
   platform: string;
-  cover_url?: string;
+  coverUrl?: string;
   playtime: number;
   rating?: number;
   favorite: boolean;
@@ -27,7 +27,7 @@ export interface GameInput {
  * Detalhes dos jogos vindos da API (RAWG)
  */
 export interface GameDetails {
-  description_raw: string;
+  descriptionRaw: string;
   metacritic: number | null;
   website: string;
   tags: { id: number; name: string }[];

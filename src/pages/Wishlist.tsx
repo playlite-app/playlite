@@ -120,32 +120,32 @@ export default function Wishlist() {
           let priceDisplay = 'Aguardando preço...';
 
           if (
-            game.localized_price !== null &&
-            game.localized_price !== undefined
+            game.localizedPrice !== null &&
+            game.localizedPrice !== undefined
           ) {
             const currency =
-              game.localized_currency === 'BRL'
+              game.localizedCurrency === 'BRL'
                 ? 'R$'
-                : game.localized_currency || 'R$';
-            priceDisplay = `${currency} ${game.localized_price.toFixed(2)}`;
+                : game.localizedCurrency || 'R$';
+            priceDisplay = `${currency} ${game.localizedPrice.toFixed(2)}`;
           } else if (
-            game.current_price !== null &&
-            game.current_price !== undefined
+            game.currentPrice !== null &&
+            game.currentPrice !== undefined
           ) {
-            priceDisplay = `US$ ${game.current_price.toFixed(2)}`;
+            priceDisplay = `US$ ${game.currentPrice.toFixed(2)}`;
           }
 
-          const targetUrl = game.steam_app_id
-            ? `https://store.steampowered.com/app/${game.steam_app_id}/`
-            : game.store_url;
+          const targetUrl = game.steamAppId
+            ? `https://store.steampowered.com/app/${game.steamAppId}/`
+            : game.storeUrl;
 
           return (
             <StandardGameCard
               key={game.id}
               title={game.name}
-              coverUrl={game.cover_url}
+              coverUrl={game.coverUrl}
               subtitle={priceDisplay}
-              badge={game.on_sale ? 'OFERTA!' : undefined}
+              badge={game.onSale ? 'OFERTA!' : undefined}
               actions={
                 <>
                   <ActionButton
@@ -165,7 +165,7 @@ export default function Wishlist() {
                       if (targetUrl) openExternalLink(targetUrl);
                     }}
                     tooltip={
-                      game.steam_app_id ? 'Abrir na Steam' : 'Ir para Loja'
+                      game.steamAppId ? 'Abrir na Steam' : 'Ir para Loja'
                     }
                   />
                 </>

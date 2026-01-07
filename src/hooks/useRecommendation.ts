@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
-import { UserProfile } from '../types';
+import { UserProfile } from '@/types';
 
 interface Genre {
   name: string;
@@ -19,7 +19,7 @@ interface UseRecommendationProps {
  * @param props.profileCache - Perfil em cache (evita requisição)
  * @param props.setProfileCache - Callback para salvar perfil em cache global
  * @returns Objeto com:
- *   - profile: Perfil com top_genres ordenados por score
+ *   - profile: Perfil com topGenres ordenados por score
  *   - loading: Estado da requisição
  *   - calculateAffinity: Função que calcula score de compatibilidade
  */
@@ -73,7 +73,7 @@ export function useRecommendation({
     let totalScore = 0;
     gameGenres.forEach(g => {
       // Busca se o gênero do jogo existe no perfil do usuário (case insensitive)
-      const userGenre = profile.top_genres.find(
+      const userGenre = profile.topGenres.find(
         ug => ug.name.toLowerCase() === g.name.toLowerCase()
       );
 

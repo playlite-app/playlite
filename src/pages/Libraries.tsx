@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import { GameActionsMenu } from '@/components/GameActionsMenu';
-import { Game, GameActions } from '@/types';
+import { Game, GameActions } from '@/types/game';
 
 import StandardGameCard from '../components/StandardGameCard';
 import { usePlaylist } from '../hooks/usePlaylist';
@@ -71,7 +71,7 @@ export default function Libraries({
             <div key={game.id} className="group relative">
               <StandardGameCard
                 title={game.name}
-                coverUrl={game.cover_url}
+                coverUrl={game.coverUrl}
                 subtitle={game.genre || 'Sem gênero'}
                 rating={game.rating || undefined}
                 onClick={() => actions.onGameClick(game)}

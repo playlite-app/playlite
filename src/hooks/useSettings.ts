@@ -40,9 +40,9 @@ export function useSettings(onLibraryUpdate: () => void) {
       .getSecrets()
       .then(data => {
         setKeys({
-          steamId: data.steam_id || '',
-          steamApiKey: data.steam_api_key || '',
-          rawgApiKey: data.rawg_api_key || '',
+          steamId: data.steamId || '',
+          steamApiKey: data.steamApiKey || '',
+          rawgApiKey: data.rawgApiKey || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -114,15 +114,15 @@ export function useSettings(onLibraryUpdate: () => void) {
     try {
       const summary = await settingsService.enrichLibrary();
 
-      if (summary.error_count === 0) {
+      if (summary.errorCount === 0) {
         setStatus({
           type: 'success',
-          message: `Sucesso total! ${summary.success_count} jogos atualizados.`,
+          message: `Sucesso total! ${summary.successCount} jogos atualizados.`,
         });
       } else {
         setStatus({
           type: 'success',
-          message: `Concluído: ${summary.success_count} atualizados, mas ${summary.error_count} falharam.`,
+          message: `Concluído: ${summary.successCount} atualizados, mas ${summary.errorCount} falharam.`,
         });
       }
 

@@ -8,9 +8,8 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Game } from '@/types';
 import { launchGame } from '@/utils/launcher.ts';
-
-import { Game } from '../types';
 
 interface PlaylistItemProps {
   game: Game;
@@ -106,9 +105,9 @@ export default function PlaylistItem({
 
       {/* Cover do jogo */}
       <div className="bg-muted group/img relative h-14 w-10 shrink-0 cursor-pointer overflow-hidden rounded shadow-sm lg:h-16 lg:w-12">
-        {game.cover_url ? (
+        {game.coverUrl ? (
           <img
-            src={game.cover_url}
+            src={game.coverUrl}
             alt=""
             className="h-full w-full object-cover"
             draggable={false}

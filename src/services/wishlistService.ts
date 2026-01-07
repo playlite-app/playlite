@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { WishlistGame } from '../types';
+import { WishlistGame } from '@/types';
 
 export interface SteamSearchResult {
   id: number;

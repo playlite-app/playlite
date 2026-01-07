@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { Game } from '@/types';
+
 import { librariesService } from '../services/librariesService.ts';
-import { Game } from '../types';
 
 /**
  * Gerencia a biblioteca de jogos do usuário com operações CRUD.
@@ -51,7 +52,7 @@ export function useLibraries() {
       name: gameData.name || 'Sem Nome',
       genre: gameData.genre || 'Desconhecido',
       platform: gameData.platform || 'Manual',
-      coverUrl: gameData.cover_url || null,
+      coverUrl: gameData.coverUrl || null,
       playtime: gameData.playtime || 0,
       rating: gameData.rating || null,
     };

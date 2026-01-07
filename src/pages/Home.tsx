@@ -20,9 +20,9 @@ import Hero from '@/components/Hero';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
+import { Game, RawgGame, UserProfile } from '@/types';
 
 import { useHome } from '../hooks/useHome';
-import { Game, RawgGame, UserProfile } from '../types';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
 import { openExternalLink } from '../utils/navigation';
@@ -111,7 +111,7 @@ export default function Home({
 
   // Helper para imagens e nomes
   const getHeroImage = (game: any) =>
-    game.cover_url || game.background_image || '';
+    game.coverUrl || game.backgroundImage || '';
 
   // Verifica se é um jogo local (possui playtime)
   const isLocalGame = (game: any) => 'playtime' in game;
@@ -221,7 +221,7 @@ export default function Home({
                 <StandardGameCard
                   key={game.id}
                   title={game.name}
-                  coverUrl={game.cover_url}
+                  coverUrl={game.coverUrl}
                   subtitle={`${formatTime(game.playtime)} jogadas`}
                   onClick={() => onGameClick(game)}
                   // Ação de Play no Hover
@@ -264,7 +264,7 @@ export default function Home({
                 <StandardGameCard
                   key={game.id}
                   title={game.name}
-                  coverUrl={game.cover_url}
+                  coverUrl={game.coverUrl}
                   subtitle={game.genre?.split(',')[0]}
                   badge="Recomendado"
                   onClick={() => onGameClick(game)}
@@ -313,9 +313,9 @@ export default function Home({
                   <div className="text-muted-foreground w-6 text-center font-bold">
                     {index + 1}
                   </div>
-                  {game.cover_url ? (
+                  {game.coverUrl ? (
                     <img
-                      src={game.cover_url}
+                      src={game.coverUrl}
                       alt=""
                       className="bg-muted h-16 w-12 rounded object-cover"
                     />

@@ -15,6 +15,7 @@ import { ActionButton } from '@/components/ActionButton.tsx';
 import Hero from '@/components/Hero';
 import StandardGameCard from '@/components/StandardGameCard.tsx';
 import { Button } from '@/components/ui/button';
+import { Game, RawgGame } from '@/types';
 
 import { ErrorState } from '../components/ErrorState';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -22,7 +23,6 @@ import { useRecommendation } from '../hooks/useRecommendation';
 import { useTrending } from '../hooks/useTrending';
 import { useWishlist } from '../hooks/useWishlist';
 import { trendingService } from '../services/trendingService';
-import { Game, RawgGame } from '../types';
 import { openExternalLink } from '../utils/navigation';
 
 interface TrendingProps {
@@ -165,8 +165,8 @@ export default function Trending(props: TrendingProps) {
       {/* Hero */}
       <Hero
         title={currentHero.name}
-        backgroundUrl={currentHero.background_image}
-        coverUrl={currentHero.background_image}
+        backgroundUrl={currentHero.backgroundImage}
+        coverUrl={currentHero.backgroundImage}
         genres={currentHero.genres.map(g => g.name)} // Normaliza gêneros
         rating={currentHero.rating}
         showNavigation={heroGames.length > 1}
@@ -255,7 +255,7 @@ export default function Trending(props: TrendingProps) {
               <StandardGameCard
                 key={game.id}
                 title={game.name}
-                coverUrl={game.background_image}
+                coverUrl={game.backgroundImage}
                 rating={game.rating}
                 subtitle={game.genres
                   .map(g => g.name)
@@ -311,7 +311,7 @@ export default function Trending(props: TrendingProps) {
                 <StandardGameCard
                   key={game.id}
                   title={game.name}
-                  coverUrl={game.background_image}
+                  coverUrl={game.backgroundImage}
                   subtitle={
                     game.released
                       ? `Lança: ${new Date(game.released).toLocaleDateString()}`

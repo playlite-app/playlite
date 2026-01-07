@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
+import { Game, GameDetails, GamePlatformLink } from '@/types';
+
 import { detailsService } from '../services/detailsService';
-import { Game, GameDetails, GamePlatformLink } from '../types';
 
 /**
 /**

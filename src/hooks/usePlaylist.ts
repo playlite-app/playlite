@@ -1,7 +1,7 @@
 import { Store } from '@tauri-apps/plugin-store';
 import { useEffect, useState } from 'react';
 
-import { Game } from '../types';
+import { Game } from '@/types';
 
 const STORE_FILENAME = 'playlist.store';
 const STORE_KEY = 'user_playlist_queue';

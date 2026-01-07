@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/providers/ConfirmProvider';
-import { Game, UserProfile } from '@/types';
+import { Game } from '@/types/game';
+import { UserProfile } from '@/types/user';
 
 import PlaylistItem from '../components/PlaylistItem';
 import { usePlaylist } from '../hooks/usePlaylist';
@@ -174,7 +175,7 @@ export default function Playlist({
               <div key={game.id} className="group relative">
                 <StandardGameCard
                   title={game.name}
-                  coverUrl={game.cover_url}
+                  coverUrl={game.coverUrl}
                   className="text-xs"
                   actions={
                     <Button

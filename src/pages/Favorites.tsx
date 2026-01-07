@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { ActionButton } from '@/components/ActionButton.tsx';
 import { GameActionsMenu } from '@/components/GameActionsMenu';
 import StandardGameCard from '@/components/StandardGameCard';
+import { Game, GameActions } from '@/types';
 
 import { usePlaylist } from '../hooks/usePlaylist';
-import { Game, GameActions } from '../types';
 import { launchGame } from '../utils/launcher';
 
 interface FavoritesProps extends GameActions {
@@ -73,7 +73,7 @@ export default function Favorites({
             <div key={game.id} className="group relative">
               <StandardGameCard
                 title={game.name}
-                coverUrl={game.cover_url}
+                coverUrl={game.coverUrl}
                 subtitle={game.genre}
                 badge={game.platform}
                 rating={game.rating}

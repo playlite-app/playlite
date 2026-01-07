@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { Game, RawgGame, UserProfile } from '@/types';
+
 import { trendingService } from '../services/trendingService';
-import { Game, RawgGame, UserProfile } from '../types';
 import { useRecommendation } from './useRecommendation';
 
 interface UseHomeProps {
