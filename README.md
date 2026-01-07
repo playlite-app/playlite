@@ -4,25 +4,13 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Alan-oliveir/game_manager?label=version&color=blue)](https://github.com/Alan-oliveir/game_manager/releases/latest)
 ![License](https://img.shields.io/badge/license-MIT-green)
-
 <br/>
-
 ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
 ![Tauri](https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 
 </div>
-
-Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
-Learning clássico.
-
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
-![Tauri](https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 
 Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
 Learning clássico.
