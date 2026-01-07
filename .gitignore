@@ -25,3 +25,8 @@ dist-ssr
 
 # OS generated files
 .settings.dat
+
+# Docs
+docs/.vuepress/dist
+docs/.vuepress/.temp
+docs/.vuepress/cache
