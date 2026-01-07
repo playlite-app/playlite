@@ -101,7 +101,7 @@ export default function Hero({
             />
           ) : (
             /* Fallback Visual (Gradiente + Ícone + Nome) */
-            <div className="from-secondary/50 via-muted to-background flex aspect-3/4 w-64 flex-col items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br p-4 text-center shadow-2xl md:w-80">
+            <div className="from-secondary/50 via-muted to-background flex aspect-3/4 w-64 flex-col items-center justify-center rounded-lg border border-white/10 bg-linear-to-br p-4 text-center shadow-2xl md:w-80">
               <ImageOff className="mb-3 h-10 w-10 opacity-20" />
               <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
                 {title}
