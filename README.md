@@ -7,12 +7,14 @@
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
 
-Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine Learning clássico.
+Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
+Learning clássico.
 
 ## 💡 Motivação
 
 Tenho uma biblioteca grande de jogos e frequentemente fico em dúvida sobre qual jogar depois.
-Este projeto nasceu para resolver esse problema real, ao mesmo tempo em que serve como um projeto completo de portfólio para explorar Rust, Tauri, React e sistemas de recomendação.
+Este projeto nasceu para resolver esse problema real, ao mesmo tempo em que serve como um projeto completo de portfólio
+para explorar Rust, Tauri, React e sistemas de recomendação.
 
 ## ✨ Funcionalidades
 
@@ -38,7 +40,7 @@ Este projeto nasceu para resolver esse problema real, ao mesmo tempo em que serv
 - UI desacoplada em React
 - Comunicação via Tauri Commands
 - Banco SQLite embarcado
-  
+
 ➡️ Veja mais em [`docs/architecture.md`](docs/architecture.md)
 
 ## 📚 Documentação
@@ -46,11 +48,14 @@ Este projeto nasceu para resolver esse problema real, ao mesmo tempo em que serv
 - Arquitetura técnica: [`docs/architecture.md`](docs/architecture.md)
 - Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
 - Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
-- Diário de desenvolvimento: [`DEV_LOG.md`](docs/dev_logs/DEV_LOG_1_MVP.md)
+- Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
+- Guia de contribuição: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Roadmap: [`ROADMAP.md`](ROADMAP.md)
 
 ## 🤖 Sistema de Recomendação
 
-O sistema de recomendação é baseado em **Machine Learning clássico**, priorizando performance, privacidade e funcionamento offline.
+O sistema de recomendação é baseado em **Machine Learning clássico**, priorizando performance, privacidade e
+funcionamento offline.
 
 - Content-based filtering
 - Similaridade entre jogos
@@ -73,14 +78,6 @@ O sistema de recomendação é baseado em **Machine Learning clássico**, priori
 npm install
 npm run tauri dev
 ```
-
-## 🗺️ Roadmap
-
-- [x] CRUD local de jogos
-- [x] UI desktop base
-- [x] Integração com Steam
-- [x] Sistema de recomendação (ML clássico)
-- [ ] Sync opcional em nuvem
 
 ## 🤝 Contribuição
 
