@@ -1,52 +1,55 @@
 ---
-# https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
 hero:
   name: "Playlite"
-  text: "Game Manager local-first"
-  tagline: "Organize sua biblioteca, acompanhe seu progresso e descubra o que jogar depois."
+  text: "Sua coleção de jogos. Unificada."
+  tagline: "Organize sua biblioteca, acompanhe seu progresso e mantenha tudo sob controle. Rápido, privado e sem depender de internet."
+  image:
+    src: /images/app-home.png
+    alt: Interface do Playlite mostrando a biblioteca de jogos
   actions:
     - theme: brand
-      text: Instalar
+      text: Baixar Agora
       link: /guide/installation
     - theme: alt
-      text: Primeiros passos
-      link: /guide/getting-started
+      text: Ver Funcionalidades
+      link: /guide/features
     - theme: alt
-      text: Quickstart (Dev)
-      link: /dev/quickstart
+      text: Ver no GitHub
+      link: https://github.com/Alan-oliveir/game_manager
 
 features:
-  - title: Local-first e offline-first
-    details: Seus dados ficam no seu computador, com persistência local (SQLite) e foco em privacidade.
-  - title: Biblioteca, favoritos e tracking
-    details: CRUD de jogos, favoritos, nota e tempo jogado — sem depender de serviços externos.
-  - title: Integrações opcionais
-    details: Importação da Steam e base para recomendações, sem comprometer a experiência offline.
+  - title: Privacidade em Primeiro Lugar
+    details: Seus dados ficam no seu computador. O Playlite usa um banco de dados local, garantindo que sua biblioteca funcione 100% offline.
+  - title: Todas as lojas, um lugar
+    details: Importe seus jogos da Steam automaticamente e adicione títulos da Epic, GOG ou emuladores manualmente.
+  - title: Acompanhe seu progresso
+    details: Organize sua fila de jogos. Marque o que está "Jogando", "Zerado" ou "Abandonado", dê notas e favorite os melhores.
 ---
 
-## O que é o Playlite?
+## Por que usar o Playlite?
 
-O **Playlite** é um app desktop para gerenciar sua biblioteca de jogos de um jeito simples.
-Ele nasceu pra resolver um problema comum: ter muitos jogos e não saber o que jogar em seguida.
+Diferente dos launchers pesados das lojas, o Playlite foca apenas na **organização** da sua coleção pessoal.
 
-### Para quem é
+### Leve e Rápido
 
-- **Usuários** que querem organizar jogos (Steam e outros) num lugar só
-- **Entusiastas** que gostam de acompanhar favoritos, notas e tempo jogado
-- **Devs/contribuidores** que querem um projeto real com React + Rust + Tauri
+Desenvolvido com tecnologias modernas (**Rust** e **Tauri**), o aplicativo abre instantaneamente e consome recursos
+mínimos do sistema. Deixe a memória RAM para os seus jogos.
 
-## Como esta documentação está organizada
+### Visual Imersivo
 
-- **Guia (Usuário):** foco em como usar o app
-  - Comece em: **Primeiros passos** → `/guide/getting-started`
-- **Dev:** foco em rodar localmente, entender a estrutura e contribuir
-  - Comece em: **Quickstart (Dev)** → `/dev/quickstart`
+Sua biblioteca merece ser vista. O Playlite baixa capas e metadados automaticamente, oferecendo uma interface limpa,
+moderna e agradável de navegar.
 
-## Links úteis
+### Você no Controle
 
-- Repositório e contexto do projeto: `README.md`
-- Como contribuir: `CONTRIBUTING.md`
-- Roadmap: `ROADMAP.md`
-- Arquitetura (técnico): `/dev/architecture`
+* **Backup Fácil:** Exporte sua coleção inteira para JSON quando quiser.
+* **Sem Rastreamento:** Não coletamos dados de uso.
+* **Open Source:** Código transparente e auditável.
+
+---
+
+<div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+  <a href="/guide/installation" style="display: inline-block; padding: 12px 24px; background-color: var(--vp-c-brand-1); color: white; border-radius: 20px; text-decoration: none; font-weight: 600;">Instalar</a>
+</div>

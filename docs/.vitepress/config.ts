@@ -1,29 +1,42 @@
-import { defineConfig } from 'vitepress';
+import {defineConfig} from 'vitepress'; // https://vitepress.dev/reference/site-config
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: 'Playlite',
   description: 'Documentação do Playlite (Game Manager)',
+  head: [['link', { rel: 'icon', href: '/icon.png' }]], // Ajuste o nome do ícone se necessário
+
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Início', link: '/' },
       {
-        text: 'Guia',
+        text: 'Guia do Usuário',
         items: [
-          { text: 'Primeiros passos', link: '/guide/getting-started' },
           { text: 'Instalação', link: '/guide/installation' },
+          { text: 'Primeiros passos', link: '/guide/getting-started' },
           { text: 'Funcionalidades', link: '/guide/features' },
-          { text: 'Fluxos (how-to)', link: '/guide/flows/' },
-          { text: 'Telas do app', link: '/guide/pages/' },
+          { text: 'Telas do app', link: '/guide/pages/home' },
           { text: 'FAQ', link: '/guide/faq' },
         ],
       },
       {
-        text: 'Dev',
+        text: 'Desenvolvimento',
         items: [
           { text: 'Quickstart', link: '/dev/quickstart' },
           { text: 'Arquitetura', link: '/dev/architecture' },
+          {
+            text: 'Sistema de Recomendação',
+            link: '/dev/recommendation-system',
+          },
+        ],
+      },
+      {
+        text: 'Sobre o Projeto',
+        items: [
+          {
+            text: 'Documentação Oficial (GitHub)',
+            link: '/dev/project-docs',
+          },
         ],
       },
       {
@@ -35,43 +48,26 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: 'Guia do usuário',
+          text: 'Começando',
           items: [
-            { text: 'Primeiros passos', link: '/guide/getting-started' },
             { text: 'Instalação', link: '/guide/installation' },
+            { text: 'Primeiros passos', link: '/guide/getting-started' },
             { text: 'Funcionalidades', link: '/guide/features' },
+            { text: 'Backup e Restore', link: '/guide/backup-restore' },
             { text: 'FAQ', link: '/guide/faq' },
           ],
         },
         {
-          text: 'Fluxos (how-to)',
+          text: 'Interface do App',
           items: [
-            { text: 'Visão geral', link: '/guide/flows/' },
-            { text: 'Importar Steam', link: '/guide/flows/import-steam' },
-            { text: 'Adicionar jogo', link: '/guide/flows/add-game' },
-            { text: 'Favoritar jogo', link: '/guide/flows/favorite-game' },
-            { text: 'Criar playlist', link: '/guide/flows/create-playlist' },
-            {
-              text: 'Adicionar na wishlist',
-              link: '/guide/flows/add-to-wishlist',
-            },
-            { text: 'Backup e restore', link: '/guide/flows/backup-restore' },
-          ],
-        },
-        {
-          text: 'Telas do app',
-          items: [
-            { text: 'Visão geral', link: '/guide/pages/' },
-            { text: 'Home', link: '/guide/pages/home' },
-            { text: 'Libraries', link: '/guide/pages/libraries' },
-            { text: 'Settings', link: '/guide/pages/settings' },
-            { text: 'Wishlist', link: '/guide/pages/wishlist' },
-            { text: 'Favorites', link: '/guide/pages/favorites' },
-            { text: 'Playlist', link: '/guide/pages/playlist' },
-            { text: 'Trending', link: '/guide/pages/trending' },
+            { text: 'Home e Trending', link: '/guide/pages/home' },
+            { text: 'Sua Biblioteca', link: '/guide/pages/libraries' },
+            { text: 'Listas (Playlist/Wishlist)', link: '/guide/pages/lists' },
+            { text: 'Configurações', link: '/guide/pages/settings' },
           ],
         },
       ],
+
       '/dev/': [
         {
           text: 'Desenvolvimento',
@@ -79,25 +75,18 @@ export default defineConfig({
             { text: 'Quickstart', link: '/dev/quickstart' },
             { text: 'Arquitetura', link: '/dev/architecture' },
             {
-              text: 'Sistema de recomendação',
+              text: 'Sistema de Recomendação',
               link: '/dev/recommendation-system',
             },
           ],
         },
-      ],
-      // fallback
-      '/': [
         {
-          text: 'Docs',
+          text: 'Sobre o Projeto',
           items: [
-            { text: 'Início', link: '/' },
-            { text: 'Primeiros passos', link: '/guide/getting-started' },
-            { text: 'Instalação', link: '/guide/installation' },
-            { text: 'Funcionalidades', link: '/guide/features' },
-            { text: 'Fluxos (how-to)', link: '/guide/flows/' },
-            { text: 'Telas do app', link: '/guide/pages/' },
-            { text: 'FAQ', link: '/guide/faq' },
-            { text: 'Quickstart (Dev)', link: '/dev/quickstart' },
+            {
+              text: 'Documentação Oficial (GitHub)',
+              link: '/dev/project-docs',
+            },
           ],
         },
       ],

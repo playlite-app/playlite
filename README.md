@@ -1,5 +1,22 @@
 # 🎮 Game Manager
 
+<div align="center">
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Alan-oliveir/game_manager?label=version&color=blue)](https://github.com/Alan-oliveir/game_manager/releases/latest)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+<br/>
+
+![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri-24C8DB?logo=tauri&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
+
+</div>
+
+Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
+Learning clássico.
+
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
@@ -9,6 +26,8 @@
 
 Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
 Learning clássico.
+
+![Demo do Playlite](https://github.com/Alan-oliveir/game_manager/blob/main/docs/assets/demo.gif?raw=true)
 
 ## 💡 Motivação
 
@@ -41,11 +60,8 @@ para explorar Rust, Tauri, React e sistemas de recomendação.
 - Comunicação via Tauri Commands
 - Banco SQLite embarcado
 
-➡️ Veja mais em [`docs/architecture.md`](docs/architecture.md)
+## 📚 Documentação Adicional
 
-## 📚 Documentação
-
-- Arquitetura técnica: [`docs/architecture.md`](docs/architecture.md)
 - Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
 - Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
 - Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
@@ -61,8 +77,6 @@ funcionamento offline.
 - Similaridade entre jogos
 - Regras de negócio
 - LLM opcional apenas para explicação das sugestões
-
-📄 Detalhes técnicos em: [`docs/recommendation-system.md`](docs/recommendation-system.md)
 
 ## 🚀 Como rodar localmente
 

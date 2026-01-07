@@ -1,28 +1,29 @@
-# Home
+# Home e Trending
 
-3. (Opcional) Importar sua biblioteca da Steam em **Settings**
-2. Adicionar alguns jogos manualmente
-1. Ir em **Libraries**
+No Início você tem um resumo da sua vida gamer e sugestões do que conferir, bem como sugestoes de jogos baseados no seu
+perfil para experimentar. Já em Trending (Em Alta) você encontra os jogos que estão em alta no momento, facilitando a
+descoberta de novidades.
 
-- Se você está começando, o caminho mais rápido é:
+## Visão Geral
+
+### Início (Home)
+
+A tela é dividida em blocos inteligentes:
+
+- **Resumo da Biblioteca:** Contadores rápidos de quantos jogos, favoritos e terminados você tem.
+- **Continue Jogando:** Acesso rápido aos jogos que você já estava jogando.
+- **Recomendados**: Jogos sugeridos com base no seu perfil e histórico.
+- **Estatísticas**: Mostra seus títulos mais jogados e gêneros preferidos.
+
+### Em Alta (Trending)
+
+O que dá pra fazer:
+
+- Explorar jogos em alta
+- Ver os próximos lançamentos mais aguardados
+- Abrir detalhes e avaliar se faz sentido adicionar na sua wishlist
 
 ## Dicas
 
-- **Editar informações** (nome, gênero, plataforma, etc.)
-- **Marcar/desmarcar favorito**
-- **Abrir detalhes de um jogo** (para ver capa, plataforma, nota e tempo jogado)
-
-## Ações comuns
-
-> Dependendo da versão, alguns blocos podem aparecer como “em evolução” (por exemplo, recomendações mais avançadas).
-
-- **Sugestões/descobertas** (quando disponível), com base no que você já joga
-- **Acesso rápido** para ações comuns (ex.: adicionar jogo, abrir detalhes)
-- **Visão geral da biblioteca**: quantidade de jogos, destaques e atalhos
-
-## O que você encontra aqui
-
-A **Home** é o ponto de entrada do Playlite. Ela foi pensada pra te dar um panorama rápido da sua biblioteca e facilitar
-o “próximo passo”.
-
-
+- Use **Wishlist** para guardar descobertas que você ainda não quer adicionar na biblioteca.
+- Combine com **Libraries** para manter sua coleção organizada.

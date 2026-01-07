@@ -1,33 +1,60 @@
-# Primeiros passos
+# Primeiros Passos
 
-O **Playlite** é um gerenciador de biblioteca de jogos **desktop** (Windows/macOS/Linux via Tauri) com foco em ser *
-*local-first**: seus dados ficam no seu computador e o app funciona offline na maior parte do tempo.
+Bem-vindo ao **Playlite**! Este guia vai te ajudar a configurar sua biblioteca e começar a organizar seus jogos em
+poucos minutos.
 
-## O que você consegue fazer
+## 1. Visão Geral
 
-- Adicionar, editar e remover jogos da sua biblioteca
-- Marcar favoritos, dar nota e registrar tempo jogado
-- Importar jogos da Steam (opcional)
-- Fazer backup/restaurar seus dados (JSON)
+Ao abrir o Playlite, você verá os jogos que você está jogando atualmente, de tendências do mercado e jogos
+recomendados para você baseado nas suas preferências e títulos mais jogados.
 
-## Comece por aqui
+![Tela Inicial do Playlite](/images/app-home.png)
 
-- Entenda as funcionalidades: `/guide/features`
-- Veja as telas do app: `/guide/pages/`
-- Siga guias rápidos (how-to): `/guide/flows/`
+O menu lateral é seu centro de navegação:
 
-## Requisitos
+* **Biblioteca:** Todos os seus jogos.
+* **Lista de Desejos:** Jogos que você quer comprar.
+* **Playlist:** Sua fila de "próximos a jogar".
+* **Configurações:** Configurações de importação e backup.
 
-- Para usar: apenas instalar o app (quando houver releases)
-- Para desenvolvimento: ver o guia em **/dev/quickstart**
+## 2. Importando sua Biblioteca (Steam)
 
-## Importar biblioteca da Steam (opcional)
+A maneira mais fácil de começar é importando seus jogos da Steam.
 
-Para importar da Steam você geralmente vai precisar de:
+1. Vá até a aba **Configuraçõoes**️.
+2. Localize a seção de importação da Steam.
+3. Preencha os campos necessários:
 
-- **SteamID** (64-bit)
-- **Steam Web API Key**
+- **Steam ID (64-bit):** O identificador numérico do seu perfil.
+- **API Key:** Sua chave de acesso pessoal.
+- Salve o Steam ID e a API Key: clique em **Salvar todas as Configurações**
 
-Depois disso, vá em **Settings** e execute a importação.
+4. Clique em **Iniciar Importação**.
 
-> Dica: a importação pode depender de jogos públicos no seu perfil Steam.
+::: tip Onde conseguir esses dados?
+Você pode obter sua API Key gratuitamente no site oficial da
+Steam: [Steam Web API](https://steamcommunity.com/dev/apikey).
+Para descobrir seu Steam ID 64, você pode usar ferramentas como o [SteamIO](https://steamid.io).
+:::
+
+O Playlite irá baixar seus jogos, capas e o tempo que você já jogou. Isso pode levar alguns instantes dependendo do
+tamanho da sua biblioteca. Depois opcionalmente clique em buscar metadados para atualizar informações dos jogos.
+
+## 3. Adicionando Jogos Manualmente
+
+Para jogos da Epic, GOG, emuladores ou físicos:
+
+1. Na **Header**, clique no botão de **+ Adicionar**.
+2. Digite o nome do jogo.
+3. Opcional: coloque a plataforma (Epic, GOG, Emulador, Físico, etc), tempo jogado e status, imagem personalizada de
+   capa e gênero (ação, aventura, rpg, etc).
+4. Confirme e salve.
+
+## 4. Organizando seu Progresso
+
+Agora que seus jogos estão importados, clique em qualquer jogo para ver os detalhes.
+
+![Detalhes do Jogo](/images/app-details.png)
+
+Nesta tela, você pode conferir todas as informações coletadas (gênero, sinopse, desenvolvedor, avaliação da crítica,
+etc) além de visitar o site oficial ou página da loja pelo link exibido. 

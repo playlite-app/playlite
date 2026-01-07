@@ -1,39 +1,32 @@
-# Libraries
+# Sua Biblioteca
 
-A página **Libraries** é onde você gerencia sua biblioteca de jogos.
-Aqui você cria e mantém sua coleção organizada (Steam e outras plataformas).
+A página **Biblioteca** é o coração do Playlite. Aqui vivem todos os seus jogos, sejam eles importados da Steam ou
+adicionados manualmente.
 
-## O que dá pra fazer
+## Gerenciando sua Coleção
 
-- **Adicionar** um jogo (manualmente)
-- **Editar** informações de um jogo
-- **Remover** um jogo da biblioteca
-- **Buscar** por nome
-- **Favoritar** jogos para acessar depois com mais facilidade
+Você pode filtrar, buscar e organizar seus jogos.
 
-Quer um passo a passo rápido?
+### Adicionar Jogo Manualmente
 
-- Fluxo: **Adicionar um jogo** → `/guide/flows/add-game`
+Se o jogo não veio da Steam (ex: Epic, GOG, Emuladores), adicione-o facilmente:
 
-## Campos comuns
+1. Clique no botão **+ Adicionar**.
+2. Digite o nome do jogo.
+3. Preencha informações opcionais (Plataforma, Gênero).
+4. Clique em **Salvar**.
 
-Os jogos normalmente têm informações como:
+### Editando Informações
 
-- **Nome**
-- **Gênero** (opcional)
-- **Plataforma** (Steam, Epic, etc.)
-- **Capa** (URL opcional)
-- **Tempo jogado**
-- **Nota/Avaliação**
+Quer mudar a capa ou corrigir o gênero?
 
-> Nem todo campo é obrigatório — a ideia é você preencher o mínimo e evoluir com o tempo.
+- Clique no botão **Mais Opções**, nos cards dos jogos.
+- Selecione **Editar**.
+- Ajuste qualquer campo e salve.
 
-## Organização e uso no dia a dia
+### Favoritos
 
-- Use **favoritos** para destacar o que você quer jogar em breve.
-- Se você tem uma biblioteca grande na Steam, pode importar em lote (ver **Settings**).
+Para destacar seus jogos preferidos:
 
-## Solução de problemas
-
-- **Não aparece capa**: verifique se a URL está pública e acessível.
-- **Importação da Steam não trouxe gêneros**: isso é esperado (a API usada não retorna gênero diretamente).
+- Dentro dos detalhes do jogo, clique no ícone de **Coração**.
+- O jogo aparecerá na página **Favoritos**.

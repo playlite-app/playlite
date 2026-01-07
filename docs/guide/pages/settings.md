@@ -1,39 +1,28 @@
-# Settings
+# Configurações
 
-A tela **Settings** reúne preferências do app e integrações opcionais.
+Na tela **Settings**, você controla o comportamento do app e suas integrações.
 
-## O que você encontra aqui
+![Configurações](/images/app-settings.png)
 
-- Preferências gerais do Playlite
-- Configurações de integração (ex.: Steam)
-- Ações utilitárias, como importação e rotinas relacionadas a dados
+## Integração Steam
 
-## Integração com a Steam (opcional)
+Conecte sua conta para manter sua biblioteca sincronizada.
 
-Você pode importar sua biblioteca da Steam para popular sua lista de jogos automaticamente.
+1. Insira seu **SteamID64** e **API Key**.
+2. Clique em **Salvar**.
+3. Use o botão **Importar** para baixar seus jogos.
 
-### O que você precisa
+> **Nota:** As credenciais ficam salvas apenas no seu computador.
+> Para saber como obter essas chaves, veja o guia de [Primeiros Passos](/guide/getting-started).
 
-- **SteamID** (64-bit)
-- **Steam Web API Key**
+## Dados e Segurança
 
-### Como funciona a importação
+### Backup e Restauração
 
-1. Você informa as credenciais na tela **Settings**
-2. O Playlite chama a Steam Web API para listar seus jogos
-3. Os jogos são adicionados na sua biblioteca local
+O Playlite permite que você exporte todos os seus dados para um arquivo JSON. Isso é útil para formatar o PC ou migrar
+de máquina.
 
-Quer um passo a passo rápido?
+- **Exportar:** Gera um arquivo com todos os seus jogos, notas e status.
+- **Importar:** Restaura sua biblioteca a partir de um arquivo salvo.
 
-- Fluxo: **Importar biblioteca da Steam** → `/guide/flows/import-steam`
-
-> Importante: a importação depende das permissões/visibilidade do seu perfil na Steam.
-
-## Segurança e privacidade (resumo)
-
-- Os dados do Playlite são **locais** (armazenados no seu dispositivo)
-- Credenciais e configurações são salvas localmente
-
-## Dicas
-
-- Se algo não importar como esperado, veja o **FAQ** e confira se seu SteamID/API Key estão corretos.
+➡️ [Veja o guia completo de Backup e Restore](/guide/backup-restore)

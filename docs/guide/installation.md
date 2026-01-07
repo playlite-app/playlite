@@ -4,8 +4,9 @@ O Playlite já tem releases disponíveis no GitHub.
 
 ## Baixar a versão mais recente
 
-- Release atual (v1.2.0):
-  - https://github.com/Alan-oliveir/game_manager/releases/tag/v1.2.0
+Mais atual:
+
+- https://github.com/Alan-oliveir/game_manager/releases/tag/v1.2.0
 
 Ou veja todas as versões:
 
@@ -35,5 +36,4 @@ Quando sair uma nova versão:
 
 Antes de atualizações ou mudanças grandes, use o fluxo:
 
-- `/guide/flows/backup-restore`
-
+➡️ [Veja o guia completo de Backup e Restore](/guide/backup-restore)
