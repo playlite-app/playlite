@@ -3,7 +3,7 @@
 //! Gerencia a criação e inicialização do banco SQLite para a biblioteca de jogos e wishlist,
 //! além do armazenamento seguro de secrets (API keys, tokens) com criptografia.
 //!
-//! # Bancos de Dados
+//! **Bancos de Dados:**
 //! - library.db: armazena a biblioteca de jogos e wishlist do usuário.
 //! - secrets.db: armazena secrets encriptados com AES-256-GCM.
 
@@ -24,7 +24,7 @@ pub struct AppState {
 
 /// Inicializa ambos os bancos de dados e retorna o estado da aplicação
 ///
-/// # Erros
+/// **Erros:**
 /// - Se não conseguir criar os diretórios
 /// - Se não conseguir abrir as conexões
 /// - Se falhar ao configurar WAL mode
@@ -77,9 +77,9 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
 /// Inicializa o banco de dados de gerenciamento de jogos.
 ///
-/// Cria as tabelas `games` e `wishlist` se não existirem, e índices otimizados para consultas frequentes.
+/// Cria as tabelas `games`, `games_details` e `wishlist` se não existirem, e índices otimizados para consultas frequentes.
 ///
-/// # Erros
+/// **Erros:**
 /// - Se falhar ao bloquear o mutex do banco de dados.
 /// - Se falhar ao executar comandos SQL.
 #[tauri::command]
@@ -96,32 +96,67 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
         "CREATE TABLE IF NOT EXISTS games (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            genre TEXT,
-            platform TEXT,
             cover_url TEXT,
-            playtime INTEGER DEFAULT 0,
-            rating INTEGER,
-            favorite BOOLEAN DEFAULT FALSE
-        )",
+            platform TEXT NOT NULL,
+            platform_id TEXT,
+            install_path TEXT,
+            executable_path TEXT,
+            launch_args TEXT,
+            user_rating INTEGER,
+            favorite BOOLEAN DEFAULT 0,
+            status TEXT,
+            playtime INTEGER,
+            last_played TEXT,
+            added_at TEXT NOT NULL
+        );",
         [],
     )
     .map_err(|e| e.to_string())?;
 
-    // Tabela da Lista de Desejos
+    // Tabela de Detalhes dos Jogos
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS game_details (
+            game_id TEXT PRIMARY KEY,
+            steam_app_id TEXT,
+            description TEXT,
+            developer TEXT,
+            publisher TEXT,
+            release_date TEXT,
+            genres TEXT,
+            tags TEXT,
+            series TEXT,
+            age_rating TEXT,
+            background_image TEXT,
+            critic_score INTEGER,
+            users_score REAL,
+            website_url TEXT,
+            igdb_url TEXT,
+            rawg_url TEXT,
+            pcgamingwiki_url TEXT,
+            hltb_main_story INTEGER,
+            hltb_main_extra INTEGER,
+            hltb_completionist INTEGER,
+            FOREIGN KEY(game_id) REFERENCES games(id) ON DELETE CASCADE
+        );",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Tabela da Lista de Desejos (Wishlist)
     conn.execute(
         "CREATE TABLE IF NOT EXISTS wishlist (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             cover_url TEXT,
             store_url TEXT,
+            store_platform TEXT,
             current_price REAL,
+            normal_price REAL,
             lowest_price REAL,
+            currency TEXT,
             on_sale BOOLEAN DEFAULT 0,
-            added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            localized_price REAL,
-            localized_currency TEXT,
-            steam_app_id INTEGER
-        )",
+            added_at TEXT
+        );",
         [],
     )
     .map_err(|e| e.to_string())?;
@@ -161,7 +196,7 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
 ///
 /// Cria automaticamente a tabela `encrypted_keys` se não existir.
 ///
-/// # Erros
+/// **Erros:**
 /// - Se falhar ao bloquear o mutex do banco de dados.
 /// - Se falhar ao executar comandos SQL.
 fn get_secrets_connection<'a>(
