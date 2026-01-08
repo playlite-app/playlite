@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["delete_secret","get_secret","get_secrets","list_secrets","set_secret","set_secrets"],"struct":["KeysBatch"]};

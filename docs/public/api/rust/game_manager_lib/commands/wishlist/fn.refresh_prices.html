@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Atualiza preços dos jogos da wishlist."><title>refresh_prices in game_manager_lib::commands::wishlist - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="game_manager_lib" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">refresh_prices</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../game_manager_lib/index.html">game_<wbr>manager_<wbr>lib</a><span class="version">1.2.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">refresh_<wbr>prices</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#processo" title="Processo">Processo</a></li><li><a href="#retorna" title="Retorna">Retorna</a></li><li><a href="#exemplo-de-uso" title="Exemplo de Uso">Exemplo de Uso</a></li><li><a href="#nota" title="Nota">Nota</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="index.html">In game_<wbr>manager_<wbr>lib::<wbr>commands::<wbr>wishlist</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">game_manager_lib</a>::<wbr><a href="../index.html">commands</a>::<wbr><a href="index.html">wishlist</a></div><h1>Function <span class="fn">refresh_<wbr>prices</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/game_manager_lib/commands/wishlist.rs.html#209-281">Source</a> </span></div><pre class="rust item-decl"><code>pub async fn refresh_prices(
+    state: State&lt;'_, AppState&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.92.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.92.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>, <a class="struct" href="https://doc.rust-lang.org/1.92.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Atualiza preços dos jogos da wishlist.</p>
+<p>Operação em lote que consulta a Steam Store API para cada jogo
+e atualiza informações de preço, desconto e URLs.</p>
+<h2 id="processo"><a class="doc-anchor" href="#processo">§</a>Processo</h2>
+<ol>
+<li>Busca todos os jogos da wishlist</li>
+<li>Para cada jogo:
+<ul>
+<li>Verifica se tem Steam App ID</li>
+<li>Se não tem, tenta descobrir via busca (auto-healing)</li>
+<li>Consulta preço atual na Steam Store API</li>
+<li>Atualiza banco com novos dados</li>
+<li>Aguarda 500ms (rate limiting)</li>
+</ul>
+</li>
+</ol>
+<h2 id="retorna"><a class="doc-anchor" href="#retorna">§</a>Retorna</h2>
+<ul>
+<li><code>Ok(String)</code> - Mensagem com contador de atualizações</li>
+<li><code>Err(String)</code> - Erro crítico de banco ou sistema</li>
+</ul>
+<h2 id="exemplo-de-uso"><a class="doc-anchor" href="#exemplo-de-uso">§</a>Exemplo de Uso</h2><div class="example-wrap"><pre class="language-typescript"><code>// Iniciar atualização (operação longa)
+const result = await invoke(&#39;refresh_prices&#39;);
+console.log(result); // &quot;Preços atualizados: 23/25&quot;
+
+// Recarregar wishlist para mostrar novos preços
+const updated = await invoke(&#39;get_wishlist&#39;);</code></pre></div><h2 id="nota"><a class="doc-anchor" href="#nota">§</a>Nota</h2>
+<ul>
+<li>Operação naturalmente lenta devido ao rate limiting (500ms) obrigatório.</li>
+<li>Erros individuais não interrompem o processo.</li>
+<li>Jogos sem Steam App ID que não são encontrados na busca são ignorados.</li>
+</ul>
+</div></details></section></div></main></body></html>

@@ -1,4 +1,4 @@
-import {defineConfig} from 'vitepress'; // https://vitepress.dev/reference/site-config
+import { defineConfig } from 'vitepress'; // https://vitepress.dev/reference/site-config
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -36,6 +36,21 @@ export default defineConfig({
           {
             text: 'Documentação Oficial (GitHub)',
             link: '/dev/project-docs',
+          },
+        ],
+      },
+      {
+        text: 'API Reference',
+        items: [
+          {
+            text: 'Backend (Rust Docs)',
+            link: '/api/rust/game_manager_lib/index.html',
+            target: '_blank',
+          },
+          {
+            text: 'Frontend (TypeDoc)',
+            link: '/api/frontend/index.html',
+            target: '_blank',
           },
         ],
       },
@@ -84,7 +99,7 @@ export default defineConfig({
           text: 'Sobre o Projeto',
           items: [
             {
-              text: 'Documentação Oficial (GitHub)',
+              text: 'Documentação Adicional (GitHub)',
               link: '/dev/project-docs',
             },
           ],

@@ -5,7 +5,6 @@ import { Game, GameDetails, GamePlatformLink } from '@/types';
 import { detailsService } from '../services/detailsService';
 
 /**
-/**
  * Busca detalhes enriquecidos de um jogo na API RAWG e identifica versões em outras plataformas.
  *
  * @param selectedGame - Jogo para buscar detalhes, ou null
