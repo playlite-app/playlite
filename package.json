@@ -16,7 +16,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:rust": "cargo doc --no-deps && mkdir -p docs/public/api/rust && cp -r target/doc/* docs/public/api/rust/",
+    "docs:ts": "typedoc src --out docs/public/api/frontend",
+    "build:all-docs": "npm run docs:rust && npm run docs:ts && npm run docs:build"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
