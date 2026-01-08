@@ -32,5 +32,4 @@ docs/.vitepress/dist
 docs/.vitepress/cache
 
 # Documentation Artifacts
-docs/public/api
 target/

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AppError"],"struct":["Game","GenreScore","UserProfile","WishlistGame"]};
