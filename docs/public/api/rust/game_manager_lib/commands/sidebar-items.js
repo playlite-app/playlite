@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["backup","games","integrations","recommendations","settings","wishlist"]};

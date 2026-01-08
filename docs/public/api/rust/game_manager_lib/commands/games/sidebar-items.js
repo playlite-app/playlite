@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["add_game","delete_game","get_games","toggle_favorite","update_game"],"struct":["GameInput"]};
