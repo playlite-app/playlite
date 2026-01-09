@@ -221,10 +221,12 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT
-            id, name, cover_url, platform, platform_id,
-            install_path, executable_path, launch_args,
-            user_rating, favorite, status, playtime, last_played, added_at
-         FROM games",
+            g.id, g.name, g.cover_url, g.platform, g.platform_id,
+            g.install_path, g.executable_path, g.launch_args,
+            g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
+            gd.genres, gd.developer -- Campos da outra tabela
+         FROM games g
+         LEFT JOIN game_details gd ON g.id = gd.game_id",
         )
         .map_err(|e| e.to_string())?;
 
@@ -245,6 +247,8 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
                 playtime: row.get(11)?,
                 last_played: row.get(12)?,
                 added_at: row.get(13)?,
+                genres: row.get(14)?,
+                developer: row.get(15)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -254,12 +258,58 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     Ok(games)
 }
 
+#[tauri::command]
+pub fn get_library_game_details(
+    state: State<AppState>,
+    game_id: String,
+) -> Result<Option<models::GameDetails>, String> {
+    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
+
+    // Query que busca tudo da tabela game_details
+    let mut stmt = conn
+        .prepare("SELECT * FROM game_details WHERE game_id = ?1")
+        .map_err(|e| e.to_string())?;
+
+    let mut rows = stmt
+        .query_map(params![game_id], |row| {
+            Ok(models::GameDetails {
+                game_id: row.get("game_id")?,
+                steam_app_id: row.get("steam_app_id").ok(),
+                description: row.get("description").ok(),
+                developer: row.get("developer").ok(),
+                publisher: row.get("publisher").ok(),
+                release_date: row.get("release_date").ok(),
+                genres: row.get("genres").ok(),
+                tags: row.get("tags").ok(), // Se tiver implementado tags
+                series: row.get("series").ok(),
+                age_rating: row.get("age_rating").ok(),
+                background_image: row.get("background_image").ok(),
+                critic_score: row.get("critic_score").ok(),
+                users_score: row.get("users_score").ok(),
+                website_url: row.get("website_url").ok(),
+                igdb_url: row.get("igdb_url").ok(),
+                rawg_url: row.get("rawg_url").ok(),
+                pcgamingwiki_url: row.get("pcgamingwiki_url").ok(),
+                hltb_main_story: row.get("hltb_main_story").ok(),
+                hltb_main_extra: row.get("hltb_main_extra").ok(),
+                hltb_completionist: row.get("hltb_completionist").ok(),
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    if let Some(row) = rows.next() {
+        Ok(Some(row.map_err(|e| e.to_string())?))
+    } else {
+        Ok(None)
+    }
+}
+
 /// Alterna o status de favorito de um jogo.
 ///
-/// Inverte o valor booleano do campo `favorite` usando NOT lógico.
+/// Inverte o valor booleano do campo 'favorite' usando NOT lógico.
 /// Se era favorito, deixa de ser; se não era, passa a ser.
 ///
-/// **Nota:** Esta operação é idempotente e não retorna erro se o ID não existir.
+/// **Nota:** Esta operação é idempotente e não retorna erro se o ‘ID’ não existir.
 #[tauri::command]
 pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String> {
     let conn = state
@@ -278,7 +328,7 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
 
 /// Define o status de um jogo na biblioteca.
 ///
-/// Altera o campo `status` para a condição fornecida para o jogo.
+/// Altera o campo 'status' para a condição fornecida para o jogo.
 /// Não há validação do valor; espera-se que o frontend envie valores válidos.
 /// A lista de status possíveis inclui "completed", "playing", "backlog" e "abandoned".
 #[tauri::command]
@@ -294,7 +344,7 @@ pub fn set_game_status(state: State<AppState>, id: String, status: String) -> Re
 
 /// Define a avaliação pessoal de um jogo.
 ///
-/// Atualiza o campo `user_rating` com o valor fornecido.
+/// Atualiza o campo 'user_rating' com o valor fornecido.
 /// Aceita valores de 0 a 5, onde 0 remove a avaliação (define como NULL).
 #[tauri::command]
 pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Result<(), String> {

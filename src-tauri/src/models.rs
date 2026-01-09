@@ -14,6 +14,8 @@ pub struct Game {
     pub name: String,
     #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>, // Caminho local
+    pub genres: Option<String>,    // Para o subtítulo do Card
+    pub developer: Option<String>, // Para o Card
 
     // Identificação
     pub platform: String,

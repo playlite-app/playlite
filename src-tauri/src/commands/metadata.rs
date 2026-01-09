@@ -1,22 +1,19 @@
 //! Módulo de integrações com APIs externas.
 //!
-//! Coordena a comunicação com serviços de terceiros (IGBD, Steam, RAWG) e
+//! Coordena a comunicação com serviços de terceiros (IGBD, RAWG, HLTB) e
 //! orquestra operações complexas como importação em lote, enriquecimento
-//! automático de metadados busca e exibição de jogos em tendência.
+//! automático de metadados, busca e exibição de jogos em tendência.
 //!
 //! **Nota:** implementa delays entre requisições para respeitar limites das APIs.
 
-use crate::constants::{self, RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
+use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database::{self, AppState};
-use crate::services::{rawg, steam};
-use crate::utils::game_logic;
-use chrono::{TimeZone, Utc};
+use crate::services::rawg;
 use rusqlite::params;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
-use tracing::{error, info, warn};
-use uuid::Uuid;
+use tracing::{info, warn};
 
 /// Resumo de uma operação de importação/processamento em lote.
 ///
@@ -33,115 +30,6 @@ pub struct ImportSummary {
     pub errors: Vec<String>,
 }
 
-/// Importa toda a biblioteca de jogos Steam do usuário.
-///
-/// Conecta-se à API Steam para buscar a lista completa de jogos possuídos
-/// e adiciona todos ao banco de dados local com informações básicas.
-///
-/// **Processo:**
-/// 1. Busca jogos via Steam WEB API ('IPlayerService/GetOwnedGames')
-/// 2. Monta URLs de capas usando CDN da Steam
-/// 3. Converte playtime de minutos para horas
-/// 4. Insere em lote usando transação SQL
-/// 5. Usa 'INSERT OR IGNORE' para evitar duplicatas
-///
-/// **Nota:**
-/// - Biblioteca privada retorna erro de autenticação
-/// - Jogos gratuitos jogados são incluídos automaticamente
-/// - Jogos gratuitos não jogados ou que foram desinstalados podem não são serem retornados pela API
-/// - Tempo de jogo é arredondado para horas inteiras
-/// - Esta operação não aplica rate limit por usar apenas uma chamada de API.
-#[tauri::command]
-pub async fn import_steam_library(
-    state: State<'_, AppState>,
-    api_key: String,
-    steam_id: String,
-) -> Result<String, String> {
-    info!("Iniciando importação da Steam ID: {}", steam_id);
-
-    let steam_games = steam::list_steam_games(&api_key, &steam_id).await?;
-    if steam_games.is_empty() {
-        return Ok("Nenhum jogo encontrado.".to_string());
-    }
-
-    let mut inserted = 0;
-    let mut updated = 0;
-    let now = Utc::now().to_rfc3339();
-
-    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
-
-    for game in steam_games {
-        let exists: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM games WHERE platform = 'Steam' AND platform_id = ?1)",
-                params![game.appid],
-                |row| row.get(0),
-            )
-            .unwrap_or(false);
-
-        let status = game_logic::calculate_status(game.playtime_forever);
-
-        // Converte Unix Timestamp (Steam) para ISO 8601 (Banco)
-        let last_played_iso = if game.rtime_last_played > 0 {
-            Some(
-                Utc.timestamp_opt(game.rtime_last_played, 0)
-                    .unwrap()
-                    .to_rfc3339(),
-            )
-        } else {
-            None
-        };
-
-        if !exists {
-            let new_id = Uuid::new_v4().to_string();
-            let cover = format!(
-                "{}/steam/apps/{}/library_600x900.jpg",
-                constants::STEAM_CDN_URL,
-                game.appid
-            );
-
-            conn.execute(
-                "INSERT INTO games (
-                    id, name, cover_url, platform, platform_id,
-                    status, playtime, last_played, added_at, favorite, user_rating
-                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, ?8, 0, NULL)",
-                params![
-                    new_id,
-                    game.name,
-                    cover,
-                    game.appid,
-                    status,
-                    game.playtime_forever,
-                    last_played_iso,
-                    now
-                ],
-            )
-            .ok();
-            inserted += 1;
-        } else {
-            conn.execute(
-                "UPDATE games SET
-                    playtime = ?1,
-                    status = ?2,
-                    last_played = COALESCE(?3, last_played)
-                 WHERE platform = 'Steam' AND platform_id = ?4",
-                params![game.playtime_forever, status, last_played_iso, game.appid],
-            )
-            .ok();
-            updated += 1;
-        }
-    }
-
-    Ok(format!(
-        "Sincronização concluída: {} novos, {} atualizados.",
-        inserted, updated
-    ))
-}
-
-fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
-    database::get_secret(app_handle, "rawg_api_key")
-}
-
 // Struct para o evento de progresso
 #[derive(serde::Serialize, Clone)]
 struct EnrichProgress {
@@ -149,6 +37,10 @@ struct EnrichProgress {
     total_found: i32, // Total neste lote ou total pendente
     last_game: String,
     status: String, // "running", "completed", "error"
+}
+
+fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
+    database::get_secret(app_handle, "rawg_api_key")
 }
 
 /// Busca metadados para os jogos da biblioteca via RAWG.
@@ -166,7 +58,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
 
     // Obtém API Key antes de spawnar a thread (falha rápido se não tiver)
-    let api_key = database::get_secret(&app, "rawg_api_key")?;
+    let api_key = get_api_key(&app)?;
     if api_key.is_empty() {
         return Err("API Key da RAWG não configurada.".to_string());
     }
@@ -258,13 +150,33 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                                 .join(", ");
                             let dev = details.developers.first().map(|d| d.name.clone());
                             let publ = details.publishers.first().map(|p| p.name.clone());
+                            let tags = details
+                                .tags
+                                .iter()
+                                .take(10)
+                                .map(|t| t.name.clone())
+                                .collect::<Vec<_>>()
+                                .join(", ");
 
                             let _ = conn.execute(
                                 "INSERT INTO game_details (
-                                    game_id, description, release_date, genres,
-                                    developer, publisher, critic_score, website_url, background_image
-                                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                                params![game_id, desc, details.released, genres, dev, publ, details.metacritic, website, bg],
+                                    game_id, description, release_date, genres, tags,
+                                    developer, publisher, critic_score, website_url,
+                                    background_image, rawg_url
+                                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                                params![
+                                    game_id,
+                                    desc,
+                                    details.released,
+                                    genres,
+                                    tags,
+                                    dev,
+                                    publ,
+                                    details.metacritic,
+                                    website,
+                                    bg,
+                                    format!("https://rawg.io/games/{}", best_match.id)
+                                ],
                             );
                             db_success = true;
                         }

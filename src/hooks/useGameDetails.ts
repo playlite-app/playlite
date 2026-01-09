@@ -1,9 +1,3 @@
-import { useEffect, useState } from 'react';
-
-import { Game, GameDetails, GamePlatformLink } from '@/types';
-
-import { detailsService } from '../services/detailsService';
-
 /**
  * Busca detalhes enriquecidos de um jogo na API RAWG e identifica versões em outras plataformas.
  *
@@ -14,6 +8,11 @@ import { detailsService } from '../services/detailsService';
  *   - loading: Estado da requisição
  *   - siblings: Mesmo jogo em outras plataformas (array de {id, platform})
  */
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
+
+import { Game, GameDetails, GamePlatformLink } from '@/types';
+
 export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
   const [details, setDetails] = useState<GameDetails | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,32 +25,67 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       return;
     }
 
-    // Identifica o mesmo jogo em outras plataformas (pelo nome)
+    // 1. Identifica versões em outras plataformas (Siblings)
     const related = allGames
       .filter(
         g =>
           g.name.toLowerCase() === selectedGame.name.toLowerCase() &&
-          g.id !== selectedGame.id // Exclui o próprio jogo atual
+          g.id !== selectedGame.id
       )
       .map(g => ({ id: g.id, platform: g.platform || 'Outra' }));
-
     setSiblings(related);
 
-    // Busca dados na nuvem
-    const fetchRemote = async () => {
+    // 2. Busca do Banco Local e ADAPTA para a UI
+    const fetchLocal = async () => {
       setLoading(true);
 
       try {
-        const data = await detailsService.getGameDetails(selectedGame.name);
-        setDetails(data);
+        // O Rust retorna o objeto com campos como 'criticScore', 'developer' (string)
+        // Usamos <any> aqui porque o retorno do Rust não bate 100% com a interface da UI ainda
+        const data = await invoke<any>('get_library_game_details', {
+          gameId: selectedGame.id,
+        });
+
+        if (data) {
+          // === ADAPTER: Banco (v2) -> UI (Legacy/RAWG Format) ===
+          // Transforma os dados do banco em objetos para o componente
+          const adapted: GameDetails = {
+            ...data,
+            // Mapeia descrição: O banco manda 'description', o modal lê 'descriptionRaw'
+            descriptionRaw: data.description || '',
+
+            // Mapeia Developer: String -> Array[{name}]
+            // O modal espera um array para poder fazer .map()
+            developers: data.developer ? [{ name: data.developer }] : [],
+
+            // Mapeia Publisher: String -> Array[{name}]
+            publishers: data.publisher ? [{ name: data.publisher }] : [],
+
+            // Mapeia Tags: String "Action, RPG" -> Array[{id, name}]
+            tags: data.tags
+              ? data.tags
+                  .split(',')
+                  .map((t: string, i: number) => ({ id: i, name: t.trim() }))
+              : [],
+
+            // Mapeia Metacritic (no banco chama criticScore)
+            metacritic: data.criticScore || null,
+          };
+
+          setDetails(adapted);
+        } else {
+          // Se não tiver detalhes no banco, deixa nulo (ou poderia buscar da API aqui)
+          setDetails(null);
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Erro ao carregar detalhes locais:', err);
+        setDetails(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRemote();
+    fetchLocal();
   }, [selectedGame, allGames]);
 
   return { details, loading, siblings };

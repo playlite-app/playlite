@@ -9,6 +9,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import { useDebounce } from './hooks/useDebounce';
+import { useGameDetails } from './hooks/useGameDetails';
 import { useLibraries } from './hooks/useLibraries.ts';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
@@ -38,6 +39,8 @@ function AppContent() {
   const [profileCache, setProfileCache] = useState<UserProfile | null>(null);
 
   const { confirm } = useConfirm();
+
+  const { details, loading, siblings } = useGameDetails(selectedGame, games);
 
   // Handlers de UI e Ações
   const handleSettingsUpdate = () => {
@@ -189,7 +192,9 @@ function AppContent() {
         isOpen={!!selectedGameId}
         onClose={closeDetails}
         game={selectedGame}
-        allGames={games}
+        details={details}
+        loading={loading}
+        siblings={siblings}
         onSwitchGame={handleSwitchGame}
       />
       <Toaster />

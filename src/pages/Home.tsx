@@ -125,7 +125,11 @@ export default function Home({
           backgroundUrl={getHeroImage(currentHero)}
           coverUrl={getHeroImage(currentHero)}
           genres={getGenresList(currentHero)}
-          rating={currentHero.rating}
+          rating={
+            isLocalGame(currentHero)
+              ? (currentHero as Game).userRating
+              : undefined
+          }
           showNavigation={heroSlides.length > 1}
           onNext={nextHero}
           onPrev={prevHero}
@@ -265,7 +269,7 @@ export default function Home({
                   key={game.id}
                   title={game.name}
                   coverUrl={game.coverUrl}
-                  subtitle={game.genre?.split(',')[0]}
+                  subtitle={game.genres?.split(',')[0]}
                   badge="Recomendado"
                   onClick={() => onGameClick(game)}
                   actions={
@@ -330,7 +334,7 @@ export default function Home({
                     </h4>
                     <div className="mt-1 flex items-center justify-between">
                       <span className="text-muted-foreground max-w-25 truncate text-xs">
-                        {game.genre?.split(',')[0]}
+                        {game.genres?.split(',')[0]}
                       </span>
                       <span className="bg-secondary rounded px-1.5 py-0.5 font-mono text-xs">
                         {formatTime(game.playtime)}

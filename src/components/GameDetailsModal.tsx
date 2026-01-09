@@ -15,27 +15,27 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Game } from '@/types/game';
-
-import { useGameDetails } from '../hooks/useGameDetails';
+import { Game, GameDetails, GamePlatformLink } from '@/types/game';
 
 interface GameDetailsModalProps {
-  game: Game | null;
   isOpen: boolean;
   onClose: () => void;
-  allGames: Game[];
+  game: Game | null;
+  details: GameDetails | null; // Dados do banco
+  loading: boolean;
+  siblings: GamePlatformLink[];
   onSwitchGame: (id: string) => void;
 }
 
 export default function GameDetailsModal({
   game,
+  details,
+  loading,
+  siblings,
   isOpen,
   onClose,
-  allGames,
   onSwitchGame,
 }: GameDetailsModalProps) {
-  const { details, loading, siblings } = useGameDetails(game, allGames);
-
   if (!game) return null;
 
   return (
@@ -73,9 +73,9 @@ export default function GameDetailsModal({
                 <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-primary/20 text-xs backdrop-blur-md">
                   {game.platform || 'PC'}
                 </Badge>
-                {game.rating && (
+                {game.userRating && (
                   <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-xs font-bold text-yellow-400 backdrop-blur-md lg:px-3 lg:text-sm">
-                    <Star size={14} fill="currentColor" /> {game.rating}
+                    <Star size={14} fill="currentColor" /> {game.userRating}
                   </div>
                 )}
               </div>
@@ -137,6 +137,7 @@ export default function GameDetailsModal({
                   </div>
                 </div>
               </div>
+
               {/* Seção 2: Detalhes */}
               <div className="space-y-2 lg:space-y-3">
                 <h3 className="text-muted-foreground text-sm font-bold tracking-wider uppercase lg:text-base">
@@ -148,7 +149,7 @@ export default function GameDetailsModal({
                       <Gamepad2 size={16} /> Gênero
                     </span>
                     <span className="max-w-[50%] truncate text-sm font-medium">
-                      {game.genre || 'N/A'}
+                      {game.genres || 'N/A'}
                     </span>
                   </div>
                   {details?.metacritic && (
@@ -183,26 +184,71 @@ export default function GameDetailsModal({
                   )}
                 </div>
               </div>
-              {/* Seção 3: Tags */}
+
+              {/* Seção 3: HowLongToBeat */}
+              {(details?.hltbMainStory || details?.hltbCompletionist) && (
+                <div className="mt-6 space-y-3">
+                  <h3 className="text-muted-foreground text-sm font-bold uppercase">
+                    HowLongToBeat
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {details.hltbMainStory && (
+                      <div className="bg-muted/50 rounded p-2 text-center">
+                        <div className="text-muted-foreground text-xs">
+                          História
+                        </div>
+                        <div className="font-mono font-bold">
+                          {details.hltbMainStory}h
+                        </div>
+                      </div>
+                    )}
+                    {details.hltbMainExtra && (
+                      <div className="bg-muted/50 rounded p-2 text-center">
+                        <div className="text-muted-foreground text-xs">
+                          + Extras
+                        </div>
+                        <div className="font-mono font-bold">
+                          {details.hltbMainExtra}h
+                        </div>
+                      </div>
+                    )}
+                    {details.hltbCompletionist && (
+                      <div className="bg-muted/50 col-span-2 rounded border border-yellow-500/20 p-2 text-center">
+                        <div className="text-xs text-yellow-600">
+                          100% Completo
+                        </div>
+                        <div className="font-mono font-bold text-yellow-600">
+                          {details.hltbCompletionist}h
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Seção 4: Tags */}
               {details?.tags && details.tags.length > 0 && (
                 <div className="space-y-2 lg:space-y-3">
                   <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
                     <Tag size={16} /> Tags
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {details.tags.slice(0, 10).map(tag => (
-                      <Badge
-                        key={tag.id}
-                        variant="secondary"
-                        className="bg-secondary/50 hover:bg-secondary text-xs font-normal"
-                      >
-                        {tag.name}
-                      </Badge>
-                    ))}
+                    {details.tags
+                      .slice(0, 10)
+                      .map((tag: { id: number; name: string }) => (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className="bg-secondary/50 hover:bg-secondary text-xs font-normal"
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
                   </div>
                 </div>
               )}
-              {/* Seção 4: Links */}
+
+              {/* Seção 5: Links */}
               <div className="space-y-3 pt-2">
                 {siblings.length > 0 && (
                   <div className="space-y-2">

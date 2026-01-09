@@ -83,13 +83,13 @@ export function useHome({
 
   // Stats
   const totalGames = library.length;
-  const totalPlaytime = library.reduce((acc, g) => acc + g.playtime, 0);
+  const totalPlaytime = library.reduce((acc, g) => acc + (g.playtime ?? 0), 0);
   const totalFavorites = library.filter(g => g.favorite).length;
 
   // Continue Jogando
   const continuePlaying = library
-    .filter(g => g.playtime > 0 && g.playtime < 50)
-    .sort((a, b) => b.playtime - a.playtime)
+    .filter(g => (g.playtime ?? 0) > 0 && (g.playtime ?? 0) < 50)
+    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
     .slice(0, 5);
 
   // Recomendações
@@ -97,13 +97,13 @@ export function useHome({
     if (!profile) return [];
 
     return library
-      .filter(g => g.playtime === 0)
+      .filter(g => (g.playtime ?? 0) === 0)
       .sort((a, b) => {
-        const genresA = a.genre
-          ? a.genre.split(',').map(n => ({ name: n.trim() }))
+        const genresA = a.genres
+          ? a.genres.split(',').map((n: string) => ({ name: n.trim() }))
           : [];
-        const genresB = b.genre
-          ? b.genre.split(',').map(n => ({ name: n.trim() }))
+        const genresB = b.genres
+          ? b.genres.split(',').map((n: string) => ({ name: n.trim() }))
           : [];
 
         return calculateAffinity(genresB) - calculateAffinity(genresA);
@@ -113,7 +113,7 @@ export function useHome({
 
   // Mais Jogados
   const mostPlayed = [...library]
-    .sort((a, b) => b.playtime - a.playtime)
+    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
     .slice(0, 3);
 
   // Gêneros Mais Comuns
@@ -121,8 +121,8 @@ export function useHome({
     () =>
       library.reduce(
         (acc, game) => {
-          if (game.genre) {
-            game.genre.split(',').forEach(g => {
+          if (game.genres) {
+            game.genres.split(',').forEach((g: string) => {
               const clean = g.trim();
 
               if (clean !== 'Desconhecido') {

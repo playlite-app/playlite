@@ -1,4 +1,4 @@
-import { ImageOff, Play } from 'lucide-react';
+import { Gamepad, Globe, ImageOff, Monitor, Play } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ interface StandardGameCardProps {
   title: string;
   coverUrl?: string | null;
   subtitle?: string;
+  platform?: string;
   badge?: string;
   rating?: number;
   onClick?: () => void;
@@ -26,21 +27,24 @@ interface StandardGameCardProps {
  * - Overlay de ações aparece no hover (botão Play + ações customizadas)
  * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
  * - Efeito hover: elevação + zoom suave na imagem
- *
- * @param title - Nome do jogo (exibido embaixo e no fallback)
- * @param coverUrl - URL da capa. Se falhar ou for null, ativa fallback visual
- * @param subtitle - Texto secundário (ex: gênero, plataforma)
- * @param badge - Texto do badge flutuante (opcional)
- * @param rating - Nota 0-5 exibida com estrela amarela (opcional)
- * @param onClick - Callback ao clicar no card (geralmente abre modal de detalhes)
- * @param onPlay - Callback do botão Play no overlay (lança o jogo)
- * @param actions - Slot para botões adicionais no overlay (Favoritar, Menu, etc)
- * @param className - Classes Tailwind extras para customização
  */
+
+// Helper para ícone da plataforma
+const getPlatformIcon = (platform: string) => {
+  const p = platform.toLowerCase();
+
+  if (p.includes('steam')) return <Monitor size={12} />; // Ou ícone específico se tiver
+
+  if (p.includes('gog')) return <Globe size={12} />;
+
+  return <Gamepad size={12} />;
+};
+
 export default function StandardGameCard({
   title,
   coverUrl,
   subtitle,
+  platform,
   badge,
   rating,
   onClick,
@@ -76,6 +80,14 @@ export default function StandardGameCard({
             <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
               {title}
             </span>
+          </div>
+        )}
+
+        {/* Badge de Plataforma */}
+        {platform && (
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-md">
+            {getPlatformIcon(platform)}
+            {platform}
           </div>
         )}
 

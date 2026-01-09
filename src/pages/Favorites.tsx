@@ -32,7 +32,7 @@ export default function Favorites({
     return favorites.filter(
       game =>
         game.name.toLowerCase().includes(term) ||
-        (game.genre && game.genre.toLowerCase().includes(term)) ||
+        (game.genres && game.genres.toLowerCase().includes(term)) ||
         (game.platform && game.platform.toLowerCase().includes(term))
     );
   }, [games, searchTerm]);
@@ -74,9 +74,13 @@ export default function Favorites({
               <StandardGameCard
                 title={game.name}
                 coverUrl={game.coverUrl}
-                subtitle={game.genre}
-                badge={game.platform}
-                rating={game.rating}
+                subtitle={
+                  [game.genres?.split(',')[0], game.developer]
+                    .filter(Boolean)
+                    .join(' • ') || 'Sem dados'
+                }
+                platform={game.platform}
+                rating={game.userRating}
                 onClick={() => actions.onGameClick(game)}
                 onPlay={() => launchGame(game)}
                 actions={

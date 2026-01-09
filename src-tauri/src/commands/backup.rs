@@ -157,6 +157,7 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
                 executable_path: None,
                 launch_args: None,
                 cover_url: row.get("cover_url")?,
+                genres: None,
                 playtime: row.get("playtime")?,
                 last_played: None,
                 //rating: row.get("rating").unwrap_or(None),
@@ -164,6 +165,7 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
                 user_rating: None,
                 status: None,
                 added_at: "".to_string(),
+                developer: None,
             })
         })
         .map_err(|e| e.to_string())?;

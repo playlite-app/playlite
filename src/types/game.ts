@@ -4,6 +4,8 @@ export interface Game {
   coverUrl?: string;
   platform: string;
   platformId?: string;
+  genres?: string;
+  developer?: string;
 
   // Campos para execução
   installPath?: string;

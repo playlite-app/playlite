@@ -57,13 +57,13 @@ export default function Playlist({
   };
 
   const suggestions = allGames
-    .filter(g => !isInPlaylist(g.id) && g.playtime < 60)
+    .filter(g => !isInPlaylist(g.id) && (g.playtime ?? 0) < 60)
     .sort((a, b) => {
-      const genresA = a.genre
-        ? a.genre.split(',').map(n => ({ name: n.trim() }))
+      const genresA = a.genres
+        ? a.genres.split(',').map((n: string) => ({ name: n.trim() }))
         : [];
-      const genresB = b.genre
-        ? b.genre.split(',').map(n => ({ name: n.trim() }))
+      const genresB = b.genres
+        ? b.genres.split(',').map((n: string) => ({ name: n.trim() }))
         : [];
 
       return calculateAffinity(genresB) - calculateAffinity(genresA);
