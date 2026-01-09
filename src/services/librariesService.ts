@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { Game, GameInput } from '@/types/game';
+import { Game } from '@/types/game';
 
 export const librariesService = {
   initDb: async (): Promise<void> => {
@@ -15,7 +15,18 @@ export const librariesService = {
    * Adiciona novo jogo à biblioteca local (SQLite).
    * Se já existir jogo com mesmo ID, sobrescreve completamente os dados.
    */
-  addGame: async (game: GameInput) => {
+  addGame: async (game: {
+    id: string;
+    name: string;
+    platform: string;
+    coverUrl: string | null;
+    playtime: number;
+    userRating: number | null;
+    status: 'playing' | 'completed' | 'backlog' | 'abandoned' | 'plan_to_play';
+    installPath: string | null;
+    executablePath: string | null;
+    launchArgs: string | null;
+  }) => {
     await invoke('add_game', { game });
   },
 
@@ -23,7 +34,18 @@ export const librariesService = {
    * Atualiza dados de um jogo existente na biblioteca.
    * Não faz nada se o ID não existir (operação silenciosa).
    */
-  updateGame: async (game: GameInput) => {
+  updateGame: async (game: {
+    id: string;
+    name: string;
+    platform: string;
+    coverUrl: string | null;
+    playtime: number;
+    userRating: number | null;
+    status: 'playing' | 'completed' | 'backlog' | 'abandoned' | 'plan_to_play';
+    installPath: string | null;
+    executablePath: string | null;
+    launchArgs: string | null;
+  }) => {
     await invoke('update_game', { game });
   },
 

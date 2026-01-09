@@ -132,12 +132,15 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
                 name: row.get(1)?,
                 cover_url: row.get(2)?,
                 store_url: row.get(3)?,
+                store_platform: None,
                 current_price: row.get(4)?,
+                normal_price: None,
                 lowest_price: row.get(5)?,
+                currency: None,
                 on_sale: row.get(6)?,
-                localized_price: row.get(7)?,
-                localized_currency: row.get(8)?,
-                steam_app_id: row.get(9)?,
+                //localized_price: row.get(7)?,
+                //localized_currency: row.get(8)?,
+                //steam_app_id: row.get(9)?,
                 added_at: row.get(10)?,
             })
         })

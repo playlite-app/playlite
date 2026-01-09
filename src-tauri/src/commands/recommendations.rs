@@ -1,64 +1,7 @@
-//! Módulo de comandos Tauri para sistema de recomendação.
-//!
-//! Camada de apresentação (Command Layer) que expõe funcionalidades
-//! do motor de recomendações para o frontend via IPC.
-//!
-//! # Arquitetura
-//! Este módulo segue o padrão de três camadas:
-//! 1. **Command Layer** (este arquivo) - Interface Tauri
-//! 2. **Service Layer** (`services::recommendation`) - Lógica de negócio
-//! 3. **Data Layer** (`database`) - Acesso a dados
-//!
-//! # Separação de Responsabilidades
-//! - Commands: Comunicação com frontend, validação de entrada/saída
-//! - Services: Algoritmos de cálculo e processamento
-//! - Database: Persistência e queries SQL
-
-use crate::database::AppState;
-use crate::models::{Game, UserProfile};
-use crate::services::recommendation;
-use tauri::State;
-
-/// Gera o perfil de preferências do usuário baseado na biblioteca.
-///
-/// Analisa todos os jogos da biblioteca e calcula um perfil detalhado
-/// das preferências do usuário, incluindo gêneros favoritos com scores
-/// ponderados e estatísticas gerais de uso.
-///
-/// # Fluxo de Dados
-/// ```text
-/// 1. Database Layer: Busca jogos do SQLite
-///    └─> SELECT * FROM games
-///
-/// 2. Service Layer: Processa dados
-///    └─> recommendation::calculate_user_profile(games)
-///        ├─> Calcula scores por gênero
-///        ├─> Pondera por playtime, rating, favoritos
-///        └─> Ordena gêneros por relevância
-///
-/// 3. Command Layer: Retorna para frontend
-///    └─> JSON serializado via Tauri IPC
-/// ```
-///
-/// # Retorna
-/// `UserProfile` contendo:
-/// - **top_genres**: Lista ordenada de gêneros com scores
-///   - Ordem decrescente (mais relevante primeiro)
-///   - Cada gênero tem: nome, score calculado, quantidade de jogos
-/// - **total_playtime**: Soma de minutos jogados em todos os jogos
-/// - **total_games**: Quantidade total de jogos na biblioteca
-/// - **`Err(String)`**: Falha ao acessar banco de dados ou processar jogos
-///
-/// # Algoritmo de Score
-/// Para cada jogo, o score é calculado como:
-/// ```text
-/// score = (horas_jogadas * 2)           // Max 100h = 200 pts
-///       + (é_favorito * 50)              // Favorito = +50 pts
-///       + (rating_estrelas * 10)         // 5★ = 50 pts
-///
-/// Esse score é distribuído entre todos os gêneros do jogo.
-/// ```
+/*
 #[tauri::command]
+
+
 pub fn get_user_profile(state: State<AppState>) -> Result<UserProfile, String> {
     // Busca todos os jogos do banco (Database Layer)
     let games = {
@@ -95,3 +38,4 @@ pub fn get_user_profile(state: State<AppState>) -> Result<UserProfile, String> {
 
     Ok(profile)
 }
+*/

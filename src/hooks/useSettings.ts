@@ -8,9 +8,9 @@ import { settingsService } from '../services/settingsService';
  * Mantém API keys seguras e coordena operações de longa duração.
  * Mensagens de status desaparecem automaticamente após 5 segundos.
  *
- * @param onLibraryUpdate - Callback executado após importar/enriquecer biblioteca
+ * @param onLibraryUpdate - Callback executado após importar biblioteca e dados.
  * @returns Objeto com:
- *   - keys: {steamId, steamApiKey, rawgApiKey}
+ *   - keys: {steamId, steamApiKey, rawgApiKey, igdbClientId, igdbClientSecret}
  *   - setKeys: Atualiza state local (não salva automaticamente)
  *   - loading: Estados individuais para cada operação
  *   - status: {type: 'success'|'error'|null, message: string}
@@ -21,7 +21,10 @@ export function useSettings(onLibraryUpdate: () => void) {
     steamId: '',
     steamApiKey: '',
     rawgApiKey: '',
+    igdbClientId: '',
+    igdbClientSecret: '',
   });
+
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
@@ -30,6 +33,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     exporting: false,
     importingBackup: false,
   });
+
   const [status, setStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
@@ -43,6 +47,8 @@ export function useSettings(onLibraryUpdate: () => void) {
           steamId: data.steamId || '',
           steamApiKey: data.steamApiKey || '',
           rawgApiKey: data.rawgApiKey || '',
+          igdbClientId: data.igdbClientId || '',
+          igdbClientSecret: data.igdbClientSecret || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -68,10 +74,12 @@ export function useSettings(onLibraryUpdate: () => void) {
         steamId: keys.steamId.trim() || null,
         steamApiKey: keys.steamApiKey.trim() || null,
         rawgApiKey: keys.rawgApiKey.trim() || null,
+        igdbClientId: keys.igdbClientId.trim() || null,
+        igdbClientSecret: keys.igdbClientSecret.trim() || null,
       });
       setStatus({
         type: 'success',
-        message: 'Configurações salvas com segurança!',
+        message: 'Credenciais salvas com segurança!',
       });
     } catch (error) {
       setStatus({ type: 'error', message: `Erro ao salvar: ${error}` });
@@ -81,17 +89,14 @@ export function useSettings(onLibraryUpdate: () => void) {
   };
 
   const importLibrary = async () => {
+    /* Código original */
     if (!keys.steamId || !keys.steamApiKey) {
-      setStatus({
-        type: 'error',
-        message: 'Preencha e salve as chaves da Steam primeiro.',
-      });
+      setStatus({ type: 'error', message: 'Preencha as chaves da Steam.' });
 
       return;
     }
 
     setLoading(prev => ({ ...prev, importing: true }));
-    setStatus({ type: null, message: 'Importando...' });
 
     try {
       const msg = await settingsService.importSteamLibrary(
@@ -100,8 +105,8 @@ export function useSettings(onLibraryUpdate: () => void) {
       );
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
-    } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
+    } catch (e) {
+      setStatus({ type: 'error', message: String(e) });
     } finally {
       setLoading(prev => ({ ...prev, importing: false }));
     }

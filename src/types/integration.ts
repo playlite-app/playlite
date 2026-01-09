@@ -11,6 +11,8 @@ export interface KeysBatch {
   steamId: string;
   steamApiKey: string;
   rawgApiKey: string;
+  igdbClientId: string;
+  igdbClientSecret: string;
 }
 
 export interface ImportSummary {

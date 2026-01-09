@@ -14,7 +14,7 @@ use url::Url;
 
 /// Dados de entrada para criar ou atualizar um jogo.
 ///
-/// Reflete os campos da interface de adição/edição de jogos.
+/// Reflete os campos da ‘interface’ de adição/edição de jogos.
 #[derive(Debug, Deserialize)]
 pub struct GameInput {
     pub id: String,
@@ -36,7 +36,7 @@ pub struct GameInput {
 
 /// Função auxiliar privada para validar dados de entrada.
 ///
-/// Evita duplicação de código entre add e update.
+/// Evita duplicação de código entre add e ‘update’.
 /// Valida nome, URL da capa, plataforma, tempo jogado e avaliação.
 fn validate_input(game: &GameInput) -> Result<(), String> {
     if game.name.trim().is_empty() {
@@ -100,9 +100,12 @@ fn validate_input(game: &GameInput) -> Result<(), String> {
 
 /// Adiciona um novo jogo à biblioteca.
 ///
-/// Insere dados na tabela `games` após as validações necessárias.
+/// Insere dados na tabela 'games' após as validações necessárias.
 #[tauri::command]
 pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+    // ADICIONE ISTO PARA DEBUG:
+    println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
+
     validate_input(&game)?;
 
     let conn = state
@@ -171,11 +174,14 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// Atualiza informações de um jogo existente.
 ///
 /// Atualiza os campos, preservando added_at e favorite, com os novos valores fornecidos.
-/// Realiza as mesmas validações de `add_game`.
+/// Realiza as mesmas validações de 'add_game'.
 ///
-/// **Nota:** Não retorna erro se ID não existe (update silencioso).
+/// **Nota:** Não retorna erro se ‘ID’ não existe (‘update’ silencioso).
 #[tauri::command]
 pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+    // ADICIONE ISTO PARA DEBUG:
+    println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
+
     validate_input(&game)?;
 
     let conn = state

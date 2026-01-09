@@ -20,7 +20,7 @@ use tracing::{error, info};
 
 /// Resumo de uma operação de importação/processamento em lote.
 ///
-/// Fornece estatísticas detalhadas e lista de erros para feedback ao usuário.
+/// Fornece estatísticas detalhadas e lista de erros para ‘feedback’ ao usuário.
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
     #[serde(rename = "successCount")]
@@ -38,34 +38,14 @@ pub struct ImportSummary {
 /// Conecta-se à API Steam para buscar a lista completa de jogos possuídos
 /// e adiciona todos ao banco de dados local com informações básicas.
 ///
-/// # Processo
-/// 1. Busca jogos via Steam Web API (`IPlayerService/GetOwnedGames`)
+/// **Processo:**
+/// 1. Busca jogos via Steam WEB API ('IPlayerService/GetOwnedGames')
 /// 2. Monta URLs de capas usando CDN da Steam
 /// 3. Converte playtime de minutos para horas
 /// 4. Insere em lote usando transação SQL
-/// 5. Usa `INSERT OR IGNORE` para evitar duplicatas
+/// 5. Usa 'INSERT OR IGNORE' para evitar duplicatas
 ///
-/// # Retorna
-/// * `Ok(String)` - Mensagem de sucesso com contador de jogos adicionados
-/// * `Err(String)` - Erro na API Steam, banco ou autenticação
-///
-/// # Comportamento
-/// - **Duplicatas**: Jogos já existentes são ignorados silenciosamente
-/// - **Gêneros**: Todos iniciam como "Desconhecido" (usar `enrich_library` depois)
-/// - **Plataforma**: Definida como "Steam"
-/// - **Transação**: Rollback automático em caso de erro
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// // Chamado via Tauri invoke
-/// let result = await invoke('import_steam_library', {
-///     apiKey: 'XXXXXXXXXXXXXXXXXXXXXXX',
-///     steamId: '765999999999999'
-/// });
-/// // Retorna: "Importação concluída! 150 novos jogos adicionados."
-/// ```
-///
-/// # Nota
+/// **Nota:**
 /// - Biblioteca privada retorna erro de autenticação
 /// - Jogos gratuitos jogados são incluídos automaticamente
 /// - Jogos gratuitos não jogados ou que foram desinstalados podem não são serem retornados pela API
@@ -305,22 +285,7 @@ fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
 ///
 /// Retorna informações expandidas incluindo descrição, desenvolvedoras,
 /// publicadoras, tags, metacritic score e mais, usados no modal de detalhes.
-///
-/// # Retorna
-/// * `Ok(GameDetails)` - Detalhes completos do jogo
-/// * `Err(String)` - API key não configurada ou jogo não encontrado
-///
-/// # Validação
-/// Verifica se a API Key da RAWG está configurada antes de fazer requisição.
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// const details = await invoke('fetch_game_details', {
-///     query: 'The Witcher 3'
-/// });
-/// console.log(details.description_raw);
-/// console.log(details.metacritic);
-/// ```
+/// Esses dados podem ser usados como alternativa à IGBD.
 #[tauri::command]
 pub async fn fetch_game_details(
     app_handle: AppHandle,
@@ -339,18 +304,6 @@ pub async fn fetch_game_details(
 ///
 /// Retorna lista de jogos mais adicionados recentemente à plataforma RAWG,
 /// indicando popularidade atual exibidos nas páginas Início e Em Alta.
-///
-/// # Retorna
-/// * `Ok(Vec<RawgGame>)` - Lista de até 20 jogos populares
-/// * `Err(String)` - API key não configurada ou erro na requisição
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// const trending = await invoke('get_trending_games');
-/// trending.forEach(game => {
-///     console.log(`${game.name} - Rating: ${game.rating}`);
-/// });
-/// ```
 #[tauri::command]
 pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
     let api_key = get_api_key(&app_handle)?;
@@ -359,18 +312,7 @@ pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgG
 
 /// Busca jogos com lançamento futuro.
 ///
-/// Retorna lista de jogos que ainda mais aguardados que serão lançados até o final do próximo ano.
-///
-/// # Retorna
-/// * `Ok(Vec<RawgGame>)` - Lista de até 10 jogos futuros
-/// * `Err(String)` - API key inválida ou erro na requisição
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// const upcoming = await invoke('get_upcoming_games', {
-///     apiKey: 'your_key_here'
-/// });
-/// ```
+/// Retorna lista de jogos mais aguardados que serão lançados até o final do próximo ano.
 #[tauri::command]
 pub async fn get_upcoming_games(api_key: String) -> Result<Vec<rawg::RawgGame>, String> {
     rawg::fetch_upcoming_games(&api_key).await

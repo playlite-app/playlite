@@ -135,7 +135,7 @@ pub struct WishlistGame {
 /// Usado internamente no Rust. É serializado para JSON quando enviado ao frontend.
 /// O atributo `#[serde(tag = "type")]` gera `{"type": "DatabaseError", "message": "..."}`.
 ///
-/// **Conversão Automática:** implementa `From<rusqlite::Error>` para conversão automática de erros.
+/// **Nota:** implementa `From<rusqlite::Error>` para conversão automática de erros.
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
 #[serde(tag = "type", content = "message")]

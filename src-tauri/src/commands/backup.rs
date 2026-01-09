@@ -1,9 +1,9 @@
-//! Módulo de backup e restauração de dados.
+//! Módulo de ‘backup’ e restauração de dados.
 //!
 //! Fornece funcionalidades para exportar e importar a base de dados completa
 //! em formato JSON, incluindo biblioteca de jogos e lista de desejos.
 //!
-//! # Nota
+//! **Nota:**
 //! Todas as operações usam transações ACID para garantir consistência dos dados.
 
 use crate::database::AppState;
@@ -11,7 +11,7 @@ use crate::models::{Game, WishlistGame};
 use std::fs;
 use tauri::{AppHandle, State};
 
-/// Estrutura do arquivo de backup.
+/// Estrutura do arquivo de ‘backup’.
 ///
 /// Contém metadados e todos os dados exportados da aplicação.
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -25,14 +25,14 @@ pub struct BackupData {
 /// Exporta toda a base de dados para um arquivo JSON.
 ///
 /// Cria um snapshot completo e consistente de todos os dados da aplicação,
-/// incluindo jogos e wishlist, em um único arquivo JSON formatado.
+/// incluindo jogos e wishlist, num único arquivo JSON formatado.
 #[tauri::command]
 pub async fn export_database(
     _app: AppHandle,
     state: State<'_, AppState>,
     file_path: String,
 ) -> Result<(), String> {
-    // Buscar dados em um único lock
+    // Buscar dados num único lock
     let (games, wishlist_game) = {
         let conn = state.library_db.lock().map_err(|_| "Falha no Mutex")?;
 
@@ -61,13 +61,13 @@ pub async fn export_database(
     Ok(())
 }
 
-/// Importa e restaura dados de um arquivo de backup.
+/// Importa e restaura dados de um arquivo de ‘backup’.
 ///
-/// Lê um arquivo JSON de backup e restaura todos os dados no banco,
+/// Lê um arquivo JSON de ‘backup’ restaura todos os dados no banco,
 /// substituindo registros existentes (INSERT OR REPLACE).
 ///
-/// # Nota
-/// Esta operação pode sobrescrever dados existentes. Considere criar um backup antes de importar.
+/// **Nota:**
+/// Esta operação pode sobrescrever dados existentes. Considere criar um ‘backup’ antes de importar.
 #[tauri::command]
 pub async fn import_database(
     state: State<'_, AppState>,
@@ -88,7 +88,7 @@ pub async fn import_database(
     conn.execute("BEGIN IMMEDIATE TRANSACTION", [])
         .map_err(|e| e.to_string())?;
 
-    // Usa prepared statements para melhor performance
+    // Usa prepared statements para melhor desempenho
     let mut game_stmt = conn.prepare(
         "INSERT OR REPLACE INTO games (id, name, genre, platform, cover_url, playtime, rating, favorite)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
@@ -104,11 +104,11 @@ pub async fn import_database(
             .execute(rusqlite::params![
                 game.id,
                 game.name,
-                game.genre,
+                //game.genre,
                 game.platform,
                 game.cover_url,
                 game.playtime,
-                game.rating,
+                game.user_rating,
                 game.favorite
             ])
             .map_err(|e| e.to_string())?;
@@ -124,9 +124,9 @@ pub async fn import_database(
                 item.current_price,
                 item.lowest_price,
                 item.on_sale,
-                item.localized_price,
-                item.localized_currency,
-                item.steam_app_id,
+                //item.localized_price,
+                //item.localized_currency,
+                //item.steam_app_id,
                 item.added_at
             ])
             .map_err(|e| e.to_string())?;
@@ -150,12 +150,20 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
             Ok(Game {
                 id: row.get("id")?,
                 name: row.get("name")?,
-                genre: row.get("genre")?,
+                //genre: row.get("genre")?,
                 platform: row.get("platform")?,
+                platform_id: None,
+                install_path: None,
+                executable_path: None,
+                launch_args: None,
                 cover_url: row.get("cover_url")?,
                 playtime: row.get("playtime")?,
-                rating: row.get("rating").unwrap_or(None),
+                last_played: None,
+                //rating: row.get("rating").unwrap_or(None),
                 favorite: row.get("favorite").unwrap_or(false),
+                user_rating: None,
+                status: None,
+                added_at: "".to_string(),
             })
         })
         .map_err(|e| e.to_string())?;
@@ -176,12 +184,15 @@ fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, Stri
                 name: row.get("name")?,
                 cover_url: row.get("cover_url")?,
                 store_url: row.get("store_url")?,
+                store_platform: None,
                 current_price: row.get("current_price")?,
+                normal_price: None,
                 lowest_price: row.get("lowest_price")?,
+                currency: None,
                 on_sale: row.get("on_sale")?,
-                localized_price: row.get("localized_price")?,
-                localized_currency: row.get("localized_currency")?,
-                steam_app_id: row.get("steam_app_id")?,
+                //localized_price: row.get("localized_price")?,
+                //localized_currency: row.get("localized_currency")?,
+                //steam_app_id: row.get("steam_app_id")?,
                 added_at: row.get("added_at")?,
             })
         })

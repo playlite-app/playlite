@@ -47,18 +47,30 @@ export function useLibraries() {
 
   // Ações CRUD
   const saveGame = async (gameData: Partial<Game>, editingId?: string) => {
+    // AQUI ESTAVA O PROBLEMA:
+    // Você estava filtrando os dados novos e enviando campos antigos.
+
     const payload = {
       id: editingId || crypto.randomUUID(),
       name: gameData.name || 'Sem Nome',
-      genre: gameData.genre || 'Desconhecido',
+      // genre: REMOVIDO (O Rust v2.0 não aceita gênero no add_game)
+
       platform: gameData.platform || 'Manual',
       coverUrl: gameData.coverUrl || null,
       playtime: gameData.playtime || 0,
-      rating: gameData.rating || null,
+
+      // Mapeamento correto para v2.0
+      userRating: gameData.userRating || null, // O Modal já manda como userRating
+      status: gameData.status || 'backlog',
+
+      // Novos campos de execução
+      installPath: gameData.installPath || null,
+      executablePath: gameData.executablePath || null,
+      launchArgs: gameData.launchArgs || null,
     };
 
     if (editingId) {
-      await librariesService.updateGame(payload);
+      await librariesService.updateGame(payload); // O Rust update_game espera userRating, status, etc.
     } else {
       await librariesService.addGame(payload);
     }

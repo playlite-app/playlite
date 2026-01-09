@@ -1,6 +1,6 @@
 //! Módulos utilitários para diversas funcionalidades auxiliares.
 //!
-//! # Modulos
+//! **Módulos:**
 //! - `http_client`: Cliente HTTP configurado com timeout e headers padrão.
 //! - `logger`: Configuração e inicialização do sistema de logging.
 

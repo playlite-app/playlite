@@ -2,8 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
 import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
-
-import { ImportSummary, KeysBatch } from '../types/integration';
+import { ImportSummary, KeysBatch } from '@/types';
 
 export const settingsService = {
   getSecrets: async (): Promise<KeysBatch> => {
@@ -14,6 +13,8 @@ export const settingsService = {
     steamId: string | null;
     steamApiKey: string | null;
     rawgApiKey: string | null;
+    igdbClientId: string | null;
+    igdbClientSecret: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
   },

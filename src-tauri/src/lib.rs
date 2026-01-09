@@ -90,7 +90,7 @@ pub fn run() {
             commands::backup::export_database,
             commands::backup::import_database,
             // Comando de Recomendação
-            commands::recommendations::get_user_profile
+            // commands::recommendations::get_user_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

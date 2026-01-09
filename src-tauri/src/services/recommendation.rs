@@ -6,9 +6,6 @@
 //! O sistema calcula scores ponderados para cada gênero e gera um perfil
 //! do usuário que pode ser usado para ranquear e recomendar novos jogos.
 
-use crate::models::{Game, GenreScore, UserProfile};
-use std::collections::HashMap;
-
 // === Configuração de Pesos do Algoritmo ===
 
 /// Pontos atribuídos por hora jogada.
@@ -32,39 +29,7 @@ const WEIGHT_RATING_STAR: f32 = 10.0;
 /// Valor de 0,95 - para 5% de redução por período definido.
 #[allow(dead_code)]
 const DECAY_FACTOR: f32 = 0.95;
-
-/// Calcula o perfil de preferências do usuário.
-///
-/// Analisa a biblioteca de jogos do usuário e gera um perfil baseado em:
-/// - **Tempo de jogo**: Maior peso para jogos mais jogados (até 100h)
-/// - **Favoritos**: Bônus significativo para jogos marcados
-/// - **Avaliações**: Score baseado em estrelas atribuídas
-/// - **Gêneros**: Distribuição dos scores pelos gêneros dos jogos
-///
-/// # Algoritmo
-///
-/// Para cada jogo:
-/// 1. Calcula score base: `(horas * 2) + (favorito * 50) + (estrelas * 10)`
-/// 2. Distribui esse score entre todos os gêneros do jogo
-/// 3. Acumula scores e contadores por gênero
-///
-/// # Parâmetros
-/// * `games` - Slice de jogos da biblioteca do usuário
-///
-/// # Retorna
-/// `UserProfile` contendo:
-/// - `top_genres`: Gêneros ordenados por score (maior → menor)
-/// - `total_playtime`: Soma total de minutos jogados
-/// - `total_games`: Quantidade de jogos analisados
-///
-/// # Exemplo
-/// ```rust
-/// let profile = calculate_user_profile(&user_games);
-///
-/// println!("Gênero favorito: {}", profile.top_genres[0].name);
-/// println!("Score do gênero: {}", profile.top_genres[0].score);
-/// println!("Total de horas: {}", profile.total_playtime / 60);
-/// ```
+/*
 pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
     let mut genre_scores: HashMap<String, (f32, i32)> = HashMap::new();
     let mut total_playtime = 0;
@@ -128,6 +93,7 @@ pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
         total_games: games.len() as i32,
     }
 }
+*/
 
 // TODO: Implementar sistema de ranqueamento de novos jogos
 //
