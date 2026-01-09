@@ -27,8 +27,13 @@ pub const MAX_RATING: i32 = 5;
 
 // Rate limiting
 pub const STEAM_RATE_LIMIT_MS: u64 = 500;
+// Rate limiting para RAWG (1 requisição por segundo)
+pub const RAWG_RATE_LIMIT_MS: u64 = 1000;
+// Limite de requisições para RAWG
+pub const RAWG_REQUISITIONS_PER_BATCH: u32 = 20;
+// Tamanho da página para requisições RAWG
 #[allow(dead_code)]
-pub const RAWG_PAGE_SIZE: u32 = 20;
+pub const RAWG_PAGE_SIZE: u32 = 15;
 
 // Configuração de banco de dados
 #[allow(dead_code)]

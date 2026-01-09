@@ -43,3 +43,4 @@ sha2 = "0.10.9"
 once_cell = "1.21.3"
 whoami = "2.0.0"
 base64 = "0.22.1"
+uuid = { version = "1.19.0", features = ["v4"] }

@@ -6,6 +6,7 @@
 use crate::constants;
 use crate::database::AppState;
 use crate::models;
+use crate::utils::game_logic;
 use chrono::Utc;
 use rusqlite::params;
 use serde::Deserialize;
@@ -103,7 +104,6 @@ fn validate_input(game: &GameInput) -> Result<(), String> {
 /// Insere dados na tabela 'games' após as validações necessárias.
 #[tauri::command]
 pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
-    // ADICIONE ISTO PARA DEBUG:
     println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
 
     validate_input(&game)?;
@@ -127,20 +127,9 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
     }
 
     // Lógica Automática de Status
-    let final_status = game.status.unwrap_or_else(|| {
-        let minutes = game.playtime.unwrap_or(0);
-        if minutes == 0 {
-            "backlog".to_string()
-        } else if minutes < 120 {
-            // menos de 2 horas
-            "abandoned".to_string()
-        } else if minutes < 1800 {
-            // menos de 30 horas
-            "playing".to_string()
-        } else {
-            "completed".to_string()
-        }
-    });
+    let final_status = game
+        .status
+        .unwrap_or_else(|| game_logic::calculate_status(game.playtime.unwrap_or(0)));
 
     let added_at = Utc::now().to_rfc3339();
     let platform = game.platform.unwrap_or("Manual".to_string());
@@ -179,7 +168,6 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// **Nota:** Não retorna erro se ‘ID’ não existe (‘update’ silencioso).
 #[tauri::command]
 pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
-    // ADICIONE ISTO PARA DEBUG:
     println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
 
     validate_input(&game)?;

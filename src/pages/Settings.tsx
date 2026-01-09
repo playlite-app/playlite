@@ -7,7 +7,6 @@ import {
   Gamepad2,
   KeyRound,
   Loader2,
-  RefreshCw,
   Save,
   Search,
   Upload,
@@ -55,7 +54,7 @@ const SettingsRow = ({
 );
 
 export default function Settings({ onLibraryUpdate }: SettingsProps) {
-  const { keys, setKeys, loading, status, actions } =
+  const { keys, setKeys, loading, status, progress, actions } =
     useSettings(onLibraryUpdate);
 
   if (loading.initial) {
@@ -190,21 +189,30 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         <SettingsRow
           icon={Search}
           title="Buscar Metadados"
-          description="Atualiza capas e gêneros usando as chaves configuradas acima."
+          description="Baixa capas e sinopses em segundo plano."
         >
-          <Button
-            onClick={actions.enrichLibrary}
-            variant="secondary"
-            className="w-full"
-            disabled={loading.enriching}
-          >
-            {loading.enriching ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
+          <div className="w-full space-y-2">
+            <Button
+              onClick={actions.enrichLibrary}
+              variant="secondary"
+              className="w-full"
+              disabled={loading.enriching}
+            >
+              {loading.enriching ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Atualizar Metadados'
+              )}
+            </Button>
+
+            {/* Feedback de Progresso */}
+            {loading.enriching && progress && (
+              <div className="text-muted-foreground animate-pulse text-center text-xs">
+                Processando: {progress.game} ({progress.current}/
+                {progress.total})
+              </div>
             )}
-            Atualizar Metadados
-          </Button>
+          </div>
         </SettingsRow>
       </section>
 

@@ -1,22 +1,22 @@
 //! Módulo de integrações com APIs externas.
 //!
-//! Coordena a comunicação com serviços de terceiros (Steam, RAWG) e
+//! Coordena a comunicação com serviços de terceiros (IGBD, Steam, RAWG) e
 //! orquestra operações complexas como importação em lote, enriquecimento
 //! automático de metadados busca e exibição de jogos em tendência.
 //!
-//! # Rate Limiting
-//! Implementa delays entre requisições para respeitar limites das APIs.
+//! **Nota:** implementa delays entre requisições para respeitar limites das APIs.
 
-use crate::constants;
-use crate::constants::STEAM_RATE_LIMIT_MS;
-use crate::database;
-use crate::database::AppState;
+use crate::constants::{self, RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
+use crate::database::{self, AppState};
 use crate::services::{rawg, steam};
+use crate::utils::game_logic;
+use chrono::{TimeZone, Utc};
 use rusqlite::params;
 use std::time::Duration;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
-use tracing::{error, info};
+use tracing::{error, info, warn};
+use uuid::Uuid;
 
 /// Resumo de uma operação de importação/processamento em lote.
 ///
@@ -57,228 +57,236 @@ pub async fn import_steam_library(
     api_key: String,
     steam_id: String,
 ) -> Result<String, String> {
-    let steam_games = steam::list_steam_games(&api_key, &steam_id).await?;
+    info!("Iniciando importação da Steam ID: {}", steam_id);
 
+    let steam_games = steam::list_steam_games(&api_key, &steam_id).await?;
     if steam_games.is_empty() {
-        return Ok("Nenhum jogo encontrado na sua biblioteca Steam.".to_string());
+        return Ok("Nenhum jogo encontrado.".to_string());
     }
 
-    println!("{} jogos encontrados na Steam", steam_games.len());
+    let mut inserted = 0;
+    let mut updated = 0;
+    let now = Utc::now().to_rfc3339();
 
-    let mut games_to_insert = Vec::new();
+    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
     for game in steam_games {
-        let cover_url = format!(
-            "{}/steam/apps/{}/library_600x900.jpg",
-            constants::STEAM_CDN_URL,
-            game.appid
-        );
+        let exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM games WHERE platform = 'Steam' AND platform_id = ?1)",
+                params![game.appid],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
 
-        let playtime_hours = (game.playtime_forever as f32 / 60.0).round() as i32;
+        let status = game_logic::calculate_status(game.playtime_forever);
 
-        games_to_insert.push((
-            game.appid.to_string(),
-            game.name.clone(),
-            constants::DEFAULT_GENRE.to_string(),
-            constants::DEFAULT_PLATFORM_STEAM.to_string(),
-            cover_url,
-            playtime_hours,
-        ));
-    }
+        // Converte Unix Timestamp (Steam) para ISO 8601 (Banco)
+        let last_played_iso = if game.rtime_last_played > 0 {
+            Some(
+                Utc.timestamp_opt(game.rtime_last_played, 0)
+                    .unwrap()
+                    .to_rfc3339(),
+            )
+        } else {
+            None
+        };
 
-    let count = {
-        let conn = state
-            .library_db
-            .lock()
-            .map_err(|_| "Falha ao bloquear mutex")?;
+        if !exists {
+            let new_id = Uuid::new_v4().to_string();
+            let cover = format!(
+                "{}/steam/apps/{}/library_600x900.jpg",
+                constants::STEAM_CDN_URL,
+                game.appid
+            );
 
-        // Inicia transação
-        conn.execute("BEGIN TRANSACTION", [])
-            .map_err(|e| format!("Erro ao iniciar transação: {}", e))?;
-
-        let mut inserted = 0;
-        let mut skipped = 0;
-
-        for (id, name, genre, platform, cover_url, playtime) in games_to_insert {
-            match conn.execute(
-                "INSERT OR IGNORE INTO games (id, name, genre, platform, cover_url, playtime, rating)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                params![id, name, genre, platform, cover_url, playtime, None::<i32>],
-            ) {
-                Ok(rows) => {
-                    if rows > 0 {
-                        inserted += rows;
-                    } else {
-                        skipped += 1;
-                    }
-                }
-                Err(e) => {
-                    eprintln!("[WARN] Erro ao inserir jogo '{}': {}", name, e);
-                }
-            }
+            conn.execute(
+                "INSERT INTO games (
+                    id, name, cover_url, platform, platform_id,
+                    status, playtime, last_played, added_at, favorite, user_rating
+                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, ?8, 0, NULL)",
+                params![
+                    new_id,
+                    game.name,
+                    cover,
+                    game.appid,
+                    status,
+                    game.playtime_forever,
+                    last_played_iso,
+                    now
+                ],
+            )
+            .ok();
+            inserted += 1;
+        } else {
+            conn.execute(
+                "UPDATE games SET
+                    playtime = ?1,
+                    status = ?2,
+                    last_played = COALESCE(?3, last_played)
+                 WHERE platform = 'Steam' AND platform_id = ?4",
+                params![game.playtime_forever, status, last_played_iso, game.appid],
+            )
+            .ok();
+            updated += 1;
         }
-
-        conn.execute("COMMIT", []).map_err(|e| {
-            let _ = conn.execute("ROLLBACK", []);
-            format!("Erro ao commitar transação: {}", e)
-        })?;
-
-        println!(
-            "Import completado: {} inseridos, {} já existiam",
-            inserted, skipped
-        );
-
-        inserted
-    };
+    }
 
     Ok(format!(
-        "Importação concluída! {} novos jogos adicionados.",
-        count
+        "Sincronização concluída: {} novos, {} atualizados.",
+        inserted, updated
     ))
-}
-
-/// Enriquece biblioteca com metadados detalhados da Steam Store API.
-///
-/// Busca e atualiza informações faltantes (principalmente gêneros) para
-/// jogos importados da Steam que ainda têm dados padrão.
-///
-/// # Processo
-/// 1. Identifica jogos com metadados pendentes (gênero "Desconhecido")
-/// 2. Para cada jogo, consulta Steam Store API
-/// 3. Extrai gênero e outros metadados
-/// 4. Atualiza banco em lote ao final
-/// 5. Aplica rate limiting entre requisições
-///
-/// # Retorna
-/// * `Ok(ImportSummary)` - Estatísticas completas do processamento
-/// * `Err(String)` - Erro crítico de banco ou sistema
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// // Chamado via Tauri invoke (operação longa)
-/// const summary = await invoke('enrich_library');
-/// console.log(`${summary.success_count} jogos atualizados`);
-/// console.log(`${summary.error_count} falhas`);
-/// summary.errors.forEach(err => console.warn(err));
-/// ```
-///
-/// # Nota
-/// - Devido ao rate limiting (500ms) obrigatório, a operação é naturalmente lenta.
-/// - Erros individuais não interrompem o processo. São coletados e reportados no resumo.
-/// - Atualiza os dados numa única transação ao final para garantir atomicidade e melhor performance.
-#[tauri::command]
-pub async fn enrich_library(state: State<'_, AppState>) -> Result<ImportSummary, String> {
-    info!("Iniciando processo de enriquecimento de biblioteca...");
-
-    let games_to_update = {
-        let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
-        let mut stmt = conn
-            .prepare("SELECT id, name FROM games WHERE genre = ?1 AND platform = ?2")
-            .map_err(|e| e.to_string())?;
-
-        let mut rows = stmt
-            .query([constants::DEFAULT_GENRE, constants::DEFAULT_PLATFORM_STEAM])
-            .map_err(|e| e.to_string())?;
-
-        let mut games = Vec::new();
-        while let Some(row) = rows.next().map_err(|e| e.to_string())? {
-            let id: String = row.get(0).map_err(|e| e.to_string())?;
-            let name: String = row.get(1).map_err(|e| e.to_string())?;
-            games.push((id, name));
-        }
-        games
-    };
-
-    let total = games_to_update.len();
-    if total == 0 {
-        return Ok(ImportSummary {
-            success_count: 0,
-            error_count: 0,
-            total_processed: 0,
-            message: "Todos os jogos já estão atualizados.".to_string(),
-            errors: vec![],
-        });
-    }
-
-    info!("Encontrados {} jogos com metadados pendentes.", total);
-
-    let mut batch_updates: Vec<(String, String)> = Vec::new();
-    let mut success_count = 0;
-    let mut failed_games = Vec::new();
-
-    // Loop de processamento
-    for (i, (id_str, name)) in games_to_update.iter().enumerate() {
-        if let Ok(app_id) = id_str.parse::<u32>() {
-            match steam::fetch_game_metadata(app_id).await {
-                Ok(metadata) => {
-                    batch_updates.push((id_str.clone(), metadata.genre.clone()));
-                    // Log menos verboso no console, detalhado no arquivo
-                    info!(
-                        "Metadata OK ({}/{}): {} -> {}",
-                        i + 1,
-                        total,
-                        name,
-                        metadata.genre
-                    );
-                    success_count += 1;
-                }
-                Err(e) => {
-                    error!(
-                        "Falha metadata ({}/{}): {} - Erro: {}",
-                        i + 1,
-                        total,
-                        name,
-                        e
-                    );
-                    failed_games.push(format!("{} ({})", name, e));
-                }
-            }
-
-            sleep(Duration::from_millis(STEAM_RATE_LIMIT_MS)).await;
-        }
-    }
-
-    // Salvar no Banco
-    if !batch_updates.is_empty() {
-        let conn = state
-            .library_db
-            .lock()
-            .map_err(|_| "Mutex error ao salvar")?;
-        conn.execute("BEGIN TRANSACTION", [])
-            .map_err(|e| e.to_string())?;
-
-        for (id, genre) in batch_updates {
-            let _ = conn.execute(
-                "UPDATE games SET genre = ?1 WHERE id = ?2",
-                rusqlite::params![genre, id],
-            );
-        }
-
-        conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
-        info!(
-            "Processamento concluído: {} sucessos e {} falhas.",
-            success_count,
-            failed_games.len()
-        );
-    }
-
-    let summary = ImportSummary {
-        success_count,
-        error_count: failed_games.len() as i32,
-        total_processed: total as i32,
-        message: format!(
-            "Processamento concluído: {} sucessos e {} falhas.",
-            success_count,
-            failed_games.len()
-        ),
-        errors: failed_games,
-    };
-
-    Ok(summary)
 }
 
 fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
+}
+
+// Struct para o evento de progresso
+#[derive(serde::Serialize, Clone)]
+struct EnrichProgress {
+    current: i32,
+    total_found: i32, // Total neste lote ou total pendente
+    last_game: String,
+    status: String, // "running", "completed", "error"
+}
+
+/// Busca metadados para os jogos da biblioteca via RAWG.
+///
+/// Busca detalhes adicionais para jogos que ainda não possuem
+/// entradas na tabela 'game_details', usando RAWG como fonte.
+///
+/// **Nota:**
+/// - Limitado a 20 jogos por execução para evitar timeout do frontend.
+/// - Inicia o processo de enriquecimento em SEGUNDO PLANO via Task.
+/// - Retorna imediatamente para não travar a UI.
+#[tauri::command]
+pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
+    // Clona o handle para usar dentro da thread
+    let app_handle = app.clone();
+
+    // Obtém API Key antes de spawnar a thread (falha rápido se não tiver)
+    let api_key = database::get_secret(&app, "rawg_api_key")?;
+    if api_key.is_empty() {
+        return Err("API Key da RAWG não configurada.".to_string());
+    }
+
+    // Spawna a tarefa assíncrona que vai rodar "para sempre" até acabar os jogos
+    tauri::async_runtime::spawn(async move {
+        info!("Task de enriquecimento iniciada em background...");
+
+        loop {
+            // 1. Obter estado do banco dentro do loop (pois o lock deve ser breve)
+            let state: State<AppState> = app_handle.state();
+
+            // Busca próximo lote de jogos sem detalhes
+            let games_to_update = {
+                let conn = match state.library_db.lock() {
+                    Ok(c) => c,
+                    Err(_) => break, // Sai se houver erro grave no mutex
+                };
+
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT g.id, g.name
+                     FROM games g
+                     LEFT JOIN game_details gd ON g.id = gd.game_id
+                     WHERE gd.game_id IS NULL
+                     LIMIT ?",
+                    )
+                    .unwrap();
+
+                let rows = stmt
+                    .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
+                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                    })
+                    .unwrap();
+
+                let mut list = Vec::new();
+                for r in rows {
+                    if let Ok(item) = r {
+                        list.push(item);
+                    }
+                }
+                list
+            };
+
+            if games_to_update.is_empty() {
+                info!("Nenhum jogo pendente. Finalizando task.");
+                let _ = app_handle.emit("enrich_complete", "Todos os jogos atualizados!");
+                break;
+            }
+
+            let total_in_batch = games_to_update.len();
+
+            // 2. Processar o lote
+            for (index, (game_id, name)) in games_to_update.into_iter().enumerate() {
+                // Notifica Frontend do progresso
+                let _ = app_handle.emit(
+                    "enrich_progress",
+                    EnrichProgress {
+                        current: (index + 1) as i32,
+                        total_found: total_in_batch as i32,
+                        last_game: name.clone(),
+                        status: "running".to_string(),
+                    },
+                );
+
+                // Lógica de Busca Inteligente (RAWG)
+                let search_result = rawg::search_games(&api_key, &name).await;
+
+                // Variável para guardar sucesso/falha do banco
+                let mut db_success = false;
+
+                if let Ok(results) = search_result {
+                    if let Some(best_match) = results.first() {
+                        if let Ok(details) =
+                            rawg::fetch_game_details(&api_key, best_match.id.to_string()).await
+                        {
+                            let conn = state.library_db.lock().unwrap();
+                            // ... Prepara dados ...
+                            let desc = details.description_raw.unwrap_or_default();
+                            let website = details.website.unwrap_or_default();
+                            let bg = details
+                                .background_image
+                                .or(best_match.background_image.clone());
+                            let genres = details
+                                .genres
+                                .iter()
+                                .map(|g| g.name.clone())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            let dev = details.developers.first().map(|d| d.name.clone());
+                            let publ = details.publishers.first().map(|p| p.name.clone());
+
+                            let _ = conn.execute(
+                                "INSERT INTO game_details (
+                                    game_id, description, release_date, genres,
+                                    developer, publisher, critic_score, website_url, background_image
+                                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                                params![game_id, desc, details.released, genres, dev, publ, details.metacritic, website, bg],
+                            );
+                            db_success = true;
+                        }
+                    }
+                }
+
+                // Se falhou tudo (não achou na RAWG), insere registro vazio para não tentar de novo no próximo loop
+                if !db_success {
+                    let conn = state.library_db.lock().unwrap();
+                    let _ = conn.execute(
+                        "INSERT INTO game_details (game_id, description) VALUES (?1, 'Metadados não encontrados')",
+                        params![game_id],
+                    );
+                    warn!("Marcando '{}' como não encontrado para evitar loop.", name);
+                }
+
+                sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
+            }
+        }
+    });
+
+    Ok(())
 }
 
 /// Busca detalhes completos de um jogo específico na RAWG.
@@ -314,6 +322,7 @@ pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgG
 ///
 /// Retorna lista de jogos mais aguardados que serão lançados até o final do próximo ano.
 #[tauri::command]
-pub async fn get_upcoming_games(api_key: String) -> Result<Vec<rawg::RawgGame>, String> {
+pub async fn get_upcoming_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
+    let api_key = get_api_key(&app_handle)?;
     rawg::fetch_upcoming_games(&api_key).await
 }

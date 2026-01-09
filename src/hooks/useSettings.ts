@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
 import { ERROR_MESSAGES } from '../constants/errorMessages';
@@ -39,6 +40,12 @@ export function useSettings(onLibraryUpdate: () => void) {
     message: string;
   }>({ type: null, message: '' });
 
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+    game: string;
+  } | null>(null);
+
   useEffect(() => {
     settingsService
       .getSecrets()
@@ -54,6 +61,42 @@ export function useSettings(onLibraryUpdate: () => void) {
       .catch(e => console.error('Erro ao carregar settings', e))
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
+
+  // Listener de Eventos
+  useEffect(() => {
+    // Ouve progresso
+    const unlistenProgress = listen(
+      'enrich_progress',
+      (event: {
+        payload: { current: number; total_found: number; last_game: string };
+      }) => {
+        const p = event.payload;
+        setProgress({
+          current: p.current,
+          total: p.total_found,
+          game: p.last_game,
+        });
+        // Mantém loading true enquanto recebe eventos
+        setLoading(prev => ({ ...prev, enriching: true }));
+      }
+    );
+
+    // Ouve conclusão
+    const unlistenComplete = listen('enrich_complete', () => {
+      setLoading(prev => ({ ...prev, enriching: false }));
+      setProgress(null);
+      setStatus({
+        type: 'success',
+        message: 'Metadados atualizados com sucesso!',
+      });
+      onLibraryUpdate(); // Atualiza a grid
+    });
+
+    return () => {
+      unlistenProgress.then(f => f());
+      unlistenComplete.then(f => f());
+    };
+  }, [onLibraryUpdate]);
 
   useEffect(() => {
     if (status.type && status.message) {
@@ -114,31 +157,17 @@ export function useSettings(onLibraryUpdate: () => void) {
 
   const enrichLibrary = async () => {
     setLoading(prev => ({ ...prev, enriching: true }));
-    setStatus({ type: null, message: 'Buscando dados extras...' });
+    setStatus({ type: null, message: 'Iniciando serviço em segundo plano...' });
 
     try {
-      const summary = await settingsService.enrichLibrary();
-
-      if (summary.errorCount === 0) {
-        setStatus({
-          type: 'success',
-          message: `Sucesso total! ${summary.successCount} jogos atualizados.`,
-        });
-      } else {
-        setStatus({
-          type: 'success',
-          message: `Concluído: ${summary.successCount} atualizados, mas ${summary.errorCount} falharam.`,
-        });
-      }
-
-      onLibraryUpdate();
+      // Chama o comando (que agora retorna void instantaneamente)
+      await settingsService.enrichLibrary();
+      // Não faz mais nada aqui, os eventos cuidarão do resto
     } catch (error) {
       setStatus({ type: 'error', message: String(error) });
-    } finally {
       setLoading(prev => ({ ...prev, enriching: false }));
     }
   };
-
   const exportDatabase = async () => {
     setLoading(prev => ({ ...prev, exporting: true }));
     setStatus({ type: null, message: 'Exportando backup...' });
@@ -146,11 +175,11 @@ export function useSettings(onLibraryUpdate: () => void) {
     try {
       const msg = await settingsService.exportDatabase();
       setStatus({ type: 'success', message: msg });
-    } catch (error: any) {
-      if (error.message !== ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
         setStatus({
           type: 'error',
-          message: error.message || 'Erro ao exportar',
+          message: (error as any).message || 'Erro ao exportar',
         });
       } else {
         setStatus({ type: null, message: '' });
@@ -168,11 +197,11 @@ export function useSettings(onLibraryUpdate: () => void) {
       const msg = await settingsService.importDatabase();
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
-    } catch (error: any) {
-      if (error.message !== ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
         setStatus({
           type: 'error',
-          message: error.message || 'Erro ao importar',
+          message: (error as any).message || 'Erro ao importar',
         });
       } else {
         setStatus({ type: null, message: '' });
@@ -187,6 +216,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     setKeys,
     loading,
     status,
+    progress,
     actions: {
       saveKeys,
       importLibrary,

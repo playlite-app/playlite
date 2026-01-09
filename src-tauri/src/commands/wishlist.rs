@@ -2,56 +2,46 @@
 //!
 //! Implementa funcionalidades para rastreamento de jogos desejados,
 //! incluindo busca, adição, remoção e monitoramento de preços.
-//!
-//! # Funcionalidades Principais
-//! - Busca de jogos na loja Steam
-//! - Adição/remoção de itens da wishlist
-//! - Busca de preços
-//! - Atualização de preços via Steam Store API
-//! - Auto-healing de Steam App IDs faltantes
-//!
-//! # Monitoramento de Preços
-//! A função `refresh_prices` atualiza:
-//! - Preços atuais em BRL
-//! - Status de promoção (on_sale)
-//! - URLs diretas para loja
 
-use crate::database::AppState;
+use crate::database::{self, AppState};
 use crate::models::WishlistGame;
-use crate::services::steam::{self, StoreSearchItem};
+use crate::services::rawg;
 use rusqlite::params;
-use std::time::Duration;
-use tauri::State;
-use tokio::time::sleep;
+use tauri::{AppHandle, State};
 use tracing::{error, info};
 
-/// Busca jogos na loja Steam por termo de pesquisa.
+// Adaptador local para retorno de busca (compatível com frontend)
+#[derive(serde::Serialize)]
+pub struct SearchResult {
+    pub id: String, // RAWG ID como string
+    pub name: String,
+    pub cover_url: Option<String>,
+}
+
+/// Busca jogos na RAWG para adicionar à Wishlist.
 ///
-/// Retorna lista de resultados da Steam Store para seleção pelo usuário.
-/// Usado no modal de "Adicionar à Wishlist".
-///
-/// # Retorna
-/// * `Ok(Vec<StoreSearchItem>)` - Lista de jogos encontrados (vazia se nenhum)
-/// * `Err(String)` - Erro na comunicação com Steam Store API
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// const results = await invoke('search_wishlist_game', {
-///     query: 'cyberpunk'
-/// });
-///
-/// // Mostrar resultados em modal de seleção
-/// results.forEach(game => {
-///     console.log(`${game.name} (ID: ${game.id})`);
-/// });
-/// ```
-///
-/// # Nota
-/// Esta é uma busca direta na Store, não requer autenticação.
-/// Retorna jogos de todas as regiões, mas priorizados para região BR.
+/// Realiza uma busca na API RAWG usando a chave configurada.
+/// Retorna uma lista de resultados com ID, nome e URL da capa.
 #[tauri::command]
-pub async fn search_wishlist_game(query: String) -> Result<Vec<StoreSearchItem>, String> {
-    steam::search_store(&query).await
+pub async fn search_wishlist_game(
+    app: AppHandle,
+    query: String,
+) -> Result<Vec<SearchResult>, String> {
+    let api_key = database::get_secret(&app, "rawg_api_key")?;
+    if api_key.is_empty() {
+        return Err("Configure a chave da RAWG nas configurações.".to_string());
+    }
+
+    let results = rawg::search_games(&api_key, &query).await?;
+
+    Ok(results
+        .into_iter()
+        .map(|g| SearchResult {
+            id: g.id.to_string(),
+            name: g.name,
+            cover_url: g.background_image,
+        })
+        .collect())
 }
 
 /// Adiciona um jogo à lista de desejos.
@@ -66,31 +56,19 @@ pub fn add_to_wishlist(
     cover_url: Option<String>,
     store_url: Option<String>,
     current_price: Option<f64>,
-    steam_app_id: Option<i32>,
 ) -> Result<String, String> {
-    info!(
-        "Tentando adicionar à Wishlist: ID={}, Nome={}, SteamID={:?}",
-        id, name, steam_app_id
-    );
+    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
-    let conn = state.library_db.lock().map_err(|e| {
-        error!("Erro de Mutex na Wishlist: {}", e);
-        "Falha interna ao acessar banco".to_string()
-    })?;
-
-    // Tenta inserir e loga o resultado exato
     match conn.execute(
-        "INSERT OR REPLACE INTO wishlist (id, name, cover_url, store_url, current_price, steam_app_id, added_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, CURRENT_TIMESTAMP)",
-        params![id, name, cover_url, store_url, current_price, steam_app_id],
+        "INSERT OR REPLACE INTO wishlist (
+            id, name, cover_url, store_url, current_price, added_at
+         ) VALUES (?1, ?2, ?3, ?4, ?5, CURRENT_TIMESTAMP)",
+        params![id, name, cover_url, store_url, current_price],
     ) {
-        Ok(_) => {
-            info!("Sucesso: Jogo {} adicionado à wishlist.", name);
-            Ok("Jogo adicionado à lista de desejos!".to_string())
-        },
+        Ok(_) => Ok("Adicionado à Wishlist!".to_string()),
         Err(e) => {
-            error!("Erro SQL ao adicionar {}: {:?}", name, e);
-            Err(format!("Erro de banco de dados: {}", e))
+            error!("Erro SQL Wishlist: {}", e);
+            Err(e.to_string())
         }
     }
 }
@@ -116,40 +94,31 @@ pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String
 /// Retorna a wishlist completa ordenada por data de adição (mais recentes primeiro).
 #[tauri::command]
 pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
     let mut stmt = conn
-        .prepare("SELECT id, name, cover_url, store_url, current_price, lowest_price, on_sale, localized_price, localized_currency, steam_app_id, added_at FROM wishlist ORDER BY added_at DESC")
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, added_at FROM wishlist ORDER BY added_at DESC")
         .map_err(|e| e.to_string())?;
 
-    let games_iter = stmt
+    let games = stmt
         .query_map([], |row| {
             Ok(WishlistGame {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 cover_url: row.get(2)?,
                 store_url: row.get(3)?,
-                store_platform: None,
-                current_price: row.get(4)?,
-                normal_price: None,
-                lowest_price: row.get(5)?,
-                currency: None,
-                on_sale: row.get(6)?,
-                //localized_price: row.get(7)?,
-                //localized_currency: row.get(8)?,
-                //steam_app_id: row.get(9)?,
+                store_platform: row.get(4)?,
+                current_price: row.get(5)?,
+                normal_price: row.get(6)?,
+                lowest_price: row.get(7)?,
+                currency: row.get(8)?,
+                on_sale: row.get(9)?,
                 added_at: row.get(10)?,
             })
         })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
-
-    let mut games = Vec::new();
-    for game in games_iter {
-        games.push(game.map_err(|e| e.to_string())?);
-    }
 
     Ok(games)
 }
@@ -176,109 +145,10 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
     Ok(count > 0)
 }
 
-/// Atualiza preços dos jogos da wishlist.
-///
-/// Operação em lote que consulta a Steam Store API para cada jogo
-/// e atualiza informações de preço, desconto e URLs.
-///
-/// # Processo
-/// 1. Busca todos os jogos da wishlist
-/// 2. Para cada jogo:
-///    - Verifica se tem Steam App ID
-///    - Se não tem, tenta descobrir via busca (auto-healing)
-///    - Consulta preço atual na Steam Store API
-///    - Atualiza banco com novos dados
-///    - Aguarda 500ms (rate limiting)
-///
-/// # Retorna
-/// * `Ok(String)` - Mensagem com contador de atualizações
-/// * `Err(String)` - Erro crítico de banco ou sistema
-///
-/// # Exemplo de Uso
-/// ```typescript,ignore
-/// // Iniciar atualização (operação longa)
-/// const result = await invoke('refresh_prices');
-/// console.log(result); // "Preços atualizados: 23/25"
-///
-/// // Recarregar wishlist para mostrar novos preços
-/// const updated = await invoke('get_wishlist');
-/// ```
-///
-/// # Nota
-/// - Operação naturalmente lenta devido ao rate limiting (500ms) obrigatório.
-/// - Erros individuais não interrompem o processo.
-/// - Jogos sem Steam App ID que não são encontrados na busca são ignorados.
+/// Placeholder para integração futura com IsThereAnyDeal.
+/// Atualmente não faz nada para evitar erros de compilação.
 #[tauri::command]
-pub async fn refresh_prices(state: State<'_, AppState>) -> Result<String, String> {
-    // Busca dados básicos do banco
-    let games: Vec<(String, Option<i32>, String)> = {
-        let conn = state
-            .library_db
-            .lock()
-            .map_err(|_| "Falha ao bloquear mutex")?;
-        let mut stmt = conn
-            .prepare("SELECT id, steam_app_id, name FROM wishlist")
-            .map_err(|e| e.to_string())?;
-
-        let rows = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-            .map_err(|e| e.to_string())?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())?;
-        rows
-    };
-
-    let total = games.len();
-    let mut updated_count = 0;
-
-    for (id, steam_app_id, name) in games {
-        let mut current_app_id = steam_app_id;
-
-        // Se não tem AppID, tenta descobrir pelo nome (Auto-healing)
-        if current_app_id.is_none() {
-            // Nota: search_store retorna lista, pegamos o primeiro para auto-healing
-            if let Ok(results) = steam::search_store(&name).await {
-                if let Some(first) = results.first() {
-                    current_app_id = Some(first.id as i32);
-                    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
-                    let _ = conn.execute(
-                        "UPDATE wishlist SET steam_app_id = ?1 WHERE id = ?2",
-                        params![current_app_id, &id],
-                    );
-                }
-            }
-        }
-
-        // Busca Preço na Steam
-        if let Some(app_id_val) = current_app_id {
-            match steam::fetch_price(app_id_val as u32).await {
-                Ok(Some(price)) => {
-                    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
-                    let on_sale = price.discount_percent > 0;
-
-                    // URL da loja Steam para o botão "Ir para Loja"
-                    let store_url = format!("https://store.steampowered.com/app/{}/", app_id_val);
-
-                    // Atualiza BRL
-                    let _ = conn.execute(
-                        "UPDATE wishlist
-                            SET localized_price = ?1, localized_currency = ?2,
-                                on_sale = ?3, store_url = ?4,
-                                lowest_price = MIN(IFNULL(lowest_price, 9999), ?1)
-                            WHERE id = ?5",
-                        params![price.final_price, price.currency, on_sale, store_url, id],
-                    );
-                    updated_count += 1;
-                }
-                Ok(None) => {
-                    println!("Jogo indisponível na loja BR: {}", name);
-                }
-                Err(_) => {}
-            }
-        }
-
-        sleep(Duration::from_millis(500)).await;
-    }
-
-    Ok(format!("Preços atualizados: {}/{}", updated_count, total))
+pub async fn refresh_prices(_state: State<'_, AppState>) -> Result<String, String> {
+    // TODO: Implementar integração com ITAD
+    Ok("Atualização de preços desativada temporariamente (Aguardando ITAD)".to_string())
 }
