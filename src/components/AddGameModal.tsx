@@ -118,7 +118,7 @@ export default function AddGameModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             <div className="grid gap-2">
               <Label>Plataforma</Label>
               <Select
@@ -137,34 +137,15 @@ export default function AddGameModal({
               </Select>
             </div>
 
-            <div className="grid gap-2">
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={val => handleChange('status', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="playing">Jogando</SelectItem>
-                  <SelectItem value="backlog">Backlog</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="abandoned">Abandonado</SelectItem>
-                  <SelectItem value="plan_to_play">Pretendo Jogar</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="col-span-2 grid gap-2">
+              <Label htmlFor="cover">Capa (URL)</Label>
+              <Input
+                id="cover"
+                value={formData.coverUrl}
+                onChange={e => handleChange('coverUrl', e.target.value)}
+                placeholder="https://..."
+              />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="cover">Capa (URL)</Label>
-            <Input
-              id="cover"
-              value={formData.coverUrl}
-              onChange={e => handleChange('coverUrl', e.target.value)}
-              placeholder="https://..."
-            />
           </div>
 
           <Separator className="my-2" />
@@ -196,6 +177,7 @@ export default function AddGameModal({
                 onChange={e => handleChange('executablePath', e.target.value)}
                 placeholder="C:\Games\MeuJogo\jogo.exe"
               />
+              {/* Futuro: Botão de selecionar executável */}
             </div>
           </div>
 
@@ -212,8 +194,8 @@ export default function AddGameModal({
           <Separator className="my-2" />
 
           {/* === AVALIAÇÃO === */}
-          <div className="grid grid-cols-2 items-end gap-4">
-            <div className="grid gap-2">
+          <div className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
+            <div className="grid gap-1">
               <Label htmlFor="playtime">Tempo Jogado (minutos)</Label>
               <Input
                 id="playtime"
@@ -224,7 +206,26 @@ export default function AddGameModal({
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1">
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={val => handleChange('status', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="playing">Jogando</SelectItem>
+                  <SelectItem value="backlog">Backlog</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="abandoned">Abandonado</SelectItem>
+                  <SelectItem value="plan_to_play">Pretendo Jogar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-1">
               <Label>Sua Avaliação</Label>
               <div className="flex h-10 items-center gap-1">
                 {[1, 2, 3, 4, 5].map(star => (

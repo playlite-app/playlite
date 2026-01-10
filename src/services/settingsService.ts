@@ -44,6 +44,15 @@ export const settingsService = {
   },
 
   /**
+   * Busca capas faltantes para jogos na biblioteca.
+   * Pode demorar dependendo do número de capas faltantes.
+   * Utiliza RAWG como fonte.
+   */
+  fetchMissingCovers: async (): Promise<void> => {
+    await invoke('fetch_missing_covers');
+  },
+
+  /**
    * Exporta toda a biblioteca para JSON.
    * Abre diálogo nativo para escolher local de salvamento.
    *

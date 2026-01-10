@@ -192,18 +192,37 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           description="Baixa capas e sinopses em segundo plano."
         >
           <div className="w-full space-y-2">
-            <Button
-              onClick={actions.enrichLibrary}
-              variant="secondary"
-              className="w-full"
-              disabled={loading.enriching}
-            >
-              {loading.enriching ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Atualizar Metadados'
-              )}
-            </Button>
+            <div className="flex gap-2">
+              {/*  Atualiza detalhes e descrição */}
+              <Button
+                onClick={actions.enrichLibrary}
+                variant="secondary"
+                //className="w-full"
+                className="flex-1"
+                disabled={loading.enriching}
+              >
+                {loading.enriching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Atualizar Metadados'
+                )}
+              </Button>
+
+              {/* Botão para baixar apenas capas faltantes */}
+              <Button
+                onClick={actions.fetchMissingCovers}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.enriching}
+                title="Busca apenas capas para jogos que estão sem imagem"
+              >
+                {loading.enriching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Baixar Capas'
+                )}
+              </Button>
+            </div>
 
             {/* Feedback de Progresso */}
             {loading.enriching && progress && (

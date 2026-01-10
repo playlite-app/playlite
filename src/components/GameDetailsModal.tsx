@@ -1,5 +1,6 @@
 import {
   Building2,
+  Calendar,
   Clock,
   Gamepad2,
   Globe,
@@ -144,6 +145,7 @@ export default function GameDetailsModal({
                   Detalhes
                 </h3>
                 <div className="space-y-2">
+                  {/* Gênero */}
                   <div className="border-border/50 flex justify-between border-b py-2">
                     <span className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Gamepad2 size={16} /> Gênero
@@ -152,6 +154,20 @@ export default function GameDetailsModal({
                       {game.genres || 'N/A'}
                     </span>
                   </div>
+                  {/* Data de Lançamento */}
+                  {details?.releaseDate && (
+                    <div className="border-border/50 flex justify-between border-b py-2">
+                      <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Calendar size={16} /> Lançamento
+                      </span>
+                      <span className="text-sm font-medium">
+                        {new Date(details.releaseDate).toLocaleDateString(
+                          'pt-BR'
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {/* Critic Score */}
                   {details?.metacritic && (
                     <div className="border-border/50 flex items-center justify-between border-b py-2">
                       <span className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -172,6 +188,7 @@ export default function GameDetailsModal({
                       </Badge>
                     </div>
                   )}
+                  {/* Desenvolvedora */}
                   {details?.developers && details.developers.length > 0 && (
                     <div className="border-border/50 flex justify-between border-b py-2">
                       <span className="text-muted-foreground flex items-center gap-2 text-sm">

@@ -54,66 +54,44 @@ fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
 /// - Retorna imediatamente para não travar a UI.
 #[tauri::command]
 pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
-    // Clona o handle para usar dentro da thread
     let app_handle = app.clone();
-
-    // Obtém API Key antes de spawnar a thread (falha rápido se não tiver)
     let api_key = get_api_key(&app)?;
     if api_key.is_empty() {
         return Err("API Key da RAWG não configurada.".to_string());
     }
 
-    // Spawna a tarefa assíncrona que vai rodar "para sempre" até acabar os jogos
     tauri::async_runtime::spawn(async move {
-        info!("Task de enriquecimento iniciada em background...");
-
+        info!("Task de enriquecimento iniciada...");
         loop {
-            // 1. Obter estado do banco dentro do loop (pois o lock deve ser breve)
             let state: State<AppState> = app_handle.state();
-
-            // Busca próximo lote de jogos sem detalhes
             let games_to_update = {
                 let conn = match state.library_db.lock() {
                     Ok(c) => c,
-                    Err(_) => break, // Sai se houver erro grave no mutex
+                    Err(_) => break,
                 };
-
-                let mut stmt = conn
-                    .prepare(
-                        "SELECT g.id, g.name
-                     FROM games g
-                     LEFT JOIN game_details gd ON g.id = gd.game_id
-                     WHERE gd.game_id IS NULL
-                     LIMIT ?",
-                    )
-                    .unwrap();
-
+                let mut stmt = conn.prepare("SELECT g.id, g.name FROM games g LEFT JOIN game_details gd ON g.id = gd.game_id WHERE gd.game_id IS NULL LIMIT ?").unwrap();
                 let rows = stmt
                     .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
                         Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
                     })
                     .unwrap();
-
                 let mut list = Vec::new();
                 for r in rows {
-                    if let Ok(item) = r {
-                        list.push(item);
+                    if let Ok(i) = r {
+                        list.push(i);
                     }
                 }
                 list
             };
 
             if games_to_update.is_empty() {
-                info!("Nenhum jogo pendente. Finalizando task.");
                 let _ = app_handle.emit("enrich_complete", "Todos os jogos atualizados!");
                 break;
             }
 
             let total_in_batch = games_to_update.len();
 
-            // 2. Processar o lote
             for (index, (game_id, name)) in games_to_update.into_iter().enumerate() {
-                // Notifica Frontend do progresso
                 let _ = app_handle.emit(
                     "enrich_progress",
                     EnrichProgress {
@@ -124,10 +102,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                     },
                 );
 
-                // Lógica de Busca Inteligente (RAWG)
                 let search_result = rawg::search_games(&api_key, &name).await;
-
-                // Variável para guardar sucesso/falha do banco
                 let mut db_success = false;
 
                 if let Ok(results) = search_result {
@@ -136,7 +111,6 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                             rawg::fetch_game_details(&api_key, best_match.id.to_string()).await
                         {
                             let conn = state.library_db.lock().unwrap();
-                            // ... Prepara dados ...
                             let desc = details.description_raw.unwrap_or_default();
                             let website = details.website.unwrap_or_default();
                             let bg = details
@@ -178,19 +152,101 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                                     format!("https://rawg.io/games/{}", best_match.id)
                                 ],
                             );
+
+                            if let Some(img) = &bg {
+                                let _ = conn.execute(
+                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2 AND (cover_url IS NULL OR cover_url = '')",
+                                    params![img, game_id]
+                                );
+                            }
+
                             db_success = true;
                         }
                     }
                 }
 
-                // Se falhou tudo (não achou na RAWG), insere registro vazio para não tentar de novo no próximo loop
                 if !db_success {
                     let conn = state.library_db.lock().unwrap();
-                    let _ = conn.execute(
-                        "INSERT INTO game_details (game_id, description) VALUES (?1, 'Metadados não encontrados')",
-                        params![game_id],
-                    );
-                    warn!("Marcando '{}' como não encontrado para evitar loop.", name);
+                    let _ = conn.execute("INSERT INTO game_details (game_id, description) VALUES (?1, 'Metadados não encontrados')", params![game_id]);
+                }
+                sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
+            }
+        }
+    });
+    Ok(())
+}
+
+/// Busca capas faltantes para jogos na biblioteca.  
+///     
+/// Busca capas para jogos que não possuem capa (cover_url NULL ou vazia), usando RAWG como fonte.
+#[tauri::command]
+pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
+    let app_handle = app.clone();
+    let api_key = get_api_key(&app)?;
+    if api_key.is_empty() {
+        return Err("API Key da RAWG não configurada.".to_string());
+    }
+
+    tauri::async_runtime::spawn(async move {
+        info!("Iniciando busca de capas faltantes...");
+
+        loop {
+            let state: State<AppState> = app_handle.state();
+
+            let games_without_cover = {
+                let conn = match state.library_db.lock() {
+                    Ok(c) => c,
+                    Err(_) => break,
+                };
+                let mut stmt = conn.prepare("SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = '' LIMIT ?").unwrap();
+                let rows = stmt
+                    .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
+                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                    })
+                    .unwrap();
+                let mut list = Vec::new();
+                for r in rows {
+                    if let Ok(i) = r {
+                        list.push(i);
+                    }
+                }
+                list
+            };
+
+            if games_without_cover.is_empty() {
+                let _ = app_handle.emit("enrich_complete", "Busca de capas finalizada!");
+                break;
+            }
+
+            let total = games_without_cover.len();
+
+            for (index, (game_id, name)) in games_without_cover.into_iter().enumerate() {
+                // Emite evento para atualizar a UI (reusa o mesmo evento de progresso)
+                let _ = app_handle.emit(
+                    "enrich_progress",
+                    EnrichProgress {
+                        current: (index + 1) as i32,
+                        total_found: total as i32,
+                        last_game: format!("Capa: {}", name),
+                        status: "running".to_string(),
+                    },
+                );
+
+                // Busca simples na RAWG para pegar a primeira imagem
+                match rawg::search_games(&api_key, &name).await {
+                    Ok(results) => {
+                        if let Some(best_match) = results.first() {
+                            if let Some(img) = &best_match.background_image {
+                                let conn = state.library_db.lock().unwrap();
+                                let _ = conn.execute(
+                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2",
+                                    params![img, game_id],
+                                );
+                                info!("Capa encontrada para '{}'", name);
+                            }
+                        }
+                    }
+                    Err(e) => warn!("Erro buscando capa para {}: {}", name, e),
                 }
 
                 sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;

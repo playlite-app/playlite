@@ -168,6 +168,20 @@ export function useSettings(onLibraryUpdate: () => void) {
       setLoading(prev => ({ ...prev, enriching: false }));
     }
   };
+
+  const fetchMissingCovers = async () => {
+    setLoading(prev => ({ ...prev, enriching: true })); // Reusa o loading de enriquecimento
+    setStatus({ type: null, message: 'Buscando capas faltantes...' });
+
+    try {
+      await settingsService.fetchMissingCovers();
+      // O listener de eventos cuidará do resto
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+      setLoading(prev => ({ ...prev, enriching: false }));
+    }
+  };
+
   const exportDatabase = async () => {
     setLoading(prev => ({ ...prev, exporting: true }));
     setStatus({ type: null, message: 'Exportando backup...' });
@@ -221,6 +235,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       saveKeys,
       importLibrary,
       enrichLibrary,
+      fetchMissingCovers,
       exportDatabase,
       importDatabase,
     },

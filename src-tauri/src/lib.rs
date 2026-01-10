@@ -74,9 +74,11 @@ pub fn run() {
             commands::wishlist::remove_from_wishlist,
             commands::wishlist::check_wishlist_status,
             commands::wishlist::refresh_prices,
-            // Comandos de Integração (Steam/RAWG)
+            // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
+            // Comandos de Importação de Metadados
             commands::metadata::enrich_library,
+            commands::metadata::fetch_missing_covers,
             commands::metadata::get_trending_games,
             commands::metadata::get_upcoming_games,
             commands::metadata::fetch_game_details,
