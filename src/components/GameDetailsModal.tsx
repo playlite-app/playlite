@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Game, GameDetails, GamePlatformLink } from '@/types/game';
+import { formatTime } from '@/utils/formatTime.ts';
 
 interface GameDetailsModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export default function GameDetailsModal({
                     </span>
                     <div className="flex items-center gap-1.5 font-mono text-lg font-semibold">
                       <Clock size={16} className="text-muted-foreground" />
-                      {game.playtime}h
+                      {formatTime(game.playtime)}
                     </div>
                   </div>
                   <div className="bg-card rounded-lg border p-3 shadow-sm">

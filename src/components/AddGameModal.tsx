@@ -196,13 +196,24 @@ export default function AddGameModal({
           {/* === AVALIAÇÃO === */}
           <div className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
             <div className="grid gap-1">
-              <Label htmlFor="playtime">Tempo Jogado (minutos)</Label>
+              <Label htmlFor="playtime">Tempo Jogado (Horas)</Label>
               <Input
                 id="playtime"
                 type="number"
                 min="0"
-                value={formData.playtime}
-                onChange={e => handleChange('playtime', e.target.value)}
+                step="0.1"
+                value={
+                  formData.playtime
+                    ? String(
+                        Math.round((Number(formData.playtime) / 60) * 100) / 100
+                      )
+                    : ''
+                }
+                onChange={e => {
+                  const hours = parseFloat(e.target.value);
+                  const minutes = isNaN(hours) ? 0 : Math.floor(hours * 60);
+                  handleChange('playtime', minutes);
+                }}
               />
             </div>
 
