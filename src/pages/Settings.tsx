@@ -5,7 +5,6 @@ import {
   Database,
   Download,
   Gamepad2,
-  KeyRound,
   Loader2,
   Save,
   Search,
@@ -145,36 +144,11 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
       {/* SEÇÃO 3: SISTEMA E DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
-
-        <SettingsRow
-          icon={KeyRound}
-          title="IGDB"
-          description="Client ID e Secret para baixar capas oficiais e detalhes."
-        >
-          <div className="grid gap-3">
-            <Input
-              placeholder="Client ID"
-              value={keys.igdbClientId}
-              onChange={e => setKeys({ ...keys, igdbClientId: e.target.value })}
-              className="bg-background/50"
-            />
-            <Input
-              type="password"
-              placeholder="Client Secret"
-              value={keys.igdbClientSecret}
-              onChange={e =>
-                setKeys({ ...keys, igdbClientSecret: e.target.value })
-              }
-              className="bg-background/50"
-            />
-          </div>
-        </SettingsRow>
-
-        {/* RAWG (Legado/Alternativo) */}
+        {/* RAWG */}
         <SettingsRow
           icon={Search}
           title="RAWG.io"
-          description="Usado como fonte de jogos em alta e lançamentos próximos."
+          description="Usado como fonte  de metadados, de jogos em alta e lançamentos próximos."
         >
           <Input
             type="password"

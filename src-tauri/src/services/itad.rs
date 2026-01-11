@@ -4,11 +4,11 @@ use crate::security;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::Deserialize;
 use serde_json::json;
-use std::collections::HashMap;
 
 const API_BASE: &str = "https://api.isthereanydeal.com";
 
-// Estruturas de Resposta da ITAD
+// === ESTRUTURAS PÚBLICAS ===
+
 #[derive(Debug, Deserialize)]
 pub struct ItadLookupResult {
     pub found: bool,
@@ -18,44 +18,78 @@ pub struct ItadLookupResult {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ItadPrice {
-    pub price: f64,
-    pub currency: String,
-    pub cut: i32, // Desconto %
-    pub shop: ItadShop,
-    pub url: String,
+pub struct ItadShop {
+    pub id: u64,
+    pub name: String,
 }
 
+/// Estrutura simplificada para uso no app
 #[derive(Debug, Deserialize)]
-pub struct ItadShop {
-    pub id: String,
-    pub name: String,
+pub struct ItadPrice {
+    pub price: f64, // Valor direto (ex: 59.99)
+    pub currency: String,
+    pub cut: Option<i32>,
+    pub shop: ItadShop,
+    pub url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ItadGameOverview {
     pub id: String,
-    pub title: String,
-    pub current: Option<ItadPrice>, // Menor preço atual
-    pub low: Option<ItadPrice>,     // Menor preço histórico
+    pub title: Option<String>,
+    pub current: Option<ItadPrice>,
+    pub lowest: Option<ItadPrice>,
 }
 
-/// Busca o ID do jogo na ITAD pelo título (Fuzzy Search simplificado)
+// === ESTRUTURAS INTERNAS (Espelho exato do JSON da API) ===
+// Usadas apenas para deserialização antes de converter
+
+#[derive(Debug, Deserialize)]
+struct RawItadResponse {
+    prices: Vec<RawItadGame>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawItadGame {
+    id: String,
+    current: Option<RawItadDeal>,
+    lowest: Option<RawItadDeal>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawItadDeal {
+    shop: ItadShop,
+    price: RawPriceValue, // O preço é um objeto aninhado
+    cut: Option<i32>,
+    url: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RawPriceValue {
+    amount: f64,
+    currency: String,
+}
+
+// === IMPLEMENTAÇÃO ===
+
+/// Busca o ID do jogo na ITAD pelo título
 pub async fn find_game_id(title: &str) -> Result<String, String> {
     let key = security::get_itad_api_key();
     if key.is_empty() {
         return Err("API Key da ITAD não configurada".into());
     }
 
-    // Endpoint de Lookup baseado na documentação: /lookup/id/title/
-    let url = format!("{}/lookup/id/title/?key={}", API_BASE, key);
+    tracing::info!("ITAD Lookup - Buscando jogo: '{}'", title);
 
-    // Corpo: Array de títulos
-    let body = json!([title]);
+    let url = format!(
+        "{}/games/lookup/v1?key={}&title={}",
+        API_BASE,
+        key,
+        urlencoding::encode(title)
+    );
 
     let res = HTTP_CLIENT
-        .post(&url)
-        .json(&body)
+        .get(&url)
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -64,13 +98,25 @@ pub async fn find_game_id(title: &str) -> Result<String, String> {
         return Err(format!("Erro ITAD Lookup: {}", res.status()));
     }
 
-    // A resposta é um mapa: "Titulo Enviado" -> "ID Encontrado"
-    let map: HashMap<String, String> = res.json().await.map_err(|e| e.to_string())?;
+    let response_text = res.text().await.map_err(|e| e.to_string())?;
 
-    // Tenta pegar o ID usando o título exato ou retorna erro
-    match map.get(title) {
-        Some(id) if !id.is_empty() => Ok(id.clone()),
-        _ => Err("Jogo não encontrado na ITAD".into()),
+    #[derive(Deserialize)]
+    struct LookupResponse {
+        game: Option<GameInfo>,
+    }
+    #[derive(Deserialize)]
+    struct GameInfo {
+        id: String,
+    }
+
+    let response: LookupResponse = serde_json::from_str(&response_text).map_err(|e| {
+        tracing::error!("Erro JSON Lookup: {}", e);
+        format!("Erro de JSON: {}", e)
+    })?;
+
+    match response.game {
+        Some(game_info) => Ok(game_info.id),
+        None => Err("Jogo não encontrado na ITAD".into()),
     }
 }
 
@@ -84,23 +130,63 @@ pub async fn get_prices(itad_ids: Vec<String>) -> Result<Vec<ItadGameOverview>, 
         return Ok(vec![]);
     }
 
-    // Endpoint Overview: Retorna preços atuais e históricos
-    // Documentação v2: /games/overview/v2/
-    let url = format!("{}/games/overview/v2/?key={}", API_BASE, key);
+    let url = format!("{}/games/overview/v2?key={}&country=BR", API_BASE, key);
 
-    let body = json!(itad_ids);
+    tracing::debug!("ITAD Prices Request: {} items", itad_ids.len());
 
     let res = HTTP_CLIENT
         .post(&url)
-        .json(&body)
+        .json(&itad_ids)
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    if !res.status().is_success() {
-        return Err(format!("Erro ITAD Prices: {}", res.status()));
+    let status = res.status();
+
+    if !status.is_success() {
+        let body = res.text().await.unwrap_or_default();
+        tracing::error!("Erro ITAD Prices: {}", body);
+        return Err(format!("Erro ITAD Prices: {}", status));
     }
 
-    let data: Vec<ItadGameOverview> = res.json().await.map_err(|e| e.to_string())?;
-    Ok(data)
+    let response_text = res.text().await.map_err(|e| e.to_string())?;
+
+    // 1. Deserializa para a estrutura bruta (Raw) que corresponde ao JSON
+    let raw_response: RawItadResponse = serde_json::from_str(&response_text).map_err(|e| {
+        tracing::error!("Erro ao parsear JSON da ITAD: {}", e);
+        // Dica de debug: mostra onde quebrou
+        format!(
+            "Erro de JSON (linha: {}, col: {}): {}",
+            e.line(),
+            e.column(),
+            e
+        )
+    })?;
+
+    // 2. Converte para a estrutura limpa (Public)
+    let clean_overview: Vec<ItadGameOverview> = raw_response
+        .prices
+        .into_iter()
+        .map(|raw| {
+            ItadGameOverview {
+                id: raw.id,
+                title: None, // A API de preços não retorna título, o wishlist.rs já tem o nome
+                current: raw.current.map(convert_deal),
+                lowest: raw.lowest.map(convert_deal),
+            }
+        })
+        .collect();
+
+    Ok(clean_overview)
+}
+
+// Helper para converter o deal bruto para o limpo (achatando o preço)
+fn convert_deal(raw: RawItadDeal) -> ItadPrice {
+    ItadPrice {
+        price: raw.price.amount,
+        currency: raw.price.currency,
+        cut: raw.cut,
+        shop: raw.shop,
+        url: raw.url,
+    }
 }

@@ -155,7 +155,8 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
             lowest_price REAL,
             currency TEXT,
             on_sale BOOLEAN DEFAULT 0,
-            added_at TEXT
+            added_at TEXT,
+            itad_id TEXT
         );",
         [],
     )
@@ -186,9 +187,6 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
         [],
     )
     .map_err(|e| e.to_string())?;
-
-    // Adicionar coluna se não existir (Migração simples)
-    let _ = conn.execute("ALTER TABLE games ADD COLUMN itad_id TEXT", []);
 
     Ok("Banco de jogos inicializado com sucesso!".to_string())
 }
@@ -283,11 +281,5 @@ pub fn delete_secret(app: &AppHandle, key_name: &str) -> Result<(), String> {
 
 /// Retorna lista de chaves de secrets suportadas pela aplicação.
 pub fn list_supported_keys() -> Vec<&'static str> {
-    vec![
-        "steam_id",
-        "steam_api_key",
-        "rawg_api_key",
-        "igdb_client_id",
-        "igdb_client_secret",
-    ]
+    vec!["steam_id", "steam_api_key", "rawg_api_key"]
 }

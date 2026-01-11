@@ -20,10 +20,6 @@ pub struct KeysBatch {
     pub steam_api_key: String,
     #[serde(rename = "rawgApiKey")]
     pub rawg_api_key: String,
-    #[serde(rename = "igdbClientId")]
-    pub igdb_client_id: String,
-    #[serde(rename = "igdbClientSecret")]
-    pub igdb_client_secret: String,
 }
 
 /// Recupera todos os secrets configurados em lote.
@@ -36,8 +32,6 @@ pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, String> {
         steam_id: database::get_secret(&app, "steam_id")?,
         steam_api_key: database::get_secret(&app, "steam_api_key")?,
         rawg_api_key: database::get_secret(&app, "rawg_api_key")?,
-        igdb_client_id: database::get_secret(&app, "igdb_client_id")?,
-        igdb_client_secret: database::get_secret(&app, "igdb_client_secret")?,
     })
 }
 
@@ -70,8 +64,6 @@ pub fn set_secrets(
     save_or_delete("steam_id", steam_id)?;
     save_or_delete("steam_api_key", steam_api_key)?;
     save_or_delete("rawg_api_key", rawg_api_key)?;
-    save_or_delete("igdb_client_id", igdb_client_id)?;
-    save_or_delete("igdb_client_secret", igdb_client_secret)?;
 
     Ok(())
 }

@@ -116,6 +116,8 @@ pub struct WishlistGame {
     pub store_url: Option<String>,
     #[serde(rename = "storePlatform")]
     pub store_platform: Option<String>, // steam, epic, etc.
+    #[serde(rename = "itadId")]
+    pub itad_id: Option<String>, // ID do jogo na ITAD para buscar preços
 
     // Preços
     #[serde(rename = "currentPrice")]

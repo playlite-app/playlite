@@ -188,8 +188,9 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
             }
         }
+        info!("Task concluída.");
     });
-    info!("Task concluída.");
+
     Ok(())
 }
 

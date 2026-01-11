@@ -22,8 +22,6 @@ export function useSettings(onLibraryUpdate: () => void) {
     steamId: '',
     steamApiKey: '',
     rawgApiKey: '',
-    igdbClientId: '',
-    igdbClientSecret: '',
   });
 
   const [loading, setLoading] = useState({
@@ -55,8 +53,6 @@ export function useSettings(onLibraryUpdate: () => void) {
           steamId: data.steamId || '',
           steamApiKey: data.steamApiKey || '',
           rawgApiKey: data.rawgApiKey || '',
-          igdbClientId: data.igdbClientId || '',
-          igdbClientSecret: data.igdbClientSecret || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -132,8 +128,6 @@ export function useSettings(onLibraryUpdate: () => void) {
         steamId: keys.steamId.trim() || null,
         steamApiKey: keys.steamApiKey.trim() || null,
         rawgApiKey: keys.rawgApiKey.trim() || null,
-        igdbClientId: keys.igdbClientId.trim() || null,
-        igdbClientSecret: keys.igdbClientSecret.trim() || null,
       });
       setStatus({
         type: 'success',

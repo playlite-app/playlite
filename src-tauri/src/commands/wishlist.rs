@@ -1,11 +1,9 @@
 //! Módulo de gerenciamento de lista de desejos (wishlist).
-//!
-//! Implementa funcionalidades para rastreamento de jogos desejados,
-//! incluindo busca, adição, remoção e monitoramento de preços.
+//! Adaptado para v2.0 com integração IsThereAnyDeal.
 
 use crate::database::{self, AppState};
 use crate::models::WishlistGame;
-use crate::services::rawg;
+use crate::services::{itad, rawg};
 use rusqlite::params;
 use tauri::{AppHandle, State};
 use tracing::{error, info};
@@ -19,14 +17,12 @@ pub struct SearchResult {
 }
 
 /// Busca jogos na RAWG para adicionar à Wishlist.
-///
-/// Realiza uma busca na API RAWG usando a chave configurada.
-/// Retorna uma lista de resultados com ID, nome e URL da capa.
 #[tauri::command]
 pub async fn search_wishlist_game(
     app: AppHandle,
     query: String,
 ) -> Result<Vec<SearchResult>, String> {
+    // Usa RAWG para buscar o jogo e a capa
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
         return Err("Configure a chave da RAWG nas configurações.".to_string());
@@ -45,9 +41,6 @@ pub async fn search_wishlist_game(
 }
 
 /// Adiciona um jogo à lista de desejos.
-///
-/// Insere ou atualiza um jogo na wishlist com informações básicas.
-/// Usa `INSERT OR REPLACE` para permitir re-adicionar jogos removidos.
 #[tauri::command]
 pub fn add_to_wishlist(
     state: State<AppState>,
@@ -56,14 +49,15 @@ pub fn add_to_wishlist(
     cover_url: Option<String>,
     store_url: Option<String>,
     current_price: Option<f64>,
+    itad_id: Option<String>,
 ) -> Result<String, String> {
     let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
     match conn.execute(
         "INSERT OR REPLACE INTO wishlist (
-            id, name, cover_url, store_url, current_price, added_at
-         ) VALUES (?1, ?2, ?3, ?4, ?5, CURRENT_TIMESTAMP)",
-        params![id, name, cover_url, store_url, current_price],
+            id, name, cover_url, store_url, current_price, itad_id, added_at
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, CURRENT_TIMESTAMP)",
+        params![id, name, cover_url, store_url, current_price, itad_id],
     ) {
         Ok(_) => Ok("Adicionado à Wishlist!".to_string()),
         Err(e) => {
@@ -74,8 +68,6 @@ pub fn add_to_wishlist(
 }
 
 /// Remove um jogo da lista de desejos.
-///
-/// Remove o jogo identificado pelo ID fornecido da wishlist.
 #[tauri::command]
 pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String, String> {
     let conn = state
@@ -90,14 +82,12 @@ pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String
 }
 
 /// Recupera todos os jogos da lista de desejos.
-///
-/// Retorna a wishlist completa ordenada por data de adição (mais recentes primeiro).
 #[tauri::command]
 pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String> {
     let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
     let mut stmt = conn
-        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, added_at FROM wishlist ORDER BY added_at DESC")
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, added_at, itad_id FROM wishlist ORDER BY added_at DESC")
         .map_err(|e| e.to_string())?;
 
     let games = stmt
@@ -114,6 +104,7 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
                 currency: row.get(8)?,
                 on_sale: row.get(9)?,
                 added_at: row.get(10)?,
+                itad_id: row.get(11)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -124,9 +115,6 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
 }
 
 /// Verifica se um jogo está na lista de desejos.
-///
-/// Consulta rápida para verificar presença na wishlist, útil para
-/// atualizar UI (ex: mudar ícone de "adicionar" para "remover").
 #[tauri::command]
 pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool, String> {
     let conn = state
@@ -145,10 +133,139 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
     Ok(count > 0)
 }
 
-/// Placeholder para integração futura com IsThereAnyDeal.
-/// Atualmente não faz nada para evitar erros de compilação.
+/// Atualiza os preços de todos os jogos na Wishlist usando a API da ITAD.
 #[tauri::command]
-pub async fn refresh_prices(_state: State<'_, AppState>) -> Result<String, String> {
-    // TODO: Implementar integração com ITAD
-    Ok("Atualização de preços desativada temporariamente (Aguardando ITAD)".to_string())
+pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Result<String, String> {
+    // 1. Busca todos os jogos da Wishlist local
+    let games_to_check: Vec<(String, String, Option<String>)> = {
+        let conn = state.library_db.lock().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT id, name, itad_id FROM wishlist")
+            .unwrap();
+        stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, Option<String>>(2)?,
+            ))
+        })
+        .unwrap()
+        .filter_map(|r| r.ok())
+        .collect()
+    };
+
+    if games_to_check.is_empty() {
+        return Ok("Lista de desejos vazia.".to_string());
+    }
+
+    // 2. Resolve IDs da ITAD (Se faltar, busca na API e salva no banco)
+    let mut itad_ids_to_fetch = Vec::new();
+    let mut game_map = std::collections::HashMap::new(); // Mapa itad_id -> local_id
+
+    for (local_id, name, current_itad_id) in games_to_check {
+        let final_itad_id = match current_itad_id {
+            Some(id) if !id.is_empty() => {
+                id // Já tem ID, usa direto
+            }
+            _ => {
+                // Se não tem ID, busca na API (Lookup)
+                info!("Buscando ID ITAD para: {}", name);
+                match itad::find_game_id(&name).await {
+                    Ok(found_id) => {
+                        // Salva no banco para cachear e não buscar na próxima vez
+                        let conn = state.library_db.lock().unwrap();
+                        match conn.execute(
+                            "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
+                            params![&found_id, &local_id],
+                        ) {
+                            Ok(_) => info!("ITAD ID salvo no banco para '{}'", name),
+                            Err(e) => error!("Erro ao salvar ITAD ID: {}", e),
+                        }
+                        found_id
+                    }
+                    Err(e) => {
+                        error!("Jogo '{}' não encontrado na ITAD: {}", name, e);
+                        continue; // Jogo não achado na ITAD, pula
+                    }
+                }
+            }
+        };
+        itad_ids_to_fetch.push(final_itad_id.clone());
+        game_map.insert(final_itad_id, (local_id, name));
+    }
+
+    // 3. Busca preços em lote
+    if itad_ids_to_fetch.is_empty() {
+        return Ok("Nenhum jogo correspondente encontrado na ITAD.".to_string());
+    }
+
+    info!(
+        "Buscando preços para {} jogos na ITAD",
+        itad_ids_to_fetch.len()
+    );
+    let overviews = itad::get_prices(itad_ids_to_fetch).await?;
+    info!("Recebidos {} resultados de preços da ITAD", overviews.len());
+
+    let mut updated_count = 0;
+
+    // 4. Atualiza o banco com os preços novos
+    let conn = state.library_db.lock().unwrap();
+
+    for game_data in overviews {
+        if let Some((local_id, game_name)) = game_map.get(&game_data.id) {
+            info!(
+                "Processando preços para jogo: {} | ITAD ID: {}",
+                game_name, game_data.id
+            );
+
+            // Pega a melhor oferta atual
+            if let Some(deal) = game_data.current {
+                let lowest = game_data.lowest.map(|l| l.price).unwrap_or(deal.price);
+
+                info!(
+                    "Atualizando preços - Jogo: {} | Preço: {} {} | Loja: {}",
+                    game_name, deal.currency, deal.price, deal.shop.name
+                );
+
+                let cut = deal.cut.unwrap_or(0) as f64;
+                let normal_price = if cut > 0.0 {
+                    deal.price / (1.0 - (cut / 100.0))
+                } else {
+                    deal.price
+                };
+                match conn.execute(
+                    "UPDATE wishlist SET
+                        current_price = ?1,
+                        currency = ?2,
+                        lowest_price = ?3,
+                        store_platform = ?4,
+                        store_url = ?5,
+                        on_sale = ?6,
+                        normal_price = ?7
+                     WHERE id = ?8",
+                    params![
+                        deal.price,
+                        deal.currency,
+                        lowest,
+                        deal.shop.name,
+                        deal.url,
+                        deal.cut > Some(0),
+                        normal_price,
+                        local_id
+                    ],
+                ) {
+                    Ok(_) => {
+                        updated_count += 1;
+                    }
+                    Err(e) => error!("Erro ao salvar '{}': {}", game_name, e),
+                }
+            } else {
+                info!("Nenhuma oferta atual disponível para: {}", game_name);
+            }
+        } else {
+            error!("ITAD ID {} não encontrado no mapa local", game_data.id);
+        }
+    }
+
+    Ok(format!("Preços atualizados para {} jogos.", updated_count))
 }

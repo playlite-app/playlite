@@ -13,8 +13,6 @@ export const settingsService = {
     steamId: string | null;
     steamApiKey: string | null;
     rawgApiKey: string | null;
-    igdbClientId: string | null;
-    igdbClientSecret: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
   },

@@ -2,10 +2,10 @@ import { invoke } from '@tauri-apps/api/core';
 
 import { WishlistGame } from '@/types';
 
-export interface SteamSearchResult {
-  id: number;
+export interface SearchResult {
+  id: string;
   name: string;
-  tiny_image?: string;
+  cover_url?: string | null;
 }
 
 export const wishlistService = {
@@ -22,39 +22,39 @@ export const wishlistService = {
   },
 
   /**
-   * Atualiza preços de TODOS os jogos da wishlist consultando Steam Store API.
-   * Operação pode demorar (múltiplas requisições HTTP sequenciais).
-   * Falhas individuais não interrompem o processo - jogos que falharem mantêm preço anterior.
+   * Atualiza preços de TODOS os jogos da wishlist consultando ITAD API.
+   * Operação pode demorar (múltiplas requisições HTTP).
+   * Jogos sem correspondência na ITAD mantêm preço anterior.
    */
   refreshPrices: async (): Promise<void> => {
     await invoke('refresh_prices');
   },
 
   /**
-   * Busca jogos no Steam por nome para adicionar à wishlist.
-   * Usa API de busca do Steam (resultados podem incluir DLCs e pacotes).
+   * Busca jogos na RAWG por nome para adicionar à wishlist.
+   * Usa RAWG API para obter metadados e imagens.
    *
    * @param query - Termo de busca (nome do jogo)
-   * @returns Lista de resultados com id, name e tiny_image
+   * @returns Lista de resultados com id, name e cover_url
    */
-  searchWishlistGame: async (query: string): Promise<SteamSearchResult[]> => {
-    return await invoke<SteamSearchResult[]>('search_wishlist_game', { query });
+  searchWishlistGame: async (query: string): Promise<SearchResult[]> => {
+    return await invoke<SearchResult[]>('search_wishlist_game', { query });
   },
 
   /**
-   * Adiciona um jogo à wishlist baseado num resultado de busca do Steam.
-   * Preço inicial é null - use refreshPrices() para buscar preço atual.
+   * Adiciona um jogo à wishlist baseado num resultado de busca.
+   * O ITAD ID será buscado automaticamente quando refresh_prices for chamado.
    *
    * @param game - Resultado da busca (searchWishlistGame)
    */
-  addToWishlist: async (game: SteamSearchResult): Promise<void> => {
+  addToWishlist: async (game: SearchResult): Promise<void> => {
     await invoke('add_to_wishlist', {
-      id: game.id.toString(),
+      id: game.id,
       name: game.name,
-      coverUrl: game.tiny_image,
-      storeUrl: `https://store.steampowered.com/app/${game.id}`,
+      coverUrl: game.cover_url,
+      storeUrl: null, // Será preenchido pelo refresh_prices
       currentPrice: null,
-      steamAppId: game.id,
+      itadId: null, // Será buscado pelo refresh_prices
     });
   },
 };

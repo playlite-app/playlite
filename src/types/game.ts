@@ -44,7 +44,7 @@ export interface GameInput {
  * Detalhes adicionais do jogo - Schema 2.0
  *
  * Metadados enriquecidos armazenados no banco de dados local,
- * provenientes de APIs externas (IGDB, RAWG, HLTB).
+ * provenientes de APIs externas (RAWG, HLTB).
  */
 export interface GameDetails {
   // Conectores Extras
