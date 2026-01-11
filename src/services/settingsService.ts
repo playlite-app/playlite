@@ -15,7 +15,6 @@ export const settingsService = {
     rawgApiKey: string | null;
     igdbClientId: string | null;
     igdbClientSecret: string | null;
-    itadApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
   },

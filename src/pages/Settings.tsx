@@ -9,7 +9,6 @@ import {
   Loader2,
   Save,
   Search,
-  ShoppingBag,
   Upload,
 } from 'lucide-react';
 import React from 'react';
@@ -143,8 +142,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </Button>
         </SettingsRow>
       </section>
-
-      {/* SEÇÃO 2: METADADOS (IGDB & RAWG) */}
+      {/* SEÇÃO 3: SISTEMA E DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
 
@@ -235,34 +233,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </div>
         </SettingsRow>
       </section>
-
-      {/* NOVO BLOCO: IsThereAnyDeal */}
-      <SettingsRow
-        icon={ShoppingBag}
-        title="IsThereAnyDeal"
-        description="Chave de API para buscar preços e ofertas (Waitlist)."
-      >
-        <div className="grid gap-2">
-          <Input
-            type="password"
-            placeholder="Cole sua API Key v2 da ITAD"
-            value={keys.itadApiKey}
-            onChange={e => setKeys({ ...keys, itadApiKey: e.target.value })}
-            className="bg-background/50"
-          />
-          <p className="text-muted-foreground text-[10px]">
-            Crie um app e gere sua chave em:{' '}
-            <a
-              href="https://isthereanydeal.com/settings/developer"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-primary underline"
-            >
-              Painel de Desenvolvedor
-            </a>
-          </p>
-        </div>
-      </SettingsRow>
 
       {/* SEÇÃO 3: SISTEMA E DADOS */}
       <section className="space-y-4">

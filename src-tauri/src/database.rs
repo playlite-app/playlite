@@ -233,7 +233,7 @@ pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), St
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
 
-    let encrypted = security::encrypt(value);
+    let encrypted = security::encrypt(app, value)?;
 
     conn.execute(
         "INSERT OR REPLACE INTO encrypted_keys (key, value) VALUES (?1, ?2)",
@@ -259,7 +259,7 @@ pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
 
     match result {
         Ok(encrypted) => {
-            let decrypted = security::decrypt(&encrypted)?;
+            let decrypted = security::decrypt(app, &encrypted)?;
             Ok(decrypted)
         }
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(String::new()),

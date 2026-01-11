@@ -24,8 +24,6 @@ pub struct KeysBatch {
     pub igdb_client_id: String,
     #[serde(rename = "igdbClientSecret")]
     pub igdb_client_secret: String,
-    #[serde(rename = "itadApiKey")]
-    pub itad_api_key: String,
 }
 
 /// Recupera todos os secrets configurados em lote.
@@ -40,7 +38,6 @@ pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, String> {
         rawg_api_key: database::get_secret(&app, "rawg_api_key")?,
         igdb_client_id: database::get_secret(&app, "igdb_client_id")?,
         igdb_client_secret: database::get_secret(&app, "igdb_client_secret")?,
-        itad_api_key: database::get_secret(&app, "itad_api_key")?,
     })
 }
 
@@ -56,7 +53,6 @@ pub fn set_secrets(
     rawg_api_key: Option<String>,
     igdb_client_id: Option<String>,
     igdb_client_secret: Option<String>,
-    itad_api_key: Option<String>,
 ) -> Result<(), String> {
     // Helper para salvar ou deletar baseado no valor
     let save_or_delete = |key: &str, value: Option<String>| -> Result<(), String> {
@@ -76,7 +72,6 @@ pub fn set_secrets(
     save_or_delete("rawg_api_key", rawg_api_key)?;
     save_or_delete("igdb_client_id", igdb_client_id)?;
     save_or_delete("igdb_client_secret", igdb_client_secret)?;
-    save_or_delete("itad_api_key", itad_api_key)?;
 
     Ok(())
 }

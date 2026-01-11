@@ -1,11 +1,10 @@
 //! Serviço para interagir com a API da IsThereAnyDeal (ITAD)
 
-use crate::database;
+use crate::security;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
-use tauri::AppHandle;
 
 const API_BASE: &str = "https://api.isthereanydeal.com";
 
@@ -42,8 +41,8 @@ pub struct ItadGameOverview {
 }
 
 /// Busca o ID do jogo na ITAD pelo título (Fuzzy Search simplificado)
-pub async fn find_game_id(app: &AppHandle, title: &str) -> Result<String, String> {
-    let key = database::get_secret(app, "itad_api_key")?;
+pub async fn find_game_id(title: &str) -> Result<String, String> {
+    let key = security::get_itad_api_key();
     if key.is_empty() {
         return Err("API Key da ITAD não configurada".into());
     }
@@ -76,11 +75,8 @@ pub async fn find_game_id(app: &AppHandle, title: &str) -> Result<String, String
 }
 
 /// Busca informações de preço para uma lista de IDs da ITAD
-pub async fn get_prices(
-    app: &AppHandle,
-    itad_ids: Vec<String>,
-) -> Result<Vec<ItadGameOverview>, String> {
-    let key = database::get_secret(app, "itad_api_key")?;
+pub async fn get_prices(itad_ids: Vec<String>) -> Result<Vec<ItadGameOverview>, String> {
+    let key = security::get_itad_api_key();
     if key.is_empty() {
         return Err("API Key ausente".into());
     }

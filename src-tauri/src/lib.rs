@@ -9,8 +9,10 @@
 
 pub mod commands;
 mod constants;
+mod crypto;
 mod database;
 pub mod models;
+mod secrets;
 mod security;
 pub mod services;
 pub mod utils;

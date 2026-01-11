@@ -24,7 +24,6 @@ export function useSettings(onLibraryUpdate: () => void) {
     rawgApiKey: '',
     igdbClientId: '',
     igdbClientSecret: '',
-    itadApiKey: '',
   });
 
   const [loading, setLoading] = useState({
@@ -58,7 +57,6 @@ export function useSettings(onLibraryUpdate: () => void) {
           rawgApiKey: data.rawgApiKey || '',
           igdbClientId: data.igdbClientId || '',
           igdbClientSecret: data.igdbClientSecret || '',
-          itadApiKey: (data as any).itadApiKey || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -136,7 +134,6 @@ export function useSettings(onLibraryUpdate: () => void) {
         rawgApiKey: keys.rawgApiKey.trim() || null,
         igdbClientId: keys.igdbClientId.trim() || null,
         igdbClientSecret: keys.igdbClientSecret.trim() || null,
-        itadApiKey: keys.itadApiKey.trim() || null,
       });
       setStatus({
         type: 'success',
