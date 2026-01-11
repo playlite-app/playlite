@@ -15,8 +15,17 @@ export const settingsService = {
     rawgApiKey: string | null;
     igdbClientId: string | null;
     igdbClientSecret: string | null;
+    itadApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
+  },
+
+  /**
+   * Inicia o fluxo OAuth com IsThereAnyDeal.
+   * Abre o navegador, aguarda o login e salva o token no banco.
+   */
+  connectToItad: async (): Promise<string> => {
+    return await invoke<string>('start_itad_auth');
   },
 
   /**

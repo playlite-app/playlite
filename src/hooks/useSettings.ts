@@ -24,6 +24,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     rawgApiKey: '',
     igdbClientId: '',
     igdbClientSecret: '',
+    itadApiKey: '',
   });
 
   const [loading, setLoading] = useState({
@@ -33,6 +34,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     enriching: false,
     exporting: false,
     importingBackup: false,
+    authenticating: false,
   });
 
   const [status, setStatus] = useState<{
@@ -56,6 +58,7 @@ export function useSettings(onLibraryUpdate: () => void) {
           rawgApiKey: data.rawgApiKey || '',
           igdbClientId: data.igdbClientId || '',
           igdbClientSecret: data.igdbClientSecret || '',
+          itadApiKey: (data as any).itadApiKey || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -108,6 +111,20 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   }, [status]);
 
+  const connectToItad = async () => {
+    setLoading(prev => ({ ...prev, authenticating: true }));
+    setStatus({ type: null, message: 'Aguardando login no navegador...' });
+
+    try {
+      const msg = await settingsService.connectToItad();
+      setStatus({ type: 'success', message: msg });
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+    } finally {
+      setLoading(prev => ({ ...prev, authenticating: false }));
+    }
+  };
+
   const saveKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
     setStatus({ type: null, message: '' });
@@ -119,6 +136,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         rawgApiKey: keys.rawgApiKey.trim() || null,
         igdbClientId: keys.igdbClientId.trim() || null,
         igdbClientSecret: keys.igdbClientSecret.trim() || null,
+        itadApiKey: keys.itadApiKey.trim() || null,
       });
       setStatus({
         type: 'success',
@@ -238,6 +256,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       fetchMissingCovers,
       exportDatabase,
       importDatabase,
+      connectToItad,
     },
   };
 }

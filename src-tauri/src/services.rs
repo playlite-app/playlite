@@ -5,6 +5,7 @@
 //! - `steam`: Integração com a API Steam para importar jogos e obter detalhes.
 //! - `recommendation`: Sistema de recomendação de jogos baseado em preferências do usuário.
 
+pub(crate) mod itad;
 pub mod rawg;
 pub mod recommendation;
 pub mod steam;

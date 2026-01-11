@@ -3,6 +3,7 @@
 //! Define structs para jogos, wishlist, perfil do usuário e sistema de erros.
 
 use serde::{Deserialize, Serialize};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Jogo na biblioteca do usuário.
 ///
@@ -198,4 +199,22 @@ pub struct UserProfile {
     pub total_playtime: i32,
     #[serde(rename = "totalGames")]
     pub total_games: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OAuthToken {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub expires_at: u64,
+}
+
+impl OAuthToken {
+    pub fn is_expired(&self) -> bool {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        now >= self.expires_at
+    }
 }

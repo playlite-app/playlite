@@ -172,7 +172,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                             if let Some(img) = &bg {
                                 let _ = conn.execute(
                                     "UPDATE games SET cover_url = ?1 WHERE id = ?2 AND (cover_url IS NULL OR cover_url = '')",
-                                    params![img, game_id]
+                                    params![img, game_id],
                                 );
                             }
 
@@ -189,6 +189,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
             }
         }
     });
+    info!("Task concluída.");
     Ok(())
 }
 

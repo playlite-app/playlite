@@ -187,6 +187,9 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
     )
     .map_err(|e| e.to_string())?;
 
+    // Adicionar coluna se não existir (Migração simples)
+    let _ = conn.execute("ALTER TABLE games ADD COLUMN itad_id TEXT", []);
+
     Ok("Banco de jogos inicializado com sucesso!".to_string())
 }
 
