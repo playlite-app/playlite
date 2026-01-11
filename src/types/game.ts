@@ -41,38 +41,39 @@ export interface GameInput {
 }
 
 /**
- * Detalhes dos jogos vindos da API (RAWG) OU do Banco de Dados
- * OBS: Você provavelmente precisará de uma interface separada para o banco
- * v2.0 (GameLibraryDetails) vs API RAWG pura.
- * Por enquanto, mantive a sua da RAWG, mas adicionei os campos do banco v2 como opcionais
+ * Detalhes adicionais do jogo - Schema 2.0
+ *
+ * Metadados enriquecidos armazenados no banco de dados local,
+ * provenientes de APIs externas (IGDB, RAWG, HLTB).
  */
 export interface GameDetails {
-  // Campos legados (RAWG API direta)
-  descriptionRaw?: string;
-  metacritic?: number | null;
-  website?: string;
-  tags?: { id: number; name: string }[];
-  developers?: { name: string }[];
-  publishers?: { name: string }[];
-
-  // Campos novos do Banco de Dados (v2.0)
-  description?: string;
+  // Conectores Extras
   steamAppId?: string;
+
+  // Dados Descritivos
+  description?: string;
+  developer?: string;
+  publisher?: string;
   releaseDate?: string;
-  genres?: string; // No banco salvamos string separada por vírgula
+  genres?: string;
+  tags?: string; // String separada por vírgulas
   series?: string;
   ageRating?: string;
+
+  // Mídia
   backgroundImage?: string;
+
+  // Avaliações
   criticScore?: number;
   usersScore?: number;
 
-  // Links
+  // Links Externos
   websiteUrl?: string;
   igdbUrl?: string;
   rawgUrl?: string;
   pcgamingwikiUrl?: string;
 
-  // HLTB
+  // HowLongToBeat
   hltbMainStory?: number;
   hltbMainExtra?: number;
   hltbCompletionist?: number;

@@ -227,7 +227,6 @@ fn get_secrets_connection<'a>(
 /// Se a chave já existir, o valor é substituído (upsert).
 /// O valor é encriptado antes de ser armazenado.
 pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), String> {
-    // Obtém o AppState
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
 

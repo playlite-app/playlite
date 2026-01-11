@@ -50,7 +50,7 @@ pub struct GameDetails {
     pub metacritic: Option<i32>,
     pub website: Option<String>,
     pub released: Option<String>,
-    pub background_image: Option<String>, // Importante para o Hero
+    pub background_image: Option<String>,
     #[serde(default)]
     pub genres: Vec<RawgGenre>,
     #[serde(default)]

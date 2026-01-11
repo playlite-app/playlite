@@ -43,6 +43,30 @@ fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
 
+/// Função auxiliar que executa uma query SQL e retorna uma lista de tuplas (id, name).
+///
+/// Usada para buscar jogos que precisam de metadados ou capas faltantes.
+fn query_games_batch(
+    conn: &rusqlite::Connection,
+    query: &str,
+    limit: u32,
+) -> Vec<(String, String)> {
+    let mut stmt = conn.prepare(query).unwrap();
+    let rows = stmt
+        .query_map(params![limit], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .unwrap();
+
+    let mut list = Vec::new();
+    for r in rows {
+        if let Ok(i) = r {
+            list.push(i);
+        }
+    }
+    list
+}
+
 /// Busca metadados para os jogos da biblioteca via RAWG.
 ///
 /// Busca detalhes adicionais para jogos que ainda não possuem
@@ -69,19 +93,11 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                     Ok(c) => c,
                     Err(_) => break,
                 };
-                let mut stmt = conn.prepare("SELECT g.id, g.name FROM games g LEFT JOIN game_details gd ON g.id = gd.game_id WHERE gd.game_id IS NULL LIMIT ?").unwrap();
-                let rows = stmt
-                    .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
-                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-                    })
-                    .unwrap();
-                let mut list = Vec::new();
-                for r in rows {
-                    if let Ok(i) = r {
-                        list.push(i);
-                    }
-                }
-                list
+                query_games_batch(
+                    &conn,
+                    "SELECT g.id, g.name FROM games g LEFT JOIN game_details gd ON g.id = gd.game_id WHERE gd.game_id IS NULL LIMIT ?",
+                    RAWG_REQUISITIONS_PER_BATCH,
+                )
             };
 
             if games_to_update.is_empty() {
@@ -176,8 +192,8 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Busca capas faltantes para jogos na biblioteca.  
-///     
+/// Busca capas faltantes para jogos na biblioteca.
+///
 /// Busca capas para jogos que não possuem capa (cover_url NULL ou vazia), usando RAWG como fonte.
 #[tauri::command]
 pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
@@ -198,19 +214,11 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
                     Ok(c) => c,
                     Err(_) => break,
                 };
-                let mut stmt = conn.prepare("SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = '' LIMIT ?").unwrap();
-                let rows = stmt
-                    .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
-                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-                    })
-                    .unwrap();
-                let mut list = Vec::new();
-                for r in rows {
-                    if let Ok(i) = r {
-                        list.push(i);
-                    }
-                }
-                list
+                query_games_batch(
+                    &conn,
+                    "SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = '' LIMIT ?",
+                    RAWG_REQUISITIONS_PER_BATCH,
+                )
             };
 
             if games_without_cover.is_empty() {

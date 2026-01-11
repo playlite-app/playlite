@@ -175,7 +175,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         <SettingsRow
           icon={Search}
           title="RAWG.io"
-          description="Usado como fonte de jogos em alta e lençamentos próximos."
+          description="Usado como fonte de jogos em alta e lançamentos próximos."
         >
           <Input
             type="password"

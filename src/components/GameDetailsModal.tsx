@@ -169,7 +169,7 @@ export default function GameDetailsModal({
                     </div>
                   )}
                   {/* Critic Score */}
-                  {details?.metacritic && (
+                  {details?.criticScore && (
                     <div className="border-border/50 flex items-center justify-between border-b py-2">
                       <span className="text-muted-foreground flex items-center gap-2 text-sm">
                         <Star size={16} /> Metascore
@@ -178,26 +178,69 @@ export default function GameDetailsModal({
                         variant="outline"
                         className={cn(
                           'border-2 text-sm font-bold',
-                          details.metacritic >= 75
+                          details.criticScore >= 75
                             ? 'border-green-500/50 text-green-500'
-                            : details.metacritic >= 50
+                            : details.criticScore >= 50
                               ? 'border-yellow-500/50 text-yellow-500'
                               : 'border-red-500/50 text-red-500'
                         )}
                       >
-                        {details.metacritic}
+                        {details.criticScore}
                       </Badge>
                     </div>
                   )}
                   {/* Desenvolvedora */}
-                  {details?.developers && details.developers.length > 0 && (
+                  {details?.developer && (
                     <div className="border-border/50 flex justify-between border-b py-2">
                       <span className="text-muted-foreground flex items-center gap-2 text-sm">
                         <Building2 size={16} /> Dev
                       </span>
                       <span className="max-w-[50%] truncate text-right text-sm font-medium">
-                        {details.developers[0].name}
+                        {details.developer}
                       </span>
+                    </div>
+                  )}
+                  {/* Série */}
+                  {details?.series && (
+                    <div className="border-border/50 flex justify-between border-b py-2">
+                      <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Gamepad2 size={16} /> Série
+                      </span>
+                      <span className="max-w-[50%] truncate text-right text-sm font-medium">
+                        {details.series}
+                      </span>
+                    </div>
+                  )}
+                  {/* Classificação Etária */}
+                  {details?.ageRating && (
+                    <div className="border-border/50 flex justify-between border-b py-2">
+                      <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Trophy size={16} /> Classificação
+                      </span>
+                      <Badge variant="outline" className="text-xs font-medium">
+                        {details.ageRating}
+                      </Badge>
+                    </div>
+                  )}
+                  {/* User Score */}
+                  {details?.usersScore && (
+                    <div className="border-border/50 flex items-center justify-between border-b py-2">
+                      <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Star size={16} /> Avaliação Usuários
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'border-2 text-sm font-bold',
+                          details.usersScore >= 4
+                            ? 'border-green-500/50 text-green-500'
+                            : details.usersScore >= 3
+                              ? 'border-yellow-500/50 text-yellow-500'
+                              : 'border-red-500/50 text-red-500'
+                        )}
+                      >
+                        {details.usersScore.toFixed(1)} / 5
+                      </Badge>
                     </div>
                   )}
                 </div>
@@ -244,62 +287,126 @@ export default function GameDetailsModal({
                 </div>
               )}
 
-              {/* Seção 4: Tags */}
-              {details?.tags && details.tags.length > 0 && (
+              {/* Seção 4: Links */}
+              {(details?.websiteUrl ||
+                details?.igdbUrl ||
+                details?.rawgUrl ||
+                details?.pcgamingwikiUrl) && (
+                <div className="space-y-2 lg:space-y-3">
+                  <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
+                    Links
+                  </h3>
+                  <div className="space-y-2">
+                    {details.websiteUrl && (
+                      <Button
+                        variant="outline"
+                        className="h-9 w-full justify-start text-sm"
+                        asChild
+                      >
+                        <a
+                          href={details.websiteUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Globe size={14} className="mr-2" /> Site Oficial
+                        </a>
+                      </Button>
+                    )}
+                    {details.igdbUrl && (
+                      <Button
+                        variant="outline"
+                        className="h-9 w-full justify-start text-sm"
+                        asChild
+                      >
+                        <a
+                          href={details.igdbUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Globe size={14} className="mr-2" /> IGDB
+                        </a>
+                      </Button>
+                    )}
+                    {details.rawgUrl && (
+                      <Button
+                        variant="outline"
+                        className="h-9 w-full justify-start text-sm"
+                        asChild
+                      >
+                        <a
+                          href={details.rawgUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Globe size={14} className="mr-2" /> RAWG
+                        </a>
+                      </Button>
+                    )}
+                    {details.pcgamingwikiUrl && (
+                      <Button
+                        variant="outline"
+                        className="h-9 w-full justify-start text-sm"
+                        asChild
+                      >
+                        <a
+                          href={details.pcgamingwikiUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Globe size={14} className="mr-2" /> PCGamingWiki
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Seção 5: Tags */}
+              {details?.tags && (
                 <div className="space-y-2 lg:space-y-3">
                   <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
                     <Tag size={16} /> Tags
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {details.tags
+                      .split(',')
+                      .map(tag => tag.trim())
+                      .filter(tag => tag.length > 0)
                       .slice(0, 10)
-                      .map((tag: { id: number; name: string }) => (
+                      .map((tag, index) => (
                         <Badge
-                          key={tag.id}
+                          key={index}
                           variant="secondary"
                           className="bg-secondary/50 hover:bg-secondary text-xs font-normal"
                         >
-                          {tag.name}
+                          {tag}
                         </Badge>
                       ))}
                   </div>
                 </div>
               )}
 
-              {/* Seção 5: Links */}
-              <div className="space-y-3 pt-2">
-                {siblings.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-muted-foreground text-sm">
-                      Outras Versões:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {siblings.map(sib => (
-                        <Button
-                          key={sib.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onSwitchGame(sib.id)}
-                          className="h-8 text-xs"
-                        >
-                          {sib.platform}
-                        </Button>
-                      ))}
-                    </div>
+              {/* Seção 6: Outras Versões */}
+              {siblings.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <span className="text-muted-foreground text-sm">
+                    Outras Versões:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {siblings.map(sib => (
+                      <Button
+                        key={sib.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSwitchGame(sib.id)}
+                        className="h-8 text-xs"
+                      >
+                        {sib.platform}
+                      </Button>
+                    ))}
                   </div>
-                )}
-                {details?.website && (
-                  <Button
-                    variant="default"
-                    className="h-9 w-full text-sm"
-                    asChild
-                  >
-                    <a href={details.website} target="_blank" rel="noreferrer">
-                      <Globe size={16} className="mr-2" /> Visitar Site Oficial
-                    </a>
-                  </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -321,7 +428,7 @@ export default function GameDetailsModal({
                 </div>
               ) : details ? (
                 <div className="text-foreground/85 text-sm leading-relaxed whitespace-pre-line lg:text-base">
-                  {details.descriptionRaw ||
+                  {details.description ||
                     'Nenhuma descrição fornecida pelo desenvolvedor.'}
                 </div>
               ) : (

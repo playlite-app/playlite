@@ -1,12 +1,12 @@
 /**
- * Busca detalhes enriquecidos de um jogo na API RAWG e identifica versões em outras plataformas.
+ * Busca detalhes enriquecidos de um jogo do banco de dados local e identifica versões em outras plataformas.
  *
  * @param selectedGame - Jogo para buscar detalhes, ou null
  * @param allGames - Lista completa para identificar versões multiplataforma
  * @returns Objeto com:
- *   - details: Dados da RAWG (descrição, ‘screenshots’, metacritic, etc)
+ *   - details: Dados do banco local (descrição, avaliações, links, HLTB, etc)
  *   - loading: Estado da requisição
- *   - siblings: Mesmo jogo em outras plataformas (array de {‘id’, platform})
+ *   - siblings: Mesmo jogo em outras plataformas (array de {'id', platform})
  */
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
@@ -35,7 +35,7 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       .map(g => ({ id: g.id, platform: g.platform || 'Outra' }));
     setSiblings(related);
 
-    // 2. Busca do Banco Local e ADAPTA para a UI
+    // 2. Busca do Banco Local (Schema 2.0)
     const fetchLocal = async () => {
       setLoading(true);
 
@@ -45,28 +45,8 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
         });
 
         if (data) {
-          // === ADAPTER ===
-          const adapted: GameDetails = {
-            ...data,
-            descriptionRaw: data.description || '',
-            developers: data.developer ? [{ name: data.developer }] : [],
-            publishers: data.publisher ? [{ name: data.publisher }] : [],
-            tags: data.tags
-              ? data.tags
-                  .split(',')
-                  .map((t: string, i: number) => ({ id: i, name: t.trim() }))
-              : [],
-            metacritic: data.criticScore || null,
-
-            // Links e datas mapeados
-            website: data.website_url || '', // Mapeia website_url -> website
-            releaseDate: data.release_date || '', // Mapeia release_date -> releaseDate
-
-            // Outros links se você for usar
-            rawgUrl: data.rawg_url,
-          };
-
-          setDetails(adapted);
+          // Dados já vêm no formato correto do banco (Schema 2.0)
+          setDetails(data);
         } else {
           setDetails(null);
         }
