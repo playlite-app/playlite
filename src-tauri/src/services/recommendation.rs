@@ -289,7 +289,7 @@ pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32
     // Jogos mais antigos recebem score reduzido
     if let Some(release_year) = game.release_year {
         let current_year = 2025; // Você pode obter dinamicamente se preferir
-        let age = (current_year - release_year).max(0).min(MAX_AGE_PENALTY);
+        let age = (current_year - release_year).clamp(0, MAX_AGE_PENALTY);
 
         if age > 0 {
             // Aplica decaimento exponencial: score * (0.95^age)

@@ -59,10 +59,8 @@ fn query_games_batch(
         .unwrap();
 
     let mut list = Vec::new();
-    for r in rows {
-        if let Ok(i) = r {
-            list.push(i);
-        }
+    for i in rows.flatten() {
+        list.push(i);
     }
     list
 }

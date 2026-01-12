@@ -3,7 +3,6 @@
 use crate::security;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::Deserialize;
-use serde_json::json;
 
 const API_BASE: &str = "https://api.isthereanydeal.com";
 
