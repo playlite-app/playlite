@@ -135,11 +135,13 @@ export default function PlaylistItem({
         </h4>
         <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
           <span className="bg-secondary/50 text-secondary-foreground border-border/50 max-w-25 truncate rounded border px-1.5 py-0.5 lg:max-w-none">
-            {game.genre || 'Geral'}
+            {game.genres || 'Geral'}
           </span>
           <span>•</span>
           <span>
-            {game.playtime > 0 ? `${Math.floor(game.playtime / 60)}h` : '0h'}
+            {(game.playtime ?? 0) > 0
+              ? `${Math.floor((game.playtime ?? 0) / 60)}h`
+              : '0h'}
           </span>
         </div>
       </div>

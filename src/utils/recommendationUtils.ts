@@ -1,0 +1,86 @@
+import { useMemo } from 'react';
+
+import { UserPreferenceVector } from '@/types';
+
+/**
+ * Calcula score de afinidade para jogos EXTERNOS (ex: RAWG)
+ * usando o perfil calculado pelo Rust.
+ */
+
+export function useCalculateAffinity(profile: UserPreferenceVector | null) {
+  return useMemo(() => {
+    const cache = new Map<string, number>();
+
+    return (
+      genres: string[],
+      tags: string[] = [],
+      series: string | null = null
+    ) => {
+      const key = `${genres.slice().sort().join(',')}|${tags.slice().sort().join(',')}|${series}`;
+
+      if (cache.has(key)) {
+        return cache.get(key)!;
+      }
+
+      const score = calculateAffinity(profile, genres, tags, series);
+      cache.set(key, score);
+
+      return score;
+    };
+  }, [profile]); // Só recalcula se perfil mudar
+}
+
+export function calculateAffinity(
+  profile: UserPreferenceVector | null,
+  genres: string[],
+  tags: string[] = [],
+  series: string | null = null
+): number {
+  if (!profile) return 0;
+
+  let score = 0;
+
+  // 1. Gêneros
+  genres.forEach(g => {
+    if (profile.genres[g]) score += profile.genres[g];
+  });
+
+  // 2. Tags
+  tags.forEach(t => {
+    if (profile.tags[t]) score += profile.tags[t] * 0.5;
+  });
+
+  // 3. Séries
+  if (series && profile.series[series]) {
+    score += profile.series[series] * 1.5;
+  }
+
+  return score;
+}
+
+/**
+ * Extrai as top séries do perfil para exibir na UI
+ */
+export function getFavoriteSeries(
+  profile: UserPreferenceVector | null,
+  limit = 5
+) {
+  if (!profile || !profile.series) return [];
+
+  return Object.entries(profile.series)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, limit)
+    .map(([name]) => ({ name }));
+}
+
+/**
+ * Verifica se uma série é favorita
+ */
+export function isFavoriteSeries(
+  profile: UserPreferenceVector | null,
+  series: string | undefined
+) {
+  if (!profile || !series) return false;
+
+  return (profile.series[series] || 0) > 50; // Threshold arbitrário
+}

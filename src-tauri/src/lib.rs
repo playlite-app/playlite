@@ -9,8 +9,10 @@
 
 pub mod commands;
 mod constants;
+mod crypto;
 mod database;
 pub mod models;
+mod secrets;
 mod security;
 pub mod services;
 pub mod utils;
@@ -30,6 +32,7 @@ pub fn run() {
             let app_handle = app.handle();
 
             // === LOGGING ===
+
             let log_dir = app_handle
                 .path()
                 .app_log_dir()
@@ -43,11 +46,13 @@ pub fn run() {
             tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
 
             // === SEGURANÇA ===
+
             security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
 
             tracing::info!("Sistema de segurança inicializado");
 
             // === BANCOS DE DADOS ===
+
             let db_state = database::initialize_databases(app_handle)
                 .expect("Falha ao inicializar bancos de dados");
 
@@ -63,6 +68,7 @@ pub fn run() {
             // Comandos de Jogos (CRUD)
             commands::games::add_game,
             commands::games::get_games,
+            commands::games::get_library_game_details,
             commands::games::toggle_favorite,
             commands::games::delete_game,
             commands::games::update_game,
@@ -73,12 +79,15 @@ pub fn run() {
             commands::wishlist::remove_from_wishlist,
             commands::wishlist::check_wishlist_status,
             commands::wishlist::refresh_prices,
-            // Comandos de Integração (Steam/RAWG)
-            commands::integrations::import_steam_library,
-            commands::integrations::enrich_library,
-            commands::integrations::get_trending_games,
-            commands::integrations::get_upcoming_games,
-            commands::integrations::fetch_game_details,
+            // Comandos de Importação de Plataformas
+            commands::plataforms::import_steam_library,
+            // Comandos de Importação de Metadados
+            commands::metadata::enrich_library,
+            commands::metadata::fetch_missing_covers,
+            commands::metadata::get_trending_games,
+            commands::metadata::get_upcoming_games,
+            commands::metadata::fetch_game_details,
+            commands::metadata::fetch_hltb_data,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,
@@ -86,11 +95,13 @@ pub fn run() {
             commands::settings::list_secrets,
             commands::settings::get_secrets,
             commands::settings::set_secrets,
-            // Comandos de Backup e Restauração
+            // Comandos de ‘Backup’ e Restauração
             commands::backup::export_database,
             commands::backup::import_database,
             // Comando de Recomendação
-            commands::recommendations::get_user_profile
+            commands::recommendations::get_user_profile,
+            commands::recommendations::recommend_from_library,
+            commands::recommendations::get_game_affinity,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

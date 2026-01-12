@@ -1,9 +1,11 @@
 import {
+  Copy,
   ExternalLink,
   Loader2,
   Plus,
   RefreshCw,
   ShoppingCart,
+  Ticket,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -119,25 +121,19 @@ export default function Wishlist() {
         {games.map(game => {
           let priceDisplay = 'Aguardando preço...';
 
-          if (
-            game.localizedPrice !== null &&
-            game.localizedPrice !== undefined
-          ) {
-            const currency =
-              game.localizedCurrency === 'BRL'
-                ? 'R$'
-                : game.localizedCurrency || 'R$';
-            priceDisplay = `${currency} ${game.localizedPrice.toFixed(2)}`;
-          } else if (
-            game.currentPrice !== null &&
-            game.currentPrice !== undefined
-          ) {
-            priceDisplay = `US$ ${game.currentPrice.toFixed(2)}`;
+          if (game.currentPrice !== null && game.currentPrice !== undefined) {
+            const currency = game.currency || 'USD';
+            const currencySymbol =
+              currency === 'BRL' ? 'R$' : currency === 'USD' ? 'US$' : currency;
+            priceDisplay = `${currencySymbol} ${game.currentPrice.toFixed(2)}`;
           }
 
-          const targetUrl = game.steamAppId
-            ? `https://store.steampowered.com/app/${game.steamAppId}/`
-            : game.storeUrl;
+          // Use a URL da loja retornada pela ITAD ou construa URL do ITAD se tiver itadId
+          const targetUrl =
+            game.storeUrl ||
+            (game.itadId
+              ? `https://isthereanydeal.com/game/${game.itadId}/`
+              : null);
 
           return (
             <StandardGameCard
@@ -145,9 +141,31 @@ export default function Wishlist() {
               title={game.name}
               coverUrl={game.coverUrl}
               subtitle={priceDisplay}
-              badge={game.onSale ? 'OFERTA!' : undefined}
+              badge={
+                game.voucher ? (
+                  <div className="flex items-center gap-1">
+                    <Ticket size={10} />
+                    <span>CUPOM: {game.voucher}</span>
+                  </div>
+                ) : game.onSale ? (
+                  'OFERTA!'
+                ) : undefined
+              }
               actions={
                 <>
+                  {/* Botão de Copiar Cupom (Só aparece se tiver voucher) */}
+                  {game.voucher && (
+                    <ActionButton
+                      icon={Copy}
+                      variant="glass"
+                      size={16}
+                      onClick={() => {
+                        navigator.clipboard.writeText(game.voucher || '');
+                        toast.success('Cupom copiado: ' + game.voucher);
+                      }}
+                      tooltip={`Copiar: ${game.voucher}`}
+                    />
+                  )}
                   <ActionButton
                     icon={Trash2}
                     variant="destructive"
@@ -155,7 +173,6 @@ export default function Wishlist() {
                     onClick={() => handleRemoveClick(game.id, game.name)}
                     tooltip="Remover"
                   />
-
                   <ActionButton
                     icon={ExternalLink}
                     variant="secondary"
@@ -165,7 +182,9 @@ export default function Wishlist() {
                       if (targetUrl) openExternalLink(targetUrl);
                     }}
                     tooltip={
-                      game.steamAppId ? 'Abrir na Steam' : 'Ir para Loja'
+                      game.storePlatform
+                        ? `Abrir em ${game.storePlatform}`
+                        : 'Ver na ITAD'
                     }
                   />
                 </>

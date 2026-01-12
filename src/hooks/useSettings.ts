@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
 import { ERROR_MESSAGES } from '../constants/errorMessages';
@@ -8,9 +9,9 @@ import { settingsService } from '../services/settingsService';
  * Mantém API keys seguras e coordena operações de longa duração.
  * Mensagens de status desaparecem automaticamente após 5 segundos.
  *
- * @param onLibraryUpdate - Callback executado após importar/enriquecer biblioteca
+ * @param onLibraryUpdate - Callback executado após importar biblioteca e dados.
  * @returns Objeto com:
- *   - keys: {steamId, steamApiKey, rawgApiKey}
+ *   - keys: {steamId, steamApiKey, rawgApiKey, igdbClientId, igdbClientSecret}
  *   - setKeys: Atualiza state local (não salva automaticamente)
  *   - loading: Estados individuais para cada operação
  *   - status: {type: 'success'|'error'|null, message: string}
@@ -22,6 +23,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     steamApiKey: '',
     rawgApiKey: '',
   });
+
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
@@ -29,11 +31,19 @@ export function useSettings(onLibraryUpdate: () => void) {
     enriching: false,
     exporting: false,
     importingBackup: false,
+    authenticating: false,
   });
+
   const [status, setStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
   }>({ type: null, message: '' });
+
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+    game: string;
+  } | null>(null);
 
   useEffect(() => {
     settingsService
@@ -49,6 +59,42 @@ export function useSettings(onLibraryUpdate: () => void) {
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
 
+  // Listener de Eventos
+  useEffect(() => {
+    // Ouve progresso
+    const unlistenProgress = listen(
+      'enrich_progress',
+      (event: {
+        payload: { current: number; total_found: number; last_game: string };
+      }) => {
+        const p = event.payload;
+        setProgress({
+          current: p.current,
+          total: p.total_found,
+          game: p.last_game,
+        });
+        // Mantém loading true enquanto recebe eventos
+        setLoading(prev => ({ ...prev, enriching: true }));
+      }
+    );
+
+    // Ouve conclusão
+    const unlistenComplete = listen('enrich_complete', () => {
+      setLoading(prev => ({ ...prev, enriching: false }));
+      setProgress(null);
+      setStatus({
+        type: 'success',
+        message: 'Metadados atualizados com sucesso!',
+      });
+      onLibraryUpdate(); // Atualiza a grid
+    });
+
+    return () => {
+      unlistenProgress.then(f => f());
+      unlistenComplete.then(f => f());
+    };
+  }, [onLibraryUpdate]);
+
   useEffect(() => {
     if (status.type && status.message) {
       const timer = setTimeout(() => {
@@ -58,6 +104,20 @@ export function useSettings(onLibraryUpdate: () => void) {
       return () => clearTimeout(timer); // Limpa se o componente desmontar
     }
   }, [status]);
+
+  const connectToItad = async () => {
+    setLoading(prev => ({ ...prev, authenticating: true }));
+    setStatus({ type: null, message: 'Aguardando login no navegador...' });
+
+    try {
+      const msg = await settingsService.connectToItad();
+      setStatus({ type: 'success', message: msg });
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+    } finally {
+      setLoading(prev => ({ ...prev, authenticating: false }));
+    }
+  };
 
   const saveKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
@@ -71,7 +131,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       });
       setStatus({
         type: 'success',
-        message: 'Configurações salvas com segurança!',
+        message: 'Credenciais salvas com segurança!',
       });
     } catch (error) {
       setStatus({ type: 'error', message: `Erro ao salvar: ${error}` });
@@ -81,17 +141,14 @@ export function useSettings(onLibraryUpdate: () => void) {
   };
 
   const importLibrary = async () => {
+    /* Código original */
     if (!keys.steamId || !keys.steamApiKey) {
-      setStatus({
-        type: 'error',
-        message: 'Preencha e salve as chaves da Steam primeiro.',
-      });
+      setStatus({ type: 'error', message: 'Preencha as chaves da Steam.' });
 
       return;
     }
 
     setLoading(prev => ({ ...prev, importing: true }));
-    setStatus({ type: null, message: 'Importando...' });
 
     try {
       const msg = await settingsService.importSteamLibrary(
@@ -100,8 +157,8 @@ export function useSettings(onLibraryUpdate: () => void) {
       );
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
-    } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
+    } catch (e) {
+      setStatus({ type: 'error', message: String(e) });
     } finally {
       setLoading(prev => ({ ...prev, importing: false }));
     }
@@ -109,27 +166,27 @@ export function useSettings(onLibraryUpdate: () => void) {
 
   const enrichLibrary = async () => {
     setLoading(prev => ({ ...prev, enriching: true }));
-    setStatus({ type: null, message: 'Buscando dados extras...' });
+    setStatus({ type: null, message: 'Iniciando serviço em segundo plano...' });
 
     try {
-      const summary = await settingsService.enrichLibrary();
-
-      if (summary.errorCount === 0) {
-        setStatus({
-          type: 'success',
-          message: `Sucesso total! ${summary.successCount} jogos atualizados.`,
-        });
-      } else {
-        setStatus({
-          type: 'success',
-          message: `Concluído: ${summary.successCount} atualizados, mas ${summary.errorCount} falharam.`,
-        });
-      }
-
-      onLibraryUpdate();
+      // Chama o comando (que agora retorna void instantaneamente)
+      await settingsService.enrichLibrary();
+      // Não faz mais nada aqui, os eventos cuidarão do resto
     } catch (error) {
       setStatus({ type: 'error', message: String(error) });
-    } finally {
+      setLoading(prev => ({ ...prev, enriching: false }));
+    }
+  };
+
+  const fetchMissingCovers = async () => {
+    setLoading(prev => ({ ...prev, enriching: true })); // Reusa o loading de enriquecimento
+    setStatus({ type: null, message: 'Buscando capas faltantes...' });
+
+    try {
+      await settingsService.fetchMissingCovers();
+      // O listener de eventos cuidará do resto
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
       setLoading(prev => ({ ...prev, enriching: false }));
     }
   };
@@ -141,11 +198,11 @@ export function useSettings(onLibraryUpdate: () => void) {
     try {
       const msg = await settingsService.exportDatabase();
       setStatus({ type: 'success', message: msg });
-    } catch (error: any) {
-      if (error.message !== ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
         setStatus({
           type: 'error',
-          message: error.message || 'Erro ao exportar',
+          message: (error as any).message || 'Erro ao exportar',
         });
       } else {
         setStatus({ type: null, message: '' });
@@ -163,11 +220,11 @@ export function useSettings(onLibraryUpdate: () => void) {
       const msg = await settingsService.importDatabase();
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
-    } catch (error: any) {
-      if (error.message !== ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
         setStatus({
           type: 'error',
-          message: error.message || 'Erro ao importar',
+          message: (error as any).message || 'Erro ao importar',
         });
       } else {
         setStatus({ type: null, message: '' });
@@ -182,12 +239,15 @@ export function useSettings(onLibraryUpdate: () => void) {
     setKeys,
     loading,
     status,
+    progress,
     actions: {
       saveKeys,
       importLibrary,
       enrichLibrary,
+      fetchMissingCovers,
       exportDatabase,
       importDatabase,
+      connectToItad,
     },
   };
 }

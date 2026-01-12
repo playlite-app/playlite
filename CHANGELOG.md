@@ -2,6 +2,34 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [2.0.0] - 2026-01-12
+
+### Adicionado
+
+- **Banco de Dados SQLite**: Migração completa do armazenamento para SQLite (`library.db` e `secrets.db`), permitindo
+  relacionamentos complexos entre jogos e detalhes.
+- **Sistema de Recomendação v2 (Rust)**: Novo algoritmo nativo no backend que calcula afinidade baseado em gênero, tags
+  e séries, aplicando penalidade temporal (Age Decay) para jogos parados há muito tempo.
+- **Integração IsThereAnyDeal**: A Wishlist agora busca preços em múltiplas lojas, histórico de menor preço e identifica
+  **Cupons de Desconto** automaticamente.
+- **Suporte Backend HLTB**: Implementação do serviço de busca para *HowLongToBeat* no backend (preparação para futura
+  UI).
+- **Coluna de Voucher**: Adicionado suporte visual para exibir códigos de cupom diretamente no card do jogo na Wishlist.
+
+### Modificado
+
+- **Arquitetura Agnóstica**: O sistema não depende mais exclusivamente da Steam para metadados, priorizando a API da
+  RAWG para capas e descrições.
+- **Refatoração de Hooks**: `useRecommendation` e `useHome` foram reescritos para consumir dados processados pelo Rust,
+  removendo cálculos pesados do JavaScript.
+- **Backup System**: Atualizado para incluir as novas tabelas `wishlist` e `game_details` na exportação/importação JSON.
+- **Logs Detalhados**: Melhoria nos logs de rastreamento (tracing) para operações de banco de dados e requisições HTTP.
+
+### Removido
+
+- **Lógica Legada v1**: Removidas funções antigas de cálculo de afinidade no frontend.
+- **Campos Obsoletos**: Limpeza de campos não utilizados nas interfaces de configuração.
+
 ## [1.2.0] - 2026-01-06
 
 ### Adicionado

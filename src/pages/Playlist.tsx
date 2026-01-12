@@ -10,18 +10,18 @@ import { toast } from 'sonner';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/providers/ConfirmProvider';
-import { Game } from '@/types/game';
-import { UserProfile } from '@/types/user';
+import { Game, UserPreferenceVector } from '@/types';
 
 import PlaylistItem from '../components/PlaylistItem';
 import { usePlaylist } from '../hooks/usePlaylist';
 import { useRecommendation } from '../hooks/useRecommendation';
 import { launchGame } from '../utils/launcher';
+import { getFavoriteSeries } from '../utils/recommendationUtils';
 
 interface PlaylistProps {
   allGames: Game[];
   onGameClick: (game: Game) => void;
-  profileCache: UserProfile | null;
+  profileCache: UserPreferenceVector | null;
 }
 
 export default function Playlist({
@@ -40,7 +40,12 @@ export default function Playlist({
   } = usePlaylist(allGames);
 
   const { confirm } = useConfirm();
-  const { calculateAffinity } = useRecommendation({ profileCache });
+
+  // Usa o hook para pegar as recomendações DO BACKEND e o perfil
+  const { recommendations, profile } = useRecommendation({
+    profileCache,
+    allGames,
+  });
 
   const handleRemoveFromPlaylist = async (game: Game) => {
     const confirmed = await confirm({
@@ -56,19 +61,13 @@ export default function Playlist({
     }
   };
 
-  const suggestions = allGames
-    .filter(g => !isInPlaylist(g.id) && g.playtime < 60)
-    .sort((a, b) => {
-      const genresA = a.genre
-        ? a.genre.split(',').map(n => ({ name: n.trim() }))
-        : [];
-      const genresB = b.genre
-        ? b.genre.split(',').map(n => ({ name: n.trim() }))
-        : [];
-
-      return calculateAffinity(genresB) - calculateAffinity(genresA);
-    })
+  // Sugestões: Filtra os jogos já na playlist e limita a 10 sugestões
+  const suggestions = recommendations
+    .filter(g => !isInPlaylist(g.id))
     .slice(0, 10);
+
+  // Séries favoritas: Usa o utilitário
+  const favoriteSeries = getFavoriteSeries(profile);
 
   const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -78,9 +77,7 @@ export default function Playlist({
 
   return (
     <div className="bg-background flex h-full flex-row overflow-hidden">
-      {/* Coluna esquerda: Fila (Playlist) */}
       <div className="border-border/50 bg-background/50 flex min-w-0 flex-1 flex-col overflow-hidden border-r">
-        {/* Header da Playlist */}
         <div className="border-border/40 shrink-0 border-b px-5 pt-5 pb-3 lg:px-8 lg:pt-6 lg:pb-4">
           <div className="mb-2 flex items-center gap-2.5 lg:gap-3">
             <div className="bg-primary/10 text-primary rounded-lg p-2">
@@ -96,7 +93,6 @@ export default function Playlist({
           </div>
         </div>
 
-        {/* Lista de jogos com Drag and Drop */}
         <div className="custom-scrollbar flex-1 overflow-y-auto px-4 pt-3 pb-6 lg:px-6 lg:pt-4">
           {playlistGames.length > 0 ? (
             <DragDropContext onDragEnd={handleOnDragEnd}>
@@ -157,19 +153,35 @@ export default function Playlist({
 
       {/* Coluna direita: Sugestões */}
       <div className="bg-muted/10 border-border flex w-72 shrink-0 flex-col overflow-hidden border-l backdrop-blur-sm md:w-80 lg:w-80 xl:w-96 2xl:w-120">
-        {/* Header das sugestões */}
         <div className="border-border/40 bg-muted/20 shrink-0 border-b p-5 lg:p-6">
           <div className="mb-1 flex items-center gap-2 text-purple-500">
             <Sparkles size={19} className="fill-purple-500/20 lg:h-5 lg:w-5" />
             <h2 className="text-lg font-bold">Recomendados</h2>
           </div>
           <p className="text-muted-foreground text-sm">
-            Baseado no seu perfil.
+            Baseado no seu perfil (Backend).
           </p>
         </div>
 
-        {/* Área de Scroll das Sugestões */}
         <div className="custom-scrollbar flex-1 overflow-y-auto p-4 lg:p-5">
+          {favoriteSeries.length > 0 && (
+            <div className="mb-4 rounded-lg bg-purple-500/10 p-3">
+              <h3 className="mb-2 text-xs font-bold text-purple-400">
+                Suas Séries Favoritas
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {favoriteSeries.map(({ name }) => (
+                  <span
+                    key={name}
+                    className="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-3.5 lg:gap-4 xl:grid-cols-2">
             {suggestions.map(game => (
               <div key={game.id} className="group relative">
@@ -197,18 +209,12 @@ export default function Playlist({
               </div>
             ))}
           </div>
+
           {suggestions.length === 0 && (
             <div className="space-y-2 py-10 text-center">
               <p className="text-muted-foreground text-sm">
-                Sem sugestões novas.
+                Sem sugestões novas no momento.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.location.reload()}
-              >
-                Recarregar
-              </Button>
             </div>
           )}
         </div>

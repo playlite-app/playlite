@@ -24,6 +24,10 @@ import { useTrending } from '../hooks/useTrending';
 import { useWishlist } from '../hooks/useWishlist';
 import { trendingService } from '../services/trendingService';
 import { openExternalLink } from '../utils/navigation';
+import {
+  calculateAffinity,
+  isFavoriteSeries,
+} from '../utils/recommendationUtils';
 
 interface TrendingProps {
   userGames: Game[];
@@ -45,7 +49,7 @@ export default function Trending(props: TrendingProps) {
     addToWishlist,
   } = useTrending(props);
 
-  const { calculateAffinity, profile } = useRecommendation();
+  const { profile } = useRecommendation();
   const { games: wishlistGames } = useWishlist();
   const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -148,12 +152,31 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
+  // Ordenação da Grid usando o Profile
   let gridGames = games.slice(5, 15);
 
   if (profile) {
     gridGames = [...gridGames].sort((a, b) => {
-      const scoreA = calculateAffinity(a.genres);
-      const scoreB = calculateAffinity(b.genres);
+      // Normalização: Extrai strings dos arrays de objetos da RAWG
+      const genresA = a.genres?.map(g => g.name) || [];
+      const genresB = b.genres?.map(g => g.name) || [];
+
+      const tagsA = a.tags?.map(t => t.name) || [];
+      const tagsB = b.tags?.map(t => t.name) || [];
+
+      // Passa o profile e os arrays de strings para o utilitário
+      const scoreA = calculateAffinity(
+        profile,
+        genresA,
+        tagsA,
+        a.series || null
+      );
+      const scoreB = calculateAffinity(
+        profile,
+        genresB,
+        tagsB,
+        b.series || null
+      );
 
       return scoreB - scoreA;
     });
@@ -167,18 +190,16 @@ export default function Trending(props: TrendingProps) {
         title={currentHero.name}
         backgroundUrl={currentHero.backgroundImage}
         coverUrl={currentHero.backgroundImage}
-        genres={currentHero.genres.map(g => g.name)} // Normaliza gêneros
+        genres={currentHero.genres.map(g => g.name)} // Normaliza gêneros para string[]
         rating={currentHero.rating}
         showNavigation={heroGames.length > 1}
         onNext={nextHero}
         onPrev={prevHero}
-        // Badge específica de Trending
         badges={
           <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
             <Flame size={16} /> EM ALTA
           </div>
         }
-        // Botões específicos de Trending
         actions={
           <>
             <Button
@@ -233,7 +254,7 @@ export default function Trending(props: TrendingProps) {
         </div>
       </div>
 
-      {/* Sugestões (Trending) */}
+      {/* Sugestões (Trending Grid) */}
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-6 flex items-center gap-2">
           <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
@@ -244,9 +265,28 @@ export default function Trending(props: TrendingProps) {
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {gridGames.map(game => {
-            // Lógica de badge baseada no perfil
-            const affinity = calculateAffinity(game.genres);
-            const isRecommended = affinity > 100;
+            // Normalização para o Utilitário
+            const genres = game.genres?.map(g => g.name) || [];
+            const tags = game.tags?.map(t => t.name) || [];
+
+            const affinity = calculateAffinity(
+              profile,
+              genres,
+              tags,
+              game.series || null
+            );
+            const isFavSeries = isFavoriteSeries(
+              profile,
+              game.series || undefined
+            );
+
+            let badge: string | undefined;
+
+            if (isFavSeries && affinity > 150) badge = 'SÉRIE FAVORITA';
+            else if (affinity > 120) badge = 'MATCH PERFEITO';
+            else if (affinity > 80) badge = 'TOP PICK';
+            else if (affinity > 50) badge = 'PARA VOCÊ';
+
             const isInWishlist = wishlistGames.some(
               w => w.id === game.id.toString()
             );
@@ -257,15 +297,10 @@ export default function Trending(props: TrendingProps) {
                 title={game.name}
                 coverUrl={game.backgroundImage}
                 rating={game.rating}
-                subtitle={game.genres
-                  .map(g => g.name)
-                  .slice(0, 2)
-                  .join(', ')}
-                badge={isRecommended ? 'TOP PICK' : undefined}
-                // Ações Personalizadas do Trending (Wishlist + Details)
+                subtitle={genres.slice(0, 2).join(', ')}
+                badge={badge}
                 actions={
                   <>
-                    {/* Botões Wishlist e Detalhes */}
                     <ActionButton
                       icon={Heart}
                       variant={isInWishlist ? 'glass-destructive' : 'glass'}
@@ -301,8 +336,27 @@ export default function Trending(props: TrendingProps) {
 
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
             {upcomingGames.map(game => {
-              const affinity = calculateAffinity(game.genres);
-              const isMatch = affinity > 50;
+              const genres = game.genres?.map(g => g.name) || [];
+              const tags = game.tags?.map(t => t.name) || [];
+
+              // Passamos profile + strings para os utilitários
+              const affinity = calculateAffinity(
+                profile,
+                genres,
+                tags,
+                game.series || null
+              );
+              const isFavSeries = isFavoriteSeries(
+                profile,
+                game.series || undefined
+              );
+
+              let badge: string | undefined;
+
+              if (isFavSeries) badge = 'SÉRIE FAVORITA';
+              else if (affinity > 80) badge = 'PARA VOCÊ';
+              else if (affinity > 50) badge = 'MATCH';
+
               const isInWishlist = wishlistGames.some(
                 w => w.id === game.id.toString()
               );
@@ -317,10 +371,9 @@ export default function Trending(props: TrendingProps) {
                       ? `Lança: ${new Date(game.released).toLocaleDateString()}`
                       : 'Em breve'
                   }
-                  badge={isMatch ? 'PARA VOCÊ' : undefined}
+                  badge={badge}
                   actions={
                     <>
-                      {/* Botões Wishlist e Detalhes */}
                       <ActionButton
                         icon={Heart}
                         variant={isInWishlist ? 'glass-destructive' : 'glass'}

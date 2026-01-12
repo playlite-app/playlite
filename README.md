@@ -31,7 +31,6 @@ para explorar Rust, Tauri, React e sistemas de recomendação.
 - Sistema de favoritos, avaliações e tempo de jogo
 - Base para sistema de recomendação inteligente
 - Backup e Restauração de dados (JSON)
-- Segurança de credenciais (AES-256)
 
 ## 🛠️ Stack
 
@@ -74,11 +73,28 @@ funcionamento offline.
 - Rust (rustup)
 - npm ou pnpm
 
+### Setup
+
+```bash
+# Clone o repositório
+git clone <repo-url>
+cd game_manager
+
+# Volte para a raiz e instale dependências
+cd ..
+npm install
+```
+
 ### Desenvolvimento
 
 ```bash
-npm install
 npm run tauri dev
+```
+
+### Build de Produção
+
+```bash
+npm run tauri build
 ```
 
 ## 🤝 Contribuição

@@ -33,3 +33,6 @@ docs/.vitepress/cache
 
 # Documentation Artifacts
 target/
+
+# Secrets - Don't commit API keys
+src-tauri/src/secrets.rs

@@ -10,47 +10,54 @@ use crate::utils::http_client::HTTP_CLIENT;
 use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 
-/// Representa uma tag/categoria da RAWG.
+// === Estruturas de Dados ===
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgTag {
     pub id: i32,
     pub name: String,
     pub slug: String,
-    pub language: String,
+    pub language: Option<String>,
     pub games_count: i32,
     pub image_background: Option<String>,
 }
-
-/// Informações sobre desenvolvedora de um jogo.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgDeveloper {
     pub id: i32,
     pub name: String,
     pub slug: String,
 }
-
-/// Informações sobre publicadora de um jogo.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgPublisher {
     pub id: i32,
     pub name: String,
     pub slug: String,
 }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RawgGenre {
+    pub name: String,
+}
 
 /// Detalhes completos de um jogo na RAWG.
 ///
-/// Inclui informações expandidas como descrição, metacritic score,
-/// desenvolvedoras, publicadoras e tags.
+/// Inclui informações expandidas como descrição, metacritic score, desenvolvedoras e tags.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameDetails {
     pub id: i32,
     pub name: String,
     #[serde(rename(deserialize = "description_raw", serialize = "descriptionRaw"))]
-    pub description_raw: String,
+    pub description_raw: Option<String>,
     pub metacritic: Option<i32>,
-    pub website: String,
+    pub website: Option<String>,
+    pub released: Option<String>,
+    pub background_image: Option<String>,
+    #[serde(default)]
+    pub genres: Vec<RawgGenre>,
+    #[serde(default)]
     pub tags: Vec<RawgTag>,
+    #[serde(default)]
     pub developers: Vec<RawgDeveloper>,
+    #[serde(default)]
     pub publishers: Vec<RawgPublisher>,
 }
 
@@ -66,12 +73,8 @@ pub struct RawgGame {
     pub rating: f32,
     pub released: Option<String>,
     pub genres: Vec<RawgGenre>,
-}
-
-/// Gênero de um jogo.
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RawgGenre {
-    pub name: String,
+    #[serde(default)]
+    pub tags: Vec<RawgTag>,
 }
 
 /// Resposta da API RAWG para listagens de jogos.
@@ -80,23 +83,36 @@ struct RawgResponse {
     results: Vec<RawgGame>,
 }
 
-/// Busca os jogos mais populares do momento.
+// === Funções de API ===
+
+/// Busca jogos por texto (Nome, Série, etc).
+///
+/// Substitui a busca da Steam Store na Wishlist e adição manual.
+pub async fn search_games(api_key: &str, query: &str) -> Result<Vec<RawgGame>, String> {
+    let url = format!(
+        "https://api.rawg.io/api/games?key={}&search={}&page_size=10",
+        api_key,
+        urlencoding::encode(query)
+    );
+
+    let res = HTTP_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !res.status().is_success() {
+        return Err(format!("Erro RAWG Search: {}", res.status()));
+    }
+
+    let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
+    Ok(data.results)
+}
+
+/// Busca os jogos mais populares do momento ('trending games').
 ///
 /// Retorna até 20 jogos lançados entre o ano passado e o ano atual,
 /// ordenados por popularidade (adições recentes).
-///
-/// # Parâmetros
-/// * `api_key` - Chave de autenticação da API RAWG
-///
-/// # Retorna
-/// * `Ok(Vec<RawgGame>)` - Lista de jogos populares
-/// * `Err(String)` - Erro na requisição ou resposta não-sucesso
-///
-/// # Exemplo
-/// ```rust
-/// let trending = fetch_trending_games("sua_api_key").await?;
-/// println!("Jogos populares: {}", trending.len());
-/// ```
 pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
     let current_year = chrono::Utc::now().year();
     let last_year = current_year - 1;
@@ -113,44 +129,34 @@ pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String
         .map_err(|e| e.to_string())?;
 
     if !res.status().is_success() {
-        return Err(format!("Erro RAWG: {}", res.status()));
+        return Err(format!("Erro RAWG Trending: {}", res.status()));
     }
 
     let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
-
     Ok(data.results)
 }
 
 /// Busca detalhes completos de um jogo específico.
 ///
 /// Converte o nome do jogo em slug (formato URL-friendly) e busca
-/// informações detalhadas incluindo descrição, desenvolvedoras,
-/// publicadoras, tags e metacritic score.
-///
-/// # Parâmetros
-/// * `api_key` - Chave de autenticação da API RAWG
-/// * `query` - Nome do jogo para buscar
-///
-/// # Retorna
-/// * `Ok(GameDetails)` - Detalhes completos do jogo
-/// * `Err(String)` - Jogo não encontrado ou erro na API
-///
-/// # Exemplo
-/// ```rust
-/// let details = fetch_game_details("sua_api_key", "The Witcher 3: Wild Hunt".into()).await?;
-/// println!("Descrição: {}", details.description_raw);
-/// ```
+/// informações detalhadas na API RAWG.
 pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDetails, String> {
-    // Transforma o nome em slug (Lógica de negócio)
-    let slug = query
-        .to_lowercase()
-        .replace(" ", "-")
-        .replace(":", "")
-        .replace("'", "")
-        .replace("&", "")
-        .replace(".", "");
+    let identifier = if query.chars().all(char::is_numeric) {
+        query
+    } else {
+        query
+            .to_lowercase()
+            .replace(" ", "-")
+            .replace(":", "")
+            .replace("'", "")
+            .replace("&", "")
+            .replace(".", "")
+    };
 
-    let url = format!("https://api.rawg.io/api/games/{}?key={}", slug, api_key);
+    let url = format!(
+        "https://api.rawg.io/api/games/{}?key={}",
+        identifier, api_key
+    );
 
     let res = HTTP_CLIENT
         .get(&url)
@@ -164,7 +170,7 @@ pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDeta
     } else if res.status().as_u16() == 404 {
         Err("Jogo não encontrado na RAWG".into())
     } else {
-        Err(format!("Erro na API RAWG: Status {}", res.status()))
+        Err(format!("Erro RAWG Details: {}", res.status()))
     }
 }
 
@@ -172,30 +178,12 @@ pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDeta
 ///
 /// Retorna até 10 jogos que ainda serão lançados, desde a data atual
 /// até o final do próximo ano, ordenados por popularidade.
-///
-/// # Parâmetros
-/// * `api_key` - Chave de autenticação da API RAWG
-///
-/// # Retorna
-/// * `Ok(Vec<RawgGame>)` - Lista de jogos futuros ordenados por popularidade
-/// * `Err(String)` - Erro na requisição ou resposta não-sucesso
-///
-/// # Exemplo
-/// ```rust
-/// let upcoming = fetch_upcoming_games("sua_api_key").await?;
-/// for game in upcoming {
-///     println!("{} - Lançamento: {:?}", game.name, game.released);
-/// }
-/// ```
 pub async fn fetch_upcoming_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
     let current_date = chrono::Utc::now();
     let next_year = current_date.year() + 1;
-
     let date_start = current_date.format("%Y-%m-%d").to_string();
     let date_end = format!("{}-12-31", next_year);
 
-    // ordering=-added -> Ordena por popularidade
-    // dates=HOJE,ANO_QUE_VEM -> Pega apenas futuros
     let url = format!(
         "https://api.rawg.io/api/games?key={}&dates={},{}&ordering=-added&page_size=10",
         api_key, date_start, date_end

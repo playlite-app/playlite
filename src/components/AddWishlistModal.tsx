@@ -11,10 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-import {
-  SteamSearchResult,
-  wishlistService,
-} from '../services/wishlistService';
+import { SearchResult, wishlistService } from '../services/wishlistService';
 
 interface AddWishlistModalProps {
   isOpen: boolean;
@@ -28,9 +25,9 @@ export default function AddWishlistModal({
   onSuccess,
 }: AddWishlistModalProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SteamSearchResult[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [addingId, setAddingId] = useState<number | null>(null);
+  const [addingId, setAddingId] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -47,7 +44,7 @@ export default function AddWishlistModal({
     }
   };
 
-  const handleAdd = async (game: SteamSearchResult) => {
+  const handleAdd = async (game: SearchResult) => {
     setAddingId(game.id);
 
     try {
@@ -94,9 +91,9 @@ export default function AddWishlistModal({
               className="hover:bg-muted/50 hover:border-border mr-2 flex items-center gap-3 rounded-lg border border-transparent p-2 transition-colors"
             >
               <div className="bg-background h-12 w-12 shrink-0 overflow-hidden rounded">
-                {game.tiny_image ? (
+                {game.cover_url ? (
                   <img
-                    src={game.tiny_image}
+                    src={game.cover_url}
                     alt=""
                     className="h-full w-full object-cover"
                   />

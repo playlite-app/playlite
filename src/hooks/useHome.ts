@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Game, RawgGame, UserProfile } from '@/types';
+import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import { trendingService } from '../services/trendingService';
 import { useRecommendation } from './useRecommendation';
@@ -9,28 +9,10 @@ interface UseHomeProps {
   games: Game[];
   trendingCache: RawgGame[];
   setTrendingCache: (games: RawgGame[]) => void;
-  profileCache: UserProfile | null;
-  setProfileCache: (profile: UserProfile) => void;
+  profileCache: UserPreferenceVector | null;
+  setProfileCache: (profile: UserPreferenceVector) => void;
 }
 
-/**
- * Gerencia a lógica de negócio da página inicial (Home/Dashboard).
- * Calcula estatísticas, seções de jogos e busca trending da RAWG (com cache).
- *
- * @param props.games - Biblioteca completa do usuário
- * @param props.trendingCache - Cache de jogos em tendência da RAWG
- * @param props.setTrendingCache - Função para atualizar o cache
- * @param props.profileCache - Cache do perfil de gêneros do usuário
- * @param props.setProfileCache - Função para atualizar o perfil
- *
- * @returns Objeto com:
- *   - trending: Jogos populares da RAWG
- *   - profile: Perfil de preferências do usuário
- *   - totalGames, totalPlaytime, totalFavorites: Estatísticas
- *   - continuePlaying: Jogos com progresso entre 0-50h
- *   - backlogRecommendations: Top 5 jogos não jogados por afinidade de gênero
- *   - mostPlayed: Top jogos por tempo de jogo
- */
 export function useHome({
   games: library,
   trendingCache,
@@ -40,16 +22,20 @@ export function useHome({
 }: UseHomeProps) {
   const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
   const [loadingTrending, setLoadingTrending] = useState(false);
+
+  // Integração com o Hook de Recomendação
   const {
     profile,
-    calculateAffinity,
+    recommendations,
+    loadingRecommendations,
     loading: profileLoading,
   } = useRecommendation({
     profileCache,
     setProfileCache,
+    allGames: library,
   });
 
-  // Busca Trending se o cache estiver vazio
+  // Busca Trending (Mantido igual)
   useEffect(() => {
     async function fetchTrendingIfNeeded() {
       if (trendingCache.length > 0) {
@@ -75,45 +61,26 @@ export function useHome({
         setLoadingTrending(false);
       }
     }
-
     fetchTrendingIfNeeded();
-  }, [trendingCache]); // Roda se o cache mudar ou montar
-
-  // Lógica de Negócios (Síncrona - Instantânea)
+  }, [trendingCache]);
 
   // Stats
   const totalGames = library.length;
-  const totalPlaytime = library.reduce((acc, g) => acc + g.playtime, 0);
+  const totalPlaytime = library.reduce((acc, g) => acc + (g.playtime ?? 0), 0);
   const totalFavorites = library.filter(g => g.favorite).length;
 
   // Continue Jogando
   const continuePlaying = library
-    .filter(g => g.playtime > 0 && g.playtime < 50)
-    .sort((a, b) => b.playtime - a.playtime)
+    .filter(g => (g.playtime ?? 0) > 0 && (g.playtime ?? 0) < 50)
+    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
     .slice(0, 5);
 
   // Recomendações
-  const backlogRecommendations = useMemo(() => {
-    if (!profile) return [];
-
-    return library
-      .filter(g => g.playtime === 0)
-      .sort((a, b) => {
-        const genresA = a.genre
-          ? a.genre.split(',').map(n => ({ name: n.trim() }))
-          : [];
-        const genresB = b.genre
-          ? b.genre.split(',').map(n => ({ name: n.trim() }))
-          : [];
-
-        return calculateAffinity(genresB) - calculateAffinity(genresA);
-      })
-      .slice(0, 5);
-  }, [library, profile, calculateAffinity]);
+  const backlogRecommendations = recommendations;
 
   // Mais Jogados
   const mostPlayed = [...library]
-    .sort((a, b) => b.playtime - a.playtime)
+    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
     .slice(0, 3);
 
   // Gêneros Mais Comuns
@@ -121,8 +88,8 @@ export function useHome({
     () =>
       library.reduce(
         (acc, game) => {
-          if (game.genre) {
-            game.genre.split(',').forEach(g => {
+          if (game.genres) {
+            game.genres.split(',').forEach((g: string) => {
               const clean = g.trim();
 
               if (clean !== 'Desconhecido') {
@@ -154,7 +121,10 @@ export function useHome({
     topGenres,
     trending,
     profile,
-    // Mostra loading se estiver carregando perfil ou trending crítico
-    loading: profileLoading || (loadingTrending && trending.length === 0),
+    loadingRecommendations,
+    loading:
+      profileLoading ||
+      loadingRecommendations ||
+      (loadingTrending && trending.length === 0),
   };
 }

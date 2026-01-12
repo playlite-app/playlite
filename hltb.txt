@@ -1,0 +1,93 @@
+Endpoint usado pelos scrapers
+
+POST https://howlongtobeat.com/api/search
+
+Eles usam um payload parecido com:
+
+{
+  "searchType": "games",
+  "searchTerms": ["Elden Ring"],
+  "searchPage": 1,
+  "size": 20,
+  "searchOptions": {
+    "games": {
+      "userId": 0,
+      "platform": "",
+      "sortCategory": "popular",
+      "rangeCategory": "main",
+      "rangeTime": { "min": 0, "max": 0 }
+    }
+  }
+}
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "1", features = ["api-all"] }
+
+Modelos básicos
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize)]
+pub struct HltbResponse {
+    pub data: Vec<HltbGame>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct HltbGame {
+    pub game_name: String,
+    pub comp_main: Option<i32>,
+    pub comp_plus: Option<i32>,
+    pub comp_100: Option<i32>,
+}
+
+Command Tauri
+
+#[tauri::command]
+pub async fn search_hltb(game_name: String) -> Result<Vec<HltbGame>, String> {
+    let client = reqwest::Client::new();
+
+    let payload = serde_json::json!({
+        "searchType": "games",
+        "searchTerms": [game_name],
+        "searchPage": 1,
+        "size": 5,
+        "searchOptions": {
+            "games": {
+                "userId": 0,
+                "platform": "",
+                "sortCategory": "popular",
+                "rangeCategory": "main",
+                "rangeTime": { "min": 0, "max": 0 }
+            }
+        }
+    });
+
+    let res = client
+        .post("https://howlongtobeat.com/api/search")
+        .header("Content-Type", "application/json")
+        .header("User-Agent", "Mozilla/5.0")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let json: HltbResponse = res.json().await.map_err(|e| e.to_string())?;
+    Ok(json.data)
+}
+
+Chamando no React
+
+import { invoke } from "@tauri-apps/api/tauri";
+
+const data = await invoke("search_hltb", {
+  gameName: "Elden Ring"
+});
+
+Recomendado fortemente:
+
+- Cache local
+
+game_id | main_hours | plus_hours | completionist | source

@@ -2,8 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
 import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
-
-import { ImportSummary, KeysBatch } from '../types/integration';
+import { ImportSummary, KeysBatch } from '@/types';
 
 export const settingsService = {
   getSecrets: async (): Promise<KeysBatch> => {
@@ -16,6 +15,14 @@ export const settingsService = {
     rawgApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
+  },
+
+  /**
+   * Inicia o fluxo OAuth com IsThereAnyDeal.
+   * Abre o navegador, aguarda o login e salva o token no banco.
+   */
+  connectToItad: async (): Promise<string> => {
+    return await invoke<string>('start_itad_auth');
   },
 
   /**
@@ -40,6 +47,15 @@ export const settingsService = {
    */
   enrichLibrary: async (): Promise<ImportSummary> => {
     return await invoke<ImportSummary>('enrich_library');
+  },
+
+  /**
+   * Busca capas faltantes para jogos na biblioteca.
+   * Pode demorar dependendo do número de capas faltantes.
+   * Utiliza RAWG como fonte.
+   */
+  fetchMissingCovers: async (): Promise<void> => {
+    await invoke('fetch_missing_covers');
   },
 
   /**

@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Gamepad2, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -18,22 +18,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Game } from '@/types';
 
 interface AddGameModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (gameData: Partial<Game>) => void;
+  onSave: (gameData: any) => void;
   gameToEdit?: Game | null;
 }
 
 const INITIAL_STATE = {
   name: '',
   coverUrl: '',
-  genre: '',
   platform: 'Manual',
+  status: 'backlog',
   playtime: '0',
   rating: 0,
+  installPath: '',
+  executablePath: '',
+  launchArgs: '',
 };
 
 export default function AddGameModal({
@@ -50,10 +54,13 @@ export default function AddGameModal({
         setFormData({
           name: gameToEdit.name,
           coverUrl: gameToEdit.coverUrl || '',
-          genre: gameToEdit.genre || '',
           platform: gameToEdit.platform || 'Manual',
+          status: gameToEdit.status || 'backlog',
           playtime: gameToEdit.playtime?.toString() || '0',
-          rating: gameToEdit.rating || 0,
+          rating: gameToEdit.userRating || 0,
+          installPath: gameToEdit.installPath || '',
+          executablePath: gameToEdit.executablePath || '',
+          launchArgs: gameToEdit.launchArgs || '',
         });
       } else {
         setFormData(INITIAL_STATE);
@@ -68,24 +75,39 @@ export default function AddGameModal({
   const handleSave = () => {
     if (!formData.name.trim()) return;
 
-    onSave({
-      ...formData,
+    const payload = {
+      // Se estiver editando, mantém o ID. Se for novo, App.tsx gera o UUID
+      id: gameToEdit?.id,
+      name: formData.name,
+      coverUrl: formData.coverUrl || null,
+      platform: formData.platform,
+      status: formData.status,
+      // Converte playtime para número
       playtime: parseInt(formData.playtime) || 0,
-      rating: formData.rating > 0 ? formData.rating : undefined,
-    });
+      // Mapeia rating para userRating
+      userRating: formData.rating > 0 ? formData.rating : null,
+
+      // Campos de execução do
+      installPath: formData.installPath || null,
+      executablePath: formData.executablePath || null,
+      launchArgs: formData.launchArgs || null,
+    };
+
+    onSave(payload);
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-125">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-150">
         <DialogHeader>
           <DialogTitle>
-            {gameToEdit ? 'Editar Jogo' : 'Adicionar Jogo'}
+            {gameToEdit ? 'Editar Jogo' : 'Adicionar Jogo Manual'}
           </DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {/* === DADOS BÁSICOS === */}
           <div className="grid gap-2">
             <Label htmlFor="name">Nome do Jogo *</Label>
             <Input
@@ -96,16 +118,7 @@ export default function AddGameModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="genre">Gênero</Label>
-              <Input
-                id="genre"
-                value={formData.genre}
-                onChange={e => handleChange('genre', e.target.value)}
-                placeholder="RPG, Ação..."
-              />
-            </div>
+          <div className="grid grid-cols-3 gap-2">
             <div className="grid gap-2">
               <Label>Plataforma</Label>
               <Select
@@ -120,35 +133,110 @@ export default function AddGameModal({
                   <SelectItem value="Steam">Steam</SelectItem>
                   <SelectItem value="Epic">Epic Games</SelectItem>
                   <SelectItem value="GOG">GOG Galaxy</SelectItem>
-                  <SelectItem value="Xbox">Xbox App</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="col-span-2 grid gap-2">
+              <Label htmlFor="cover">Capa (URL)</Label>
+              <Input
+                id="cover"
+                value={formData.coverUrl}
+                onChange={e => handleChange('coverUrl', e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          <Separator className="my-2" />
+
+          {/* === EXECUÇÃO (V2.0) === */}
+          <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
+            <Gamepad2 size={16} /> Configuração de Lançamento
+          </h3>
+
+          <div className="grid gap-2">
+            <Label htmlFor="installPath">Pasta de Instalação (Raiz)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="installPath"
+                value={formData.installPath}
+                onChange={e => handleChange('installPath', e.target.value)}
+                placeholder="C:\Games\MeuJogo\"
+              />
+              {/* Futuro: Botão de selecionar pasta */}
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="cover">Capa (URL)</Label>
+            <Label htmlFor="execPath">Caminho do Executável (.exe)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="execPath"
+                value={formData.executablePath}
+                onChange={e => handleChange('executablePath', e.target.value)}
+                placeholder="C:\Games\MeuJogo\jogo.exe"
+              />
+              {/* Futuro: Botão de selecionar executável */}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="launchArgs">Argumentos de Lançamento</Label>
             <Input
-              id="cover"
-              value={formData.coverUrl}
-              onChange={e => handleChange('coverUrl', e.target.value)}
-              placeholder="https://..."
+              id="launchArgs"
+              value={formData.launchArgs}
+              onChange={e => handleChange('launchArgs', e.target.value)}
+              placeholder="Ex: -windowed -nointro"
             />
           </div>
 
-          <div className="grid grid-cols-2 items-end gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="playtime">Tempo Jogado (horas)</Label>
+          <Separator className="my-2" />
+
+          {/* === AVALIAÇÃO === */}
+          <div className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
+            <div className="grid gap-1">
+              <Label htmlFor="playtime">Tempo Jogado (Horas)</Label>
               <Input
                 id="playtime"
                 type="number"
                 min="0"
-                value={formData.playtime}
-                onChange={e => handleChange('playtime', e.target.value)}
+                step="0.1"
+                value={
+                  formData.playtime
+                    ? String(
+                        Math.round((Number(formData.playtime) / 60) * 100) / 100
+                      )
+                    : ''
+                }
+                onChange={e => {
+                  const hours = parseFloat(e.target.value);
+                  const minutes = isNaN(hours) ? 0 : Math.floor(hours * 60);
+                  handleChange('playtime', minutes);
+                }}
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-1">
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={val => handleChange('status', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="playing">Jogando</SelectItem>
+                  <SelectItem value="backlog">Backlog</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="abandoned">Abandonado</SelectItem>
+                  <SelectItem value="plan_to_play">Pretendo Jogar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-1">
               <Label>Sua Avaliação</Label>
               <div className="flex h-10 items-center gap-1">
                 {[1, 2, 3, 4, 5].map(star => (

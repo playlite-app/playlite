@@ -1,17 +1,17 @@
-//! Módulo de backup e restauração de dados.
+//! Módulo de ‘backup’ e restauração de dados.
 //!
 //! Fornece funcionalidades para exportar e importar a base de dados completa
 //! em formato JSON, incluindo biblioteca de jogos e lista de desejos.
 //!
-//! # Nota
+//! **Nota:**
 //! Todas as operações usam transações ACID para garantir consistência dos dados.
 
 use crate::database::AppState;
-use crate::models::{Game, WishlistGame};
+use crate::models::{Game, GameDetails, WishlistGame};
 use std::fs;
 use tauri::{AppHandle, State};
 
-/// Estrutura do arquivo de backup.
+/// Estrutura do arquivo de ‘backup’.
 ///
 /// Contém metadados e todos os dados exportados da aplicação.
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -19,21 +19,22 @@ pub struct BackupData {
     pub version: u32,
     pub date: String,
     pub games: Vec<Game>,
+    pub game_details: Vec<GameDetails>,
     pub wishlist_game: Vec<WishlistGame>,
 }
 
 /// Exporta toda a base de dados para um arquivo JSON.
 ///
 /// Cria um snapshot completo e consistente de todos os dados da aplicação,
-/// incluindo jogos e wishlist, em um único arquivo JSON formatado.
+/// incluindo jogos e wishlist, num único arquivo JSON formatado.
 #[tauri::command]
 pub async fn export_database(
     _app: AppHandle,
     state: State<'_, AppState>,
     file_path: String,
 ) -> Result<(), String> {
-    // Buscar dados em um único lock
-    let (games, wishlist_game) = {
+    // Buscar dados num único lock
+    let (games, game_details, wishlist_game) = {
         let conn = state.library_db.lock().map_err(|_| "Falha no Mutex")?;
 
         // Inicia transação READ para consistência
@@ -41,17 +42,19 @@ pub async fn export_database(
             .map_err(|e| e.to_string())?;
 
         let games = fetch_games(&conn)?;
+        let game_details = fetch_game_details(&conn)?;
         let wishlist_game = fetch_wishlist(&conn)?;
 
         conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
 
-        (games, wishlist_game)
+        (games, game_details, wishlist_game)
     }; // Lock liberado aqui
 
     let backup = BackupData {
-        version: 1,
+        version: 2,
         date: chrono::Local::now().to_rfc3339(),
         games,
+        game_details,
         wishlist_game,
     };
 
@@ -61,13 +64,13 @@ pub async fn export_database(
     Ok(())
 }
 
-/// Importa e restaura dados de um arquivo de backup.
+/// Importa e restaura dados de um arquivo de ‘backup’.
 ///
-/// Lê um arquivo JSON de backup e restaura todos os dados no banco,
+/// Lê um arquivo JSON de ‘backup’ restaura todos os dados no banco,
 /// substituindo registros existentes (INSERT OR REPLACE).
 ///
-/// # Nota
-/// Esta operação pode sobrescrever dados existentes. Considere criar um backup antes de importar.
+/// **Nota:**
+/// Esta operação pode sobrescrever dados existentes. Considere criar um ‘backup’ antes de importar.
 #[tauri::command]
 pub async fn import_database(
     state: State<'_, AppState>,
@@ -78,7 +81,7 @@ pub async fn import_database(
         serde_json::from_str(&content).map_err(|_| "Arquivo de backup inválido".to_string())?;
 
     // Validação de versão
-    if backup.version != 1 {
+    if backup.version != 2 {
         return Err(format!("Versão de backup incompatível: {}", backup.version));
     }
 
@@ -88,15 +91,20 @@ pub async fn import_database(
     conn.execute("BEGIN IMMEDIATE TRANSACTION", [])
         .map_err(|e| e.to_string())?;
 
-    // Usa prepared statements para melhor performance
+    // Usa prepared statements para melhor desempenho
     let mut game_stmt = conn.prepare(
-        "INSERT OR REPLACE INTO games (id, name, genre, platform, cover_url, playtime, rating, favorite)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
+        "INSERT OR REPLACE INTO games (id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)"
+    ).map_err(|e| e.to_string())?;
+
+    let mut details_stmt = conn.prepare(
+        "INSERT OR REPLACE INTO game_details (game_id, steam_app_id, description, developer, publisher, release_date, genres, tags, series, age_rating, background_image, critic_score, users_score, website_url, igdb_url, rawg_url, pcgamingwiki_url, hltb_main_story, hltb_main_extra, hltb_completionist)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)"
     ).map_err(|e| e.to_string())?;
 
     let mut wishlist_stmt = conn.prepare(
-        "INSERT OR REPLACE INTO wishlist (id, name, cover_url, store_url, current_price, lowest_price, on_sale, localized_price, localized_currency, steam_app_id, added_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
+        "INSERT OR REPLACE INTO wishlist (id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)"
     ).map_err(|e| e.to_string())?;
 
     for game in &backup.games {
@@ -104,12 +112,45 @@ pub async fn import_database(
             .execute(rusqlite::params![
                 game.id,
                 game.name,
-                game.genre,
-                game.platform,
                 game.cover_url,
+                game.platform,
+                game.platform_id,
+                game.install_path,
+                game.executable_path,
+                game.launch_args,
+                game.user_rating,
+                game.favorite,
+                game.status,
                 game.playtime,
-                game.rating,
-                game.favorite
+                game.last_played,
+                game.added_at
+            ])
+            .map_err(|e| e.to_string())?;
+    }
+
+    for detail in &backup.game_details {
+        details_stmt
+            .execute(rusqlite::params![
+                detail.game_id,
+                detail.steam_app_id,
+                detail.description,
+                detail.developer,
+                detail.publisher,
+                detail.release_date,
+                detail.genres,
+                detail.tags,
+                detail.series,
+                detail.age_rating,
+                detail.background_image,
+                detail.critic_score,
+                detail.users_score,
+                detail.website_url,
+                detail.igdb_url,
+                detail.rawg_url,
+                detail.pcgamingwiki_url,
+                detail.hltb_main_story,
+                detail.hltb_main_extra,
+                detail.hltb_completionist
             ])
             .map_err(|e| e.to_string())?;
     }
@@ -121,13 +162,15 @@ pub async fn import_database(
                 item.name,
                 item.cover_url,
                 item.store_url,
+                item.store_platform,
                 item.current_price,
+                item.normal_price,
                 item.lowest_price,
+                item.currency,
                 item.on_sale,
-                item.localized_price,
-                item.localized_currency,
-                item.steam_app_id,
-                item.added_at
+                item.voucher,
+                item.added_at,
+                item.itad_id
             ])
             .map_err(|e| e.to_string())?;
     }
@@ -135,27 +178,36 @@ pub async fn import_database(
     conn.execute("COMMIT", []).map_err(|e| e.to_string())?;
 
     Ok(format!(
-        "Backup restaurado! {} jogos e {} itens da lista de desejos.",
+        "Backup restaurado! {} jogos, {} detalhes de jogos e {} itens da lista de desejos.",
         backup.games.len(),
+        backup.game_details.len(),
         backup.wishlist_game.len()
     ))
 }
 
 fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
     let mut stmt = conn
-        .prepare("SELECT * FROM games")
+        .prepare("SELECT id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at FROM games")
         .map_err(|e| e.to_string())?;
     let game_iter = stmt
         .query_map([], |row| {
             Ok(Game {
-                id: row.get("id")?,
-                name: row.get("name")?,
-                genre: row.get("genre")?,
-                platform: row.get("platform")?,
-                cover_url: row.get("cover_url")?,
-                playtime: row.get("playtime")?,
-                rating: row.get("rating").unwrap_or(None),
-                favorite: row.get("favorite").unwrap_or(false),
+                id: row.get(0)?,
+                name: row.get(1)?,
+                cover_url: row.get(2)?,
+                genres: None,
+                developer: None,
+                platform: row.get(3)?,
+                platform_id: row.get(4)?,
+                install_path: row.get(5)?,
+                executable_path: row.get(6)?,
+                launch_args: row.get(7)?,
+                user_rating: row.get(8)?,
+                favorite: row.get(9)?,
+                status: row.get(10)?,
+                playtime: row.get(11)?,
+                last_played: row.get(12)?,
+                added_at: row.get(13)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -167,27 +219,65 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
 
 fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, String> {
     let mut stmt = conn
-        .prepare("SELECT * FROM wishlist")
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, itad_id, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at FROM wishlist")
         .map_err(|e| e.to_string())?;
     let wishlist_iter = stmt
         .query_map([], |row| {
             Ok(WishlistGame {
-                id: row.get("id")?,
-                name: row.get("name")?,
-                cover_url: row.get("cover_url")?,
-                store_url: row.get("store_url")?,
-                current_price: row.get("current_price")?,
-                lowest_price: row.get("lowest_price")?,
-                on_sale: row.get("on_sale")?,
-                localized_price: row.get("localized_price")?,
-                localized_currency: row.get("localized_currency")?,
-                steam_app_id: row.get("steam_app_id")?,
-                added_at: row.get("added_at")?,
+                id: row.get(0)?,
+                name: row.get(1)?,
+                cover_url: row.get(2)?,
+                store_url: row.get(3)?,
+                store_platform: row.get(4)?,
+                itad_id: row.get(5)?,
+                current_price: row.get(6)?,
+                normal_price: row.get(7)?,
+                lowest_price: row.get(8)?,
+                currency: row.get(9)?,
+                on_sale: row.get(10)?,
+                voucher: row.get(11)?,
+                added_at: row.get(12)?,
             })
         })
         .map_err(|e| e.to_string())?;
 
     wishlist_iter
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
+}
+
+fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, String> {
+    let mut stmt = conn
+        .prepare("SELECT game_id, steam_app_id, description, developer, publisher, release_date, genres, tags, series, age_rating, background_image, critic_score, users_score, website_url, igdb_url, rawg_url, pcgamingwiki_url, hltb_main_story, hltb_main_extra, hltb_completionist FROM game_details")
+        .map_err(|e| e.to_string())?;
+    let details_iter = stmt
+        .query_map([], |row| {
+            Ok(GameDetails {
+                game_id: row.get(0)?,
+                steam_app_id: row.get(1)?,
+                description: row.get(2)?,
+                developer: row.get(3)?,
+                publisher: row.get(4)?,
+                release_date: row.get(5)?,
+                genres: row.get(6)?,
+                tags: row.get(7)?,
+                series: row.get(8)?,
+                age_rating: row.get(9)?,
+                background_image: row.get(10)?,
+                critic_score: row.get(11)?,
+                users_score: row.get(12)?,
+                website_url: row.get(13)?,
+                igdb_url: row.get(14)?,
+                rawg_url: row.get(15)?,
+                pcgamingwiki_url: row.get(16)?,
+                hltb_main_story: row.get(17)?,
+                hltb_main_extra: row.get(18)?,
+                hltb_completionist: row.get(19)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    details_iter
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())
 }

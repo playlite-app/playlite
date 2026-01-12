@@ -5,12 +5,16 @@ export interface RawgGame {
   rating: number;
   released: string | null;
   genres: { name: string }[];
+  tags?: { name: string }[];
+  series?: string | null;
 }
 
 export interface KeysBatch {
   steamId: string;
   steamApiKey: string;
   rawgApiKey: string;
+  igdbClientId: string;
+  igdbClientSecret: string;
 }
 
 export interface ImportSummary {

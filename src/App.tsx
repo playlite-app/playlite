@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import { Game, RawgGame, UserProfile } from '@/types';
+import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import AddGameModal from './components/AddGameModal';
 import GameDetailsModal from './components/GameDetailsModal.tsx';
@@ -9,6 +9,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import { useDebounce } from './hooks/useDebounce';
+import { useGameDetails } from './hooks/useGameDetails';
 import { useLibraries } from './hooks/useLibraries.ts';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
@@ -35,9 +36,13 @@ function AppContent() {
   );
   const [trendingCache, setTrendingCache] = useState<RawgGame[]>([]);
   const [trendingKey, setTrendingKey] = useState(0);
-  const [profileCache, setProfileCache] = useState<UserProfile | null>(null);
+  const [profileCache, setProfileCache] = useState<UserPreferenceVector | null>(
+    null
+  );
 
   const { confirm } = useConfirm();
+
+  const { details, loading, siblings } = useGameDetails(selectedGame, games);
 
   // Handlers de UI e Ações
   const handleSettingsUpdate = () => {
@@ -189,7 +194,9 @@ function AppContent() {
         isOpen={!!selectedGameId}
         onClose={closeDetails}
         game={selectedGame}
-        allGames={games}
+        details={details}
+        loading={loading}
+        siblings={siblings}
         onSwitchGame={handleSwitchGame}
       />
       <Toaster />

@@ -3,64 +3,135 @@
 //! Define structs para jogos, wishlist, perfil do usuário e sistema de erros.
 
 use serde::{Deserialize, Serialize};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Jogo na biblioteca do usuário.
 ///
 /// Representa um jogo adicionado à biblioteca pessoal, com metadados
-/// importados do Steam/RAWG e dados de progresso do usuário.
-///
-/// # Campos
-/// * `id` - ID único (Steam App ID ou RAWG ID convertido para string)
-/// * `playtime` - Tempo jogado em horas
-/// * `rating` - Avaliação pessoal (1-5) ou `None` se não avaliado
-/// * `favorite` - Se o usuário marcou como favorito (usado para filtragem)
-#[derive(Debug, Serialize, Deserialize)]
+/// importados da plataforma e dados de progresso do usuário.
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
     pub id: String,
     pub name: String,
-    pub genre: Option<String>,
-    pub platform: Option<String>,
     #[serde(rename = "coverUrl")]
-    pub cover_url: Option<String>,
-    pub playtime: i32,
-    pub rating: Option<i32>,
+    pub cover_url: Option<String>, // Caminho local
+    pub genres: Option<String>,    // Para o subtítulo do Card
+    pub developer: Option<String>, // Para o Card
+
+    // Identificação
+    pub platform: String,
+    #[serde(rename = "platformId")]
+    pub platform_id: Option<String>,
+
+    // Execução
+    #[serde(rename = "installPath")]
+    pub install_path: Option<String>,
+    #[serde(rename = "executablePath")]
+    pub executable_path: Option<String>,
+    #[serde(rename = "launchArgs")]
+    pub launch_args: Option<String>,
+
+    // Dados do Usuário
+    #[serde(rename = "userRating")]
+    pub user_rating: Option<i32>,
     pub favorite: bool,
+    pub status: Option<String>, // "completed", "playing", "backlog", etc.
+
+    // Metadados de Tempo
+    pub playtime: Option<i32>,
+    #[serde(rename = "lastPlayed")]
+    pub last_played: Option<String>, // ISO 8601 UTC
+    #[serde(rename = "addedAt")]
+    pub added_at: String, // ISO 8601 UTC
+}
+
+/// Detalhes adicionais do jogo.
+///
+/// Armazena metadados importados de APIs externas
+/// (IGDB, RAWG, HLTB) para exibição na interface do usuário.
+///
+/// **Nota:** os campos são opcionais, pois nem todos os jogos terão metadados completos disponíveis.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GameDetails {
+    pub game_id: String, // FK -> Game.id
+
+    // Conectores Extras
+    pub steam_app_id: Option<String>, // Steam App ID (se disponível)
+
+    // Dados Descritivos
+    pub description: Option<String>,
+    pub developer: Option<String>,
+    pub publisher: Option<String>,
+    #[serde(rename = "releaseDate")]
+    pub release_date: Option<String>,
+    pub genres: Option<String>,
+    pub tags: Option<String>, // "Open World, Sci-fi"
+    pub series: Option<String>,
+    #[serde(rename = "ageRating")]
+    pub age_rating: Option<String>, // "PEGI 18", "ESRB M"
+
+    // Mídia Offline (Hero/Banner)
+    #[serde(rename = "backgroundImage")]
+    pub background_image: Option<String>, // Caminho local
+
+    // Ratings
+    #[serde(rename = "criticScore")]
+    pub critic_score: Option<i32>, // Crítica especializada
+    #[serde(rename = "usersScore")]
+    pub users_score: Option<f32>, // Steam reviews
+
+    // Links
+    #[serde(rename = "websiteUrl")]
+    pub website_url: Option<String>,
+    #[serde(rename = "igdbUrl")]
+    pub igdb_url: Option<String>,
+    #[serde(rename = "rawgUrl")]
+    pub rawg_url: Option<String>,
+    #[serde(rename = "pcgamingwikiUrl")]
+    pub pcgamingwiki_url: Option<String>,
+
+    // HLTB
+    #[serde(rename = "hltbMainStory")]
+    pub hltb_main_story: Option<i32>, // Duração da história principal
+    #[serde(rename = "hltbMainExtra")]
+    pub hltb_main_extra: Option<i32>, // História + extras
+    #[serde(rename = "hltbCompletionist")]
+    pub hltb_completionist: Option<i32>, // 100% conclusão
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.
 ///
-/// Armazena jogos que o usuário deseja comprar e monitora preços via Steam Store API.
+/// Armazena jogos que o usuário deseja comprar.
 /// Preços são atualizados sob demanda com `refresh_prices()`.
-///
-/// # Campos de Preço
-/// * `current_price` - Preço atual em USD (pode ser `None` se região não suportada)
-/// * `lowest_price` - Menor preço já registrado (histórico)
-/// * `localized_price`/`localized_currency` - Preço na moeda local do usuário
-/// * `on_sale` - `true` se o jogo está em promoção atualmente
-///
-/// # Nota
-/// `steam_app_id` pode ser `None` para jogos adicionados via RAWG que não
-/// têm correspondência no Steam.
+/// Busca de preços são feitas por meio de consultas a ITAD API (IsThereAnyDeal).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WishlistGame {
     pub id: String,
     pub name: String,
     #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
+
+    // Controle de Loja
     #[serde(rename = "storeUrl")]
     pub store_url: Option<String>,
+    #[serde(rename = "storePlatform")]
+    pub store_platform: Option<String>, // steam, epic, etc.
+    #[serde(rename = "itadId")]
+    pub itad_id: Option<String>, // ID do jogo na ITAD para buscar preços
+
+    // Preços
     #[serde(rename = "currentPrice")]
-    pub current_price: Option<f64>,
+    pub current_price: Option<f64>, // Preço atual
+    #[serde(rename = "normalPrice")]
+    pub normal_price: Option<f64>, // Preço base
     #[serde(rename = "lowestPrice")]
-    pub lowest_price: Option<f64>,
+    pub lowest_price: Option<f64>, // Menor preço histórico (ITAD)
+    #[serde(rename = "currency")]
+    pub currency: Option<String>,
     #[serde(rename = "onSale")]
     pub on_sale: bool,
-    #[serde(rename = "localizedPrice")]
-    pub localized_price: Option<f64>,
-    #[serde(rename = "localizedCurrency")]
-    pub localized_currency: Option<String>,
-    #[serde(rename = "steamAppId")]
-    pub steam_app_id: Option<i32>,
+    pub voucher: Option<String>,
+
     #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
 }
@@ -70,8 +141,7 @@ pub struct WishlistGame {
 /// Usado internamente no Rust. É serializado para JSON quando enviado ao frontend.
 /// O atributo `#[serde(tag = "type")]` gera `{"type": "DatabaseError", "message": "..."}`.
 ///
-/// # Conversão Automática
-/// Implementa `From<rusqlite::Error>` para conversão automática de erros SQLite.
+/// **Nota:** implementa `From<rusqlite::Error>` para conversão automática de erros.
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
 #[serde(tag = "type", content = "message")]
@@ -132,4 +202,22 @@ pub struct UserProfile {
     pub total_playtime: i32,
     #[serde(rename = "totalGames")]
     pub total_games: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OAuthToken {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub expires_at: u64,
+}
+
+impl OAuthToken {
+    pub fn is_expired(&self) -> bool {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        now >= self.expires_at
+    }
 }

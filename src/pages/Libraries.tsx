@@ -30,7 +30,7 @@ export default function Libraries({
     return games.filter(
       game =>
         game.name.toLowerCase().includes(term) ||
-        (game.genre && game.genre.toLowerCase().includes(term)) ||
+        (game.genres && game.genres.toLowerCase().includes(term)) ||
         (game.platform && game.platform.toLowerCase().includes(term))
     );
   }, [games, searchTerm]);
@@ -72,8 +72,13 @@ export default function Libraries({
               <StandardGameCard
                 title={game.name}
                 coverUrl={game.coverUrl}
-                subtitle={game.genre || 'Sem gênero'}
-                rating={game.rating || undefined}
+                platform={game.platform}
+                subtitle={
+                  [game.genres?.split(',')[0], game.developer]
+                    .filter(Boolean)
+                    .join(' • ') || 'Sem dados'
+                }
+                rating={game.userRating || undefined}
                 onClick={() => actions.onGameClick(game)}
                 onPlay={() => launchGame(game)}
                 actions={

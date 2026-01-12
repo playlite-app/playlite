@@ -3,11 +3,13 @@ export interface WishlistGame {
   name: string;
   coverUrl: string | null;
   storeUrl: string | null;
+  storePlatform: string | null;
   currentPrice: number | null;
+  normalPrice: number | null;
   lowestPrice: number | null;
+  currency: string | null;
   onSale: boolean;
-  localizedPrice: number | null;
-  localizedCurrency: string | null;
-  steamAppId: number | null;
-  addedAt: string;
+  voucher?: string | null;
+  addedAt: string | null;
+  itadId: string | null;
 }

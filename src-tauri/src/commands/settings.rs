@@ -6,13 +6,13 @@
 //! A chave de criptografia é derivada de características únicas via `security::init_security()`.
 
 use crate::database;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 /// Lote de todas as API keys configuradas no sistema.
 ///
 /// Usado para retornar múltiplos secrets de uma vez para o frontend.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct KeysBatch {
     #[serde(rename = "steamId")]
     pub steam_id: String,
@@ -35,10 +35,10 @@ pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, String> {
     })
 }
 
-/// Configura múltiplos secrets em uma única operação.
+/// Configura múltiplos secrets numa única operação.
 ///
-/// Permite atualizar várias credenciais simultaneamente. Valores vazios
-/// ou compostos apenas de whitespace deletam o secret correspondente.
+/// Permite atualizar várias credenciais simultaneamente.
+/// Mantém a compatibilidade com o objeto JSON enviado pelo frontend.
 #[tauri::command]
 pub fn set_secrets(
     app: AppHandle,
@@ -46,43 +46,29 @@ pub fn set_secrets(
     steam_api_key: Option<String>,
     rawg_api_key: Option<String>,
 ) -> Result<(), String> {
-    // Steam ID
-    if let Some(id) = steam_id {
-        let trimmed = id.trim();
-        if trimmed.is_empty() {
-            database::delete_secret(&app, "steam_id")?;
-        } else {
-            database::set_secret(&app, "steam_id", trimmed)?;
+    // Helper para salvar ou deletar baseado no valor
+    let save_or_delete = |key: &str, value: Option<String>| -> Result<(), String> {
+        if let Some(v) = value {
+            let trimmed = v.trim();
+            if trimmed.is_empty() {
+                database::delete_secret(&app, key)?;
+            } else {
+                database::set_secret(&app, key, trimmed)?;
+            }
         }
-    }
+        Ok(())
+    };
 
-    // Steam API Key
-    if let Some(key) = steam_api_key {
-        let trimmed = key.trim();
-        if trimmed.is_empty() {
-            database::delete_secret(&app, "steam_api_key")?;
-        } else {
-            database::set_secret(&app, "steam_api_key", trimmed)?;
-        }
-    }
-
-    // Rawg API Key
-    if let Some(rawg) = rawg_api_key {
-        let trimmed = rawg.trim();
-        if trimmed.is_empty() {
-            database::delete_secret(&app, "rawg_api_key")?;
-        } else {
-            database::set_secret(&app, "rawg_api_key", trimmed)?;
-        }
-    }
+    save_or_delete("steam_id", steam_id)?;
+    save_or_delete("steam_api_key", steam_api_key)?;
+    save_or_delete("rawg_api_key", rawg_api_key)?;
 
     Ok(())
 }
 
 /// Define um secret individual por nome de chave.
 ///
-/// Versão genérica que permite configurar qualquer secret suportado
-/// fornecendo nome e valor.
+/// Versão genérica que permite configurar qualquer secret suportado fornecendo nome e valor.
 #[tauri::command]
 pub fn set_secret(app: AppHandle, key_name: String, key_value: String) -> Result<(), String> {
     let trimmed_val = key_value.trim();
@@ -104,7 +90,7 @@ pub fn get_secret(app: AppHandle, key_name: String) -> Result<String, String> {
 
 /// Remove permanentemente um secret do banco.
 ///
-/// Deleta a credencial criptografada do banco de dados. Operação irreversível.
+/// Exclui a credencial criptografada do banco de dados. Operação irreversível.
 #[tauri::command]
 pub fn delete_secret(app: AppHandle, key_name: String) -> Result<(), String> {
     database::delete_secret(&app, &key_name)
