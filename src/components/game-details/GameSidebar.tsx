@@ -11,7 +11,6 @@ import {
   Trophy,
 } from 'lucide-react';
 
-import { GameHltbCard } from '@/components/game-details/GamehltbCard.tsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -166,10 +165,7 @@ export function GameSidebar({
         </div>
       </div>
 
-      {/* Seção 3: HowLongToBeat (NOVO COMPONENTE) */}
-      <GameHltbCard details={details} />
-
-      {/* Seção 4: Links */}
+      {/* Seção 3: Links */}
       {(() => {
         // Filtra apenas os links que existem
         const links = [
@@ -209,7 +205,7 @@ export function GameSidebar({
         );
       })()}
 
-      {/* Seção 5: Tags */}
+      {/* Seção 4: Tags */}
       {details?.tags && (
         <div className="space-y-2 lg:space-y-3">
           <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
@@ -232,7 +228,7 @@ export function GameSidebar({
         </div>
       )}
 
-      {/* Seção 6: Siblings */}
+      {/* Seção 5: Siblings */}
       {siblings.length > 0 && (
         <div className="space-y-2 pt-2">
           <span className="text-muted-foreground text-sm">Outras Versões:</span>

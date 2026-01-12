@@ -5,9 +5,10 @@
 
 use std::path::PathBuf;
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{
-    filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer,
-};
+use tracing_subscriber::{filter::EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+
+#[cfg(debug_assertions)]
+use tracing_subscriber::Layer;
 
 pub fn init_logging(log_dir: PathBuf) -> WorkerGuard {
     // Configura rotação de dev_logs: cria um arquivo novo por dia - Ex: app.log.2026-01-02

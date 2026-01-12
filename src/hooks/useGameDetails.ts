@@ -9,6 +9,7 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
   const [siblings, setSiblings] = useState<GamePlatformLink[]>([]);
 
   useEffect(() => {
+    // Se nenhum jogo foi selecionado, limpa o estado
     if (!selectedGame) {
       setDetails(null);
 
@@ -25,7 +26,7 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       .map(g => ({ id: g.id, platform: g.platform || 'Outra' }));
     setSiblings(related);
 
-    // 2. Lógica de Busca Inteligente
+    // 2. Busca detalhes do banco de dados local
     const loadData = async () => {
       setLoading(true);
 
@@ -37,37 +38,8 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
           }
         );
 
-        if (localData) {
-          setDetails(localData);
-
-          const hasHltbData =
-            localData.hltbMainStory && localData.hltbMainStory > 0;
-
-          if (!hasHltbData) {
-            console.log('Dados HLTB ausentes. Buscando em background...');
-
-            // Chama o comando do Rust sem 'await' para não travar a UI (Fire and Forget)
-            invoke('fetch_hltb_data', {
-              gameId: selectedGame.id,
-              gameName: selectedGame.name,
-            })
-              .then(async () => {
-                // Sucesso: busca os detalhes novamente no banco para atualizar a tela
-                const updatedData = await invoke<GameDetails>(
-                  'get_library_game_details',
-                  {
-                    gameId: selectedGame.id,
-                  }
-                );
-                setDetails(updatedData);
-              })
-              .catch(err => {
-                console.warn('Não foi possível encontrar dados no HLTB:', err);
-              });
-          }
-        } else {
-          setDetails(null);
-        }
+        // Se encontrou, define os detalhes; senão, define como null
+        setDetails(localData || null);
       } catch (err) {
         console.error('Erro ao carregar detalhes locais:', err);
         setDetails(null);
