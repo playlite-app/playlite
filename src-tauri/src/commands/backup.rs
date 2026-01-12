@@ -194,19 +194,19 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 cover_url: row.get(2)?,
-                genres: None,
-                developer: None,
-                platform: row.get(3)?,
-                platform_id: row.get(4)?,
-                install_path: row.get(5)?,
-                executable_path: row.get(6)?,
-                launch_args: row.get(7)?,
-                user_rating: row.get(8)?,
-                favorite: row.get(9)?,
-                status: row.get(10)?,
-                playtime: row.get(11)?,
-                last_played: row.get(12)?,
-                added_at: row.get(13)?,
+                genres: row.get(3)?,
+                developer: row.get(4)?,
+                platform: row.get(5)?,
+                platform_id: row.get(6)?,
+                install_path: row.get(7)?,
+                executable_path: row.get(8)?,
+                launch_args: row.get(9)?,
+                user_rating: row.get(10)?,
+                favorite: row.get(11)?,
+                status: row.get(12)?,
+                playtime: row.get(13)?,
+                last_played: row.get(14)?,
+                added_at: row.get(15)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -234,7 +234,8 @@ fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, Stri
                 lowest_price: row.get(8)?,
                 currency: row.get(9)?,
                 on_sale: row.get(10)?,
-                added_at: row.get(11)?,
+                voucher: row.get(11)?,
+                added_at: row.get(12)?,
             })
         })
         .map_err(|e| e.to_string())?;

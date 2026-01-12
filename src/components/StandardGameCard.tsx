@@ -10,7 +10,7 @@ interface StandardGameCardProps {
   coverUrl?: string | null;
   subtitle?: string;
   platform?: string;
-  badge?: string;
+  badge?: ReactNode;
   rating?: number;
   onClick?: () => void;
   actions?: ReactNode;

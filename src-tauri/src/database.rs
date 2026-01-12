@@ -155,6 +155,7 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
             lowest_price REAL,
             currency TEXT,
             on_sale BOOLEAN DEFAULT 0,
+            voucher TEXT,
             added_at TEXT,
             itad_id TEXT
         );",

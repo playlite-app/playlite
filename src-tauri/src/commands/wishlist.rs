@@ -87,7 +87,7 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
     let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
     let mut stmt = conn
-        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, added_at, itad_id FROM wishlist ORDER BY added_at DESC")
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id FROM wishlist ORDER BY added_at DESC")
         .map_err(|e| e.to_string())?;
 
     let games = stmt
@@ -103,8 +103,9 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
                 lowest_price: row.get(7)?,
                 currency: row.get(8)?,
                 on_sale: row.get(9)?,
-                added_at: row.get(10)?,
-                itad_id: row.get(11)?,
+                voucher: row.get(10)?,
+                added_at: row.get(11)?,
+                itad_id: row.get(12)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -241,8 +242,9 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
                         store_platform = ?4,
                         store_url = ?5,
                         on_sale = ?6,
-                        normal_price = ?7
-                     WHERE id = ?8",
+                        normal_price = ?7,
+                        voucher = ?8
+                     WHERE id = ?9",
                     params![
                         deal.price,
                         deal.currency,
@@ -251,6 +253,7 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
                         deal.url,
                         deal.cut > Some(0),
                         normal_price,
+                        deal.voucher,
                         local_id
                     ],
                 ) {

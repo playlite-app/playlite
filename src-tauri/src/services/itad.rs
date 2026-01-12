@@ -26,11 +26,12 @@ pub struct ItadShop {
 /// Estrutura simplificada para uso no app
 #[derive(Debug, Deserialize)]
 pub struct ItadPrice {
-    pub price: f64, // Valor direto (ex: 59.99)
+    pub price: f64,
     pub currency: String,
     pub cut: Option<i32>,
     pub shop: ItadShop,
     pub url: Option<String>,
+    pub voucher: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,7 +43,6 @@ pub struct ItadGameOverview {
 }
 
 // === ESTRUTURAS INTERNAS (Espelho exato do JSON da API) ===
-// Usadas apenas para deserialização antes de converter
 
 #[derive(Debug, Deserialize)]
 struct RawItadResponse {
@@ -62,6 +62,7 @@ struct RawItadDeal {
     price: RawPriceValue,
     cut: Option<i32>,
     url: Option<String>,
+    voucher: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -188,5 +189,6 @@ fn convert_deal(raw: RawItadDeal) -> ItadPrice {
         cut: raw.cut,
         shop: raw.shop,
         url: raw.url,
+        voucher: raw.voucher,
     }
 }

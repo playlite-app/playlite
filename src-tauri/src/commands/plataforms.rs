@@ -39,7 +39,7 @@ pub async fn import_steam_library(
     api_key: String,
     steam_id: String,
 ) -> Result<String, String> {
-    info!("Iniciando importação da Steam ID: {}", steam_id);
+    info!("Iniciando importação da Steam");
 
     // Busca jogos via Steam API
     let steam_games = steam::list_steam_games(&api_key, &steam_id).await?;

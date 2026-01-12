@@ -9,6 +9,7 @@ export interface WishlistGame {
   lowestPrice: number | null;
   currency: string | null;
   onSale: boolean;
+  voucher?: string | null;
   addedAt: string | null;
   itadId: string | null;
 }

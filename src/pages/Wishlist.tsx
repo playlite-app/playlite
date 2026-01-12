@@ -1,9 +1,11 @@
 import {
+  Copy,
   ExternalLink,
   Loader2,
   Plus,
   RefreshCw,
   ShoppingCart,
+  Ticket,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -139,9 +141,31 @@ export default function Wishlist() {
               title={game.name}
               coverUrl={game.coverUrl}
               subtitle={priceDisplay}
-              badge={game.onSale ? 'OFERTA!' : undefined}
+              badge={
+                game.voucher ? (
+                  <div className="flex items-center gap-1">
+                    <Ticket size={10} />
+                    <span>CUPOM: {game.voucher}</span>
+                  </div>
+                ) : game.onSale ? (
+                  'OFERTA!'
+                ) : undefined
+              }
               actions={
                 <>
+                  {/* Botão de Copiar Cupom (Só aparece se tiver voucher) */}
+                  {game.voucher && (
+                    <ActionButton
+                      icon={Copy}
+                      variant="glass"
+                      size={16}
+                      onClick={() => {
+                        navigator.clipboard.writeText(game.voucher || '');
+                        toast.success('Cupom copiado: ' + game.voucher);
+                      }}
+                      tooltip={`Copiar: ${game.voucher}`}
+                    />
+                  )}
                   <ActionButton
                     icon={Trash2}
                     variant="destructive"
@@ -149,7 +173,6 @@ export default function Wishlist() {
                     onClick={() => handleRemoveClick(game.id, game.name)}
                     tooltip="Remover"
                   />
-
                   <ActionButton
                     icon={ExternalLink}
                     variant="secondary"

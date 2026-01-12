@@ -130,6 +130,7 @@ pub struct WishlistGame {
     pub currency: Option<String>,
     #[serde(rename = "onSale")]
     pub on_sale: bool,
+    pub voucher: Option<String>,
 
     #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
