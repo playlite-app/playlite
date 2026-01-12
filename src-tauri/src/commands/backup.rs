@@ -103,8 +103,8 @@ pub async fn import_database(
     ).map_err(|e| e.to_string())?;
 
     let mut wishlist_stmt = conn.prepare(
-        "INSERT OR REPLACE INTO wishlist (id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, added_at, itad_id)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)"
+        "INSERT OR REPLACE INTO wishlist (id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)"
     ).map_err(|e| e.to_string())?;
 
     for game in &backup.games {
@@ -168,6 +168,7 @@ pub async fn import_database(
                 item.lowest_price,
                 item.currency,
                 item.on_sale,
+                item.voucher,
                 item.added_at,
                 item.itad_id
             ])
@@ -194,19 +195,19 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 cover_url: row.get(2)?,
-                genres: row.get(3)?,
-                developer: row.get(4)?,
-                platform: row.get(5)?,
-                platform_id: row.get(6)?,
-                install_path: row.get(7)?,
-                executable_path: row.get(8)?,
-                launch_args: row.get(9)?,
-                user_rating: row.get(10)?,
-                favorite: row.get(11)?,
-                status: row.get(12)?,
-                playtime: row.get(13)?,
-                last_played: row.get(14)?,
-                added_at: row.get(15)?,
+                genres: None,
+                developer: None,
+                platform: row.get(3)?,
+                platform_id: row.get(4)?,
+                install_path: row.get(5)?,
+                executable_path: row.get(6)?,
+                launch_args: row.get(7)?,
+                user_rating: row.get(8)?,
+                favorite: row.get(9)?,
+                status: row.get(10)?,
+                playtime: row.get(11)?,
+                last_played: row.get(12)?,
+                added_at: row.get(13)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -218,7 +219,7 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
 
 fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, String> {
     let mut stmt = conn
-        .prepare("SELECT id, name, cover_url, store_url, store_platform, itad_id, current_price, normal_price, lowest_price, currency, on_sale, added_at FROM wishlist")
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, itad_id, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at FROM wishlist")
         .map_err(|e| e.to_string())?;
     let wishlist_iter = stmt
         .query_map([], |row| {
