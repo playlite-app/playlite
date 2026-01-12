@@ -29,6 +29,8 @@ struct SteamApiResponse {
     response: SteamResponseData,
 }
 
+// === FUNÇÕES PÚBLICAS ===
+
 /// Lista todos os jogos da biblioteca de um usuário Steam.
 pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<SteamGame>, String> {
     let url = format!(

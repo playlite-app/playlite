@@ -32,6 +32,7 @@ pub fn run() {
             let app_handle = app.handle();
 
             // === LOGGING ===
+
             let log_dir = app_handle
                 .path()
                 .app_log_dir()
@@ -45,11 +46,13 @@ pub fn run() {
             tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
 
             // === SEGURANÇA ===
+
             security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
 
             tracing::info!("Sistema de segurança inicializado");
 
             // === BANCOS DE DADOS ===
+
             let db_state = database::initialize_databases(app_handle)
                 .expect("Falha ao inicializar bancos de dados");
 
@@ -95,7 +98,9 @@ pub fn run() {
             commands::backup::export_database,
             commands::backup::import_database,
             // Comando de Recomendação
-            // commands::recommendations::get_user_profile
+            commands::recommendations::get_user_profile,
+            commands::recommendations::recommend_from_library,
+            commands::recommendations::get_game_affinity,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

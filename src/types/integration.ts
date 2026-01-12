@@ -5,6 +5,8 @@ export interface RawgGame {
   rating: number;
   released: string | null;
   genres: { name: string }[];
+  tags?: { name: string }[];
+  series?: string | null;
 }
 
 export interface KeysBatch {

@@ -381,8 +381,3 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
 
     Ok(())
 }
-
-// Rascunho mental para o futuro
-// pub fn update_metadata(id: String, igdb_data: IgdbData) {
-// UPDATE game_details SET genre = ?, description = ? ... WHERE game_id = ?
-// }

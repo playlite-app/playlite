@@ -1,11 +1,7 @@
-export interface GenreScore {
-  name: string;
-  score: number;
-  gameCount: number;
-}
-
-export interface UserProfile {
-  topGenres: GenreScore[];
+export interface UserPreferenceVector {
+  genres: Record<string, number>;
+  tags: Record<string, number>;
+  series: Record<string, number>;
   totalPlaytime: number;
   totalGames: number;
 }

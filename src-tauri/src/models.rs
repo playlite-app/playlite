@@ -9,7 +9,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 ///
 /// Representa um jogo adicionado à biblioteca pessoal, com metadados
 /// importados da plataforma e dados de progresso do usuário.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
     pub id: String,
     pub name: String,

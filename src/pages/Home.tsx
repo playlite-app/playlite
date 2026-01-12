@@ -20,7 +20,7 @@ import Hero from '@/components/Hero';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
-import { Game, RawgGame, UserProfile } from '@/types';
+import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import { useHome } from '../hooks/useHome';
 import { formatTime } from '../utils/formatTime';
@@ -32,19 +32,19 @@ interface HomeProps {
   games: Game[];
   trendingCache: RawgGame[];
   setTrendingCache: (games: RawgGame[]) => void;
-  profileCache: UserProfile | null;
-  setProfileCache: (profile: UserProfile) => void;
   onGameClick: (game: Game) => void;
+  profileCache: UserPreferenceVector | null;
+  setProfileCache: (profile: UserPreferenceVector) => void;
 }
 
 export default function Home({
-  onChangeTab,
   games,
   trendingCache,
   setTrendingCache,
   profileCache,
   setProfileCache,
   onGameClick,
+  onChangeTab,
 }: HomeProps) {
   const {
     stats,
@@ -54,6 +54,7 @@ export default function Home({
     topGenres,
     loading,
     trending,
+    loadingRecommendations,
   } = useHome({
     games,
     trendingCache,
@@ -97,24 +98,27 @@ export default function Home({
     setHeroIndex(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
 
   // Helper para normalizar gêneros (Home mistura tipos Game e RawgGame)
-  const getGenresList = (game: any): string[] => {
+  const getGenresList = (game: Game | RawgGame): string[] => {
     if (game.genres && Array.isArray(game.genres)) {
-      return game.genres.map((g: any) => g.name); // RAWG
+      return game.genres.map((g: { name: string }) => g.name); // RAWG
     }
 
-    if (game.genre && typeof game.genre === 'string') {
-      return game.genre.split(',').map((g: string) => g.trim()); // Local
+    if ('genres' in game && typeof game.genres === 'string') {
+      return game.genres.split(',').map((g: string) => g.trim()); // Local
     }
 
     return [];
   };
 
   // Helper para imagens e nomes
-  const getHeroImage = (game: any) =>
-    game.coverUrl || game.backgroundImage || '';
+  const getHeroImage = (game: Game | RawgGame) =>
+    ('coverUrl' in game ? game.coverUrl : null) ||
+    ('backgroundImage' in game ? game.backgroundImage : null) ||
+    '';
 
   // Verifica se é um jogo local (possui playtime)
-  const isLocalGame = (game: any) => 'playtime' in game;
+  const isLocalGame = (game: Game | RawgGame): game is Game =>
+    'playtime' in game;
 
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto pb-10">
@@ -262,7 +266,13 @@ export default function Home({
               Ver Tudo
             </Button>
           </div>
-          {backlogRecommendations.length > 0 ? (
+
+          {/* Lógica de Loading adicionada */}
+          {loadingRecommendations ? (
+            <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-white/10">
+              <Loader2 className="text-muted-foreground animate-spin" />
+            </div>
+          ) : backlogRecommendations.length > 0 ? (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {backlogRecommendations.slice(0, 5).map(game => (
                 <StandardGameCard
@@ -382,7 +392,15 @@ export default function Home({
 }
 
 // Subcomponente StatCard
-function StatCard({ icon, label, value, color, bg }: any) {
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  color: string;
+  bg: string;
+}
+
+function StatCard({ icon, label, value, color, bg }: StatCardProps) {
   return (
     <div className="bg-card border-border hover:border-primary/50 flex items-center gap-4 rounded-xl border p-5 transition-colors">
       <div className={`rounded-lg p-3 ${bg} ${color}`}>{icon}</div>

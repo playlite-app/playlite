@@ -2,7 +2,7 @@
 
 /// Calcula o status do jogo baseado no tempo jogado (em minutos).
 ///
-/// # Regras
+/// **Regras:**
 /// - 0 min: **backlog**
 /// - < 2h (120 min): **abandoned** (testou e parou)
 /// - < 30h (1800 min): **playing**

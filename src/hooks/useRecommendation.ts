@@ -1,38 +1,33 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { UserProfile } from '@/types';
+import { Game, UserPreferenceVector } from '@/types';
 
-interface Genre {
-  name: string;
+interface GameRecommendationResult {
+  game_id: string;
+  score: number;
 }
 
 interface UseRecommendationProps {
-  profileCache?: UserProfile | null;
-  setProfileCache?: (profile: UserProfile) => void;
+  profileCache?: UserPreferenceVector | null;
+  setProfileCache?: (profile: UserPreferenceVector) => void;
+  allGames?: Game[];
 }
 
-/**
- * Gerencia sistema de recomendações baseado no perfil de gêneros do usuário.
- * Busca perfil do backend (Rust) e fornece função de scoring.
- *
- * @param props.profileCache - Perfil em cache (evita requisição)
- * @param props.setProfileCache - Callback para salvar perfil em cache global
- * @returns Objeto com:
- *   - profile: Perfil com topGenres ordenados por score
- *   - loading: Estado da requisição
- *   - calculateAffinity: Função que calcula score de compatibilidade
- */
 export function useRecommendation({
   profileCache,
   setProfileCache,
+  allGames = [],
 }: UseRecommendationProps = {}) {
-  // Inicia com o cache se existir
-  const [profile, setProfile] = useState<UserProfile | null>(
+  const [profile, setProfile] = useState<UserPreferenceVector | null>(
     profileCache || null
   );
+
+  const [recommendations, setRecommendations] = useState<Game[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [loading, setLoading] = useState(!profileCache);
 
+  // 1. Carregar Perfil
   useEffect(() => {
     if (profileCache) {
       setLoading(false);
@@ -44,12 +39,10 @@ export function useRecommendation({
       setLoading(true);
 
       try {
-        const data = await invoke<UserProfile>('get_user_profile');
+        const data = await invoke<UserPreferenceVector>('get_user_profile');
         setProfile(data);
 
-        if (setProfileCache) {
-          setProfileCache(data);
-        }
+        if (setProfileCache) setProfileCache(data);
       } catch (error) {
         console.error('Falha ao carregar perfil:', error);
       } finally {
@@ -57,33 +50,44 @@ export function useRecommendation({
       }
     }
     loadProfile();
-  }, [profileCache]);
+  }, [profileCache, setProfileCache]);
 
-  /**
-   * Calcula pontuação de afinidade somando scores dos gêneros em comum.
-   *
-   * @param gameGenres - Array de objetos {name: string} do jogo
-   * @returns Score total (quanto maior, mais recomendado)
-   * @example
-   * calculateAffinity([{name: 'Action'}, {name: 'RPG'}]) // => 150
-   */
-  const calculateAffinity = (gameGenres: Genre[]) => {
-    if (!profile || !gameGenres) return 0;
+  // 2. Buscar Recomendações no Backend
+  const refreshRecommendations = useCallback(async () => {
+    if (allGames.length === 0) return;
 
-    let totalScore = 0;
-    gameGenres.forEach(g => {
-      // Busca se o gênero do jogo existe no perfil do usuário (case insensitive)
-      const userGenre = profile.topGenres.find(
-        ug => ug.name.toLowerCase() === g.name.toLowerCase()
+    setLoadingRecommendations(true);
+
+    try {
+      const results = await invoke<GameRecommendationResult[]>(
+        'recommend_from_library',
+        {
+          minPlaytime: 0,
+          maxPlaytime: 300,
+          limit: 10,
+        }
       );
 
-      if (userGenre) {
-        totalScore += userGenre.score;
-      }
-    });
+      const mapped = results
+        .map(rec => allGames.find(g => g.id === rec.game_id))
+        .filter((g): g is Game => !!g);
 
-    return totalScore;
+      setRecommendations(mapped);
+    } catch (error) {
+      console.error('Erro ao buscar recomendações do backend:', error);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  }, [allGames.length]);
+
+  useEffect(() => {
+    refreshRecommendations();
+  }, [refreshRecommendations]);
+
+  return {
+    profile,
+    loading,
+    recommendations,
+    loadingRecommendations,
   };
-
-  return { profile, loading, calculateAffinity };
 }

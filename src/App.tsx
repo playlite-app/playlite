@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import { Game, RawgGame, UserProfile } from '@/types';
+import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import AddGameModal from './components/AddGameModal';
 import GameDetailsModal from './components/GameDetailsModal.tsx';
@@ -36,7 +36,9 @@ function AppContent() {
   );
   const [trendingCache, setTrendingCache] = useState<RawgGame[]>([]);
   const [trendingKey, setTrendingKey] = useState(0);
-  const [profileCache, setProfileCache] = useState<UserProfile | null>(null);
+  const [profileCache, setProfileCache] = useState<UserPreferenceVector | null>(
+    null
+  );
 
   const { confirm } = useConfirm();
 

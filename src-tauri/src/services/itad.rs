@@ -59,7 +59,7 @@ struct RawItadGame {
 #[derive(Debug, Deserialize)]
 struct RawItadDeal {
     shop: ItadShop,
-    price: RawPriceValue, // O preço é um objeto aninhado
+    price: RawPriceValue,
     cut: Option<i32>,
     url: Option<String>,
 }

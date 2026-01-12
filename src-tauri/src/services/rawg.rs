@@ -73,6 +73,8 @@ pub struct RawgGame {
     pub rating: f32,
     pub released: Option<String>,
     pub genres: Vec<RawgGenre>,
+    #[serde(default)]
+    pub tags: Vec<RawgTag>,
 }
 
 /// Resposta da API RAWG para listagens de jogos.

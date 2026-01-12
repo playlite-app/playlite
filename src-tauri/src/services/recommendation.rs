@@ -1,112 +1,337 @@
-//! Módulo de sistema de recomendação personalizado.
+//! Sistema de Recomendação v2.0 - Content-Based Filtering Avançado
 //!
-//! Implementa algoritmo de análise de perfil baseado em múltiplos fatores:
-//! tempo de jogo, avaliações, favoritos e gêneros preferidos.
-//!
-//! O sistema calcula scores ponderados para cada gênero e gera um perfil
-//! do usuário que pode ser usado para ranquear e recomendar novos jogos.
+//! Features:
+//! - Usa dados de game_details (genres, tags, series)
+//! - Penaliza jogos antigos (decaimento temporal)
+//! - Sistema de pesos balanceado
+//! - Sem compatibilidade com sistema v1 (código limpo)
 
-// === Configuração de Pesos do Algoritmo ===
+use crate::models::Game;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-/// Pontos atribuídos por hora jogada.
+// === CONFIGURAÇÃO DE PESOS DO ALGORITMO ===
+
+/// Peso base por hora jogada (limitado a 100h para evitar outliers)
+const WEIGHT_PLAYTIME_HOUR: f32 = 1.5;
+
+/// Bônus para jogos marcados como favoritos
+const WEIGHT_FAVORITE: f32 = 40.0;
+
+/// Peso por estrela de avaliação do usuário (1-5 estrelas)
+const WEIGHT_USER_RATING: f32 = 8.0;
+
+/// Multiplicador para gêneros (peso padrão)
+const WEIGHT_GENRE: f32 = 1.0;
+
+/// Multiplicador para tags (peso menor que gênero)
+const WEIGHT_TAG: f32 = 0.5;
+
+/// Multiplicador para séries (peso moderado - evita viés excessivo)
+const WEIGHT_SERIES: f32 = 1.2;
+
+/// Decaimento por ano (0.95 = 5% de redução por ano de idade)
+/// Jogos de 10 anos atrás terão score multiplicado por ~0.60
+const AGE_DECAY_FACTOR: f32 = 0.95;
+
+/// Idade máxima considerada para decaimento (anos)
+/// Jogos mais velhos que isso não sofrem decaimento adicional
+const MAX_AGE_PENALTY: i32 = 15;
+
+// === ESTRUTURAS DE DADOS ===
+
+/// Detalhes completos de um jogo (união de Game + GameDetails)
+#[derive(Debug, Clone)]
+pub struct GameWithDetails {
+    pub game: Game,
+    pub genres: Vec<String>,
+    pub tags: Vec<String>,
+    pub series: Option<String>,
+    pub release_year: Option<i32>,
+}
+
+/// Vetor de preferências do usuário com múltiplas dimensões
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserPreferenceVector {
+    /// Scores acumulados por gênero
+    pub genres: HashMap<String, f32>,
+
+    /// Scores acumulados por tag
+    pub tags: HashMap<String, f32>,
+
+    /// Scores acumulados por série de jogos
+    pub series: HashMap<String, f32>,
+
+    /// Metadados estatísticos
+    #[serde(rename = "totalPlaytime")]
+    pub total_playtime: i32,
+
+    #[serde(rename = "totalGames")]
+    pub total_games: i32,
+}
+
+// ===  FUNÇÃO PRINCIPAL - CÁLCULO DE PERFIL ===
+
+/// Calcula o perfil completo do usuário baseado em sua biblioteca
 ///
-/// Cada hora de jogo adiciona 2 pontos ao score do jogo, limitado a 100 horas para evitar outliers.
-const WEIGHT_PLAYTIME_HOUR: f32 = 2.0;
-
-/// Pontos de bônus para jogos marcados como favorito.
+/// IMPORTANTE: Espera que GameWithDetails já tenha sido montado pela
+/// camada de comandos Tauri, fazendo JOIN com game_details
 ///
-/// Jogos favoritos recebem 50 pontos adicionais, indicando preferência do usuário.
-const WEIGHT_FAVORITE: f32 = 50.0;
+/// Usa `games` slice para agregar scores por dimensão (gêneros, tags, séries)
+/// e retorna um `UserPreferenceVector` com os scores normalizados.
+pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector {
+    let mut profile = UserPreferenceVector {
+        genres: HashMap::new(),
+        tags: HashMap::new(),
+        series: HashMap::new(),
+        total_playtime: 0,
+        total_games: games.len() as i32,
+    };
 
-/// Pontos atribuídos por estrela de avaliação.
-///
-/// Sistema de 5 estrelas onde cada estrela vale 10 pontos.
-const WEIGHT_RATING_STAR: f32 = 10.0;
+    for game_with_details in games {
+        // Calcula o peso base do jogo
+        let weight = calculate_game_weight(&game_with_details.game);
 
-/// Fator de decaimento temporal para jogos antigos (não implementado).
-///
-/// Planejado para reduzir gradualmente a influência de títulos jogados há muito tempo.
-/// Valor de 0,95 - para 5% de redução por período definido.
-#[allow(dead_code)]
-const DECAY_FACTOR: f32 = 0.95;
-/*
-pub fn calculate_user_profile(games: &[Game]) -> UserProfile {
-    let mut genre_scores: HashMap<String, (f32, i32)> = HashMap::new();
-    let mut total_playtime = 0;
+        profile.total_playtime += game_with_details.game.playtime.unwrap_or(0);
 
-    for game in games {
-        total_playtime += game.playtime;
-
-        // Calcular o Score Base do Jogo (Game Score)
-        let mut game_score = 0.0;
-
-        // Fator Tempo de Jogo (limitado a 100h para não distorcer demais)
-        let hours = (game.playtime as f32 / 60.0).min(100.0);
-        game_score += hours * WEIGHT_PLAYTIME_HOUR;
-
-        // Fator Favorito
-        if game.favorite {
-            game_score += WEIGHT_FAVORITE;
+        // === PROCESSAMENTO DE GÊNEROS ===
+        for genre in &game_with_details.genres {
+            if genre.is_empty() || genre == "Desconhecido" {
+                continue;
+            }
+            *profile.genres.entry(genre.clone()).or_insert(0.0) += weight * WEIGHT_GENRE;
         }
 
-        // Fator Rating (Se tiver avaliação)
-        if let Some(rating) = game.rating {
-            game_score += (rating as f32) * WEIGHT_RATING_STAR;
+        // === PROCESSAMENTO DE TAGS ===
+        for tag in &game_with_details.tags {
+            if tag.is_empty() {
+                continue;
+            }
+            *profile.tags.entry(tag.clone()).or_insert(0.0) += weight * WEIGHT_TAG;
         }
 
-        // Distribuir o Score para os Gêneros do Jogo
-        if let Some(genre_str) = &game.genre {
-            let genres: Vec<&str> = genre_str.split(',').map(|s| s.trim()).collect();
+        // === PROCESSAMENTO DE SÉRIES ===
+        // Prioriza series do banco, fallback para detecção
+        let series_name = if let Some(ref series) = game_with_details.series {
+            if !series.is_empty() {
+                Some(series.clone())
+            } else {
+                detect_game_series(&game_with_details.game.name)
+            }
+        } else {
+            detect_game_series(&game_with_details.game.name)
+        };
 
-            for genre in genres {
-                if genre.is_empty() || genre == "Desconhecido" {
-                    continue;
-                }
+        if let Some(series) = series_name {
+            *profile.series.entry(series).or_insert(0.0) += weight * WEIGHT_SERIES;
+        }
+    }
 
-                let entry = genre_scores.entry(genre.to_string()).or_insert((0.0, 0));
-                entry.0 += game_score; // Soma pontuação
-                entry.1 += 1; // Conta ocorrência
+    profile
+}
+
+/// Calcula o peso/importância de um jogo individual
+///
+/// Combina múltiplos fatores:
+/// - Tempo jogado (até 100h)
+/// - Status de favorito
+/// - Avaliação do usuário (1-5 estrelas)
+///
+/// # Retorna
+/// Score base do jogo (tipicamente 1.0 a 250.0)
+fn calculate_game_weight(game: &Game) -> f32 {
+    let mut weight = 1.0;
+
+    // Fator tempo de jogo (limitado a 100h)
+    if let Some(playtime) = game.playtime {
+        let hours = (playtime as f32 / 60.0).min(100.0);
+        weight += hours * WEIGHT_PLAYTIME_HOUR;
+    }
+
+    // Bônus de favorito
+    if game.favorite {
+        weight += WEIGHT_FAVORITE;
+    }
+
+    // Fator avaliação do usuário
+    if let Some(rating) = game.user_rating {
+        weight += (rating as f32) * WEIGHT_USER_RATING;
+    }
+
+    weight
+}
+
+// ============================================================================
+// DETECÇÃO INTELIGENTE DE SÉRIES (Fallback)
+// ============================================================================
+
+/// Detecta automaticamente se um jogo pertence a uma série conhecida
+///
+/// Usado apenas como FALLBACK quando game_details.series está vazio
+fn detect_game_series(game_name: &str) -> Option<String> {
+    // Lista expandida de séries conhecidas
+    let known_series = [
+        "The Witcher",
+        "Dark Souls",
+        "Elden Ring",
+        "Elder Scrolls",
+        "Fallout",
+        "Mass Effect",
+        "Dragon Age",
+        "Assassin's Creed",
+        "Far Cry",
+        "Grand Theft Auto",
+        "GTA",
+        "Red Dead",
+        "Borderlands",
+        "BioShock",
+        "Metro",
+        "S.T.A.L.K.E.R.",
+        "Deus Ex",
+        "Dishonored",
+        "Doom",
+        "Wolfenstein",
+        "Tomb Raider",
+        "Hitman",
+        "Final Fantasy",
+        "Resident Evil",
+        "Silent Hill",
+        "Dead Space",
+        "Halo",
+        "Gears of War",
+        "Uncharted",
+        "The Last of Us",
+        "God of War",
+        "Horizon",
+        "Persona",
+        "Kingdom Hearts",
+        "Metal Gear",
+        "Souls",
+        "Crysis",
+        "Call of Duty",
+        "Battlefield",
+        "Portal",
+        "Half-Life",
+        "Left 4 Dead",
+        "Dying Light",
+        "Watch Dogs",
+        "Just Cause",
+        "Saints Row",
+        "Batman Arkham",
+        "Middle-earth",
+        "Monster Hunter",
+    ];
+
+    let name_lower = game_name.to_lowercase();
+
+    for series in &known_series {
+        if name_lower.contains(&series.to_lowercase()) {
+            return Some(series.to_string());
+        }
+    }
+
+    // Tenta detectar padrão "Nome X"
+    extract_base_name(game_name)
+}
+
+/// Extrai o nome base de um jogo removendo números e subtítulos
+fn extract_base_name(game_name: &str) -> Option<String> {
+    let patterns = [
+        " II", " III", " IV", " V", " VI", " VII", " VIII", " 2", " 3", " 4", " 5", " 6", " 7",
+        " 8", ":", " -", " –", " —",
+    ];
+
+    for pattern in &patterns {
+        if let Some(pos) = game_name.find(pattern) {
+            let base = game_name[..pos].trim();
+            if base.len() > 3 {
+                return Some(base.to_string());
             }
         }
     }
 
-    // Converter HashMap para Vetor Ordenado
-    let mut top_genres: Vec<GenreScore> = genre_scores
-        .into_iter()
-        .map(|(name, (score, count))| GenreScore {
-            name,
-            score,
-            game_count: count,
-        })
+    None
+}
+
+// === SISTEMA DE SCORING COM PENALIZAÇÃO POR IDADE ===
+
+/// Calcula o score de afinidade entre o perfil do usuário e um jogo candidato
+///
+/// Considera:
+/// - Gêneros em comum
+/// - Tags em comum
+/// - Pertencer à mesma série
+/// - **Penaliza jogos antigos** (decaimento temporal)
+pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32 {
+    let mut score = 0.0;
+
+    // Score de gêneros
+    for genre in &game.genres {
+        if let Some(&genre_score) = profile.genres.get(genre) {
+            score += genre_score;
+        }
+    }
+
+    // Score de tags
+    for tag in &game.tags {
+        if let Some(&tag_score) = profile.tags.get(tag) {
+            score += tag_score;
+        }
+    }
+
+    // Bônus de série (prioriza series do banco, fallback para detecção)
+    let series_name = if let Some(ref series) = game.series {
+        if !series.is_empty() {
+            Some(series.clone())
+        } else {
+            detect_game_series(&game.game.name)
+        }
+    } else {
+        detect_game_series(&game.game.name)
+    };
+
+    if let Some(series) = series_name {
+        if let Some(&series_score) = profile.series.get(&series) {
+            score += series_score * 1.5; // Peso extra para séries
+        }
+    }
+
+    // === PENALIZAÇÃO POR IDADE ===
+
+    // Jogos mais antigos recebem score reduzido
+    if let Some(release_year) = game.release_year {
+        let current_year = 2025; // Você pode obter dinamicamente se preferir
+        let age = (current_year - release_year).max(0).min(MAX_AGE_PENALTY);
+
+        if age > 0 {
+            // Aplica decaimento exponencial: score * (0.95^age)
+            let age_multiplier = AGE_DECAY_FACTOR.powi(age);
+            score *= age_multiplier;
+        }
+    }
+
+    score
+}
+
+/// Ranqueia uma lista de jogos candidatos baseado no perfil do usuário
+pub fn rank_games(
+    profile: &UserPreferenceVector,
+    candidates: &[GameWithDetails],
+) -> Vec<(GameWithDetails, f32)> {
+    let mut ranked: Vec<_> = candidates
+        .iter()
+        .map(|g| (g.clone(), score_game(profile, g)))
         .collect();
 
-    // Ordenar do maior score para o menor
-    top_genres.sort_by(|a, b| {
-        b.score
-            .partial_cmp(&a.score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    // Ordena por score decrescente
+    ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-    UserProfile {
-        top_genres,
-        total_playtime,
-        total_games: games.len() as i32,
-    }
+    ranked
 }
-*/
 
-// TODO: Implementar sistema de ranqueamento de novos jogos
-//
-// Funcionalidade planejada para cruzar o perfil do usuário com
-// uma lista de jogos candidatos (ex: lançamentos futuros, jogos em promoção)
-// e ranqueá-los por compatibilidade com as preferências do usuário.
-//
-// Estratégias a considerar:
-// - Matching de gêneros com weights do perfil
-// - Boost para jogos de desenvolvedoras favoritas
-// - Penalidade para gêneros que o usuário evita
-// - Integração com ratings externos (Metacritic, Steam)
-//
-// pub fn rank_games(profile: &UserProfile, candidates: Vec<Game>) -> Vec<Game> {
-//     // Implementação futura
-// }
+// === UTILITÁRIOS ===
+
+/// Parse de ano a partir de data ISO 8601 (YYYY-MM-DD)
+pub fn parse_release_year(date_str: &str) -> Option<i32> {
+    date_str.split('-').next()?.parse().ok()
+}

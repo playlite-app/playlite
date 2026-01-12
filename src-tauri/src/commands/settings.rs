@@ -45,8 +45,6 @@ pub fn set_secrets(
     steam_id: Option<String>,
     steam_api_key: Option<String>,
     rawg_api_key: Option<String>,
-    igdb_client_id: Option<String>,
-    igdb_client_secret: Option<String>,
 ) -> Result<(), String> {
     // Helper para salvar ou deletar baseado no valor
     let save_or_delete = |key: &str, value: Option<String>| -> Result<(), String> {

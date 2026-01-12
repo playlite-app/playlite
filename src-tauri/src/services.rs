@@ -2,6 +2,7 @@
 //!
 //! **Módulos:**
 //! - `rawg`: Integração com a API RAWG para busca de jogos e tendências.
+//! - `itad`: Integração com a API IsThereAnyDeal para ‘tracking’ de preços e ofertas.
 //! - `steam`: Integração com a API Steam para importar jogos e obter detalhes.
 //! - `recommendation`: Sistema de recomendação de jogos baseado em preferências do usuário.
 

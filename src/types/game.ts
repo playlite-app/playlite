@@ -5,6 +5,8 @@ export interface Game {
   platform: string;
   platformId?: string;
   genres?: string;
+  tags?: string;
+  series?: string;
   developer?: string;
 
   // Campos para execução

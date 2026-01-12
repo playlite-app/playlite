@@ -11,7 +11,7 @@ use tracing::{error, info};
 // Adaptador local para retorno de busca (compatível com frontend)
 #[derive(serde::Serialize)]
 pub struct SearchResult {
-    pub id: String, // RAWG ID como string
+    pub id: String,
     pub name: String,
     pub cover_url: Option<String>,
 }
