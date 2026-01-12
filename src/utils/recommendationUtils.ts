@@ -1,9 +1,35 @@
+import { useMemo } from 'react';
+
 import { UserPreferenceVector } from '@/types';
 
 /**
  * Calcula score de afinidade para jogos EXTERNOS (ex: RAWG)
  * usando o perfil calculado pelo Rust.
  */
+
+export function useCalculateAffinity(profile: UserPreferenceVector | null) {
+  return useMemo(() => {
+    const cache = new Map<string, number>();
+
+    return (
+      genres: string[],
+      tags: string[] = [],
+      series: string | null = null
+    ) => {
+      const key = `${genres.slice().sort().join(',')}|${tags.slice().sort().join(',')}|${series}`;
+
+      if (cache.has(key)) {
+        return cache.get(key)!;
+      }
+
+      const score = calculateAffinity(profile, genres, tags, series);
+      cache.set(key, score);
+
+      return score;
+    };
+  }, [profile]); // Só recalcula se perfil mudar
+}
+
 export function calculateAffinity(
   profile: UserPreferenceVector | null,
   genres: string[],

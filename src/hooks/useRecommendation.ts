@@ -26,6 +26,7 @@ export function useRecommendation({
   const [recommendations, setRecommendations] = useState<Game[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [loading, setLoading] = useState(!profileCache);
+  const [error, setError] = useState<string | null>(null);
 
   // 1. Carregar Perfil
   useEffect(() => {
@@ -57,6 +58,7 @@ export function useRecommendation({
     if (allGames.length === 0) return;
 
     setLoadingRecommendations(true);
+    setError(null);
 
     try {
       const results = await invoke<GameRecommendationResult[]>(
@@ -75,6 +77,8 @@ export function useRecommendation({
       setRecommendations(mapped);
     } catch (error) {
       console.error('Erro ao buscar recomendações do backend:', error);
+      console.error('Erro ao buscar recomendações:', error);
+      setRecommendations([]);
     } finally {
       setLoadingRecommendations(false);
     }
@@ -89,5 +93,6 @@ export function useRecommendation({
     loading,
     recommendations,
     loadingRecommendations,
+    error,
   };
 }
