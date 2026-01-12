@@ -4,7 +4,7 @@ import { toast, Toaster } from 'sonner';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import AddGameModal from './components/AddGameModal';
-import GameDetailsModal from './components/GameDetailsModal.tsx';
+import GameDetailsModal from './components/game-details/GameDetailsModal';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';

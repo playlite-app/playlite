@@ -1,13 +1,3 @@
-/**
- * Busca detalhes enriquecidos de um jogo do banco de dados local e identifica versões em outras plataformas.
- *
- * @param selectedGame - Jogo para buscar detalhes, ou null
- * @param allGames - Lista completa para identificar versões multiplataforma
- * @returns Objeto com:
- *   - details: Dados do banco local (descrição, avaliações, links, HLTB, etc)
- *   - loading: Estado da requisição
- *   - siblings: Mesmo jogo em outras plataformas (array de {'id', platform})
- */
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
@@ -35,18 +25,46 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       .map(g => ({ id: g.id, platform: g.platform || 'Outra' }));
     setSiblings(related);
 
-    // 2. Busca do Banco Local (Schema 2.0)
-    const fetchLocal = async () => {
+    // 2. Lógica de Busca Inteligente
+    const loadData = async () => {
       setLoading(true);
 
       try {
-        const data = await invoke<any>('get_library_game_details', {
-          gameId: selectedGame.id,
-        });
+        const localData = await invoke<GameDetails>(
+          'get_library_game_details',
+          {
+            gameId: selectedGame.id,
+          }
+        );
 
-        if (data) {
-          // Dados já vêm no formato correto do banco (Schema 2.0)
-          setDetails(data);
+        if (localData) {
+          setDetails(localData);
+
+          const hasHltbData =
+            localData.hltbMainStory && localData.hltbMainStory > 0;
+
+          if (!hasHltbData) {
+            console.log('Dados HLTB ausentes. Buscando em background...');
+
+            // Chama o comando do Rust sem 'await' para não travar a UI (Fire and Forget)
+            invoke('fetch_hltb_data', {
+              gameId: selectedGame.id,
+              gameName: selectedGame.name,
+            })
+              .then(async () => {
+                // Sucesso: busca os detalhes novamente no banco para atualizar a tela
+                const updatedData = await invoke<GameDetails>(
+                  'get_library_game_details',
+                  {
+                    gameId: selectedGame.id,
+                  }
+                );
+                setDetails(updatedData);
+              })
+              .catch(err => {
+                console.warn('Não foi possível encontrar dados no HLTB:', err);
+              });
+          }
         } else {
           setDetails(null);
         }
@@ -58,7 +76,7 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       }
     };
 
-    fetchLocal();
+    loadData();
   }, [selectedGame, allGames]);
 
   return { details, loading, siblings };
