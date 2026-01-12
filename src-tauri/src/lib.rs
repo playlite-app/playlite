@@ -87,6 +87,7 @@ pub fn run() {
             commands::metadata::get_trending_games,
             commands::metadata::get_upcoming_games,
             commands::metadata::fetch_game_details,
+            commands::metadata::fetch_hltb_data,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,

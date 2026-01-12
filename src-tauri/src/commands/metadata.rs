@@ -8,6 +8,7 @@
 
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database::{self, AppState};
+use crate::services::hltb;
 use crate::services::rawg;
 use rusqlite::params;
 use std::time::Duration;
@@ -300,4 +301,44 @@ pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgG
 pub async fn get_upcoming_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
     let api_key = get_api_key(&app_handle)?;
     rawg::fetch_upcoming_games(&api_key).await
+}
+
+/// Busca e salva dados do HowLongToBeat para um jogo específico na biblioteca via API HLTB.
+#[tauri::command]
+pub async fn fetch_hltb_data(
+    state: State<'_, AppState>,
+    game_id: String,
+    game_name: String,
+) -> Result<String, String> {
+    // 1. Busca na API
+    let hltb_result = hltb::search(&game_name).await?;
+
+    if let Some(times) = hltb_result {
+        // 2. Salva no banco (game_details)
+        let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
+
+        let rows_affected = conn
+            .execute(
+                "UPDATE game_details SET
+                hltb_main_story = ?1,
+                hltb_main_extra = ?2,
+                hltb_completionist = ?3
+             WHERE game_id = ?4",
+                params![
+                    times.main_story,
+                    times.main_extra,
+                    times.completionist,
+                    game_id
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+
+        if rows_affected == 0 {
+            return Err("Detalhes do jogo não encontrados no banco.".to_string());
+        }
+
+        Ok("Dados HLTB atualizados!".to_string())
+    } else {
+        Ok("Jogo não encontrado no HowLongToBeat.".to_string())
+    }
 }

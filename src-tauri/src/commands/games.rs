@@ -263,6 +263,7 @@ pub fn get_library_game_details(
     state: State<AppState>,
     game_id: String,
 ) -> Result<Option<models::GameDetails>, String> {
+    tracing::info!("Buscando detalhes para game_id: {}", game_id);
     let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
 
     // Query que busca tudo da tabela game_details
