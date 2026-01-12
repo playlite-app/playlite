@@ -6,8 +6,8 @@
 //! **Módulos:**
 //! - `backup`: Comandos relacionados a ‘backup’ e restauração de dados.
 //! - `games`: Comandos CRUD para a biblioteca de jogos.
+//! - `metadata`: Comandos para integração com APIs externas.
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
-//! - `metadata`: Comandos para integração com APIs externas (IGBD, RAWG).
 //! - `recommendations`: Comandos para sistema de recomendação de jogos.
 //! - `settings`: Comandos para gerenciar configurações e segredos do usuário.
 //! - `wishlist`: Comandos para gerenciar a lista de desejos com ‘tracking’ de preços.

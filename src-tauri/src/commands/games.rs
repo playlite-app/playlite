@@ -280,7 +280,7 @@ pub fn get_library_game_details(
                 publisher: row.get("publisher").ok(),
                 release_date: row.get("release_date").ok(),
                 genres: row.get("genres").ok(),
-                tags: row.get("tags").ok(), // Se tiver implementado tags
+                tags: row.get("tags").ok(),
                 series: row.get("series").ok(),
                 age_rating: row.get("age_rating").ok(),
                 background_image: row.get("background_image").ok(),

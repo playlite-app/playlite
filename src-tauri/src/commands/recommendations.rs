@@ -8,7 +8,15 @@ use crate::services::recommendation::{
     calculate_user_profile, parse_release_year, rank_games, score_game, GameWithDetails,
     UserPreferenceVector,
 };
+use serde::Serialize;
 use tauri::State;
+
+/// Estrutura simplificada de recomendação (game_id + score)
+#[derive(Debug, Serialize)]
+pub struct GameRecommendation {
+    pub game_id: String,
+    pub score: f32,
+}
 
 /// Retorna o perfil completo v2.0 com gêneros, tags e séries
 ///
@@ -85,17 +93,6 @@ pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32,
 
     let score = score_game(&profile, &game);
     Ok(score)
-}
-
-// === ESTRUTURAS DE DADOS ===
-
-use serde::Serialize;
-
-/// Estrutura simplificada de recomendação (game_id + score)
-#[derive(Debug, Serialize)]
-pub struct GameRecommendation {
-    pub game_id: String,
-    pub score: f32,
 }
 
 // === HELPER FUNCTIONS - JOIN COM game_details ===

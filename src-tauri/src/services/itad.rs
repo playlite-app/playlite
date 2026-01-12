@@ -23,7 +23,6 @@ pub struct ItadShop {
     pub name: String,
 }
 
-/// Estrutura simplificada para uso no app
 #[derive(Debug, Deserialize)]
 pub struct ItadPrice {
     pub price: f64,

@@ -76,7 +76,7 @@ pub struct GameDetails {
 
     // Ratings
     #[serde(rename = "criticScore")]
-    pub critic_score: Option<i32>, // Critca especializada
+    pub critic_score: Option<i32>, // Crítica especializada
     #[serde(rename = "usersScore")]
     pub users_score: Option<f32>, // Steam reviews
 

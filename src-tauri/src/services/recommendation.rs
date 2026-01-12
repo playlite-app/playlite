@@ -72,7 +72,7 @@ pub struct UserPreferenceVector {
 
 // ===  FUNÇÃO PRINCIPAL - CÁLCULO DE PERFIL ===
 
-/// Calcula o perfil completo do usuário baseado em sua biblioteca
+/// Calcula o perfil completo do usuário baseado na sua biblioteca
 ///
 /// IMPORTANTE: Espera que GameWithDetails já tenha sido montado pela
 /// camada de comandos Tauri, fazendo JOIN com game_details
@@ -94,7 +94,7 @@ pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector
 
         profile.total_playtime += game_with_details.game.playtime.unwrap_or(0);
 
-        // === PROCESSAMENTO DE GÊNEROS ===
+        // Processamento de gêneros
         for genre in &game_with_details.genres {
             if genre.is_empty() || genre == "Desconhecido" {
                 continue;
@@ -102,7 +102,7 @@ pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector
             *profile.genres.entry(genre.clone()).or_insert(0.0) += weight * WEIGHT_GENRE;
         }
 
-        // === PROCESSAMENTO DE TAGS ===
+        // Processamento de tags
         for tag in &game_with_details.tags {
             if tag.is_empty() {
                 continue;
@@ -110,19 +110,8 @@ pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector
             *profile.tags.entry(tag.clone()).or_insert(0.0) += weight * WEIGHT_TAG;
         }
 
-        // === PROCESSAMENTO DE SÉRIES ===
-        // Prioriza series do banco, fallback para detecção
-        let series_name = if let Some(ref series) = game_with_details.series {
-            if !series.is_empty() {
-                Some(series.clone())
-            } else {
-                detect_game_series(&game_with_details.game.name)
-            }
-        } else {
-            detect_game_series(&game_with_details.game.name)
-        };
-
-        if let Some(series) = series_name {
+        // Processamento de séries - Prioriza series do banco, fallback para detecção
+        if let Some(series) = get_series_name(game_with_details) {
             *profile.series.entry(series).or_insert(0.0) += weight * WEIGHT_SERIES;
         }
     }
@@ -161,9 +150,20 @@ fn calculate_game_weight(game: &Game) -> f32 {
     weight
 }
 
-// ============================================================================
-// DETECÇÃO INTELIGENTE DE SÉRIES (Fallback)
-// ============================================================================
+// === DETECÇÃO INTELIGENTE DE SÉRIES (Fallback) ===
+
+/// Obtém o nome da série para um jogo, priorizando dados do banco, fallback para detecção
+fn get_series_name(game: &GameWithDetails) -> Option<String> {
+    if let Some(ref series) = game.series {
+        if !series.is_empty() {
+            Some(series.clone())
+        } else {
+            detect_game_series(&game.game.name)
+        }
+    } else {
+        detect_game_series(&game.game.name)
+    }
+}
 
 /// Detecta automaticamente se um jogo pertence a uma série conhecida
 ///
@@ -280,23 +280,11 @@ pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32
     }
 
     // Bônus de série (prioriza series do banco, fallback para detecção)
-    let series_name = if let Some(ref series) = game.series {
-        if !series.is_empty() {
-            Some(series.clone())
-        } else {
-            detect_game_series(&game.game.name)
-        }
-    } else {
-        detect_game_series(&game.game.name)
-    };
-
-    if let Some(series) = series_name {
+    if let Some(series) = get_series_name(game) {
         if let Some(&series_score) = profile.series.get(&series) {
             score += series_score * 1.5; // Peso extra para séries
         }
     }
-
-    // === PENALIZAÇÃO POR IDADE ===
 
     // Jogos mais antigos recebem score reduzido
     if let Some(release_year) = game.release_year {

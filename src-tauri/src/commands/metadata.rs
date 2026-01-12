@@ -39,7 +39,7 @@ struct EnrichProgress {
     status: String, // "running", "completed", "error"
 }
 
-fn get_api_key(app_handle: &tauri::AppHandle) -> Result<String, String> {
+fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
 
@@ -271,7 +271,6 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
 ///
 /// Retorna informações expandidas incluindo descrição, desenvolvedoras,
 /// publicadoras, tags, metacritic score e mais, usados no modal de detalhes.
-/// Esses dados podem ser usados como alternativa à IGBD.
 #[tauri::command]
 pub async fn fetch_game_details(
     app_handle: AppHandle,
