@@ -26,23 +26,6 @@ export interface Game {
 }
 
 /**
- * Dados usados para criar ou atualizar um jogo
- * (frontend → backend)
- */
-export interface GameInput {
-  id?: string;
-  name: string;
-  platform?: string;
-  coverUrl: string | null;
-  playtime: number;
-  userRating?: number | null;
-  status?: string;
-  installPath?: string;
-  executablePath?: string;
-  launchArgs?: string;
-}
-
-/**
  * Detalhes adicionais do jogo - Schema 2.0
  *
  * Metadados enriquecidos armazenados no banco de dados local,
