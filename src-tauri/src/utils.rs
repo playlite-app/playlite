@@ -10,3 +10,4 @@ pub mod game_logic;
 pub mod http_client;
 pub mod logger;
 pub mod oauth;
+pub(crate) mod series;

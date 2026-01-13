@@ -49,7 +49,7 @@ pub fn run() {
 
             security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
 
-            tracing::info!("Sistema de segurança inicializado");
+            // tracing::info!("Sistema de segurança inicializado");
 
             // === BANCOS DE DADOS ===
 
@@ -58,7 +58,7 @@ pub fn run() {
 
             app.manage(db_state);
 
-            tracing::info!("Bancos de dados inicializados com sucesso");
+            // tracing::info!("Bancos de dados inicializados com sucesso");
 
             Ok(())
         })
@@ -83,6 +83,7 @@ pub fn run() {
             commands::plataforms::import_steam_library,
             // Comandos de Importação de Metadados
             commands::metadata::enrich_library,
+            commands::metadata::enrich_library_optimized,
             commands::metadata::fetch_missing_covers,
             commands::metadata::get_trending_games,
             commands::metadata::get_upcoming_games,

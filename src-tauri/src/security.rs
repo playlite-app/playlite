@@ -20,7 +20,7 @@ use tauri::AppHandle;
 /// - Se falhar ao derivar a chave mestre
 pub fn init_security(app: &AppHandle) -> Result<(), String> {
     secrets::master_key(app)?;
-    tracing::info!("Chave mestre derivada e armazenada com sucesso");
+    // tracing::info!("Chave mestre derivada e armazenada com sucesso");
     Ok(())
 }
 
