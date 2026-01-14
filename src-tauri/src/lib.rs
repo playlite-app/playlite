@@ -83,7 +83,6 @@ pub fn run() {
             commands::plataforms::import_steam_library,
             // Comandos de Importação de Metadados
             commands::metadata::enrich_library,
-            commands::metadata::enrich_library_optimized,
             commands::metadata::fetch_missing_covers,
             commands::metadata::get_trending_games,
             commands::metadata::get_upcoming_games,

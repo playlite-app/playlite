@@ -265,13 +265,28 @@ pub fn get_library_game_details(
 ) -> Result<Option<models::GameDetails>, String> {
     let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
 
-    // Query que busca tudo da tabela game_details
+    // Query busca todas as colunas da tabela game_details
     let mut stmt = conn
-        .prepare("SELECT * FROM game_details WHERE game_id = ?1")
+        .prepare(
+            "SELECT
+            game_id, steam_app_id, description, developer, publisher,
+            release_date, genres, tags, series, age_rating, background_image,
+            critic_score, users_score, website_url, igdb_url, rawg_url,
+            pcgamingwiki_url, hltb_main_story, hltb_main_extra, hltb_completionist,
+            steam_review_label, steam_review_count, steam_review_score,
+            steam_review_updated_at, is_adult, adult_tags, external_links,
+            median_playtime
+         FROM game_details
+         WHERE game_id = ?1",
+        )
         .map_err(|e| e.to_string())?;
 
     let mut rows = stmt
         .query_map(params![game_id], |row| {
+            // Helper para deserializar JSON do campo external_links
+            let links_json: Option<String> = row.get("external_links").ok();
+            let external_links = links_json.and_then(|json| serde_json::from_str(&json).ok());
+
             Ok(models::GameDetails {
                 game_id: row.get("game_id")?,
                 steam_app_id: row.get("steam_app_id").ok(),
@@ -286,13 +301,32 @@ pub fn get_library_game_details(
                 background_image: row.get("background_image").ok(),
                 critic_score: row.get("critic_score").ok(),
                 users_score: row.get("users_score").ok(),
+
+                // URLs legadas (mantidas para compatibilidade)
                 website_url: row.get("website_url").ok(),
                 igdb_url: row.get("igdb_url").ok(),
                 rawg_url: row.get("rawg_url").ok(),
                 pcgamingwiki_url: row.get("pcgamingwiki_url").ok(),
+
+                // HowLongToBeat
                 hltb_main_story: row.get("hltb_main_story").ok(),
                 hltb_main_extra: row.get("hltb_main_extra").ok(),
                 hltb_completionist: row.get("hltb_completionist").ok(),
+
+                // === NOVOS CAMPOS v2.0 ===
+                steam_review_label: row.get("steam_review_label").ok(),
+                steam_review_count: row.get("steam_review_count").ok(),
+                steam_review_score: row.get("steam_review_score").ok(),
+                steam_review_updated_at: row.get("steam_review_updated_at").ok(),
+
+                // O unwrap_or(false) garante que se for NULL vire false
+                is_adult: row.get("is_adult").unwrap_or(false),
+                adult_tags: row.get("adult_tags").ok(),
+
+                // Campo JSON processado acima
+                external_links,
+
+                median_playtime: row.get("median_playtime").ok(),
             })
         })
         .map_err(|e| e.to_string())?;

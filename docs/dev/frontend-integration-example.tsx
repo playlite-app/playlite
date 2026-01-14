@@ -61,7 +61,9 @@ export function useEnrichLibrary() {
       setProgress(null);
 
       // Cleanup listeners em caso de erro
+      // @ts-ignore
       if (unlistenProgress) unlistenProgress();
+      // @ts-ignore
       if (unlistenComplete) unlistenComplete();
     }
   };

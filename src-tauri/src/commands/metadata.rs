@@ -1,23 +1,20 @@
 //! Módulo de integrações com APIs externas.
 //!
-//! Coordena a comunicação com serviços de terceiros (IGBD, RAWG, HLTB) e
-//! orquestra operações complexas como importação em lote, enriquecimento
-//! automático de metadados, busca e exibição de jogos em tendência.
-//!
-//! **Nota:** implementa delays entre requisições para respeitar limites das APIs.
+//! Coordena a comunicação com serviços de terceiros (RAWG, Steam) e
+//! orquestra operações complexas como importação em lote e enriquecimento.
 
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database::{self, AppState};
-use crate::services::{metadata_unified, rawg};
+use crate::services::{rawg, steam};
+use crate::utils::series;
 use rusqlite::params;
+use std::collections::HashMap;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
-/// Resumo de uma operação de importação/processamento em lote.
-///
-/// Fornece estatísticas detalhadas e lista de erros para ‘feedback’ ao usuário.
+// ... (Structs ImportSummary e EnrichProgress permanecem iguais)
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
     #[serde(rename = "successCount")]
@@ -30,23 +27,19 @@ pub struct ImportSummary {
     pub errors: Vec<String>,
 }
 
-// Struct para o evento de progresso
 #[derive(serde::Serialize, Clone)]
 struct EnrichProgress {
     current: i32,
-    total_found: i32, // Total neste lote ou total pendente
+    total_found: i32,
     last_game: String,
-    status: String, // "running", "completed", "error"
+    status: String,
 }
 
 fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
 
-/// Função auxiliar que executa uma query SQL e retorna uma lista de tuplas (id, name).
-///
-/// Usada para buscar jogos que precisam de metadados ou capas faltantes.
-fn query_games_batch(
+fn query_basic_games_batch(
     conn: &rusqlite::Connection,
     query: &str,
     limit: u32,
@@ -57,46 +50,60 @@ fn query_games_batch(
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         })
         .unwrap();
-
-    let mut list = Vec::new();
-    for i in rows.flatten() {
-        list.push(i);
-    }
-    list
+    rows.flatten().collect()
 }
 
-/// Busca metadados para os jogos da biblioteca via RAWG.
-///
-/// Busca detalhes adicionais para jogos que ainda não possuem
-/// entradas na tabela 'game_details', usando RAWG como fonte.
-///
-/// **Nota:**
-/// - Limitado a 20 jogos por execução para evitar timeout do frontend.
-/// - Inicia o processo de enriquecimento em SEGUNDO PLANO via Task.
-/// - Retorna imediatamente para não travar a UI.
+/// Helper para extrair Steam AppID de uma URL da Steam Store
+/// Ex: "https://store.steampowered.com/app/1091500/Cyberpunk_2077/" -> Some("1091500")
+fn extract_steam_id_from_url(url: &str) -> Option<String> {
+    if url.contains("store.steampowered.com/app/") {
+        let parts: Vec<&str> = url.split("/app/").collect();
+        if let Some(right_part) = parts.get(1) {
+            // Pega o número antes da próxima barra
+            let id_part: String = right_part.chars().take_while(|c| c.is_numeric()).collect();
+            if !id_part.is_empty() {
+                return Some(id_part);
+            }
+        }
+    }
+    None
+}
+
 #[tauri::command]
 pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
-    let api_key = get_api_key(&app)?;
-    if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
-    }
+    let api_key = get_api_key(&app).unwrap_or_default();
+    let has_rawg = !api_key.is_empty();
 
     tauri::async_runtime::spawn(async move {
-        info!("Iniciando atualização de metadados (RAWG + Steam + Series)...");
+        info!("Iniciando atualização de metadados (Híbrido: RAWG + Steam Cross-Platform)...");
+
         loop {
             let state: State<AppState> = app_handle.state();
-            // Busca jogos que precisam de update (sem game_details)
-            let games_to_update = {
+
+            let games_to_update: Vec<(String, String, String, Option<String>)> = {
                 let conn = match state.library_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
                 };
-                query_games_batch(
-                    &conn,
-                    "SELECT g.id, g.name FROM games g LEFT JOIN game_details gd ON g.id = gd.game_id WHERE gd.game_id IS NULL LIMIT ?",
-                    RAWG_REQUISITIONS_PER_BATCH,
-                )
+
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT g.id, g.name, g.platform, g.platform_id
+                     FROM games g
+                     LEFT JOIN game_details gd ON g.id = gd.game_id
+                     WHERE gd.game_id IS NULL
+                     LIMIT ?",
+                    )
+                    .unwrap();
+
+                let rows = stmt
+                    .query_map(params![RAWG_REQUISITIONS_PER_BATCH], |row| {
+                        Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+                    })
+                    .unwrap();
+
+                rows.flatten().collect()
             };
 
             if games_to_update.is_empty() {
@@ -106,7 +113,9 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
 
             let total_in_batch = games_to_update.len();
 
-            for (index, (game_id, name)) in games_to_update.into_iter().enumerate() {
+            for (index, (game_id, name, platform, platform_id)) in
+                games_to_update.into_iter().enumerate()
+            {
                 let _ = app_handle.emit(
                     "enrich_progress",
                     EnrichProgress {
@@ -117,213 +126,270 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                     },
                 );
 
-                let series = crate::utils::series::infer_series(&name);
+                let series_name = series::infer_series(&name);
 
-                let search_result = rawg::search_games(&api_key, &name).await;
-                let mut db_success = false;
+                // Variáveis para preenchimento
+                let mut description = String::new();
+                let mut release_date: Option<String> = None;
+                let mut genres_str = String::new();
+                let mut tags_str = String::new();
+                let mut developer: Option<String> = None;
+                let mut publisher: Option<String> = None;
+                let mut critic_score: Option<i32> = None;
+                let mut background: Option<String> = None;
+                let mut website_url: Option<String> = None;
+                let igdb_url: Option<String> = None;
+                let mut rawg_url_legacy: Option<String> = None;
+                let pcgamingwiki_url: Option<String> = None;
 
-                if let Ok(results) = search_result {
-                    if let Some(best_match) = results.first() {
-                        if let Ok(details) =
-                            rawg::fetch_game_details(&api_key, best_match.id.to_string()).await
-                        {
-                            let conn = state.library_db.lock().unwrap();
-                            let desc = details.description_raw.unwrap_or_default();
-                            let website = details.website.unwrap_or_default();
-                            let bg = details
-                                .background_image
-                                .or(best_match.background_image.clone());
-                            let genres = details
-                                .genres
-                                .iter()
-                                .map(|g| g.name.clone())
-                                .collect::<Vec<_>>()
-                                .join(", ");
-                            let dev = details.developers.first().map(|d| d.name.clone());
-                            let publ = details.publishers.first().map(|p| p.name.clone());
-                            let tags = details
-                                .tags
-                                .iter()
-                                .take(10)
-                                .map(|t| t.name.clone())
-                                .collect::<Vec<_>>()
-                                .join(", ");
+                // Variáveis Steam (Reviews e Adult Content)
+                let mut is_adult = false;
+                let mut adult_tags_json = None;
+                let mut steam_review_label = None;
+                let mut steam_review_count = None;
+                let mut steam_review_score = None;
+                let mut steam_review_updated_at = None;
 
-                            let _ = conn.execute(
-                                "INSERT INTO game_details (
-                                    game_id, description, release_date, genres, tags,
-                                    developer, publisher, critic_score, website_url,
-                                    background_image, rawg_url, series
-                                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-                                params![
-                                    game_id,
-                                    desc,
-                                    details.released,
-                                    genres,
-                                    tags,
-                                    dev,
-                                    publ,
-                                    details.metacritic,
-                                    website,
-                                    bg,
-                                    format!("https://rawg.io/games/{}", best_match.id),
-                                    series
-                                ],
-                            );
+                let mut links_map: HashMap<String, String> = HashMap::new();
 
-                            if let Some(img) = &bg {
-                                let _ = conn.execute(
-                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2 AND (cover_url IS NULL OR cover_url = '')",
-                                    params![img, game_id],
-                                );
+                // === ESTRATÉGIA DE STEAM ID ===
+                // Tentamos descobrir o Steam ID de duas formas:
+                // 1. Se o jogo já for da plataforma Steam (temos o ID nativo)
+                // 2. Se a RAWG nos der um link para a loja Steam
+                let mut target_steam_id = if platform.to_lowercase() == "steam" {
+                    platform_id.clone()
+                } else {
+                    None
+                };
+
+                // === BUSCA NA RAWG ===
+                if has_rawg {
+                    match rawg::search_games(&api_key, &name).await {
+                        Ok(results) => {
+                            if let Some(best_match) = results.first() {
+                                if let Ok(details) =
+                                    rawg::fetch_game_details(&api_key, best_match.id.to_string())
+                                        .await
+                                {
+                                    // Preenchimento Básico
+                                    description = details.description_raw.unwrap_or_default();
+                                    release_date = details.released;
+                                    genres_str = details
+                                        .genres
+                                        .iter()
+                                        .map(|g| g.name.clone())
+                                        .collect::<Vec<_>>()
+                                        .join(", ");
+                                    tags_str = details
+                                        .tags
+                                        .iter()
+                                        .take(10)
+                                        .map(|t| t.name.clone())
+                                        .collect::<Vec<_>>()
+                                        .join(", ");
+                                    developer = details.developers.first().map(|d| d.name.clone());
+                                    publisher = details.publishers.first().map(|p| p.name.clone());
+                                    critic_score = details.metacritic;
+                                    background = details
+                                        .background_image
+                                        .or(best_match.background_image.clone());
+
+                                    // Links
+                                    website_url = details.website.clone();
+                                    if let Some(url) = &details.website {
+                                        links_map.insert("website".to_string(), url.clone());
+                                    }
+                                    if let Some(url) = &details.reddit_url {
+                                        links_map.insert("reddit".to_string(), url.clone());
+                                    }
+                                    if let Some(url) = &details.metacritic_url {
+                                        links_map.insert("metacritic".to_string(), url.clone());
+                                    }
+
+                                    let r_url =
+                                        format!("https://rawg.io/games/{}", best_match.slug);
+                                    links_map.insert("rawg".to_string(), r_url.clone());
+                                    rawg_url_legacy = Some(r_url);
+
+                                    // === TENTATIVA DE DESCOBRIR STEAM ID VIA RAWG ===
+                                    // Se ainda não temos ID (jogo Epic/Manual), olhamos nas lojas da RAWG
+                                    if target_steam_id.is_none() {
+                                        for store_data in &details.stores {
+                                            if store_data.store.slug == "steam" {
+                                                if let Some(extracted_id) =
+                                                    extract_steam_id_from_url(&store_data.url)
+                                                {
+                                                    info!("Steam ID descoberto via RAWG para '{}': {}", name, extracted_id);
+                                                    target_steam_id = Some(extracted_id);
+                                                    // Salva o link da loja
+                                                    links_map.insert(
+                                                        "steam".to_string(),
+                                                        store_data.url.clone(),
+                                                    );
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
-
-                            db_success = true;
                         }
+                        Err(e) => warn!("Erro RAWG para {}: {}", name, e),
                     }
+                    sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
                 }
 
-                if !db_success {
-                    let conn = state.library_db.lock().unwrap();
-                    let _ = conn.execute("INSERT INTO game_details (game_id, description) VALUES (?1, 'Metadados não encontrados')", params![game_id]);
-                }
-                sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
-            }
-        }
-        info!("Task concluída.");
-    });
-
-    Ok(())
-}
-
-/// **[OTIMIZADO]** Busca metadados para os jogos da biblioteca via RAWG.
-///
-/// Versão otimizada que processa jogos em paralelo usando o serviço unificado.
-/// - Processa até 3 requisições simultaneamente
-/// - Usa transações em lote para salvar no banco
-/// - Combina dados de múltiplas fontes (RAWG + inferência local)
-/// - Melhor performance: ~3x mais rápido que a versão sequencial
-#[tauri::command]
-pub async fn enrich_library_optimized(app: AppHandle) -> Result<(), String> {
-    let app_handle = app.clone();
-    let api_key = get_api_key(&app)?;
-    if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
-    }
-
-    tauri::async_runtime::spawn(async move {
-        info!("Iniciando enriquecimento otimizado (paralelo + batch)...");
-
-        loop {
-            let state: State<AppState> = app_handle.state();
-
-            // Busca jogos que precisam de update (sem game_details)
-            let games_to_update = {
-                let conn = match state.library_db.lock() {
-                    Ok(c) => c,
-                    Err(_) => break,
-                };
-                query_games_batch(
-                    &conn,
-                    "SELECT g.id, g.name FROM games g LEFT JOIN game_details gd ON g.id = gd.game_id WHERE gd.game_id IS NULL LIMIT ?",
-                    RAWG_REQUISITIONS_PER_BATCH,
-                )
-            };
-
-            if games_to_update.is_empty() {
-                let _ = app_handle.emit("enrich_complete", "Todos os jogos atualizados!");
-                break;
-            }
-
-            let total_in_batch = games_to_update.len();
-            info!("Processando lote de {} jogos...", total_in_batch);
-
-            // Emite progresso inicial
-            let _ = app_handle.emit(
-                "enrich_progress",
-                EnrichProgress {
-                    current: 0,
-                    total_found: total_in_batch as i32,
-                    last_game: "Iniciando...".to_string(),
-                    status: "running".to_string(),
-                },
-            );
-
-            // Configuração para busca paralela
-            let config = metadata_unified::MetadataConfig {
-                rawg_api_key: api_key.clone(),
-                steam_api_key: None, // TODO: Adicionar quando implementar Steam
-                enable_steam: false,
-                rate_limit_ms: RAWG_RATE_LIMIT_MS,
-                max_concurrent: 3, // Processa até 3 jogos simultaneamente
-            };
-
-            // Busca metadados em paralelo
-            let metadata_results =
-                metadata_unified::fetch_batch_metadata(games_to_update.clone(), config).await;
-
-            // Salva em batch no banco
-            {
-                let mut conn = match state.library_db.lock() {
-                    Ok(c) => c,
-                    Err(e) => {
-                        warn!("Erro ao obter lock do banco: {}", e);
-                        break;
-                    }
-                };
-
-                match metadata_unified::save_batch_to_db(&mut conn, metadata_results.clone()) {
-                    Ok(count) => {
-                        info!("Salvos {}/{} jogos com sucesso", count, total_in_batch);
-
-                        // Emite progresso final do lote
-                        let _ = app_handle.emit(
-                            "enrich_progress",
-                            EnrichProgress {
-                                current: total_in_batch as i32,
-                                total_found: total_in_batch as i32,
-                                last_game: format!("{} jogos processados", count),
-                                status: "running".to_string(),
-                            },
+                // === BUSCA NA STEAM (Se tivermos um ID, independente da origem) ===
+                if let Some(steam_id) = &target_steam_id {
+                    // Garante que o link da Steam esteja no mapa se viemos da importação nativa
+                    if !links_map.contains_key("steam") {
+                        links_map.insert(
+                            "steam".to_string(),
+                            format!("https://store.steampowered.com/app/{}", steam_id),
                         );
                     }
-                    Err(e) => {
-                        warn!("Erro ao salvar batch: {}", e);
+
+                    // A. Metadados e Conteúdo Adulto
+                    match steam::get_app_details(steam_id).await {
+                        Ok(Some(store_data)) => {
+                            // Detecção de Adulto PRIMEIRO (antes de consumir campos)
+                            let (detected_adult, flags) = steam::detect_adult_content(&store_data);
+                            is_adult = detected_adult;
+                            if !flags.is_empty() {
+                                adult_tags_json = serde_json::to_string(&flags).ok();
+                            }
+
+                            // Fallbacks se RAWG falhou
+                            if description.is_empty() {
+                                description = store_data.short_description;
+                            }
+                            if release_date.is_none() {
+                                release_date = store_data.release_date;
+                            }
+                            if background.is_none() {
+                                background = Some(store_data.header_image);
+                            }
+                        }
+                        _ => {}
+                    }
+
+                    // B. Reviews
+                    match steam::get_app_reviews(steam_id).await {
+                        Ok(Some(reviews)) => {
+                            steam_review_label = Some(reviews.review_score_desc);
+                            steam_review_count = Some(reviews.total_reviews as i32);
+                            let total = reviews.total_positive + reviews.total_negative;
+                            if total > 0 {
+                                let score_pct =
+                                    (reviews.total_positive as f32 / total as f32) * 100.0;
+                                steam_review_score = Some(score_pct);
+                            }
+                            steam_review_updated_at = Some(chrono::Utc::now().to_rfc3339());
+                        }
+                        _ => {}
+                    }
+                }
+
+                // Dentro do loop do enrich_library, após buscar reviews:
+
+                // C. Tempo Médio (SteamSpy)
+                if let Some(steam_id) = &target_steam_id {
+                    match steam::get_median_playtime(steam_id).await {
+                        Ok(Some(hours)) => {
+                            let conn = state.library_db.lock().unwrap();
+                            let _ = conn.execute(
+                                "UPDATE game_details SET median_playtime = ?1 WHERE game_id = ?2",
+                                params![hours as i32, game_id],
+                            );
+                        }
+                        _ => {}
+                    }
+
+                    // Rate limit de 1 req/segundo
+                    sleep(Duration::from_secs(1)).await;
+                }
+
+                // === SALVAR NO BANCO ===
+                let links_json = if !links_map.is_empty() {
+                    serde_json::to_string(&links_map).ok()
+                } else {
+                    None
+                };
+
+                // (Query de INSERT OR REPLACE permanece igual à versão anterior)
+                {
+                    let conn = state.library_db.lock().unwrap();
+                    let _ = conn.execute(
+                        "INSERT OR REPLACE INTO game_details (
+                            game_id, description, release_date, genres, tags,
+                            developer, publisher, critic_score, website_url,
+                            background_image, rawg_url, igdb_url, pcgamingwiki_url, series,
+                            steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
+                            is_adult, adult_tags, external_links, steam_app_id
+                         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)",
+                        params![
+                            game_id,
+                            description,
+                            release_date,
+                            genres_str,
+                            tags_str,
+                            developer,
+                            publisher,
+                            critic_score,
+                            website_url,
+                            background,
+                            rawg_url_legacy,
+                            igdb_url,
+                            pcgamingwiki_url,
+                            series_name,
+                            steam_review_label,
+                            steam_review_count,
+                            steam_review_score,
+                            steam_review_updated_at,
+                            is_adult,
+                            adult_tags_json,
+                            links_json,
+                            target_steam_id // Salvamos o ID descoberto no banco também!
+                        ],
+                    );
+
+                    if let Some(img) = &background {
+                        let _ = conn.execute(
+                            "UPDATE games SET cover_url = ?1 WHERE id = ?2 AND (cover_url IS NULL OR cover_url = '')",
+                            params![img, game_id],
+                        );
                     }
                 }
             }
         }
-
-        let _ = app_handle.emit("enrich_complete", "Enriquecimento concluído!");
-        info!("Task de enriquecimento otimizado concluída.");
+        info!("Metadata update concluído.");
     });
 
     Ok(())
 }
 
-/// Busca capas faltantes para jogos na biblioteca.
-///
-/// Busca capas para jogos que não possuem capa (cover_url NULL ou vazia), usando RAWG como fonte.
+// Substituir fetch_missing_covers completo:
+
 #[tauri::command]
 pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
     let api_key = get_api_key(&app)?;
+
     if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
+        return Err("API Key RAWG necessária".to_string());
     }
 
     tauri::async_runtime::spawn(async move {
         info!("Iniciando busca de capas faltantes...");
 
+        let mut total_updated = 0;
+        let mut total_failed = 0;
+
         loop {
             let state: State<AppState> = app_handle.state();
 
             let games_without_cover = {
-                let conn = match state.library_db.lock() {
-                    Ok(c) => c,
-                    Err(_) => break,
-                };
-                query_games_batch(
+                let conn = state.library_db.lock().unwrap();
+                query_basic_games_batch(
                     &conn,
                     "SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = '' LIMIT ?",
                     RAWG_REQUISITIONS_PER_BATCH,
@@ -331,82 +397,88 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
             };
 
             if games_without_cover.is_empty() {
-                let _ = app_handle.emit("enrich_complete", "Busca de capas finalizada!");
+                let summary = format!(
+                    "Busca concluída! {} atualizadas, {} falharam",
+                    total_updated, total_failed
+                );
+                let _ = app_handle.emit("enrich_complete", summary);
                 break;
             }
 
-            let total = games_without_cover.len();
+            let batch_size = games_without_cover.len();
 
             for (index, (game_id, name)) in games_without_cover.into_iter().enumerate() {
-                // Emite evento para atualizar a UI (reusa o mesmo evento de progresso)
                 let _ = app_handle.emit(
                     "enrich_progress",
                     EnrichProgress {
                         current: (index + 1) as i32,
-                        total_found: total as i32,
+                        total_found: batch_size as i32,
                         last_game: format!("Capa: {}", name),
                         status: "running".to_string(),
                     },
                 );
 
-                // Busca simples na RAWG para pegar a primeira imagem
                 match rawg::search_games(&api_key, &name).await {
                     Ok(results) => {
-                        if let Some(best_match) = results.first() {
-                            if let Some(img) = &best_match.background_image {
-                                let conn = state.library_db.lock().unwrap();
-                                let _ = conn.execute(
-                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2",
-                                    params![img, game_id],
-                                );
-                                info!("Capa encontrada para '{}'", name);
+                        if let Some(img) = results.first().and_then(|g| g.background_image.as_ref())
+                        {
+                            let conn = state.library_db.lock().unwrap();
+                            match conn.execute(
+                                "UPDATE games SET cover_url = ?1 WHERE id = ?2",
+                                params![img, game_id],
+                            ) {
+                                Ok(_) => {
+                                    total_updated += 1;
+                                    info!("Capa atualizada para: {}", name);
+                                }
+                                Err(e) => {
+                                    total_failed += 1;
+                                    warn!("Erro ao salvar capa de {}: {}", name, e);
+                                }
                             }
+                        } else {
+                            total_failed += 1;
+                            warn!("Nenhuma capa encontrada para: {}", name);
                         }
                     }
-                    Err(e) => warn!("Erro buscando capa para {}: {}", name, e),
+                    Err(e) => {
+                        total_failed += 1;
+                        warn!("Erro RAWG ao buscar {}: {}", name, e);
+                    }
                 }
 
                 sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
             }
         }
+
+        info!(
+            "Busca de capas finalizada: {} sucesso, {} falhas",
+            total_updated, total_failed
+        );
     });
 
     Ok(())
 }
 
-/// Busca detalhes completos de um jogo específico na RAWG.
-///
-/// Retorna informações expandidas incluindo descrição, desenvolvedoras,
-/// publicadoras, tags, metacritic score e mais, usados no modal de detalhes.
+// === Proxies do Frontend (Mantidos) ===
+
 #[tauri::command]
 pub async fn fetch_game_details(
-    app_handle: AppHandle,
+    app: AppHandle,
     query: String,
 ) -> Result<rawg::GameDetails, String> {
-    let api_key = get_api_key(&app_handle)?;
-
-    if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
-    }
-
+    let api_key = get_api_key(&app)?;
     rawg::fetch_game_details(&api_key, query).await
 }
 
-/// Busca jogos em tendência/populares do momento.
-///
-/// Retorna lista de jogos mais adicionados recentemente à plataforma RAWG,
-/// indicando popularidade atual exibidos nas páginas Início e Em Alta.
 #[tauri::command]
-pub async fn get_trending_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
-    let api_key = get_api_key(&app_handle)?;
+pub async fn get_trending_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
+    let api_key = get_api_key(&app)?;
     rawg::fetch_trending_games(&api_key).await
 }
 
-/// Busca jogos com lançamento futuro.
-///
-/// Retorna lista de jogos mais aguardados que serão lançados até o final do próximo ano.
 #[tauri::command]
-pub async fn get_upcoming_games(app_handle: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
-    let api_key = get_api_key(&app_handle)?;
+pub async fn get_upcoming_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
+    let api_key = get_api_key(&app)?;
     rawg::fetch_upcoming_games(&api_key).await
 }

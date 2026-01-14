@@ -75,13 +75,102 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
 // === BANCO DE DADOS PARA GERENCIAMENTO DE JOGOS (library.db) ===
 
-/// Inicializa o banco de dados de gerenciamento de jogos.
+/// Gerencia a evolução do esquema do banco de dados (Migrations).
 ///
-/// Cria as tabelas `games`, `games_details` e `wishlist` se não existirem, e índices otimizados para consultas frequentes.
-///
-/// **Erros:**
-/// - Se falhar ao bloquear o mutex do banco de dados.
-/// - Se falhar ao executar comandos SQL.
+/// Verifica a versão atual do banco (PRAGMA user_version) e aplica
+/// as mudanças incrementais necessárias.
+fn run_migrations(conn: &Connection) -> Result<(), String> {
+    // 1. Obtém versão atual
+    let current_version: i32 = conn
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .map_err(|e| format!("Erro ao ler versão do DB: {}", e))?;
+
+    tracing::info!("Versão atual do banco: v{}", current_version);
+
+    // MIGRATION v1: Criação Inicial (O que você já tinha)
+    if current_version < 1 {
+        tracing::info!("Aplicando Migration v1: Schema Inicial...");
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS games (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, cover_url TEXT,
+            platform TEXT NOT NULL, platform_id TEXT, install_path TEXT,
+            executable_path TEXT, launch_args TEXT, user_rating INTEGER,
+            favorite BOOLEAN DEFAULT 0, status TEXT, playtime INTEGER,
+            last_played TEXT, added_at TEXT NOT NULL
+        )",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS game_details (
+            game_id TEXT PRIMARY KEY, steam_app_id TEXT, description TEXT,
+            developer TEXT, publisher TEXT, release_date TEXT, genres TEXT,
+            tags TEXT, series TEXT, age_rating TEXT, background_image TEXT,
+            critic_score INTEGER, users_score REAL, website_url TEXT,
+            igdb_url TEXT, rawg_url TEXT, pcgamingwiki_url TEXT,
+            hltb_main_story INTEGER, hltb_main_extra INTEGER, hltb_completionist INTEGER,
+            FOREIGN KEY(game_id) REFERENCES games(id) ON DELETE CASCADE
+        )",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS wishlist (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, cover_url TEXT, store_url TEXT,
+            store_platform TEXT, current_price REAL, normal_price REAL, lowest_price REAL,
+            currency TEXT, on_sale BOOLEAN DEFAULT 0, voucher TEXT, added_at TEXT, itad_id TEXT
+        )",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+
+        // Índices
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    // MIGRATION v2: Suporte a Steam Reviews, Conteúdo Adulto e JSON de Links
+    if current_version < 2 {
+        tracing::info!("Aplicando Migration v2: Steam Data & Links...");
+
+        let mutations = [
+            // Steam Reviews
+            "ALTER TABLE game_details ADD COLUMN steam_review_label TEXT",
+            "ALTER TABLE game_details ADD COLUMN steam_review_count INTEGER",
+            "ALTER TABLE game_details ADD COLUMN steam_review_score REAL",
+            "ALTER TABLE game_details ADD COLUMN steam_review_updated_at TEXT",
+            // Conteúdo Adulto
+            "ALTER TABLE game_details ADD COLUMN is_adult BOOLEAN DEFAULT 0",
+            "ALTER TABLE game_details ADD COLUMN adult_tags TEXT", // JSON ou CSV
+            // Links (JSON)
+            "ALTER TABLE game_details ADD COLUMN external_links TEXT", // JSON string
+            // Playtime extra
+            "ALTER TABLE game_details ADD COLUMN median_playtime INTEGER",
+        ];
+
+        for sql in mutations {
+            // Ignora erro se a coluna já existir (segurança para dev)
+            if let Err(e) = conn.execute(sql, []) {
+                tracing::warn!("Aviso na migração v2 (pode ser seguro ignorar): {}", e);
+            }
+        }
+    }
+
+    // Atualiza a versão do banco para a mais recente (2)
+    // SE VOCÊ FIZER MAIS MUDANÇAS NO FUTURO, MUDE O VALOR ABAIXO
+    conn.pragma_update(None, "user_version", 2)
+        .map_err(|e| format!("Erro ao atualizar versão do DB: {}", e))?;
+
+    Ok(())
+}
+
+/// Inicializa o banco de dados chamando as migrações.
 #[tauri::command]
 pub fn init_db(state: State<AppState>) -> Result<String, String> {
     let conn = state
@@ -89,107 +178,9 @@ pub fn init_db(state: State<AppState>) -> Result<String, String> {
         .lock()
         .map_err(|_| "Falha ao bloquear mutex do library_db")?;
 
-    // === TABELAS BÁSICAS ===
+    run_migrations(&conn)?;
 
-    // Tabela da Biblioteca de Jogos
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS games (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            cover_url TEXT,
-            platform TEXT NOT NULL,
-            platform_id TEXT,
-            install_path TEXT,
-            executable_path TEXT,
-            launch_args TEXT,
-            user_rating INTEGER,
-            favorite BOOLEAN DEFAULT 0,
-            status TEXT,
-            playtime INTEGER,
-            last_played TEXT,
-            added_at TEXT NOT NULL
-        );",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    // Tabela de Detalhes dos Jogos
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS game_details (
-            game_id TEXT PRIMARY KEY,
-            steam_app_id TEXT,
-            description TEXT,
-            developer TEXT,
-            publisher TEXT,
-            release_date TEXT,
-            genres TEXT,
-            tags TEXT,
-            series TEXT,
-            age_rating TEXT,
-            background_image TEXT,
-            critic_score INTEGER,
-            users_score REAL,
-            website_url TEXT,
-            igdb_url TEXT,
-            rawg_url TEXT,
-            pcgamingwiki_url TEXT,
-            hltb_main_story INTEGER,
-            hltb_main_extra INTEGER,
-            hltb_completionist INTEGER,
-            FOREIGN KEY(game_id) REFERENCES games(id) ON DELETE CASCADE
-        );",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    // Tabela da Lista de Desejos (Wishlist)
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS wishlist (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            cover_url TEXT,
-            store_url TEXT,
-            store_platform TEXT,
-            current_price REAL,
-            normal_price REAL,
-            lowest_price REAL,
-            currency TEXT,
-            on_sale BOOLEAN DEFAULT 0,
-            voucher TEXT,
-            added_at TEXT,
-            itad_id TEXT
-        );",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    // === ÍNDICES OTIMIZADOS ===
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_favorite ON games(favorite)",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_platform ON games(platform)",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_wishlist_added ON wishlist(added_at)",
-        [],
-    )
-    .map_err(|e| e.to_string())?;
-
-    Ok("Banco de jogos inicializado com sucesso!".to_string())
+    Ok("Banco de dados verificado e atualizado.".to_string())
 }
 
 // === BANCO DE DADOS PARA GERENCIAMENTO DE API KEYS (secrets.db) ===

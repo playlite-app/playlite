@@ -12,3 +12,4 @@ pub mod metadata_unified;
 pub mod rawg;
 pub mod recommendation;
 pub mod steam;
+mod steam_test;

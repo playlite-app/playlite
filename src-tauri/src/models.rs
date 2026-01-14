@@ -3,6 +3,7 @@
 //! Define structs para jogos, wishlist, perfil do usuário e sistema de erros.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Jogo na biblioteca do usuário.
@@ -53,34 +54,59 @@ pub struct Game {
 /// **Nota:** os campos são opcionais, pois nem todos os jogos terão metadados completos disponíveis.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameDetails {
-    pub game_id: String, // FK -> Game.id
+    pub game_id: String,
+    pub steam_app_id: Option<String>,
 
-    // Conectores Extras
-    pub steam_app_id: Option<String>, // Steam App ID (se disponível)
-
-    // Dados Descritivos
+    // === Metadados Básicos ===
     pub description: Option<String>,
     pub developer: Option<String>,
     pub publisher: Option<String>,
     #[serde(rename = "releaseDate")]
     pub release_date: Option<String>,
+
+    // === Categorização ===
     pub genres: Option<String>,
-    pub tags: Option<String>, // "Open World, Sci-fi"
+    pub tags: Option<String>,
     pub series: Option<String>,
+
+    // === NOVO: Classificação e Conteúdo Adulto ===
+    // Substitui o antigo age_rating simples por flags detalhadas
     #[serde(rename = "ageRating")]
-    pub age_rating: Option<String>, // "PEGI 18", "ESRB M"
+    pub age_rating: Option<String>, // Mantido para retrocompatibilidade
+    #[serde(rename = "isAdult")]
+    pub is_adult: bool, // Novo: Flag direta para filtro
+    #[serde(rename = "adultTags")]
+    pub adult_tags: Option<String>, // JSON ou CSV: "Nudity, Gore"
 
-    // Mídia Offline (Hero/Banner)
+    // === Mídia ===
     #[serde(rename = "backgroundImage")]
-    pub background_image: Option<String>, // Caminho local
+    pub background_image: Option<String>,
 
-    // Ratings
+    // === Scores e Reviews ===
     #[serde(rename = "criticScore")]
-    pub critic_score: Option<i32>, // Crítica especializada
-    #[serde(rename = "usersScore")]
-    pub users_score: Option<f32>, // Steam reviews
+    pub critic_score: Option<i32>, // Metacritic
 
-    // Links
+    // Score legado de usuários (mantido para compatibilidade)
+    #[serde(rename = "usersScore")]
+    pub users_score: Option<f32>,
+
+    // NOVO: Steam Reviews (muito mais detalhado que users_score simples)
+    #[serde(rename = "steamReviewLabel")]
+    pub steam_review_label: Option<String>, // "Very Positive"
+    #[serde(rename = "steamReviewCount")]
+    pub steam_review_count: Option<i32>, // 12450
+    #[serde(rename = "steamReviewScore")]
+    pub steam_review_score: Option<f32>, // % de positivos (0-100)
+    #[serde(rename = "steamReviewUpdatedAt")]
+    pub steam_review_updated_at: Option<String>, // Timestamp da última atualização
+
+    // === NOVO: Links Centralizados ===
+    // A UI deve preferir iterar sobre isso ao invés de buscar campos fixos
+    #[serde(rename = "externalLinks")]
+    pub external_links: Option<HashMap<String, String>>,
+
+    // Campos legados de URL (Mantidos para não quebrar frontend IMEDIATAMENTE)
+    // No futuro, o frontend deve ler apenas de external_links
     #[serde(rename = "websiteUrl")]
     pub website_url: Option<String>,
     #[serde(rename = "igdbUrl")]
@@ -90,13 +116,17 @@ pub struct GameDetails {
     #[serde(rename = "pcgamingwikiUrl")]
     pub pcgamingwiki_url: Option<String>,
 
-    // HLTB
+    // === Tempo de Jogo (HLTB + SteamSpy) ===
     #[serde(rename = "hltbMainStory")]
-    pub hltb_main_story: Option<i32>, // Duração da história principal
+    pub hltb_main_story: Option<i32>,
     #[serde(rename = "hltbMainExtra")]
-    pub hltb_main_extra: Option<i32>, // História + extras
+    pub hltb_main_extra: Option<i32>,
     #[serde(rename = "hltbCompletionist")]
-    pub hltb_completionist: Option<i32>, // 100% conclusão
+    pub hltb_completionist: Option<i32>,
+
+    // NOVO: Mediana do SteamSpy (backup para quando HLTB falhar)
+    #[serde(rename = "medianPlaytime")]
+    pub median_playtime: Option<i32>,
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.

@@ -38,6 +38,22 @@ pub struct RawgGenre {
     pub name: String,
 }
 
+// === NOVAS STRUCTS PARA LOJAS ===
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StoreInfo {
+    pub id: i32,
+    pub name: String,
+    pub slug: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StoreWrapper {
+    pub id: i32,
+    pub url: String,
+    pub store: StoreInfo,
+}
+// ===============================
+
 /// Detalhes completos de um jogo na RAWG.
 ///
 /// Inclui informações expandidas como descrição, metacritic score, desenvolvedoras e tags.
@@ -59,6 +75,14 @@ pub struct GameDetails {
     pub developers: Vec<RawgDeveloper>,
     #[serde(default)]
     pub publishers: Vec<RawgPublisher>,
+    #[serde(default)]
+    pub reddit_url: Option<String>, // <--- ADICIONAR ESTE
+    #[serde(default)]
+    pub metacritic_url: Option<String>, // <--- ADICIONAR ESTE,
+
+    // === CAMPO NOVO ===
+    #[serde(default)]
+    pub stores: Vec<StoreWrapper>, // Lista de lojas onde o jogo vende
 }
 
 /// Representação básica de um jogo na RAWG.
@@ -75,6 +99,7 @@ pub struct RawgGame {
     pub genres: Vec<RawgGenre>,
     #[serde(default)]
     pub tags: Vec<RawgTag>,
+    pub slug: String,
 }
 
 /// Resposta da API RAWG para listagens de jogos.
