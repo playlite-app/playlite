@@ -3,6 +3,7 @@ import {
   Calendar,
   Clock,
   Gamepad2,
+  Hourglass,
   ListCheck,
   Star,
   Tag,
@@ -42,24 +43,40 @@ export function GameSidebar({
         </h3>
 
         <div className="grid grid-cols-2 gap-4">
+          {/* Card 1: Tempo Real Jogado */}
           <div className="bg-card rounded-lg border p-4 shadow-sm">
             <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-              Tempo Jogado
+              Você Jogou
             </span>
             <div className="flex items-center gap-2 font-mono text-xl font-bold">
               <Clock size={20} className="text-muted-foreground/70" />
               {formatTime(game.playtime)}
             </div>
           </div>
-          <div className="bg-card rounded-lg border p-4 shadow-sm">
-            <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-              Status
-            </span>
-            <div className="flex items-center gap-2 text-base font-medium">
-              <TrendingUp size={20} className="text-muted-foreground/70" />
-              {game.playtime === 0 ? 'Backlog' : 'Jogando'}
+
+          {/* Card 2: Estimativa (SteamSpy) - NOVO! */}
+          {details?.medianPlaytime ? (
+            <div className="bg-card rounded-lg border p-4 shadow-sm">
+              <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
+                Tempo Médio
+              </span>
+              <div className="flex items-center gap-2 font-mono text-xl font-bold">
+                <Hourglass size={20} className="text-muted-foreground/70" />
+                {details.medianPlaytime}h
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Fallback se não tiver estimativa: Mostra Status */
+            <div className="bg-card rounded-lg border p-4 shadow-sm">
+              <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
+                Status
+              </span>
+              <div className="flex items-center gap-2 text-base font-medium">
+                <TrendingUp size={20} className="text-muted-foreground/70" />
+                {game.playtime === 0 ? 'Backlog' : 'Jogando'}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
