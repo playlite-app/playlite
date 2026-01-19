@@ -15,9 +15,9 @@ pub struct Game {
     pub id: String,
     pub name: String,
     #[serde(rename = "coverUrl")]
-    pub cover_url: Option<String>, // Caminho local
-    pub genres: Option<String>,    // Para o subtítulo do Card
-    pub developer: Option<String>, // Para o Card
+    pub cover_url: Option<String>,
+    pub genres: Option<String>,
+    pub developer: Option<String>,
 
     // Identificação
     pub platform: String,
@@ -36,31 +36,41 @@ pub struct Game {
     #[serde(rename = "userRating")]
     pub user_rating: Option<i32>,
     pub favorite: bool,
-    pub status: Option<String>, // "completed", "playing", "backlog", etc.
+    pub status: Option<String>,
 
     // Metadados de Tempo
     pub playtime: Option<i32>,
     #[serde(rename = "lastPlayed")]
-    pub last_played: Option<String>, // ISO 8601 UTC
+    pub last_played: Option<String>,
     #[serde(rename = "addedAt")]
-    pub added_at: String, // ISO 8601 UTC
+    pub added_at: String,
 }
 
-/// Detalhes adicionais do jogo.
+/// Detalhes adicionais do jogo (Schema v3).
 ///
-/// Armazena metadados importados de APIs externas
-/// (IGDB, RAWG, HLTB) para exibição na interface do usuário.
+/// **Campos removidos:**
+/// - HLTB (hltb_main_story, hltb_main_extra, hltb_completionist)
+/// - URLs legadas (website_url, igdb_url, rawg_url, pcgamingwiki_url)
+/// - users_score (substituído por steam_review_*)
+/// - age_rating (substituído por esrb_rating, is_adult, adult_tags)
 ///
-/// **Nota:** os campos são opcionais, pois nem todos os jogos terão metadados completos disponíveis.
+/// **Campos mantidos/novos:**
+/// - external_links: HashMap JSON com todos os links externos
+/// - steam_review_*: Dados completos de reviews da Steam
+/// - is_adult + adult_tags: Sistema de filtragem de conteúdo
+/// - median_playtime: Tempo médio via SteamSpy
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameDetails {
+    #[serde(rename = "gameId")]
     pub game_id: String,
+
+    #[serde(rename = "steamAppId")]
     pub steam_app_id: Option<String>,
 
     // === Metadados Básicos ===
-    pub description: Option<String>,
     pub developer: Option<String>,
     pub publisher: Option<String>,
+
     #[serde(rename = "releaseDate")]
     pub release_date: Option<String>,
 
@@ -69,97 +79,87 @@ pub struct GameDetails {
     pub tags: Option<String>,
     pub series: Option<String>,
 
-    // === NOVO: Classificação e Conteúdo Adulto ===
-    // Substitui o antigo age_rating simples por flags detalhadas
-    #[serde(rename = "ageRating")]
-    pub age_rating: Option<String>, // Mantido para retrocompatibilidade
-    #[serde(rename = "isAdult")]
-    pub is_adult: bool, // Novo: Flag direta para filtro
-    #[serde(rename = "adultTags")]
-    pub adult_tags: Option<String>, // JSON ou CSV: "Nudity, Gore"
+    // === Descrição ===
+    #[serde(rename = "descriptionRaw")]
+    pub description_raw: Option<String>,
+
+    #[serde(rename = "descriptionPtbr")]
+    pub description_ptbr: Option<String>,
 
     // === Mídia ===
     #[serde(rename = "backgroundImage")]
     pub background_image: Option<String>,
 
-    // === Scores e Reviews ===
+    // === Scores ===
     #[serde(rename = "criticScore")]
     pub critic_score: Option<i32>, // Metacritic
 
-    // Score legado de usuários (mantido para compatibilidade)
-    #[serde(rename = "usersScore")]
-    pub users_score: Option<f32>,
-
-    // NOVO: Steam Reviews (muito mais detalhado que users_score simples)
+    // === Steam Reviews (substitui users_score) ===
     #[serde(rename = "steamReviewLabel")]
-    pub steam_review_label: Option<String>, // "Very Positive"
-    #[serde(rename = "steamReviewCount")]
-    pub steam_review_count: Option<i32>, // 12450
-    #[serde(rename = "steamReviewScore")]
-    pub steam_review_score: Option<f32>, // % de positivos (0-100)
-    #[serde(rename = "steamReviewUpdatedAt")]
-    pub steam_review_updated_at: Option<String>, // Timestamp da última atualização
+    pub steam_review_label: Option<String>, // "Very Positive", "Mixed", etc.
 
-    // === NOVO: Links Centralizados ===
-    // A UI deve preferir iterar sobre isso ao invés de buscar campos fixos
+    #[serde(rename = "steamReviewCount")]
+    pub steam_review_count: Option<i32>,
+
+    #[serde(rename = "steamReviewScore")]
+    pub steam_review_score: Option<f32>, // Porcentagem de positivos (0-100)
+
+    #[serde(rename = "steamReviewUpdatedAt")]
+    pub steam_review_updated_at: Option<String>,
+
+    // === Conteúdo Adulto (substitui age_rating) ===
+    #[serde(rename = "esrbRating")]
+    pub esrb_rating: Option<String>, // "E", "T", "M", etc.
+
+    #[serde(rename = "isAdult")]
+    pub is_adult: bool,
+
+    #[serde(rename = "adultTags")]
+    pub adult_tags: Option<String>, // Nudity, Gore, Sexual Content, etc.
+
+    // === Links Externos (substitui URLs individuais) ===
     #[serde(rename = "externalLinks")]
     pub external_links: Option<HashMap<String, String>>,
+    // Exemplo: {"website": "...", "steam": "...", "rawg": "...", "reddit": "..."}
 
-    // Campos legados de URL (Mantidos para não quebrar frontend IMEDIATAMENTE)
-    // No futuro, o frontend deve ler apenas de external_links
-    #[serde(rename = "websiteUrl")]
-    pub website_url: Option<String>,
-    #[serde(rename = "igdbUrl")]
-    pub igdb_url: Option<String>,
-    #[serde(rename = "rawgUrl")]
-    pub rawg_url: Option<String>,
-    #[serde(rename = "pcgamingwikiUrl")]
-    pub pcgamingwiki_url: Option<String>,
-
-    // === Tempo de Jogo (HLTB + SteamSpy) ===
-    #[serde(rename = "hltbMainStory")]
-    pub hltb_main_story: Option<i32>,
-    #[serde(rename = "hltbMainExtra")]
-    pub hltb_main_extra: Option<i32>,
-    #[serde(rename = "hltbCompletionist")]
-    pub hltb_completionist: Option<i32>,
-
-    // NOVO: Mediana do SteamSpy (backup para quando HLTB falhar)
+    // === Tempo de Jogo (substitui HLTB) ===
     #[serde(rename = "medianPlaytime")]
-    pub median_playtime: Option<i32>,
+    pub median_playtime: Option<i32>, // Mediana do SteamSpy em horas
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.
-///
-/// Armazena jogos que o usuário deseja comprar.
-/// Preços são atualizados sob demanda com `refresh_prices()`.
-/// Busca de preços são feitas por meio de consultas a ITAD API (IsThereAnyDeal).
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WishlistGame {
     pub id: String,
     pub name: String,
+
     #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
 
-    // Controle de Loja
     #[serde(rename = "storeUrl")]
     pub store_url: Option<String>,
-    #[serde(rename = "storePlatform")]
-    pub store_platform: Option<String>, // steam, epic, etc.
-    #[serde(rename = "itadId")]
-    pub itad_id: Option<String>, // ID do jogo na ITAD para buscar preços
 
-    // Preços
+    #[serde(rename = "storePlatform")]
+    pub store_platform: Option<String>,
+
+    #[serde(rename = "itadId")]
+    pub itad_id: Option<String>,
+
     #[serde(rename = "currentPrice")]
-    pub current_price: Option<f64>, // Preço atual
+    pub current_price: Option<f64>,
+
     #[serde(rename = "normalPrice")]
-    pub normal_price: Option<f64>, // Preço base
+    pub normal_price: Option<f64>,
+
     #[serde(rename = "lowestPrice")]
-    pub lowest_price: Option<f64>, // Menor preço histórico (ITAD)
+    pub lowest_price: Option<f64>,
+
     #[serde(rename = "currency")]
     pub currency: Option<String>,
+
     #[serde(rename = "onSale")]
     pub on_sale: bool,
+
     pub voucher: Option<String>,
 
     #[serde(rename = "addedAt")]
@@ -167,24 +167,14 @@ pub struct WishlistGame {
 }
 
 /// Erros tipados da aplicação para tratamento granular.
-///
-/// Usado internamente no Rust. É serializado para JSON quando enviado ao frontend.
-/// O atributo `#[serde(tag = "type")]` gera `{"type": "DatabaseError", "message": "..."}`.
-///
-/// **Nota:** implementa `From<rusqlite::Error>` para conversão automática de erros.
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
 #[serde(tag = "type", content = "message")]
 pub enum AppError {
-    /// Erro em operações SQLite (leitura, escrita, constraints)
     DatabaseError(String),
-    /// Dados inválidos fornecidos pelo usuário (ex: API key vazia)
     ValidationError(String),
-    /// Falha em chamadas HTTP (Steam/RAWG API timeout, 401, 500, etc.)
     NetworkError(String),
-    /// Recurso solicitado não existe (jogo, secret, etc.)
     NotFound(String),
-    /// Falha ao adquirir lock em recurso compartilhado (raro)
     MutexError,
 }
 
@@ -209,9 +199,6 @@ impl From<rusqlite::Error> for AppError {
 }
 
 /// Pontuação de gênero no perfil do usuário.
-///
-/// Usado para calcular gênero favorito baseado em tempo jogado e quantidade
-/// de jogos. O algoritmo de score considera tanto variedade quanto dedicação.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GenreScore {
     pub name: String,
@@ -221,19 +208,19 @@ pub struct GenreScore {
 }
 
 /// Perfil agregado do usuário com estatísticas da biblioteca.
-///
-/// Gerado sob demanda analisando todos os jogos na biblioteca.
-/// Usado para exibir dashboard e recomendações personalizadas.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserProfile {
     #[serde(rename = "topGenres")]
     pub top_genres: Vec<GenreScore>,
+
     #[serde(rename = "totalPlaytime")]
     pub total_playtime: i32,
+
     #[serde(rename = "totalGames")]
     pub total_games: i32,
 }
 
+/// Token OAuth com informações de expiração.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OAuthToken {
     pub access_token: String,
@@ -241,6 +228,7 @@ pub struct OAuthToken {
     pub expires_at: u64,
 }
 
+/// Verifica se o token OAuth expirou.
 impl OAuthToken {
     pub fn is_expired(&self) -> bool {
         let now = SystemTime::now()

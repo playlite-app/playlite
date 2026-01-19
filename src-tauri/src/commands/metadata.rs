@@ -14,7 +14,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
-// ... (Structs ImportSummary e EnrichProgress permanecem iguais)
+// === ESTRUTURAS ===
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
     #[serde(rename = "successCount")]
@@ -34,6 +34,8 @@ struct EnrichProgress {
     last_game: String,
     status: String,
 }
+
+// === FUNÇÕES AUXILIARES ===
 
 fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
@@ -69,8 +71,19 @@ fn extract_steam_id_from_url(url: &str) -> Option<String> {
     None
 }
 
+// === COMANDOS PRINCIPAIS ===
+
+/// Atualiza metadados de jogos faltantes via RAWG e Steam.
+///
+/// Utiliza uma estratégia híbrida para maximizar a cobertura:
+/// 1. Tenta buscar dados na RAWG primeiro.
+/// 2. Se disponível, tenta extrair o Steam ID via RAWG.
+/// 3. Se tiver Steam ID (nativo ou extraído), busca dados adicionais na Steam.
+///
+/// Atualiza o banco de dados em lotes assíncronos, emitindo progresso via eventos.
+/// Continua até que todos os jogos sem detalhes sejam processados.
 #[tauri::command]
-pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
+pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
     let api_key = get_api_key(&app).unwrap_or_default();
     let has_rawg = !api_key.is_empty();
@@ -107,7 +120,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
             };
 
             if games_to_update.is_empty() {
-                let _ = app_handle.emit("enrich_complete", "Todos os jogos atualizados!");
+                let _ = app_handle.emit("update_complete", "Todos os jogos atualizados!");
                 break;
             }
 
@@ -117,7 +130,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 games_to_update.into_iter().enumerate()
             {
                 let _ = app_handle.emit(
-                    "enrich_progress",
+                    "update_progress",
                     EnrichProgress {
                         current: (index + 1) as i32,
                         total_found: total_in_batch as i32,
@@ -129,7 +142,8 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 let series_name = series::infer_series(&name);
 
                 // Variáveis para preenchimento
-                let mut description = String::new();
+                let mut description_raw: Option<String> = None;
+                let description_ptbr: Option<String> = None;
                 let mut release_date: Option<String> = None;
                 let mut genres_str = String::new();
                 let mut tags_str = String::new();
@@ -137,10 +151,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 let mut publisher: Option<String> = None;
                 let mut critic_score: Option<i32> = None;
                 let mut background: Option<String> = None;
-                let mut website_url: Option<String> = None;
-                let igdb_url: Option<String> = None;
-                let mut rawg_url_legacy: Option<String> = None;
-                let pcgamingwiki_url: Option<String> = None;
+                let esrb_rating: Option<String> = None;
 
                 // Variáveis Steam (Reviews e Adult Content)
                 let mut is_adult = false;
@@ -153,7 +164,8 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 let mut links_map: HashMap<String, String> = HashMap::new();
 
                 // === ESTRATÉGIA DE STEAM ID ===
-                // Tentamos descobrir o Steam ID de duas formas:
+
+                // Tenta obter o Steam ID de duas formas:
                 // 1. Se o jogo já for da plataforma Steam (temos o ID nativo)
                 // 2. Se a RAWG nos der um link para a loja Steam
                 let mut target_steam_id = if platform.to_lowercase() == "steam" {
@@ -172,7 +184,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                                         .await
                                 {
                                     // Preenchimento Básico
-                                    description = details.description_raw.unwrap_or_default();
+                                    description_raw = details.description_raw;
                                     release_date = details.released;
                                     genres_str = details
                                         .genres
@@ -195,7 +207,6 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                                         .or(best_match.background_image.clone());
 
                                     // Links
-                                    website_url = details.website.clone();
                                     if let Some(url) = &details.website {
                                         links_map.insert("website".to_string(), url.clone());
                                     }
@@ -208,11 +219,10 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
 
                                     let r_url =
                                         format!("https://rawg.io/games/{}", best_match.slug);
-                                    links_map.insert("rawg".to_string(), r_url.clone());
-                                    rawg_url_legacy = Some(r_url);
+                                    links_map.insert("rawg".to_string(), r_url);
 
                                     // === TENTATIVA DE DESCOBRIR STEAM ID VIA RAWG ===
-                                    // Se ainda não temos ID (jogo Epic/Manual), olhamos nas lojas da RAWG
+
                                     if target_steam_id.is_none() {
                                         for store_data in &details.stores {
                                             if store_data.store.slug == "steam" {
@@ -239,6 +249,7 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 }
 
                 // === BUSCA NA STEAM (Se tivermos um ID, independente da origem) ===
+
                 if let Some(steam_id) = &target_steam_id {
                     // Garante que o link da Steam esteja no mapa se viemos da importação nativa
                     if !links_map.contains_key("steam") {
@@ -259,8 +270,8 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                             }
 
                             // Fallbacks se RAWG falhou
-                            if description.is_empty() {
-                                description = store_data.short_description;
+                            if description_raw.is_none() {
+                                description_raw = Some(store_data.short_description);
                             }
                             if release_date.is_none() {
                                 release_date = store_data.release_date;
@@ -289,8 +300,6 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                     }
                 }
 
-                // Dentro do loop do enrich_library, após buscar reviews:
-
                 // C. Tempo Médio (SteamSpy)
                 if let Some(steam_id) = &target_steam_id {
                     match steam::get_median_playtime(steam_id).await {
@@ -309,46 +318,44 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
                 }
 
                 // === SALVAR NO BANCO ===
+
                 let links_json = if !links_map.is_empty() {
                     serde_json::to_string(&links_map).ok()
                 } else {
                     None
                 };
 
-                // (Query de INSERT OR REPLACE permanece igual à versão anterior)
                 {
                     let conn = state.library_db.lock().unwrap();
                     let _ = conn.execute(
                         "INSERT OR REPLACE INTO game_details (
-                            game_id, description, release_date, genres, tags,
-                            developer, publisher, critic_score, website_url,
-                            background_image, rawg_url, igdb_url, pcgamingwiki_url, series,
+                            game_id, description_raw, description_ptbr, release_date, genres, tags,
+                            developer, publisher, critic_score, background_image, series,
                             steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-                            is_adult, adult_tags, external_links, steam_app_id
-                         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)",
+                            esrb_rating, is_adult, adult_tags, external_links, steam_app_id, median_playtime
+                         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
                         params![
                             game_id,
-                            description,
+                            description_raw,
+                            description_ptbr,
                             release_date,
                             genres_str,
                             tags_str,
                             developer,
                             publisher,
                             critic_score,
-                            website_url,
                             background,
-                            rawg_url_legacy,
-                            igdb_url,
-                            pcgamingwiki_url,
                             series_name,
                             steam_review_label,
                             steam_review_count,
                             steam_review_score,
                             steam_review_updated_at,
+                            esrb_rating,
                             is_adult,
                             adult_tags_json,
                             links_json,
-                            target_steam_id // Salvamos o ID descoberto no banco também!
+                            target_steam_id,
+                            None::<i32> // median_playtime será preenchido depois via SteamSpy
                         ],
                     );
 
@@ -367,8 +374,10 @@ pub async fn enrich_library(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-// Substituir fetch_missing_covers completo:
-
+/// Busca capas faltantes via RAWG e atualiza o banco de dados.
+///
+/// Processa jogos em lotes assíncronos, emitindo progresso via eventos.
+/// Continua até que todos os jogos sem capa sejam processados.
 #[tauri::command]
 pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
@@ -460,7 +469,7 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-// === Proxies do Frontend (Mantidos) ===
+// === PROXIES DO FRONTEND ===
 
 #[tauri::command]
 pub async fn fetch_game_details(

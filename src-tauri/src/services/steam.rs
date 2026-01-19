@@ -3,19 +3,15 @@
 //! Unifica funcionalidades da API de Usuário (autenticada) para importar biblioteca
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
+use crate::constants::{REVIEW_API_URL, STEAMSPY_API_URL, STEAM_STORE_API_URL};
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::Duration;
 
-// === CONSTANTES ===
-const STORE_API_URL: &str = "https://store.steampowered.com/api/appdetails";
-const REVIEW_API_URL: &str = "https://store.steampowered.com/appreviews";
+// === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA (Requer API Key) ===
 
-// =========================================================================
-// PARTE 1: API DE USUÁRIO (Requer API Key) - Importação de Biblioteca
-// =========================================================================
-
+/// Representa um jogo retornado pela API GetOwnedGames da Steam.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SteamGame {
     pub appid: u32,
@@ -58,10 +54,9 @@ pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<Steam
     Ok(api_data.response.games)
 }
 
-// =========================================================================
-// PARTE 2: API DA LOJA (Pública) - Metadados, Reviews e Conteúdo Adulto
-// =========================================================================
+//  === API DA LOJA - METADADOS, REVIEWS E CONTEÚDO ADULTO (Pública) ===
 
+/// Detalhes da loja Steam para um aplicativo (jogo).
 #[derive(Debug, Clone)]
 pub struct SteamStoreData {
     pub name: String,
@@ -103,13 +98,19 @@ pub struct SteamReviewSummary {
     pub total_reviews: u32,
 }
 
+#[derive(Debug, Deserialize)]
+struct SteamSpyResponse {
+    median_forever: u32,
+}
+
 /// Busca detalhes da loja (Conteúdo adulto, descrição, imagens)
+///
 /// Retorna Option porque o jogo pode não existir na loja (removido/banido).
 pub async fn get_app_details(app_id: &str) -> Result<Option<SteamStoreData>, String> {
     // Filtramos apenas os campos necessários para economizar banda
     let url = format!(
         "{}?appids={}&l=brazilian&filters=basic,content_descriptors,categories,genres,release_date",
-        STORE_API_URL, app_id
+        STEAM_STORE_API_URL, app_id
     );
 
     let response = HTTP_CLIENT
@@ -314,16 +315,6 @@ pub fn detect_adult_content(data: &SteamStoreData) -> (bool, Vec<String>) {
     flags.dedup();
 
     (is_adult, flags)
-}
-
-// Adicionar ao final do arquivo steam.rs
-
-const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
-
-#[derive(Debug, Deserialize)]
-struct SteamSpyResponse {
-    median_forever: u32,
-    average_forever: u32,
 }
 
 /// Busca tempo médio de jogo no SteamSpy (em minutos)

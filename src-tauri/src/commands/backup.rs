@@ -101,17 +101,12 @@ pub async fn import_database(
     // Prepared Statement para Details (ATUALIZADO COM NOVOS CAMPOS)
     let mut details_stmt = conn.prepare(
         "INSERT OR REPLACE INTO game_details (
-            game_id, steam_app_id, description, developer, publisher, release_date,
-            genres, tags, series, age_rating, background_image, critic_score, users_score,
-            website_url, igdb_url, rawg_url, pcgamingwiki_url, hltb_main_story,
-            hltb_main_extra, hltb_completionist,
-            steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-            is_adult, adult_tags, external_links, median_playtime
-        )
-         VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20,
-            ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28
-         )"
+        game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
+        description_raw, description_ptbr, background_image, critic_score, steam_review_label,
+        steam_review_count, steam_review_score, steam_review_updated_at, esrb_rating, is_adult,
+        adult_tags, external_links, median_playtime
+    )
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)"
     ).map_err(|e| e.to_string())?;
 
     let mut wishlist_stmt = conn.prepare(
@@ -140,7 +135,7 @@ pub async fn import_database(
             .map_err(|e| e.to_string())?;
     }
 
-    // Loop Details (ATUALIZADO)
+    // Loop Details
     for detail in &backup.game_details {
         // Serializa o HashMap de links para JSON String antes de salvar
         let links_json = detail
@@ -152,29 +147,21 @@ pub async fn import_database(
             .execute(params![
                 detail.game_id,
                 detail.steam_app_id,
-                detail.description,
                 detail.developer,
                 detail.publisher,
                 detail.release_date,
                 detail.genres,
                 detail.tags,
                 detail.series,
-                detail.age_rating,
+                detail.description_raw,
+                detail.description_ptbr,
                 detail.background_image,
                 detail.critic_score,
-                detail.users_score,
-                detail.website_url,
-                detail.igdb_url,
-                detail.rawg_url,
-                detail.pcgamingwiki_url,
-                detail.hltb_main_story,
-                detail.hltb_main_extra,
-                detail.hltb_completionist,
-                // Novos Campos v2.0
                 detail.steam_review_label,
                 detail.steam_review_count,
                 detail.steam_review_score,
-                detail.steam_review_updated_at, // Adicionado conforme sua correção
+                detail.steam_review_updated_at,
+                detail.esrb_rating,
                 detail.is_adult,
                 detail.adult_tags,
                 links_json, // JSON String
@@ -213,6 +200,9 @@ pub async fn import_database(
     ))
 }
 
+/// Busca todos os jogos na biblioteca
+///
+/// Retorna um vetor de `Game` ou um erro em formato de string.
 fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
     let mut stmt = conn
         .prepare("SELECT id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at FROM games")
@@ -245,6 +235,61 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Busca todos os detalhes dos jogos na biblioteca
+///
+/// Retorna um vetor de `GameDetails` ou um erro em formato de string.
+fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+            game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
+            description_raw, description_ptbr, background_image, critic_score,
+            steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
+            esrb_rating, is_adult, adult_tags, external_links, median_playtime
+         FROM game_details",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let details_iter = stmt
+        .query_map([], |row| {
+            // Deserializa JSON string para HashMap
+            let links_json: Option<String> = row.get(19)?;
+            let external_links = links_json.and_then(|s| serde_json::from_str(&s).ok());
+
+            Ok(GameDetails {
+                game_id: row.get(0)?,
+                steam_app_id: row.get(1)?,
+                developer: row.get(2)?,
+                publisher: row.get(3)?,
+                release_date: row.get(4)?,
+                genres: row.get(5)?,
+                tags: row.get(6)?,
+                series: row.get(7)?,
+                description_raw: row.get(8)?,
+                description_ptbr: row.get(9)?,
+                background_image: row.get(10)?,
+                critic_score: row.get(11)?,
+                steam_review_label: row.get(12)?,
+                steam_review_count: row.get(13)?,
+                steam_review_score: row.get(14)?,
+                steam_review_updated_at: row.get(15)?,
+                esrb_rating: row.get(16)?,
+                is_adult: row.get(17).unwrap_or(false),
+                adult_tags: row.get(18)?,
+                external_links, // Mapeado acima
+                median_playtime: row.get(20)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    details_iter
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
+}
+
+/// Busca todos os jogos da wishlist
+///
+/// Retorna um vetor de `WishlistGame` ou um erro em formato de string.
 fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, String> {
     let mut stmt = conn
         .prepare("SELECT id, name, cover_url, store_url, store_platform, itad_id, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at FROM wishlist")
@@ -270,66 +315,6 @@ fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, Stri
         .map_err(|e| e.to_string())?;
 
     wishlist_iter
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())
-}
-
-// ATUALIZADO: fetch_game_details com novos campos
-fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, String> {
-    let mut stmt = conn
-        .prepare(
-            "SELECT
-            game_id, steam_app_id, description, developer, publisher, release_date,
-            genres, tags, series, age_rating, background_image, critic_score, users_score,
-            website_url, igdb_url, rawg_url, pcgamingwiki_url, hltb_main_story,
-            hltb_main_extra, hltb_completionist,
-            steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-            is_adult, adult_tags, external_links, median_playtime
-         FROM game_details",
-        )
-        .map_err(|e| e.to_string())?;
-
-    let details_iter = stmt
-        .query_map([], |row| {
-            // Deserializa JSON string para HashMap
-            let links_json: Option<String> = row.get(26)?;
-            let external_links = links_json.and_then(|s| serde_json::from_str(&s).ok());
-
-            Ok(GameDetails {
-                game_id: row.get(0)?,
-                steam_app_id: row.get(1)?,
-                description: row.get(2)?,
-                developer: row.get(3)?,
-                publisher: row.get(4)?,
-                release_date: row.get(5)?,
-                genres: row.get(6)?,
-                tags: row.get(7)?,
-                series: row.get(8)?,
-                age_rating: row.get(9)?,
-                background_image: row.get(10)?,
-                critic_score: row.get(11)?,
-                users_score: row.get(12)?,
-                website_url: row.get(13)?,
-                igdb_url: row.get(14)?,
-                rawg_url: row.get(15)?,
-                pcgamingwiki_url: row.get(16)?,
-                hltb_main_story: row.get(17)?,
-                hltb_main_extra: row.get(18)?,
-                hltb_completionist: row.get(19)?,
-                // Novos campos mapeados por índice
-                steam_review_label: row.get(20)?,
-                steam_review_count: row.get(21)?,
-                steam_review_score: row.get(22)?,
-                steam_review_updated_at: row.get(23)?,
-                is_adult: row.get(24)?,
-                adult_tags: row.get(25)?,
-                external_links, // Mapeado acima
-                median_playtime: row.get(27)?,
-            })
-        })
-        .map_err(|e| e.to_string())?;
-
-    details_iter
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())
 }

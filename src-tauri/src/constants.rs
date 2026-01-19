@@ -7,6 +7,8 @@ pub const STEAM_STORE_API_URL: &str = "https://store.steampowered.com/api/appdet
 #[allow(dead_code)]
 pub const STEAM_PLAYER_API_URL: &str =
     "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001";
+pub(crate) const REVIEW_API_URL: &str = "https://store.steampowered.com/appreviews";
+pub(crate) const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
 #[allow(dead_code)]
 pub const RAWG_API_URL: &str = "https://api.rawg.io/api/games";
 

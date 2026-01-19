@@ -10,7 +10,7 @@ use crate::utils::http_client::HTTP_CLIENT;
 use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 
-// === Estruturas de Dados ===
+// === ESTRUTURAS DE DADOS PRINCIPAIS ===
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RawgTag {
@@ -38,7 +38,7 @@ pub struct RawgGenre {
     pub name: String,
 }
 
-// === NOVAS STRUCTS PARA LOJAS ===
+/// Informações sobre a loja onde o jogo está disponível.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoreInfo {
     pub id: i32,
@@ -46,13 +46,34 @@ pub struct StoreInfo {
     pub slug: String,
 }
 
+/// Wrapper para informações de loja com URL específica do jogo.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoreWrapper {
     pub id: i32,
     pub url: String,
     pub store: StoreInfo,
 }
-// ===============================
+
+/// Resposta da API RAWG para listagens de jogos.
+#[derive(Debug, Deserialize, Serialize)]
+struct RawgResponse {
+    results: Vec<RawgGame>,
+}
+
+/// Representação básica de um jogo na RAWG.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RawgGame {
+    pub id: u32,
+    pub name: String,
+    #[serde(rename(deserialize = "background_image", serialize = "backgroundImage"))]
+    pub background_image: Option<String>,
+    pub rating: f32,
+    pub released: Option<String>,
+    pub genres: Vec<RawgGenre>,
+    #[serde(default)]
+    pub tags: Vec<RawgTag>,
+    pub slug: String,
+}
 
 /// Detalhes completos de um jogo na RAWG.
 ///
@@ -76,39 +97,14 @@ pub struct GameDetails {
     #[serde(default)]
     pub publishers: Vec<RawgPublisher>,
     #[serde(default)]
-    pub reddit_url: Option<String>, // <--- ADICIONAR ESTE
+    pub reddit_url: Option<String>,
     #[serde(default)]
-    pub metacritic_url: Option<String>, // <--- ADICIONAR ESTE,
-
-    // === CAMPO NOVO ===
+    pub metacritic_url: Option<String>,
     #[serde(default)]
-    pub stores: Vec<StoreWrapper>, // Lista de lojas onde o jogo vende
+    pub stores: Vec<StoreWrapper>,
 }
 
-/// Representação básica de um jogo na RAWG.
-///
-/// Contém informações essenciais para listagens e busca.
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RawgGame {
-    pub id: u32,
-    pub name: String,
-    #[serde(rename(deserialize = "background_image", serialize = "backgroundImage"))]
-    pub background_image: Option<String>,
-    pub rating: f32,
-    pub released: Option<String>,
-    pub genres: Vec<RawgGenre>,
-    #[serde(default)]
-    pub tags: Vec<RawgTag>,
-    pub slug: String,
-}
-
-/// Resposta da API RAWG para listagens de jogos.
-#[derive(Debug, Deserialize, Serialize)]
-struct RawgResponse {
-    results: Vec<RawgGame>,
-}
-
-// === Funções de API ===
+// === FUNÇÕES DE API ===
 
 /// Busca jogos por texto (Nome, Série, etc).
 ///

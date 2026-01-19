@@ -82,7 +82,7 @@ pub fn run() {
             // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
             // Comandos de Importação de Metadados
-            commands::metadata::enrich_library,
+            commands::metadata::update_metadata,
             commands::metadata::fetch_missing_covers,
             commands::metadata::get_trending_games,
             commands::metadata::get_upcoming_games,

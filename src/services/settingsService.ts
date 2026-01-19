@@ -46,7 +46,7 @@ export const settingsService = {
    * Os dados são usados para o sistema de recomendação.
    */
   enrichLibrary: async (): Promise<ImportSummary> => {
-    return await invoke<ImportSummary>('enrich_library');
+    return await invoke<ImportSummary>('update_metadata');
   },
 
   /**

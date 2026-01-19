@@ -5,6 +5,7 @@
 //! - `http_client`: Cliente HTTP configurado com timeout e headers padrão.
 //! - `logger`: Configuração e inicialização do sistema de logging.
 //! - `oauth`: Funções auxiliares para autenticação OAuth.
+//! - `series`: Funções auxiliares para manipulação de séries de jogos.
 
 pub mod game_logic;
 pub mod http_client;

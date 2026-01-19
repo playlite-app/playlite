@@ -60,7 +60,6 @@ fn validate_input(game: &GameInput) -> Result<(), String> {
         }
         // Validação básica de URL
         if !url_str.starts_with("http") && !url_str.starts_with("asset://") {
-            // Aceita asset:// para imagens locais na v2.0
             let url = Url::parse(url_str).map_err(|_| "URL inválida.")?;
             if url.scheme() != "http" && url.scheme() != "https" {
                 return Err("A URL deve ser HTTP, HTTPS ou Asset local.".to_string());
@@ -136,8 +135,7 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 
     conn.execute(
         "INSERT INTO games (
-            id, name, cover_url, platform, platform_id,
-            install_path, executable_path, launch_args,
+            id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args,
             user_rating, status, playtime, added_at
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
@@ -221,10 +219,9 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     let mut stmt = conn
         .prepare(
             "SELECT
-            g.id, g.name, g.cover_url, g.platform, g.platform_id,
-            g.install_path, g.executable_path, g.launch_args,
-            g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
-            gd.genres, gd.developer -- Campos da outra tabela
+            g.id, g.name, g.cover_url, g.platform, g.platform_id, g.install_path, g.executable_path,
+            g.launch_args, g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
+            gd.genres, gd.developer -- Campos da tabela game_details
          FROM games g
          LEFT JOIN game_details gd ON g.id = gd.game_id",
         )
@@ -258,6 +255,11 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
     Ok(games)
 }
 
+/// Recupera detalhes adicionais de um jogo na biblioteca.
+///
+/// Busca na tabela 'game_details' usando o game_id fornecido.
+/// Usado para obter informações adicionais sobre o jogo que serão exibidas na ‘interface’.
+/// Retorna None se não houver detalhes para o jogo.
 #[tauri::command]
 pub fn get_library_game_details(
     state: State<AppState>,
@@ -265,68 +267,45 @@ pub fn get_library_game_details(
 ) -> Result<Option<models::GameDetails>, String> {
     let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
 
-    // Query busca todas as colunas da tabela game_details
     let mut stmt = conn
         .prepare(
             "SELECT
-            game_id, steam_app_id, description, developer, publisher,
-            release_date, genres, tags, series, age_rating, background_image,
-            critic_score, users_score, website_url, igdb_url, rawg_url,
-            pcgamingwiki_url, hltb_main_story, hltb_main_extra, hltb_completionist,
-            steam_review_label, steam_review_count, steam_review_score,
-            steam_review_updated_at, is_adult, adult_tags, external_links,
-            median_playtime
-         FROM game_details
-         WHERE game_id = ?1",
+                game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
+                description_raw, description_ptbr, background_image, critic_score,
+                steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
+                esrb_rating, is_adult, adult_tags, external_links, median_playtime
+             FROM game_details
+             WHERE game_id = ?1",
         )
         .map_err(|e| e.to_string())?;
 
     let mut rows = stmt
         .query_map(params![game_id], |row| {
-            // Helper para deserializar JSON do campo external_links
-            let links_json: Option<String> = row.get("external_links").ok();
+            let links_json: Option<String> = row.get(19)?; // external_links
             let external_links = links_json.and_then(|json| serde_json::from_str(&json).ok());
 
             Ok(models::GameDetails {
-                game_id: row.get("game_id")?,
-                steam_app_id: row.get("steam_app_id").ok(),
-                description: row.get("description").ok(),
-                developer: row.get("developer").ok(),
-                publisher: row.get("publisher").ok(),
-                release_date: row.get("release_date").ok(),
-                genres: row.get("genres").ok(),
-                tags: row.get("tags").ok(),
-                series: row.get("series").ok(),
-                age_rating: row.get("age_rating").ok(),
-                background_image: row.get("background_image").ok(),
-                critic_score: row.get("critic_score").ok(),
-                users_score: row.get("users_score").ok(),
-
-                // URLs legadas (mantidas para compatibilidade)
-                website_url: row.get("website_url").ok(),
-                igdb_url: row.get("igdb_url").ok(),
-                rawg_url: row.get("rawg_url").ok(),
-                pcgamingwiki_url: row.get("pcgamingwiki_url").ok(),
-
-                // HowLongToBeat
-                hltb_main_story: row.get("hltb_main_story").ok(),
-                hltb_main_extra: row.get("hltb_main_extra").ok(),
-                hltb_completionist: row.get("hltb_completionist").ok(),
-
-                // === NOVOS CAMPOS v2.0 ===
-                steam_review_label: row.get("steam_review_label").ok(),
-                steam_review_count: row.get("steam_review_count").ok(),
-                steam_review_score: row.get("steam_review_score").ok(),
-                steam_review_updated_at: row.get("steam_review_updated_at").ok(),
-
-                // O unwrap_or(false) garante que se for NULL vire false
-                is_adult: row.get("is_adult").unwrap_or(false),
-                adult_tags: row.get("adult_tags").ok(),
-
-                // Campo JSON processado acima
+                game_id: row.get(0)?,
+                steam_app_id: row.get(1)?,
+                developer: row.get(2)?,
+                publisher: row.get(3)?,
+                release_date: row.get(4)?,
+                genres: row.get(5)?,
+                tags: row.get(6)?,
+                series: row.get(7)?,
+                description_raw: row.get(8)?,
+                description_ptbr: row.get(9)?,
+                background_image: row.get(10)?,
+                critic_score: row.get(11)?,
+                steam_review_label: row.get(12)?,
+                steam_review_count: row.get(13)?,
+                steam_review_score: row.get(14)?,
+                steam_review_updated_at: row.get(15)?,
+                esrb_rating: row.get(16)?,
+                is_adult: row.get(17).unwrap_or(false),
+                adult_tags: row.get(18)?,
                 external_links,
-
-                median_playtime: row.get("median_playtime").ok(),
+                median_playtime: row.get(20)?,
             })
         })
         .map_err(|e| e.to_string())?;
