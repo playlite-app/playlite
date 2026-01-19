@@ -39,6 +39,15 @@ function AppContent() {
   const [profileCache, setProfileCache] = useState<UserPreferenceVector | null>(
     null
   );
+  const [hideAdult, setHideAdult] = useState(() => {
+    return localStorage.getItem('playlite_hide_adult') === 'true';
+  });
+
+  const toggleAdultFilter = () => {
+    const newValue = !hideAdult;
+    setHideAdult(newValue);
+    localStorage.setItem('playlite_hide_adult', String(newValue));
+  };
 
   const { confirm } = useConfirm();
 
@@ -130,6 +139,7 @@ function AppContent() {
           <Libraries
             games={games}
             searchTerm={debouncedSearchTerm}
+            hideAdult={hideAdult}
             {...commonGameActions}
           />
         );
@@ -138,6 +148,7 @@ function AppContent() {
           <Favorites
             games={games}
             searchTerm={debouncedSearchTerm}
+            hideAdult={hideAdult}
             {...commonGameActions}
           />
         );
@@ -181,6 +192,8 @@ function AppContent() {
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           activeSection={activeSection}
+          hideAdult={hideAdult}
+          onToggleAdultFilter={toggleAdultFilter}
         />
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>

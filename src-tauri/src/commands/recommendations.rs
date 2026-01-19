@@ -19,8 +19,6 @@ pub struct GameRecommendation {
 }
 
 /// Retorna o perfil completo v2.0 com gêneros, tags e séries
-///
-/// Faz JOIN entre games e game_details para obter todos os dados necessários.
 #[tauri::command]
 pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, String> {
     let games = fetch_all_games_with_details(&state)?;
@@ -29,9 +27,6 @@ pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, 
 }
 
 /// Ranqueia jogos da biblioteca do usuário baseado em afinidade
-///
-/// Útil para Home/Playlist - recomenda jogos que o usuário
-/// já possui mas ainda não jogou muito.
 #[tauri::command]
 pub fn recommend_from_library(
     state: State<AppState>,
@@ -65,7 +60,7 @@ pub fn recommend_from_library(
         ranked.truncate(lim);
     }
 
-    // Converte para formato simplificado (só ID e score)
+    // Converte para formato simplificado
     let result: Vec<GameRecommendation> = ranked
         .into_iter()
         .map(|(game, score)| GameRecommendation {
@@ -78,14 +73,11 @@ pub fn recommend_from_library(
 }
 
 /// Calcula o score de afinidade de um jogo específico
-///
-/// Útil para exibir badges como "TOP PICK" ou "PARA VOCÊ" na interface.
 #[tauri::command]
 pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32, String> {
     let all_games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&all_games);
 
-    // Busca o jogo específico
     let game = all_games
         .into_iter()
         .find(|g| g.game.id == game_id)
@@ -98,22 +90,23 @@ pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32,
 // === HELPER FUNCTIONS - JOIN COM game_details ===
 
 /// Busca todos os jogos COM detalhes (JOIN com game_details)
-///
-/// Esta é a função crucial que monta GameWithDetails fazendo JOIN.
 fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithDetails>, String> {
     let conn = state
         .library_db
         .lock()
         .map_err(|_| "Falha ao bloquear mutex")?;
 
-    // SQL com LEFT JOIN para pegar game_details
     let mut stmt = conn
         .prepare(
             "SELECT
                 g.id, g.name, g.cover_url, d.developer, g.platform, g.platform_id,
                 g.install_path, g.executable_path, g.launch_args,
                 g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
-                d.genres, d.tags, d.series, d.release_date
+                COALESCE(d.is_adult, 0), -- 15: is_adult
+                d.genres,                -- 16: genres
+                d.tags,                  -- 17: tags
+                d.series,                -- 18: series
+                d.release_date           -- 19: release_date
              FROM games g
              LEFT JOIN game_details d ON g.id = d.game_id",
         )
@@ -139,10 +132,11 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
                 playtime: row.get(12)?,
                 last_played: row.get(13)?,
                 added_at: row.get(14)?,
+                is_adult: row.get(15)?,
             };
 
-            // Processa genres (string CSV → Vec)
-            let genres_str: Option<String> = row.get(15)?;
+            // Processa genres
+            let genres_str: Option<String> = row.get(16)?;
             let genres = genres_str
                 .as_ref()
                 .map(|s| {
@@ -153,8 +147,8 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
                 })
                 .unwrap_or_default();
 
-            // Processa tags (string CSV → Vec)
-            let tags_str: Option<String> = row.get(16)?;
+            // Processa tags
+            let tags_str: Option<String> = row.get(17)?;
             let tags = tags_str
                 .as_ref()
                 .map(|s| {
@@ -165,11 +159,11 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
                 })
                 .unwrap_or_default();
 
-            // Series (string direta)
-            let series: Option<String> = row.get(17)?;
+            // Series
+            let series: Option<String> = row.get(18)?;
 
-            // Release year (extrai ano da data ISO 8601)
-            let release_date: Option<String> = row.get(18)?;
+            // Release year
+            let release_date: Option<String> = row.get(19)?;
             let release_year = release_date.as_ref().and_then(|d| parse_release_year(d));
 
             Ok(GameWithDetails {

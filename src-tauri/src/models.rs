@@ -44,6 +44,10 @@ pub struct Game {
     pub last_played: Option<String>,
     #[serde(rename = "addedAt")]
     pub added_at: String,
+
+    // Conteúdo Adulto
+    #[serde(default, rename = "isAdult")]
+    pub is_adult: bool,
 }
 
 /// Detalhes adicionais do jogo (Schema v3).

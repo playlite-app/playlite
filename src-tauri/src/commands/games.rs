@@ -221,9 +221,10 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
             "SELECT
             g.id, g.name, g.cover_url, g.platform, g.platform_id, g.install_path, g.executable_path,
             g.launch_args, g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
-            gd.genres, gd.developer -- Campos da tabela game_details
+            gd.genres, gd.developer, COALESCE(gd.is_adult, 0) as is_adult -- Campos da tabela game_details
          FROM games g
-         LEFT JOIN game_details gd ON g.id = gd.game_id",
+         LEFT JOIN game_details gd ON g.id = gd.game_id
+         ORDER BY g.name ASC"
         )
         .map_err(|e| e.to_string())?;
 
@@ -246,6 +247,7 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
                 added_at: row.get(13)?,
                 genres: row.get(14)?,
                 developer: row.get(15)?,
+                is_adult: row.get(16)?,
             })
         })
         .map_err(|e| e.to_string())?

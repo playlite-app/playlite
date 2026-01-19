@@ -12,28 +12,32 @@ import { launchGame } from '../utils/launcher';
 interface LibraryProps extends GameActions {
   games: Game[];
   searchTerm: string;
+  hideAdult?: boolean;
 }
 
 export default function Libraries({
   games,
   searchTerm,
+  hideAdult,
   ...actions
 }: LibraryProps) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
-  // Filtra os jogos com base no termo de busca
+  // Filtra os jogos com base no termo de busca e no filtro adulto
   const displayedGames = useMemo(() => {
-    if (!searchTerm) return games;
+    const safeGames = hideAdult ? games.filter(game => !game.isAdult) : games;
+
+    if (!searchTerm) return safeGames;
 
     const term = searchTerm.toLowerCase();
 
-    return games.filter(
+    return safeGames.filter(
       game =>
         game.name.toLowerCase().includes(term) ||
         (game.genres && game.genres.toLowerCase().includes(term)) ||
         (game.platform && game.platform.toLowerCase().includes(term))
     );
-  }, [games, searchTerm]);
+  }, [games, hideAdult, searchTerm]);
 
   // Empty state
   if (displayedGames.length === 0) {

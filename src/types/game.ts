@@ -30,6 +30,8 @@ export interface Game {
   playtime?: number;
   lastPlayed?: string;
   addedAt: string;
+
+  isAdult: boolean;
 }
 
 /**

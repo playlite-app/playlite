@@ -207,6 +207,7 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
     let mut stmt = conn
         .prepare("SELECT id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at FROM games")
         .map_err(|e| e.to_string())?;
+
     let game_iter = stmt
         .query_map([], |row| {
             Ok(Game {
@@ -226,6 +227,7 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, String> {
                 playtime: row.get(11)?,
                 last_played: row.get(12)?,
                 added_at: row.get(13)?,
+                is_adult: false,
             })
         })
         .map_err(|e| e.to_string())?;

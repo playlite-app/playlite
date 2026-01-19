@@ -1,5 +1,6 @@
 import { Moon, Plus, Search, Sun } from 'lucide-react';
 
+import { AdultFilterToggle } from '@/components/AdultFilterToggle'; // Importe o componente
 import { Button } from '@/components/ui/button';
 
 import { useTheme } from '../hooks/useTheme';
@@ -9,6 +10,8 @@ interface HeaderProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   activeSection: string;
+  hideAdult: boolean;
+  onToggleAdultFilter: () => void;
 }
 
 export default function Header({
@@ -16,6 +19,8 @@ export default function Header({
   searchTerm,
   onSearchChange,
   activeSection,
+  hideAdult,
+  onToggleAdultFilter,
 }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
 
@@ -64,6 +69,14 @@ export default function Header({
           <Plus size={18} />
           <span className="ml-1 hidden md:inline">Adicionar</span>
         </Button>
+
+        {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
+        {isSearchable && (
+          <AdultFilterToggle
+            hideAdult={hideAdult}
+            onToggle={onToggleAdultFilter}
+          />
+        )}
 
         <Button
           onClick={toggleTheme}

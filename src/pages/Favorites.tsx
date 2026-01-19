@@ -12,30 +12,35 @@ import { launchGame } from '../utils/launcher';
 interface FavoritesProps extends GameActions {
   games: Game[];
   searchTerm: string;
+  hideAdult?: boolean;
 }
 
 export default function Favorites({
   games,
   searchTerm,
+  hideAdult,
   ...actions
 }: FavoritesProps) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
-  // Filtra os jogos favoritos com base no termo de busca
+  // Filtra os jogos favoritos com base no termo de busca e filtro adulto
   const displayedGames = useMemo(() => {
     const favorites = games.filter(g => g.favorite);
+    const safeFavorites = hideAdult
+      ? favorites.filter(game => !game.isAdult)
+      : favorites;
 
-    if (!searchTerm) return favorites;
+    if (!searchTerm) return safeFavorites;
 
     const term = searchTerm.toLowerCase();
 
-    return favorites.filter(
+    return safeFavorites.filter(
       game =>
         game.name.toLowerCase().includes(term) ||
         (game.genres && game.genres.toLowerCase().includes(term)) ||
         (game.platform && game.platform.toLowerCase().includes(term))
     );
-  }, [games, searchTerm]);
+  }, [games, hideAdult, searchTerm]);
 
   // Empty state
   if (displayedGames.length === 0) {
