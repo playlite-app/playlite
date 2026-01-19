@@ -101,6 +101,8 @@ pub fn run() {
             commands::recommendations::get_user_profile,
             commands::recommendations::recommend_from_library,
             commands::recommendations::get_game_affinity,
+            // Comando de Tradução de Descrição via Gemini
+            commands::ai_translation::translate_description,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

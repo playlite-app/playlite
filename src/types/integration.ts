@@ -13,8 +13,7 @@ export interface KeysBatch {
   steamId: string;
   steamApiKey: string;
   rawgApiKey: string;
-  igdbClientId: string;
-  igdbClientSecret: string;
+  geminiApiKey?: string;
 }
 
 export interface ImportSummary {

@@ -9,6 +9,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     steamId: '',
     steamApiKey: '',
     rawgApiKey: '',
+    geminiApiKey: '',
   });
 
   const [loading, setLoading] = useState({
@@ -41,6 +42,7 @@ export function useSettings(onLibraryUpdate: () => void) {
           steamId: data.steamId || '',
           steamApiKey: data.steamApiKey || '',
           rawgApiKey: data.rawgApiKey || '',
+          geminiApiKey: data.geminiApiKey || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -125,6 +127,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         steamId: keys.steamId.trim() || null,
         steamApiKey: keys.steamApiKey.trim() || null,
         rawgApiKey: keys.rawgApiKey.trim() || null,
+        geminiApiKey: keys.geminiApiKey.trim() || null,
       });
       setStatus({
         type: 'success',

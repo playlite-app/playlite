@@ -36,16 +36,16 @@ export function SteamReviewBadge({
 
   return (
     <div
-      className={`flex flex-col gap-1 rounded border px-3 py-2 ${colorClass}`}
+      className={`flex flex-col gap-1 rounded-lg border px-3 py-2 ${colorClass}`}
     >
       <div className="flex items-center gap-2">
-        <Icon size={16} />
-        <span className="text-xs font-bold tracking-wide uppercase">
+        <Icon size={18} />
+        <span className="text-sm font-bold tracking-wide uppercase">
           {label}
         </span>
       </div>
       {count && (
-        <div className="flex justify-between font-mono text-[10px] opacity-80">
+        <div className="flex justify-between font-mono text-xs opacity-80">
           <span>{count.toLocaleString()} reviews</span>
           {score && <span>{Math.round(score)}%</span>}
         </div>

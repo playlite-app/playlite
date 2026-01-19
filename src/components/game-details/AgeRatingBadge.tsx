@@ -8,8 +8,8 @@ interface AgeRatingProps {
 export function AgeRatingBadge({ esrb, isAdult }: AgeRatingProps) {
   if (isAdult) {
     return (
-      <div className="mb-2 flex w-full items-center justify-center gap-1.5 rounded border border-red-500/50 bg-red-500/10 px-2 py-1 text-[10px] font-bold text-red-400">
-        <AlertTriangle size={12} />
+      <div className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-500/50 bg-red-500/10 px-2 py-1 text-sm font-bold text-red-400">
+        <AlertTriangle size={18} />
         <span>CONTEÚDO ADULTO (+18)</span>
       </div>
     );

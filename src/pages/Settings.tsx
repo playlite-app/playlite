@@ -4,10 +4,12 @@ import {
   CloudDownload,
   Database,
   Download,
+  ExternalLink,
   Gamepad2,
   Loader2,
   Save,
   Search,
+  Sparkles,
   Upload,
 } from 'lucide-react';
 import React from 'react';
@@ -207,7 +209,41 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: ZONA DE DADOS */}
+      {/* SEÇÃO 3: TRADUÇÃO COM IA */}
+      <section className="space-y-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+          Tradução com IA
+        </h3>
+
+        <SettingsRow
+          icon={Sparkles}
+          title="Google Gemini"
+          description="Usado para traduzir descrições dos jogos para Português."
+        >
+          <div className="grid gap-2">
+            <Input
+              type="password"
+              placeholder="Gemini API Key"
+              value={keys.geminiApiKey}
+              onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
+              className="bg-background/50"
+            />
+            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+              <span>Não tem uma chave?</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-0.5 text-blue-400 hover:underline"
+              >
+                Obter no Google AI Studio <ExternalLink size={10} />
+              </a>
+            </div>
+          </div>
+        </SettingsRow>
+      </section>
+
+      {/* SEÇÃO 4: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 

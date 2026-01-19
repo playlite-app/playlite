@@ -13,6 +13,7 @@ export const settingsService = {
     steamId: string | null;
     steamApiKey: string | null;
     rawgApiKey: string | null;
+    geminiApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
   },

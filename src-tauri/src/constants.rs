@@ -10,7 +10,8 @@ pub const STEAM_PLAYER_API_URL: &str =
 pub(crate) const REVIEW_API_URL: &str = "https://store.steampowered.com/appreviews";
 pub(crate) const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
 #[allow(dead_code)]
-pub const RAWG_API_URL: &str = "https://api.rawg.io/api/games";
+pub(crate) const GEMINI_API_URL: &str =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 // Valores padrão
 #[allow(dead_code)]
