@@ -29,6 +29,7 @@ pub const RAWG_RATE_LIMIT_MS: u64 = 1000;
 pub const RAWG_REQUISITIONS_PER_BATCH: u32 = 20;
 #[allow(dead_code)]
 pub const RAWG_PAGE_SIZE: u32 = 15;
+pub const STEAMSPY_RATE_LIMIT_MS: u64 = 1000;
 
 // Configuração de banco de dados
 #[allow(dead_code)]

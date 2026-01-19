@@ -38,6 +38,13 @@ pub struct RawgGenre {
     pub name: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EsrbRating {
+    pub id: i32,
+    pub name: String,
+    pub slug: String,
+}
+
 /// Informações sobre a loja onde o jogo está disponível.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StoreInfo {
@@ -102,6 +109,8 @@ pub struct GameDetails {
     pub metacritic_url: Option<String>,
     #[serde(default)]
     pub stores: Vec<StoreWrapper>,
+    #[serde(default)]
+    pub esrb_rating: Option<EsrbRating>,
 }
 
 // === FUNÇÕES DE API ===
