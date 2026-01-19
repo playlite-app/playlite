@@ -1,3 +1,10 @@
+/**
+ * Informações básicas do jogo - Schema 2.0
+ *
+ * Dados básicos armazenados no banco de dados local.
+ * Esses dados são essenciais para a exibição e gerenciamento dos jogos na biblioteca.
+ * Também incluem campos para execução e dados do usuário.
+ */
 export interface Game {
   id: string;
   name: string;
@@ -26,42 +33,41 @@ export interface Game {
 }
 
 /**
- * Detalhes adicionais do jogo - Schema 2.0
+ * Detalhes adicionais do jogo - Schema 3.0
  *
  * Metadados enriquecidos armazenados no banco de dados local,
- * provenientes de APIs externas (RAWG, HLTB).
+ * provenientes de APIs externas (RAWG, STEAM).
  */
 export interface GameDetails {
-  // Conectores Extras
+  gameId: string;
   steamAppId?: string;
 
-  // Dados Descritivos
-  description?: string;
+  // Metadados
+  descriptionRaw?: string;
+  descriptionPtbr?: string;
+  releaseDate?: string;
   developer?: string;
   publisher?: string;
-  releaseDate?: string;
   genres?: string;
-  tags?: string; // String separada por vírgulas
+  tags?: string;
   series?: string;
-  ageRating?: string;
-
-  // Mídia
   backgroundImage?: string;
 
-  // Avaliações
-  criticScore?: number;
-  usersScore?: number;
+  // Scores & Reviews
+  criticScore?: number; // Metacritic
+  steamReviewLabel?: string; // "Very Positive"
+  steamReviewCount?: number;
+  steamReviewScore?: number; // % (0-100)
+  steamReviewUpdatedAt?: string;
 
-  // Links Externos
-  websiteUrl?: string;
-  igdbUrl?: string;
-  rawgUrl?: string;
-  pcgamingwikiUrl?: string;
+  // Classificação & Conteúdo
+  esrbRating?: string; // "Mature", "Teen", etc.
+  isAdult?: boolean;
+  adultTags?: string;
 
-  // HowLongToBeat
-  hltbMainStory?: number;
-  hltbMainExtra?: number;
-  hltbCompletionist?: number;
+  // Links & Tempo
+  externalLinks?: Record<string, string>; // { "steam": "url", "website": "url" }
+  medianPlaytime?: number; // Horas (SteamSpy)
 }
 
 export interface GamePlatformLink {

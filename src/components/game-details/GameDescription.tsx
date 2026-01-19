@@ -25,7 +25,7 @@ export function GameDescription({ details, loading }: GameDescriptionProps) {
         </div>
       ) : details ? (
         <div className="text-foreground/85 text-sm leading-relaxed whitespace-pre-line lg:text-base">
-          {details.description ||
+          {details.descriptionRaw ||
             'Nenhuma descrição fornecida pelo desenvolvedor.'}
         </div>
       ) : (

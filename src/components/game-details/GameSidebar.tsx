@@ -3,7 +3,6 @@ import {
   Calendar,
   Clock,
   Gamepad2,
-  Globe,
   ListCheck,
   Star,
   Tag,
@@ -15,7 +14,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Game, GameDetails, GamePlatformLink } from '@/types/game';
-import { formatTime } from '@/utils/formatTime.ts';
+import { formatTime } from '@/utils/formatTime';
+
+import { AgeRatingBadge } from './AgeRatingBadge';
+import { GameLinks } from './GameLinks';
+import { SteamReviewBadge } from './SteamReviewBadge';
 
 interface GameSidebarProps {
   game: Game;
@@ -31,187 +34,105 @@ export function GameSidebar({
   onSwitchGame,
 }: GameSidebarProps) {
   return (
-    <div className="space-y-5 p-5 lg:space-y-6 lg:p-6 xl:p-8">
-      <div className="space-y-3">
-        {/* Seção 1: Dados do Usuário */}
-        <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
-          <Trophy size={16} className="text-primary" /> Seus Dados
+    <div className="space-y-8 p-6 lg:p-8">
+      {/* 1. SEÇÃO DO USUÁRIO */}
+      <div className="space-y-4">
+        <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
+          <Trophy size={18} className="text-primary" /> Seus Dados
         </h3>
 
-        {/* Card Responsivo */}
-        <div className="hidden grid-cols-2 gap-3 xl:grid">
-          <div className="bg-card rounded-lg border p-3 shadow-sm">
-            <span className="text-muted-foreground mb-1 block text-xs">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-card rounded-lg border p-4 shadow-sm">
+            <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
               Tempo Jogado
             </span>
-            <div className="flex items-center gap-1.5 font-mono text-lg font-semibold">
-              <Clock size={16} className="text-muted-foreground" />
+            <div className="flex items-center gap-2 font-mono text-xl font-bold">
+              <Clock size={20} className="text-muted-foreground/70" />
               {formatTime(game.playtime)}
             </div>
           </div>
-          <div className="bg-card rounded-lg border p-3 shadow-sm">
-            <span className="text-muted-foreground mb-1 block text-xs">
+          <div className="bg-card rounded-lg border p-4 shadow-sm">
+            <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
               Status
             </span>
-            <div className="flex items-center gap-1.5 text-sm font-medium">
-              <TrendingUp size={16} className="text-muted-foreground" />
-              {game.playtime === 0 ? 'Nunca Jogado' : 'Em Progresso'}
+            <div className="flex items-center gap-2 text-base font-medium">
+              <TrendingUp size={20} className="text-muted-foreground/70" />
+              {game.playtime === 0 ? 'Backlog' : 'Jogando'}
             </div>
-          </div>
-        </div>
-
-        {/* Versão Mobile/Pequena */}
-        <div className="space-y-2 xl:hidden">
-          <div className="border-border/50 flex justify-between border-b py-2">
-            <span className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Clock size={16} /> Tempo Jogado
-            </span>
-            <span className="font-mono text-sm font-semibold">
-              {game.playtime}h
-            </span>
-          </div>
-          <div className="border-border/50 flex justify-between border-b py-2">
-            <span className="text-muted-foreground flex items-center gap-2 text-sm">
-              <TrendingUp size={16} /> Status
-            </span>
-            <span className="flex items-center gap-1 text-sm font-medium">
-              {game.playtime === 0 ? 'Nunca Jogado' : 'Em Progresso'}
-            </span>
           </div>
         </div>
       </div>
 
-      {/* Seção 2: Detalhes Técnicos */}
-      <div className="space-y-2 lg:space-y-3">
-        <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
-          <ListCheck size={16} /> Detalhes
-        </h3>
-        <div className="space-y-2">
-          {/* Gênero */}
-          <div className="border-border/50 flex justify-between border-b py-2">
-            <span className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Gamepad2 size={16} /> Gênero
-            </span>
-            <span className="max-w-[50%] truncate text-sm font-medium">
-              {game.genres || 'N/A'}
-            </span>
-          </div>
+      {/* 2. SEÇÃO DE REVIEWS */}
+      {(details?.steamReviewLabel || details?.criticScore) && (
+        <div className="space-y-4">
+          <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
+            <Star size={18} /> Avaliação
+          </h3>
 
-          {/* Lançamento */}
-          {details?.releaseDate && (
-            <div className="border-border/50 flex justify-between border-b py-2">
-              <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Calendar size={16} /> Lançamento
-              </span>
-              <span className="text-sm font-medium">
-                {new Date(details.releaseDate).toLocaleDateString('pt-BR')}
-              </span>
-            </div>
-          )}
+          <SteamReviewBadge
+            label={details?.steamReviewLabel}
+            count={details?.steamReviewCount}
+            score={details?.steamReviewScore}
+          />
 
-          {/* Scores (Metascore e User) */}
           {details?.criticScore && (
-            <div className="border-border/50 flex items-center justify-between border-b py-2">
-              <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Star size={16} /> Metascore
+            <div className="flex items-center justify-between px-1 py-1">
+              <span className="text-muted-foreground text-sm font-medium">
+                Metascore
               </span>
               <Badge
                 variant="outline"
                 className={cn(
-                  'border-2 text-sm font-bold',
+                  'border-2 px-3 py-0.5 text-sm font-bold',
                   details.criticScore >= 75
-                    ? 'border-green-500/50 text-green-500'
+                    ? 'border-green-500/30 text-green-400'
                     : details.criticScore >= 50
-                      ? 'border-yellow-500/50 text-yellow-500'
-                      : 'border-red-500/50 text-red-500'
+                      ? 'border-yellow-500/30 text-yellow-400'
+                      : 'border-red-500/30 text-red-400'
                 )}
               >
                 {details.criticScore}
               </Badge>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Desenvolvedora e Série - Mesma lógica anterior */}
-          {details?.developer && (
-            <div className="border-border/50 flex justify-between border-b py-2">
-              <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Building2 size={16} /> Dev
-              </span>
-              <span className="max-w-[50%] truncate text-right text-sm font-medium">
-                {details.developer}
-              </span>
-            </div>
+      {/* 3. DETALHES TÉCNICOS */}
+      <div className="space-y-4">
+        <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
+          <ListCheck size={18} /> Detalhes
+        </h3>
+
+        <AgeRatingBadge esrb={details?.esrbRating} isAdult={details?.isAdult} />
+
+        <div className="space-y-2">
+          <DetailRow icon={Gamepad2} label="Gênero" value={game.genres} />
+
+          {details?.releaseDate && (
+            <DetailRow
+              icon={Calendar}
+              label="Lançamento"
+              value={new Date(details.releaseDate).toLocaleDateString('pt-BR')}
+            />
           )}
-          {details?.series && (
-            <div className="border-border/50 flex justify-between border-b py-2">
-              <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Gamepad2 size={16} /> Série
-              </span>
-              <span className="max-w-[50%] truncate text-right text-sm font-medium">
-                {details.series}
-              </span>
-            </div>
-          )}
-          {details?.ageRating && (
-            <div className="border-border/50 flex justify-between border-b py-2">
-              <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Trophy size={16} /> Classificação
-              </span>
-              <Badge variant="outline" className="text-xs font-medium">
-                {details.ageRating}
-              </Badge>
-            </div>
-          )}
+
+          <DetailRow icon={Building2} label="Dev" value={details?.developer} />
+          <DetailRow icon={Gamepad2} label="Série" value={details?.series} />
         </div>
       </div>
 
-      {/* Seção 3: Links */}
-      {(() => {
-        // Filtra apenas os links que existem
-        const links = [
-          { label: 'Site Oficial', url: details?.websiteUrl },
-          { label: 'IGDB', url: details?.igdbUrl },
-          { label: 'RAWG', url: details?.rawgUrl },
-          { label: 'PCGamingWiki', url: details?.pcgamingwikiUrl },
-        ].filter(link => link.url);
+      {/* 4. LINKS EXTERNOS (Filtragem está no componente GameLinks) */}
+      <GameLinks links={details?.externalLinks} />
 
-        // Se não houver nenhum link, não renderiza nada
-        if (links.length === 0) return null;
-
-        return (
-          <div className="space-y-2 lg:space-y-3">
-            <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
-              <Globe size={16} /> Links
-            </h3>
-            <div className="text-sm leading-relaxed font-medium">
-              {links.map((link, index) => (
-                <span key={link.label}>
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-foreground/80 hover:text-primary transition-colors hover:underline"
-                  >
-                    {link.label}
-                  </a>
-                  {/* Adiciona o ponto separador se não for o último item */}
-                  {index < links.length - 1 && (
-                    <span className="text-muted-foreground mx-2">•</span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Seção 4: Tags */}
+      {/* 5. TAGS */}
       {details?.tags && (
-        <div className="space-y-2 lg:space-y-3">
-          <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase lg:text-base">
-            <Tag size={16} /> Tags
+        <div className="space-y-3">
+          <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
+            <Tag size={18} /> Tags
           </h3>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {details.tags
               .split(',')
               .slice(0, 10)
@@ -219,7 +140,7 @@ export function GameSidebar({
                 <Badge
                   key={i}
                   variant="secondary"
-                  className="bg-secondary/50 hover:bg-secondary text-xs font-normal"
+                  className="bg-secondary/40 hover:bg-secondary px-2 py-0.5 text-xs font-medium"
                 >
                   {tag.trim()}
                 </Badge>
@@ -228,18 +149,20 @@ export function GameSidebar({
         </div>
       )}
 
-      {/* Seção 5: Siblings */}
+      {/* 6. OUTRAS PLATAFORMAS */}
       {siblings.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <span className="text-muted-foreground text-sm">Outras Versões:</span>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="border-border/40 space-y-3 border-t pt-4">
+          <span className="text-muted-foreground text-sm font-medium">
+            Outras Versões:
+          </span>
+          <div className="flex flex-wrap gap-2">
             {siblings.map(sib => (
               <Button
                 key={sib.id}
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => onSwitchGame(sib.id)}
-                className="h-8 text-xs"
+                className="border-border/50 h-8 border text-xs"
               >
                 {sib.platform}
               </Button>
@@ -247,6 +170,30 @@ export function GameSidebar({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Helper com fontes maiores
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value?: string;
+}) {
+  if (!value) return null;
+
+  return (
+    <div className="border-border/40 flex justify-between rounded border-b px-1 py-2.5 transition-colors last:border-0 hover:bg-white/5">
+      <span className="text-muted-foreground flex items-center gap-2 text-sm">
+        <Icon size={16} /> {label}
+      </span>
+      <span className="text-foreground/90 max-w-[60%] truncate text-right text-sm font-medium">
+        {value}
+      </span>
     </div>
   );
 }

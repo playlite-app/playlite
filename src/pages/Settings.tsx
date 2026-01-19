@@ -22,7 +22,6 @@ interface SettingsProps {
   onLibraryUpdate: () => void;
 }
 
-// Subcomponente para criar o visual "Microsoft Store Settings"
 const SettingsRow = ({
   icon: Icon,
   title,
@@ -66,6 +65,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
 
   return (
     <div className="custom-scrollbar flex-1 space-y-8 overflow-y-auto p-8 pb-24">
+      {/* HEADER E STATUS */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Configurações</h2>
@@ -74,7 +74,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </p>
         </div>
 
-        {/* Feedback Flutuante ou Fixo no topo */}
         {status.type && (
           <div
             className={`animate-in fade-in slide-in-from-top-2 flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${
@@ -141,14 +140,15 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </Button>
         </SettingsRow>
       </section>
-      {/* SEÇÃO 3: SISTEMA E DADOS */}
+
+      {/* SEÇÃO 2: METADADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
         {/* RAWG */}
         <SettingsRow
           icon={Search}
           title="RAWG.io"
-          description="Usado como fonte  de metadados, de jogos em alta e lançamentos próximos."
+          description="Usado como fonte de metadados, de jogos em alta e lançamentos próximos."
         >
           <Input
             type="password"
@@ -166,13 +166,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         >
           <div className="w-full space-y-2">
             <div className="flex gap-2">
-              {/*  Atualiza detalhes e descrição */}
+              {/* BOTÃO 1: Metadados (Usa loading.enriching) */}
               <Button
                 onClick={actions.enrichLibrary}
                 variant="secondary"
-                //className="w-full"
                 className="flex-1"
-                disabled={loading.enriching}
+                disabled={loading.enriching || loading.fetchingCovers}
               >
                 {loading.enriching ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -181,15 +180,15 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 )}
               </Button>
 
-              {/* Botão para baixar apenas capas faltantes */}
+              {/* BOTÃO 2: Capas (Usa loading.fetchingCovers) */}
               <Button
                 onClick={actions.fetchMissingCovers}
                 variant="outline"
                 className="flex-1"
-                disabled={loading.enriching}
+                disabled={loading.fetchingCovers || loading.enriching}
                 title="Busca apenas capas para jogos que estão sem imagem"
               >
-                {loading.enriching ? (
+                {loading.fetchingCovers ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   'Baixar Capas'
@@ -197,8 +196,8 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               </Button>
             </div>
 
-            {/* Feedback de Progresso */}
-            {loading.enriching && progress && (
+            {/* Feedback de Progresso (Mostra se QUALQUER um estiver rodando) */}
+            {(loading.enriching || loading.fetchingCovers) && progress && (
               <div className="text-muted-foreground animate-pulse text-center text-xs">
                 Processando: {progress.game} ({progress.current}/
                 {progress.total})
@@ -208,7 +207,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: SISTEMA E DADOS */}
+      {/* SEÇÃO 3: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 
@@ -223,7 +222,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             className="w-full bg-blue-600 text-white hover:bg-blue-700"
           >
             {loading.saving ? (
-              <Loader2 className="mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
@@ -247,7 +246,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Download className="mr-2 h-4 w-4" /> Exportar
+                  <Download className="mr-2 h-4 w-4" /> Importar
                 </>
               )}
             </Button>
@@ -261,7 +260,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Upload className="mr-2 h-4 w-4" /> Importar
+                  <Upload className="mr-2 h-4 w-4" /> Exportar
                 </>
               )}
             </Button>

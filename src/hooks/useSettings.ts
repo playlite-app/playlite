@@ -4,19 +4,6 @@ import { useEffect, useState } from 'react';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { settingsService } from '../services/settingsService';
 
-/**
- * Gerencia configurações, importações e backups do aplicativo.
- * Mantém API keys seguras e coordena operações de longa duração.
- * Mensagens de status desaparecem automaticamente após 5 segundos.
- *
- * @param onLibraryUpdate - Callback executado após importar biblioteca e dados.
- * @returns Objeto com:
- *   - keys: {steamId, steamApiKey, rawgApiKey, igdbClientId, igdbClientSecret}
- *   - setKeys: Atualiza state local (não salva automaticamente)
- *   - loading: Estados individuais para cada operação
- *   - status: {type: 'success'|'error'|null, message: string}
- *   - actions: {saveKeys, importLibrary, enrichLibrary, exportDatabase, importDatabase}
- */
 export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({
     steamId: '',
@@ -29,6 +16,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     saving: false,
     importing: false,
     enriching: false,
+    fetchingCovers: false,
     exporting: false,
     importingBackup: false,
     authenticating: false,
@@ -73,20 +61,29 @@ export function useSettings(onLibraryUpdate: () => void) {
           total: p.total_found,
           game: p.last_game,
         });
-        // Mantém loading true enquanto recebe eventos
-        setLoading(prev => ({ ...prev, enriching: true }));
+
+        const isCoverTask = p.last_game.startsWith('Capa:');
+
+        setLoading(prev => ({
+          ...prev,
+          enriching: !isCoverTask,
+          fetchingCovers: isCoverTask,
+        }));
       }
     );
 
-    // Ouve conclusão
     const unlistenComplete = listen('enrich_complete', () => {
-      setLoading(prev => ({ ...prev, enriching: false }));
+      setLoading(prev => ({
+        ...prev,
+        enriching: false,
+        fetchingCovers: false,
+      }));
       setProgress(null);
       setStatus({
         type: 'success',
-        message: 'Metadados atualizados com sucesso!',
+        message: 'Processo concluído com sucesso!',
       });
-      onLibraryUpdate(); // Atualiza a grid
+      onLibraryUpdate();
     });
 
     return () => {
@@ -99,9 +96,9 @@ export function useSettings(onLibraryUpdate: () => void) {
     if (status.type && status.message) {
       const timer = setTimeout(() => {
         setStatus({ type: null, message: '' });
-      }, 5000); // 5000ms = 5 segundos
+      }, 5000);
 
-      return () => clearTimeout(timer); // Limpa se o componente desmontar
+      return () => clearTimeout(timer);
     }
   }, [status]);
 
@@ -141,7 +138,6 @@ export function useSettings(onLibraryUpdate: () => void) {
   };
 
   const importLibrary = async () => {
-    /* Código original */
     if (!keys.steamId || !keys.steamApiKey) {
       setStatus({ type: 'error', message: 'Preencha as chaves da Steam.' });
 
@@ -166,12 +162,10 @@ export function useSettings(onLibraryUpdate: () => void) {
 
   const enrichLibrary = async () => {
     setLoading(prev => ({ ...prev, enriching: true }));
-    setStatus({ type: null, message: 'Iniciando serviço em segundo plano...' });
+    setStatus({ type: null, message: 'Iniciando atualização de metadados...' });
 
     try {
-      // Chama o comando (que agora retorna void instantaneamente)
       await settingsService.enrichLibrary();
-      // Não faz mais nada aqui, os eventos cuidarão do resto
     } catch (error) {
       setStatus({ type: 'error', message: String(error) });
       setLoading(prev => ({ ...prev, enriching: false }));
@@ -179,15 +173,14 @@ export function useSettings(onLibraryUpdate: () => void) {
   };
 
   const fetchMissingCovers = async () => {
-    setLoading(prev => ({ ...prev, enriching: true })); // Reusa o loading de enriquecimento
+    setLoading(prev => ({ ...prev, fetchingCovers: true }));
     setStatus({ type: null, message: 'Buscando capas faltantes...' });
 
     try {
       await settingsService.fetchMissingCovers();
-      // O listener de eventos cuidará do resto
     } catch (error) {
       setStatus({ type: 'error', message: String(error) });
-      setLoading(prev => ({ ...prev, enriching: false }));
+      setLoading(prev => ({ ...prev, fetchingCovers: false }));
     }
   };
 

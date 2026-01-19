@@ -14,7 +14,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
-// === ESTRUTURAS AUXILIARES ===
+// === ESTRUTURAS ===
 
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
@@ -33,7 +33,7 @@ struct EnrichProgress {
     status: String,
 }
 
-/// Estrutura intermediária para facilitar a passagem de dados entre o processamento e a persistência no banco.
+/// Estrutura intermediária
 struct ProcessedGameDetails {
     game_id: String,
     description_raw: Option<String>,
@@ -64,7 +64,6 @@ fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
 }
 
-/// Tenta extrair o Steam ID de uma URL da Steam.
 fn extract_steam_id_from_url(url: &str) -> Option<String> {
     if url.contains("store.steampowered.com/app/") {
         let parts: Vec<&str> = url.split("/app/").collect();
@@ -78,7 +77,7 @@ fn extract_steam_id_from_url(url: &str) -> Option<String> {
     None
 }
 
-// === LÓGICA CORE (Processamento de um único jogo) ===
+// === LÓGICA CORE ===
 
 /// Processa um único jogo: busca RAWG, infere Steam ID, busca Steam e monta o objeto final.
 async fn process_single_game(
@@ -243,6 +242,12 @@ async fn process_single_game(
         details.external_links = serde_json::to_string(&links_map).ok();
     }
 
+    // === LOG DE DEBUG ===
+    info!(
+        "Processado {}: ESRB={:?}, Playtime={:?}, SteamID={:?}",
+        name, details.esrb_rating, details.median_playtime, details.steam_app_id
+    );
+
     details
 }
 
@@ -280,7 +285,7 @@ fn save_game_details(
     Ok(())
 }
 
-// === COMANDO PRINCIPAL ===
+// === COMANDOS PRINCIPAIS ===
 
 /// Atualiza metadados de jogos na biblioteca.
 ///
@@ -323,7 +328,6 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
             };
 
             if games_to_update.is_empty() {
-                let _ = app_handle.emit("enrich_complete", "Todos os jogos atualizados!");
                 break;
             }
 
@@ -343,7 +347,6 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     },
                 );
 
-                // Processamento pesado (Network)
                 let processed_data = process_single_game(
                     &api_key,
                     has_rawg,
@@ -353,8 +356,6 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     platform_id,
                 )
                 .await;
-
-                // Persistência (DB Lock curto)
                 {
                     let conn = state.library_db.lock().unwrap();
                     if let Err(e) = save_game_details(&conn, processed_data) {
@@ -362,7 +363,6 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     }
                 }
 
-                // Rate limiting
                 if has_rawg {
                     sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
                 } else {
@@ -370,30 +370,17 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                 }
             }
         }
+
         info!("Metadata update concluído.");
+        let _ = app_handle.emit("enrich_complete", "Metadados atualizados!");
     });
 
     Ok(())
 }
 
-fn query_basic_games_batch(
-    conn: &rusqlite::Connection,
-    query: &str,
-    limit: u32,
-) -> Vec<(String, String)> {
-    let mut stmt = conn.prepare(query).unwrap();
-    let rows = stmt
-        .query_map(params![limit], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        })
-        .unwrap();
-    rows.flatten().collect()
-}
-
-/// Busca capas faltantes via RAWG e atualiza o banco de dados.
+/// Busca capas faltantes via RAWG.
 ///
-/// Processa jogos em lotes assíncronos, emitindo progresso via eventos.
-/// Continua até que todos os jogos sem capa sejam processados.
+/// Busca a lista de jogos SEM CAPA, e atualiza cada um que encontrar a capa na RAWG.
 #[tauri::command]
 pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
@@ -406,38 +393,33 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     tauri::async_runtime::spawn(async move {
         info!("Iniciando busca de capas faltantes...");
 
+        let state: State<AppState> = app_handle.state();
         let mut total_updated = 0;
         let mut total_failed = 0;
 
-        loop {
-            let state: State<AppState> = app_handle.state();
+        // 1. Busca TODOS os jogos que precisam de capa de uma vez
+        let games_without_cover: Vec<(String, String)> = {
+            let conn = state.library_db.lock().unwrap();
+            let mut stmt = conn
+                .prepare("SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = ''")
+                .unwrap();
 
-            let games_without_cover = {
-                let conn = state.library_db.lock().unwrap();
-                query_basic_games_batch(
-                    &conn,
-                    "SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = '' LIMIT ?",
-                    RAWG_REQUISITIONS_PER_BATCH,
-                )
-            };
+            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+                .unwrap()
+                .flatten()
+                .collect()
+        };
 
-            if games_without_cover.is_empty() {
-                let summary = format!(
-                    "Busca concluída! {} atualizadas, {} falharam",
-                    total_updated, total_failed
-                );
-                let _ = app_handle.emit("enrich_complete", summary);
-                break;
-            }
-
-            let batch_size = games_without_cover.len();
+        if !games_without_cover.is_empty() {
+            let count = games_without_cover.len();
 
             for (index, (game_id, name)) in games_without_cover.into_iter().enumerate() {
+                // Emite progresso com prefixo "Capa:" para o frontend identificar
                 let _ = app_handle.emit(
                     "enrich_progress",
                     EnrichProgress {
                         current: (index + 1) as i32,
-                        total_found: batch_size as i32,
+                        total_found: count as i32,
                         last_game: format!("Capa: {}", name),
                         status: "running".to_string(),
                     },
@@ -448,27 +430,23 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
                         if let Some(img) = results.first().and_then(|g| g.background_image.as_ref())
                         {
                             let conn = state.library_db.lock().unwrap();
-                            match conn.execute(
-                                "UPDATE games SET cover_url = ?1 WHERE id = ?2",
-                                params![img, game_id],
-                            ) {
-                                Ok(_) => {
-                                    total_updated += 1;
-                                    info!("Capa atualizada para: {}", name);
-                                }
-                                Err(e) => {
-                                    total_failed += 1;
-                                    warn!("Erro ao salvar capa de {}: {}", name, e);
-                                }
+                            if conn
+                                .execute(
+                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2",
+                                    params![img, game_id],
+                                )
+                                .is_ok()
+                            {
+                                total_updated += 1;
+                            } else {
+                                total_failed += 1;
                             }
                         } else {
                             total_failed += 1;
-                            warn!("Nenhuma capa encontrada para: {}", name);
                         }
                     }
-                    Err(e) => {
+                    Err(_) => {
                         total_failed += 1;
-                        warn!("Erro RAWG ao buscar {}: {}", name, e);
                     }
                 }
 
@@ -476,10 +454,12 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
             }
         }
 
+        // Emite o evento final
         info!(
             "Busca de capas finalizada: {} sucesso, {} falhas",
             total_updated, total_failed
         );
+        let _ = app_handle.emit("enrich_complete", "Busca de capas finalizada.");
     });
 
     Ok(())

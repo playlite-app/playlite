@@ -40,9 +40,9 @@ pub struct RawgGenre {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EsrbRating {
-    pub id: i32,
+    pub id: Option<i32>,
     pub name: String,
-    pub slug: String,
+    pub slug: Option<String>,
 }
 
 /// Informações sobre a loja onde o jogo está disponível.
@@ -139,33 +139,6 @@ pub async fn search_games(api_key: &str, query: &str) -> Result<Vec<RawgGame>, S
     Ok(data.results)
 }
 
-/// Busca os jogos mais populares do momento ('trending games').
-///
-/// Retorna até 20 jogos lançados entre o ano passado e o ano atual,
-/// ordenados por popularidade (adições recentes).
-pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
-    let current_year = chrono::Utc::now().year();
-    let last_year = current_year - 1;
-
-    let url = format!(
-        "https://api.rawg.io/api/games?key={}&dates={}-01-01,{}-12-31&ordering=-added&page_size=20",
-        api_key, last_year, current_year
-    );
-
-    let res = HTTP_CLIENT
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if !res.status().is_success() {
-        return Err(format!("Erro RAWG Trending: {}", res.status()));
-    }
-
-    let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
-    Ok(data.results)
-}
-
 /// Busca detalhes completos de um jogo específico.
 ///
 /// Converte o nome do jogo em slug (formato URL-friendly) e busca
@@ -202,6 +175,33 @@ pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDeta
     } else {
         Err(format!("Erro RAWG Details: {}", res.status()))
     }
+}
+
+/// Busca os jogos mais populares do momento ('trending games').
+///
+/// Retorna até 20 jogos lançados entre o ano passado e o ano atual,
+/// ordenados por popularidade (adições recentes).
+pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String> {
+    let current_year = chrono::Utc::now().year();
+    let last_year = current_year - 1;
+
+    let url = format!(
+        "https://api.rawg.io/api/games?key={}&dates={}-01-01,{}-12-31&ordering=-added&page_size=20",
+        api_key, last_year, current_year
+    );
+
+    let res = HTTP_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !res.status().is_success() {
+        return Err(format!("Erro RAWG Trending: {}", res.status()));
+    }
+
+    let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
+    Ok(data.results)
 }
 
 /// Busca jogos com lançamento futuro.

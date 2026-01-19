@@ -323,6 +323,7 @@ pub async fn get_median_playtime(app_id: &str) -> Result<Option<u32>, String> {
 
     let response = HTTP_CLIENT
         .get(&url)
+        .header("User-Agent", "Valve/Steam HTTP Client 1.0")
         .timeout(Duration::from_secs(5))
         .send()
         .await
@@ -332,13 +333,18 @@ pub async fn get_median_playtime(app_id: &str) -> Result<Option<u32>, String> {
         return Ok(None);
     }
 
-    let data: SteamSpyResponse = response
-        .json()
-        .await
-        .map_err(|_| "Falha ao parsear SteamSpy".to_string())?;
-
-    // SteamSpy retorna em minutos, converter para horas
-    let median_hours = data.median_forever / 60;
-
-    Ok(Some(median_hours))
+    // Tenta parsear. Se falhar (ex: jogo não trackeado), retorna None sem erro crítico
+    match response.json::<SteamSpyResponse>().await {
+        Ok(data) => {
+            // SteamSpy retorna em minutos, converter para horas
+            let median_hours = data.median_forever / 60;
+            // Filtra zeros (jogos sem dados ou nunca jogados)
+            if median_hours > 0 {
+                Ok(Some(median_hours))
+            } else {
+                Ok(None)
+            }
+        }
+        Err(_) => Ok(None),
+    }
 }
