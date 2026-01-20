@@ -1,7 +1,6 @@
 import { ImageOff, Star, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Game } from '@/types/game';
 
 interface GameHeaderProps {
@@ -59,7 +58,6 @@ export function GameHeader({ game, onClose }: GameHeaderProps) {
           </h2>
         </div>
       </div>
-      <Separator className="bg-primary/20 absolute right-0 bottom-0 left-0 h-0.5" />
     </div>
   );
 }
