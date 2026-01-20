@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
+import Achievements from '../components/Achievements';
 import { useHome } from '../hooks/useHome';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
@@ -181,7 +182,7 @@ export default function Home({
       <Separator className={'mb-3'} />
       {/* Conteúdo Principal da Home */}
       <div className="relative z-20 mx-auto max-w-7xl space-y-10 p-8">
-        {/* Stats Cards */}
+        {/* Stats Cards e Conquistas */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             icon={<Library size={24} />}
@@ -212,6 +213,7 @@ export default function Home({
             bg="bg-yellow-500/10"
           />
         </div>
+        <Achievements />
 
         {/* Continue Jogando */}
         {continuePlaying.length > 0 && (

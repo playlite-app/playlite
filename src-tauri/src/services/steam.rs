@@ -33,6 +33,36 @@ struct SteamApiResponse {
     response: SteamResponseData,
 }
 
+/// Representa uma conquista (achievement) de um jogo na Steam.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct SteamAchievement {
+    pub apiname: String,
+    pub achieved: i32,
+    pub unlocktime: i64,
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PlayerStats {
+    achievements: Option<Vec<SteamAchievement>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PlayerStatsResponse {
+    playerstats: PlayerStats,
+}
+
+#[derive(Debug, Deserialize)]
+struct RecentGamesResponse {
+    response: RecentGamesData,
+}
+
+#[derive(Debug, Deserialize)]
+struct RecentGamesData {
+    games: Option<Vec<SteamGame>>,
+}
+
 /// Lista todos os jogos da biblioteca de um usuário Steam.
 pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<SteamGame>, String> {
     let url = format!(
@@ -52,6 +82,60 @@ pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<Steam
 
     let api_data: SteamApiResponse = res.json().await.map_err(|e| format!("JSON Error: {}", e))?;
     Ok(api_data.response.games)
+}
+
+/// Busca jogos jogados nas últimas 2 semanas
+pub async fn get_recently_played_games(
+    api_key: &str,
+    steam_id: &str,
+) -> Result<Vec<SteamGame>, String> {
+    let url = format!(
+        "https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={}&steamid={}&format=json&count=10",
+        api_key, steam_id
+    );
+
+    let res = crate::utils::http_client::HTTP_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !res.status().is_success() {
+        return Err(format!("Erro Steam Recent Games: {}", res.status()));
+    }
+
+    let data: RecentGamesResponse = res.json().await.map_err(|e| e.to_string())?;
+    Ok(data.response.games.unwrap_or_default())
+}
+
+/// Busca conquistas do jogador num jogo específico
+pub async fn get_player_achievements(
+    api_key: &str,
+    steam_id: &str,
+    app_id: u32,
+) -> Result<Vec<SteamAchievement>, String> {
+    // Usamos l=brazilian para tentar pegar nomes traduzidos se disponíveis
+    let url = format!(
+        "https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={}&key={}&steamid={}&l=brazilian",
+        app_id, api_key, steam_id
+    );
+
+    let res = crate::utils::http_client::HTTP_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Jogos sem conquistas retornam 400 ou erro, então tratamos como lista vazia
+    if !res.status().is_success() {
+        return Ok(vec![]);
+    }
+
+    let data: Result<PlayerStatsResponse, _> = res.json().await;
+    match data {
+        Ok(d) => Ok(d.playerstats.achievements.unwrap_or_default()),
+        Err(_) => Ok(vec![]), // Falha no parse (jogo sem conquistas públicas)
+    }
 }
 
 //  === API DA LOJA - METADADOS, REVIEWS E CONTEÚDO ADULTO (Pública) ===
