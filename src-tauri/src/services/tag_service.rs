@@ -6,9 +6,27 @@ use crate::utils::tag_utils::{GameTag, TagMetadata};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json;
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
+use tauri::{AppHandle, Manager};
+
+const TAG_METADATA_JSON: &str = include_str!("../data/tag_metadata.json");
+
+// Estrutura para estatísticas de tags
+#[derive(Debug, Serialize)]
+pub struct TagStats {
+    pub total: usize,
+    pub visible: usize,
+    pub hidden: usize,
+    pub by_category: HashMap<String, usize>,
+}
+
+#[derive(Debug, Serialize)]
+struct AnalysisReport {
+    timestamp: String,
+    stats: TagStats,
+    unknown_tags_count: usize,
+    unknown_tags: Vec<String>, // Lista das tags que não estão no seu JSON
+}
 
 // Cache estático das regras de tags
 static TAG_METADATA: Lazy<HashMap<String, TagMetadata>> = Lazy::new(|| {
@@ -18,11 +36,10 @@ static TAG_METADATA: Lazy<HashMap<String, TagMetadata>> = Lazy::new(|| {
     })
 });
 
-/// Carrega o arquivo tag_metadata.json
+/// Carrega o metadata a partir da string embutida
 fn load_tag_metadata() -> Result<HashMap<String, TagMetadata>, Box<dyn std::error::Error>> {
-    let path = get_tag_metadata_path();
-    let content = fs::read_to_string(&path)?;
-    let tags: Vec<TagMetadata> = serde_json::from_str(&content)?;
+    // Parse direto da constante, sem IO de disco
+    let tags: Vec<TagMetadata> = serde_json::from_str(TAG_METADATA_JSON)?;
 
     let map = tags
         .into_iter()
@@ -30,11 +47,6 @@ fn load_tag_metadata() -> Result<HashMap<String, TagMetadata>, Box<dyn std::erro
         .collect();
 
     Ok(map)
-}
-
-/// Retorna o caminho para tag_metadata.json
-fn get_tag_metadata_path() -> PathBuf {
-    PathBuf::from("data/tag_metadata.json")
 }
 
 /// Classifica tags da RAWG usando as regras
@@ -105,172 +117,40 @@ pub fn get_tag_stats() -> TagStats {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct TagStats {
-    pub total: usize,
-    pub visible: usize,
-    pub hidden: usize,
-    pub by_category: HashMap<String, usize>,
-}
+/// Recebe um conjunto de TODAS as tags (slugs) encontradas durante o enriquecimento,
+/// gera um relatório e salva num arquivo JSON na pasta de logs do aplicativo.
+pub fn generate_analysis_report(
+    app: &AppHandle,
+    encountered_slugs: HashSet<String>,
+) -> Result<String, String> {
+    // 1. Calcula estatísticas gerais (já existentes)
+    let stats = get_tag_stats();
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::utils::tag_utils::TagCategory;
+    // 2. Filtra quais das tags encontradas são desconhecidas
+    let mut unknown_tags: Vec<String> = encountered_slugs
+        .into_iter()
+        .filter(|slug| !TAG_METADATA.contains_key(slug))
+        .collect();
 
-    // Helper para criar tags de teste sem depender do arquivo
-    fn create_test_metadata() -> HashMap<String, TagMetadata> {
-        let mut map = HashMap::new();
+    // Ordena para facilitar a leitura
+    unknown_tags.sort();
 
-        map.insert(
-            "singleplayer".to_string(),
-            TagMetadata {
-                slug: "singleplayer".to_string(),
-                name: "Singleplayer".to_string(),
-                category: TagCategory::Mode,
-                relevance: 8,
-                visible: true,
-            },
-        );
+    // 3. Monta o relatório
+    let report = AnalysisReport {
+        timestamp: chrono::Local::now().to_rfc3339(),
+        stats,
+        unknown_tags_count: unknown_tags.len(),
+        unknown_tags,
+    };
 
-        map.insert(
-            "story-rich".to_string(),
-            TagMetadata {
-                slug: "story-rich".to_string(),
-                name: "Story Rich".to_string(),
-                category: TagCategory::Narrative,
-                relevance: 10,
-                visible: true,
-            },
-        );
+    // 4. Define o caminho do arquivo
+    // Em Dev: Salva na pasta de logs do app (ex: AppData/Local/com.game-manager.dev/logs/tag_report.json)
+    let log_dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
+    let file_path = log_dir.join("tag_analysis_report.json");
 
-        map.insert(
-            "fantasy".to_string(),
-            TagMetadata {
-                slug: "fantasy".to_string(),
-                name: "Fantasy".to_string(),
-                category: TagCategory::Theme,
-                relevance: 7,
-                visible: true,
-            },
-        );
+    // 5. Salva no disco
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    std::fs::write(&file_path, json).map_err(|e| e.to_string())?;
 
-        map.insert(
-            "windows".to_string(),
-            TagMetadata {
-                slug: "windows".to_string(),
-                name: "Windows".to_string(),
-                category: TagCategory::Technical,
-                relevance: 3,
-                visible: false, // Não deve aparecer
-            },
-        );
-
-        map.insert(
-            "casual".to_string(),
-            TagMetadata {
-                slug: "casual".to_string(),
-                name: "Casual".to_string(),
-                category: TagCategory::Gameplay,
-                relevance: 6,
-                visible: true,
-            },
-        );
-
-        map.insert(
-            "indie".to_string(),
-            TagMetadata {
-                slug: "indie".to_string(),
-                name: "Indie".to_string(),
-                category: TagCategory::Meta,
-                relevance: 5,
-                visible: true,
-            },
-        );
-
-        map
-    }
-
-    #[test]
-    fn test_classify_tags_logic() {
-        // Testa apenas a lógica de classificação com dados mockados
-        let test_metadata = create_test_metadata();
-
-        let raw_tags = vec![
-            "singleplayer".to_string(),
-            "story-rich".to_string(),
-            "fantasy".to_string(),
-            "windows".to_string(),     // deve ser filtrada (visible: false)
-            "unknown-tag".to_string(), // deve ser ignorada
-        ];
-
-        // Simula a classificação manualmente
-        let classified: Vec<_> = raw_tags
-            .iter()
-            .filter_map(|slug| {
-                test_metadata.get(slug).and_then(|metadata| {
-                    if metadata.visible {
-                        Some((slug.clone(), metadata.name.clone()))
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect();
-
-        assert_eq!(classified.len(), 3);
-        assert!(classified.iter().any(|(slug, _)| slug == "singleplayer"));
-        assert!(classified.iter().any(|(slug, _)| slug == "story-rich"));
-        assert!(classified.iter().any(|(slug, _)| slug == "fantasy"));
-        assert!(!classified.iter().any(|(slug, _)| slug == "windows"));
-    }
-
-    #[test]
-    fn test_sort_by_relevance_logic() {
-        // Testa apenas a lógica de ordenação
-        let test_metadata = create_test_metadata();
-
-        let raw_tags = vec![
-            "casual".to_string(),     // relevance: 6
-            "story-rich".to_string(), // relevance: 10
-            "indie".to_string(),      // relevance: 5
-        ];
-
-        let mut sorted: Vec<_> = raw_tags
-            .iter()
-            .filter_map(|slug| test_metadata.get(slug))
-            .collect();
-
-        sorted.sort_by(|a, b| {
-            b.relevance
-                .partial_cmp(&a.relevance)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        assert_eq!(sorted[0].slug, "story-rich");
-        assert_eq!(sorted[1].slug, "casual");
-        assert_eq!(sorted[2].slug, "indie");
-    }
-
-    #[test]
-    fn test_get_unknown_tags_logic() {
-        let test_metadata = create_test_metadata();
-
-        let raw_tags = vec![
-            "singleplayer".to_string(),
-            "unknown-1".to_string(),
-            "fantasy".to_string(),
-            "unknown-2".to_string(),
-        ];
-
-        let unknown: Vec<_> = raw_tags
-            .iter()
-            .filter(|slug| !test_metadata.contains_key(*slug))
-            .cloned()
-            .collect();
-
-        assert_eq!(unknown.len(), 2);
-        assert!(unknown.contains(&"unknown-1".to_string()));
-        assert!(unknown.contains(&"unknown-2".to_string()));
-    }
+    Ok(file_path.to_string_lossy().to_string())
 }

@@ -131,6 +131,7 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
             adult_tags TEXT,
             external_links TEXT,
             median_playtime INTEGER,
+            estimated_playtime REAL,
             FOREIGN KEY(game_id) REFERENCES games(id) ON DELETE CASCADE
         )",
         [],

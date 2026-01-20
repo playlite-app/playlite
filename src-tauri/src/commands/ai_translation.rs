@@ -1,3 +1,10 @@
+//! Comando Tauri para traduzir descrições de jogos usando o serviço Gemini AI.
+//!
+//! **Fluxo:**
+//! 1. Recupera a chave API do banco de dados seguro.
+//! 2. Chama o serviço Gemini para traduzir o texto.
+//! 3. Salva a tradução no banco de dados local para evitar custos futuros.
+
 use crate::database;
 use crate::database::AppState;
 use crate::services::gemini;
@@ -5,6 +12,7 @@ use rusqlite::params;
 use tauri::{AppHandle, Manager, State};
 use tracing::{error, info};
 
+/// Traduz a descrição de um jogo
 #[tauri::command]
 pub async fn translate_description(
     app: AppHandle,

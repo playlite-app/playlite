@@ -1,10 +1,11 @@
 import {
+  AlertTriangle,
   Building2,
   Calendar,
   Clock,
   Gamepad2,
-  Hourglass,
   ListCheck,
+  type LucideIcon,
   Star,
   Tag,
   TrendingUp,
@@ -13,11 +14,10 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Game, GameDetails, GamePlatformLink } from '@/types/game';
+import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game';
 import { formatTime } from '@/utils/formatTime';
+import { getPlaytimeCategory } from '@/utils/PlaytimeUtils.ts';
 
-import { AgeRatingBadge } from './AgeRatingBadge';
 import { GameLinks } from './GameLinks';
 import { SteamReviewBadge } from './SteamReviewBadge';
 
@@ -34,53 +34,118 @@ export function GameSidebar({
   siblings,
   onSwitchGame,
 }: GameSidebarProps) {
+  // Lógica para renderizar as tags categorizadas
+  const renderTags = () => {
+    if (!details?.tags) return null;
+
+    if (Array.isArray(details.tags)) {
+      if (details.tags.length === 0) return null;
+
+      // Agrupa por categoria
+      const grouped = details.tags.reduce(
+        (acc, tag) => {
+          const cat = tag.category;
+
+          if (!acc[cat]) acc[cat] = [];
+
+          acc[cat].push(tag);
+
+          return acc;
+        },
+        {} as Record<string, GameTag[]>
+      );
+
+      const order = ['mode', 'narrative', 'theme', 'gameplay', 'meta'];
+      const labels: Record<string, string> = {
+        mode: 'Modo',
+        narrative: 'Narrativa',
+        theme: 'Tema',
+        gameplay: 'Gameplay',
+        meta: 'Info',
+      };
+
+      return (
+        <div className="space-y-3">
+          {order.map(cat => {
+            const tags = grouped[cat];
+
+            if (!tags?.length) return null;
+
+            return (
+              <div key={cat} className="space-y-1.5">
+                <span className="text-muted-foreground/70 pl-1 text-[10px] font-bold tracking-widest uppercase">
+                  {labels[cat] || cat}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map(tag => (
+                    <Badge
+                      key={tag.slug}
+                      variant="secondary"
+                      className="bg-secondary/40 hover:bg-secondary hover:border-border/50 border border-transparent px-2 py-0.5 text-xs font-normal transition-all"
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
-    <div className="space-y-8 p-6 lg:p-8">
-      {/* 1. SEÇÃO DO USUÁRIO */}
+    <div className="space-y-6 p-6 lg:p-8">
+      {/* AVISO DE CONTEÚDO ADULTO */}
+      {(details?.isAdult || details?.adultTags) && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-400">
+          <div className="mb-1 flex items-center gap-2 font-bold">
+            <AlertTriangle size={16} /> Conteúdo +18
+          </div>
+          {details?.adultTags && (
+            <p className="text-sm opacity-80">
+              {details.adultTags.startsWith('[')
+                ? JSON.parse(details.adultTags).join(', ')
+                : details.adultTags}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* 1. DADOS DO USUÁRIO */}
       <div className="space-y-4">
         <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
           <Trophy size={18} className="text-primary" /> Seus Dados
         </h3>
-
         <div className="grid grid-cols-2 gap-4">
           {/* Card 1: Tempo Real Jogado */}
-          <div className="bg-card rounded-lg border p-4 shadow-sm">
-            <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-              Você Jogou
+          <div className="bg-card rounded-lg border px-4 py-2 shadow-sm">
+            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold uppercase">
+              Jogado
             </span>
-            <div className="flex items-center gap-2 font-mono text-xl font-bold">
-              <Clock size={20} className="text-muted-foreground/70" />
+            <div className="flex items-center gap-2 font-mono text-base font-bold">
+              <Clock size={18} className="text-muted-foreground/70" />
               {formatTime(game.playtime)}
             </div>
           </div>
 
-          {/* Card 2: Estimativa (SteamSpy) - NOVO! */}
-          {details?.medianPlaytime ? (
-            <div className="bg-card rounded-lg border p-4 shadow-sm">
-              <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-                Tempo Médio
-              </span>
-              <div className="flex items-center gap-2 font-mono text-xl font-bold">
-                <Hourglass size={20} className="text-muted-foreground/70" />
-                {details.medianPlaytime}h
-              </div>
+          {/* Card 2: Status */}
+          <div className="bg-card rounded-lg border px-4 py-2 shadow-sm">
+            <span className="text-muted-foreground mb-1 block text-[11px] font-semibold uppercase">
+              Status
+            </span>
+            <div className="flex items-center gap-2 text-base font-medium">
+              <TrendingUp size={18} className="text-muted-foreground/70" />
+              {game.playtime === 0 ? 'Backlog' : 'Jogando'}
             </div>
-          ) : (
-            /* Fallback se não tiver estimativa: Mostra Status */
-            <div className="bg-card rounded-lg border p-4 shadow-sm">
-              <span className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-                Status
-              </span>
-              <div className="flex items-center gap-2 text-base font-medium">
-                <TrendingUp size={20} className="text-muted-foreground/70" />
-                {game.playtime === 0 ? 'Backlog' : 'Jogando'}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* 2. SEÇÃO DE REVIEWS */}
+      {/* 2. REVIEWS */}
       {(details?.steamReviewLabel || details?.criticScore) && (
         <div className="space-y-4">
           <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
@@ -92,83 +157,74 @@ export function GameSidebar({
             count={details?.steamReviewCount}
             score={details?.steamReviewScore}
           />
-
-          {details?.criticScore && (
-            <div className="flex items-center justify-between px-1 py-1">
-              <span className="text-muted-foreground text-sm font-medium">
-                Metascore
-              </span>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'border-2 px-3 py-0.5 text-sm font-bold',
-                  details.criticScore >= 75
-                    ? 'border-green-500/30 text-green-400'
-                    : details.criticScore >= 50
-                      ? 'border-yellow-500/30 text-yellow-400'
-                      : 'border-red-500/30 text-red-400'
-                )}
-              >
-                {details.criticScore}
-              </Badge>
-            </div>
-          )}
         </div>
       )}
 
       {/* 3. DETALHES TÉCNICOS */}
-      <div className="space-y-4">
-        <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
+      <div className="space-y-1.5">
+        <h3 className="text-muted-foreground flex items-center gap-2 pb-2 text-sm font-bold tracking-wider uppercase">
           <ListCheck size={18} /> Detalhes
         </h3>
 
-        <AgeRatingBadge esrb={details?.esrbRating} isAdult={details?.isAdult} />
+        <DetailRow
+          icon={Building2}
+          label="Dev e Pub"
+          value={`${details?.developer}, ${details?.publisher}`}
+        />
 
-        <div className="space-y-2">
-          <DetailRow icon={Gamepad2} label="Gênero" value={game.genres} />
+        {details?.releaseDate && (
+          <DetailRow
+            icon={Calendar}
+            label="Lançamento"
+            value={new Date(details.releaseDate).toLocaleDateString('pt-BR')}
+          />
+        )}
 
-          {details?.releaseDate && (
-            <DetailRow
-              icon={Calendar}
-              label="Lançamento"
-              value={new Date(details.releaseDate).toLocaleDateString('pt-BR')}
-            />
-          )}
+        <DetailRow icon={Gamepad2} label="Gênero" value={game.genres} />
 
-          <DetailRow icon={Building2} label="Dev" value={details?.developer} />
-          <DetailRow icon={Gamepad2} label="Série" value={details?.series} />
-        </div>
+        <DetailRow icon={TrendingUp} label="Série" value={details?.series} />
+
+        <DetailRow
+          icon={Star}
+          label="Metacritic"
+          value={
+            details?.criticScore ? details.criticScore.toString() : undefined
+          }
+        />
+
+        {details?.esrbRating && (
+          <DetailRow
+            icon={Trophy}
+            label="Classificação"
+            value={`ESRB ${details.esrbRating}`}
+          />
+        )}
+
+        {details?.estimatedPlaytime && details.estimatedPlaytime > 0 && (
+          <DetailRow
+            icon={Clock}
+            label="Duração"
+            value={getPlaytimeCategory(details.estimatedPlaytime).label} // Ex: "Longo (30h - 80h)"
+          />
+        )}
       </div>
 
-      {/* 4. LINKS EXTERNOS (Filtragem está no componente GameLinks) */}
+      {/* 4. LINKS */}
       <GameLinks links={details?.externalLinks} />
 
-      {/* 5. TAGS */}
+      {/* 5. TAGS (Com Categorização) */}
       {details?.tags && (
         <div className="space-y-3">
-          <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
-            <Tag size={18} /> Tags
+          <h3 className="text-muted-foreground flex items-center gap-1 text-sm font-bold tracking-wider uppercase">
+            <Tag size={18} /> Características
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {details.tags
-              .split(',')
-              .slice(0, 10)
-              .map((tag, i) => (
-                <Badge
-                  key={i}
-                  variant="secondary"
-                  className="bg-secondary/40 hover:bg-secondary px-2 py-0.5 text-xs font-medium"
-                >
-                  {tag.trim()}
-                </Badge>
-              ))}
-          </div>
+          {renderTags()}
         </div>
       )}
 
       {/* 6. OUTRAS PLATAFORMAS */}
       {siblings.length > 0 && (
-        <div className="border-border/40 space-y-3 border-t pt-4">
+        <div className="border-border/40 space-y-2 border-t pt-4">
           <span className="text-muted-foreground text-sm font-medium">
             Outras Versões:
           </span>
@@ -179,7 +235,7 @@ export function GameSidebar({
                 variant="ghost"
                 size="sm"
                 onClick={() => onSwitchGame(sib.id)}
-                className="border-border/50 h-8 border text-xs"
+                className="border-border/50 h-7 border text-xs"
               >
                 {sib.platform}
               </Button>
@@ -191,20 +247,21 @@ export function GameSidebar({
   );
 }
 
-// Helper com fontes maiores
+// === DetailRow ====
+
 function DetailRow({
   icon: Icon,
   label,
   value,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value?: string;
 }) {
   if (!value) return null;
 
   return (
-    <div className="border-border/40 flex justify-between rounded border-b px-1 py-2.5 transition-colors last:border-0 hover:bg-white/5">
+    <div className="border-border/40 flex justify-between rounded border-b px-2 py-2 transition-colors hover:bg-white/5">
       <span className="text-muted-foreground flex items-center gap-2 text-sm">
         <Icon size={16} /> {label}
       </span>

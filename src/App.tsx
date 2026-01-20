@@ -197,21 +197,23 @@ function AppContent() {
         />
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>
-      <AddGameModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveGameWrapper}
-        gameToEdit={gameToEdit}
-      />
-      <GameDetailsModal
-        isOpen={!!selectedGameId}
-        onClose={closeDetails}
-        game={selectedGame}
-        details={details}
-        loading={loading}
-        siblings={siblings}
-        onSwitchGame={handleSwitchGame}
-      />
+      <ErrorBoundary>
+        <AddGameModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveGameWrapper}
+          gameToEdit={gameToEdit}
+        />
+        <GameDetailsModal
+          isOpen={!!selectedGameId}
+          onClose={closeDetails}
+          game={selectedGame}
+          details={details}
+          loading={loading}
+          siblings={siblings}
+          onSwitchGame={handleSwitchGame}
+        />
+      </ErrorBoundary>
       <Toaster />
     </div>
   );

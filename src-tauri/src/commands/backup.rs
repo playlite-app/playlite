@@ -252,7 +252,8 @@ fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, S
             game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
             description_raw, description_ptbr, background_image, critic_score,
             steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-            esrb_rating, is_adult, adult_tags, external_links, median_playtime
+            esrb_rating, is_adult, adult_tags, external_links, median_playtime,
+            estimated_playtime
          FROM game_details",
         )
         .map_err(|e| e.to_string())?;
@@ -288,6 +289,7 @@ fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, S
                 adult_tags: row.get(18)?,
                 external_links, // Mapeado acima
                 median_playtime: row.get(20)?,
+                estimated_playtime: row.get(21)?,
             })
         })
         .map_err(|e| e.to_string())?;

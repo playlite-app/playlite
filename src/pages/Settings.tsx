@@ -129,7 +129,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         >
           <Button
             onClick={actions.importLibrary}
-            variant="secondary"
+            variant="outline"
             className="w-full"
             disabled={loading.importing}
           >
@@ -171,7 +171,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               {/* BOTÃO 1: Metadados (Usa loading.enriching) */}
               <Button
                 onClick={actions.enrichLibrary}
-                variant="secondary"
+                variant="outline"
                 className="flex-1"
                 disabled={loading.enriching || loading.fetchingCovers}
               >

@@ -159,7 +159,7 @@ export default function Playlist({
             <h2 className="text-lg font-bold">Recomendados</h2>
           </div>
           <p className="text-muted-foreground text-sm">
-            Baseado no seu perfil (Backend).
+            Baseado no seu perfil.
           </p>
         </div>
 

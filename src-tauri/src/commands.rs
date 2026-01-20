@@ -8,7 +8,8 @@
 //! - `ai_translation`: Comandos para tradução de descrições usando IA.
 //! - `backup`: Comandos relacionados a ‘backup’ e restauração de dados.
 //! - `games`: Comandos CRUD para a biblioteca de jogos.
-//! - `metadata`: Comandos para integração com APIs externas.
+//! - `metadata_enrichment`: Comandos para enriquecer metadados de jogos via RAWG API.
+//! - `metadata_search`: Comandos para busca de jogos via RAWG API.
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
 //! - `recommendations`: Comandos para sistema de recomendação de jogos.
 //! - `settings`: Comandos para gerenciar configurações e segredos do usuário.

@@ -1,3 +1,7 @@
+//! Comando para buscar conquistas recentes do Steam para o dashboard.
+//!
+//! Retorna as 5 conquistas mais recentes dos jogos jogados nas últimas 2 semanas.
+
 use crate::database;
 use crate::services::steam;
 use serde::Serialize;
@@ -8,9 +12,11 @@ pub struct DashboardAchievement {
     pub game_name: String,
     pub achievement_name: String,
     pub unlock_time: i64,
-    pub game_id: String, // Para linkar com sua biblioteca se quiser
+    pub game_id: String,
 }
 
+/// Busca as 5 conquistas mais recentes dos jogos jogados nas últimas 2 semanas.
+/// Retorna uma lista vazia se não houver conquistas ou se as credenciais não estiverem configuradas.
 #[tauri::command]
 pub async fn get_recent_achievements(app: AppHandle) -> Result<Vec<DashboardAchievement>, String> {
     // 1. Pega credenciais

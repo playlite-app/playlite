@@ -6,10 +6,10 @@
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH, STEAMSPY_RATE_LIMIT_MS};
 use crate::database;
 use crate::database::AppState;
-use crate::services::{rawg, steam};
+use crate::services::{playtime_estimator, rawg, steam};
 use crate::utils::series;
 use rusqlite::params;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
@@ -57,6 +57,7 @@ struct ProcessedGameDetails {
     external_links: Option<String>, // JSON
     steam_app_id: Option<String>,
     median_playtime: Option<i32>,
+    estimated_playtime: Option<f32>, // Tempo estimado em horas
 }
 
 // === FUNÇÕES AUXILIARES ===
@@ -88,7 +89,7 @@ async fn process_single_game(
     name: &str,
     platform: &str,
     platform_id: Option<String>,
-) -> ProcessedGameDetails {
+) -> (ProcessedGameDetails, Vec<String>) {
     let series_name = series::infer_series(name);
     let mut details = ProcessedGameDetails {
         game_id: game_id.to_string(),
@@ -112,9 +113,13 @@ async fn process_single_game(
         external_links: None,
         steam_app_id: None,
         median_playtime: None,
+        estimated_playtime: None,
     };
 
     let mut links_map: HashMap<String, String> = HashMap::new();
+
+    // Variável para coletar tags do jogo
+    let mut found_raw_tags: Vec<String> = Vec::new();
 
     // 1. Estratégia de Steam ID
     let mut target_steam_id = if platform.to_lowercase() == "steam" {
@@ -130,6 +135,9 @@ async fn process_single_game(
                 if let Ok(rawg_det) =
                     rawg::fetch_game_details(api_key, best_match.id.to_string()).await
                 {
+                    // Coleta as tags cruas
+                    found_raw_tags = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
+
                     // Extrai slugs de tags para classificação posterior
                     let raw_tag_slugs: Vec<String> = rawg_det
                         .tags
@@ -235,9 +243,29 @@ async fn process_single_game(
             details.steam_review_updated_at = Some(chrono::Utc::now().to_rfc3339());
         }
 
-        // C. Median Playtime (SteamSpy)
+        // C. Median Playtime (SteamSpy) + Heurística
         if let Ok(Some(hours)) = steam::get_median_playtime(steam_id).await {
+            // Salva o dado bruto do SteamSpy (Mediana)
             details.median_playtime = Some(hours as i32);
+
+            let genre_list: Vec<String> = details
+                .genres
+                .split(',')
+                .map(|s| s.trim().to_lowercase())
+                .collect();
+
+            // Calcula e salva a estimativa ajustada (Heurística)
+            if let Some(estimated_hours) =
+                playtime_estimator::estimate_playtime(Some(hours), &genre_list, &details.tags)
+            {
+                details.estimated_playtime = Some(estimated_hours as f32);
+
+                // Log para debug
+                info!(
+                    "Playtime '{}': SteamSpy={}h -> Estimado={}h",
+                    name, hours, estimated_hours
+                );
+            }
         }
     }
 
@@ -251,7 +279,7 @@ async fn process_single_game(
         name, details.esrb_rating, details.median_playtime, details.steam_app_id
     );
 
-    details
+    (details, found_raw_tags)
 }
 
 // === PERSISTÊNCIA ===
@@ -262,20 +290,22 @@ fn save_game_details(
     d: ProcessedGameDetails,
 ) -> Result<(), rusqlite::Error> {
     // 1. Salva detalhes
-    let tags_json = crate::database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
+    let tags_json = database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
 
     conn.execute(
         "INSERT OR REPLACE INTO game_details (
             game_id, description_raw, description_ptbr, release_date, genres, tags,
             developer, publisher, critic_score, background_image, series,
             steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-            esrb_rating, is_adult, adult_tags, external_links, steam_app_id, median_playtime
-         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
+            esrb_rating, is_adult, adult_tags, external_links, steam_app_id, median_playtime,
+            estimated_playtime
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)",
         params![
             d.game_id, d.description_raw, d.description_ptbr, d.release_date, d.genres, tags_json,
             d.developer, d.publisher, d.critic_score, d.background_image, d.series,
             d.steam_review_label, d.steam_review_count, d.steam_review_score, d.steam_review_updated_at,
-            d.esrb_rating, d.is_adult, d.adult_tags, d.external_links, d.steam_app_id, d.median_playtime
+            d.esrb_rating, d.is_adult, d.adult_tags, d.external_links, d.steam_app_id, d.median_playtime,
+            d.estimated_playtime
         ],
     )?;
 
@@ -304,6 +334,9 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
 
     tauri::async_runtime::spawn(async move {
         info!("Iniciando atualização de metadados...");
+
+        // Armazena todas as tags encontradas (para estatísticas futuras, se necessário)
+        let mut all_session_tags: HashSet<String> = HashSet::new();
 
         loop {
             let state: State<AppState> = app_handle.state();
@@ -352,7 +385,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     },
                 );
 
-                let processed_data = process_single_game(
+                let (processed_data, raw_tags) = process_single_game(
                     &api_key,
                     has_rawg,
                     &game_id,
@@ -361,6 +394,12 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     platform_id,
                 )
                 .await;
+
+                // Adiciona as tags encontradas no acumulador global
+                for tag in raw_tags {
+                    all_session_tags.insert(tag);
+                }
+
                 {
                     let conn = state.library_db.lock().unwrap();
                     if let Err(e) = save_game_details(&conn, processed_data) {
@@ -374,6 +413,13 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     sleep(Duration::from_millis(STEAMSPY_RATE_LIMIT_MS)).await;
                 }
             }
+        }
+
+        // Gera relatório de tags da sessão
+        match crate::services::tag_service::generate_analysis_report(&app_handle, all_session_tags)
+        {
+            Ok(path) => info!("Relatório de tags salvo em: {}", path),
+            Err(e) => warn!("Falha ao salvar relatório de tags: {}", e),
         }
 
         info!("Metadata update concluído.");

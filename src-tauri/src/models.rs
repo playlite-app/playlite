@@ -125,6 +125,10 @@ pub struct GameDetails {
     // Tempo de Jogo (Alternativa a HLTB)
     #[serde(rename = "medianPlaytime")]
     pub median_playtime: Option<i32>, // Mediana do SteamSpy em horas
+
+    // Estimativa de Tempo de Jogo
+    #[serde(rename = "estimatedPlaytime")]
+    pub estimated_playtime: Option<f32>, // Tempo estimado em horas (história principal)
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.

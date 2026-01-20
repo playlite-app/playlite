@@ -1,4 +1,5 @@
 //! Módulo de gerenciamento de lista de desejos (wishlist).
+//!
 //! Adaptado para v2.0 com integração IsThereAnyDeal.
 
 use crate::database::{self, AppState};

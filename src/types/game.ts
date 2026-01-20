@@ -34,6 +34,20 @@ export interface Game {
   isAdult: boolean;
 }
 
+export interface GameTag {
+  slug: string;
+  name: string;
+  category:
+    | 'mode'
+    | 'narrative'
+    | 'theme'
+    | 'gameplay'
+    | 'meta'
+    | 'technical'
+    | 'input';
+  relevance: number;
+}
+
 /**
  * Detalhes adicionais do jogo - Schema 3.0
  *
@@ -51,7 +65,7 @@ export interface GameDetails {
   developer?: string;
   publisher?: string;
   genres?: string;
-  tags?: string;
+  tags?: GameTag[] | string;
   series?: string;
   backgroundImage?: string;
 
@@ -70,6 +84,7 @@ export interface GameDetails {
   // Links & Tempo
   externalLinks?: Record<string, string>; // { "steam": "url", "website": "url" }
   medianPlaytime?: number; // Horas (SteamSpy)
+  estimatedPlaytime?: number; // Tempo estimado em horas (float)
 }
 
 export interface GamePlatformLink {
