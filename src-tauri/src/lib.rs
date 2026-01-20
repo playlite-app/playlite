@@ -81,12 +81,13 @@ pub fn run() {
             commands::wishlist::refresh_prices,
             // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
-            // Comandos de Importação de Metadados
-            commands::metadata::update_metadata,
-            commands::metadata::fetch_missing_covers,
-            commands::metadata::get_trending_games,
-            commands::metadata::get_upcoming_games,
-            commands::metadata::fetch_game_details,
+            // Comandos de Enriquecimento de Metadados
+            commands::metadata_enrichment::update_metadata,
+            commands::metadata_enrichment::fetch_missing_covers,
+            // Comandos de Busca de Metadados
+            commands::metadata_search::get_trending_games,
+            commands::metadata_search::get_upcoming_games,
+            commands::metadata_search::fetch_game_details,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,

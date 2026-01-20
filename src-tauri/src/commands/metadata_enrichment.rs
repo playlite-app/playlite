@@ -1,10 +1,11 @@
-//! Módulo de integrações com APIs externas.
+//! Comandos para enriquecimento automático de metadados
 //!
-//! Coordena a comunicação com serviços de terceiros (RAWG, Steam) e
-//! orquestra operações complexas como importação em lote e enriquecimento.
+//! Este módulo contém comandos Tauri para atualizar metadados de jogos na biblioteca
+//! do usuário, buscando informações de APIs externas como RAWG e Steam.
 
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH, STEAMSPY_RATE_LIMIT_MS};
-use crate::database::{self, AppState};
+use crate::database;
+use crate::database::AppState;
 use crate::services::{rawg, steam};
 use crate::utils::series;
 use rusqlite::params;
@@ -14,7 +15,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
-// === ESTRUTURAS ===
+// === ESTRUTURAS DE DADOS ===
 
 #[derive(serde::Serialize)]
 pub struct ImportSummary {
@@ -40,7 +41,7 @@ struct ProcessedGameDetails {
     description_ptbr: Option<String>,
     release_date: Option<String>,
     genres: String,
-    tags: String,
+    tags: Vec<crate::models::GameTag>,
     developer: Option<String>,
     publisher: Option<String>,
     critic_score: Option<i32>,
@@ -58,7 +59,7 @@ struct ProcessedGameDetails {
     median_playtime: Option<i32>,
 }
 
-// === FUNÇÕES UTILITÁRIAS ===
+// === FUNÇÕES AUXILIARES ===
 
 fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
     database::get_secret(app_handle, "rawg_api_key")
@@ -95,7 +96,7 @@ async fn process_single_game(
         description_ptbr: None,
         release_date: None,
         genres: String::new(),
-        tags: String::new(),
+        tags: Vec::new(),
         developer: None,
         publisher: None,
         critic_score: None,
@@ -129,6 +130,13 @@ async fn process_single_game(
                 if let Ok(rawg_det) =
                     rawg::fetch_game_details(api_key, best_match.id.to_string()).await
                 {
+                    // Extrai slugs de tags para classificação posterior
+                    let raw_tag_slugs: Vec<String> = rawg_det
+                        .tags
+                        .iter()
+                        .map(|t| t.slug.clone()) // Pega o slug da RAWG
+                        .collect();
+
                     // Preenchimento
                     details.description_raw = rawg_det.description_raw;
                     details.release_date = rawg_det.released;
@@ -138,13 +146,8 @@ async fn process_single_game(
                         .map(|g| g.name.clone())
                         .collect::<Vec<_>>()
                         .join(", ");
-                    details.tags = rawg_det
-                        .tags
-                        .iter()
-                        .take(10)
-                        .map(|t| t.name.clone())
-                        .collect::<Vec<_>>()
-                        .join(", ");
+                    details.tags =
+                        crate::services::tag_service::classify_and_sort_tags(raw_tag_slugs, 10);
                     details.developer = rawg_det.developers.first().map(|d| d.name.clone());
                     details.publisher = rawg_det.publishers.first().map(|p| p.name.clone());
                     details.critic_score = rawg_det.metacritic;
@@ -259,6 +262,8 @@ fn save_game_details(
     d: ProcessedGameDetails,
 ) -> Result<(), rusqlite::Error> {
     // 1. Salva detalhes
+    let tags_json = crate::database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
+
     conn.execute(
         "INSERT OR REPLACE INTO game_details (
             game_id, description_raw, description_ptbr, release_date, genres, tags,
@@ -267,7 +272,7 @@ fn save_game_details(
             esrb_rating, is_adult, adult_tags, external_links, steam_app_id, median_playtime
          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
         params![
-            d.game_id, d.description_raw, d.description_ptbr, d.release_date, d.genres, d.tags,
+            d.game_id, d.description_raw, d.description_ptbr, d.release_date, d.genres, tags_json,
             d.developer, d.publisher, d.critic_score, d.background_image, d.series,
             d.steam_review_label, d.steam_review_count, d.steam_review_score, d.steam_review_updated_at,
             d.esrb_rating, d.is_adult, d.adult_tags, d.external_links, d.steam_app_id, d.median_playtime
@@ -463,30 +468,4 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     });
 
     Ok(())
-}
-
-// === PROXIES DO FRONTEND ===
-
-/// Busca detalhes de um jogo na RAWG.
-#[tauri::command]
-pub async fn fetch_game_details(
-    app: AppHandle,
-    query: String,
-) -> Result<rawg::GameDetails, String> {
-    let api_key = get_api_key(&app)?;
-    rawg::fetch_game_details(&api_key, query).await
-}
-
-/// Busca jogos em alta na RAWG.
-#[tauri::command]
-pub async fn get_trending_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
-    let api_key = get_api_key(&app)?;
-    rawg::fetch_trending_games(&api_key).await
-}
-
-/// Busca jogos que serão lançados em breve na RAWG.
-#[tauri::command]
-pub async fn get_upcoming_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
-    let api_key = get_api_key(&app)?;
-    rawg::fetch_upcoming_games(&api_key).await
 }

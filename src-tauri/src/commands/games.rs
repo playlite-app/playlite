@@ -4,6 +4,7 @@
 //! Inclui validações robustas e manipulação de erros para garantir integridade dos dados.
 
 use crate::constants;
+use crate::database;
 use crate::database::AppState;
 use crate::models;
 use crate::utils::game_logic;
@@ -286,6 +287,9 @@ pub fn get_library_game_details(
             let links_json: Option<String> = row.get(19)?; // external_links
             let external_links = links_json.and_then(|json| serde_json::from_str(&json).ok());
 
+            let tags_json: Option<String> = row.get(6)?;
+            let tags = tags_json.map(|s| database::deserialize_tags(&s));
+
             Ok(models::GameDetails {
                 game_id: row.get(0)?,
                 steam_app_id: row.get(1)?,
@@ -293,7 +297,7 @@ pub fn get_library_game_details(
                 publisher: row.get(3)?,
                 release_date: row.get(4)?,
                 genres: row.get(5)?,
-                tags: row.get(6)?,
+                tags,
                 series: row.get(7)?,
                 description_raw: row.get(8)?,
                 description_ptbr: row.get(9)?,

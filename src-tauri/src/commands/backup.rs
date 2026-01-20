@@ -137,11 +137,16 @@ pub async fn import_database(
 
     // Loop Details
     for detail in &backup.game_details {
-        // Serializa o HashMap de links para JSON String antes de salvar
+        // Serializa o HashMap de links e as tags para JSON String antes de salvar
         let links_json = detail
             .external_links
             .as_ref()
             .and_then(|links| serde_json::to_string(links).ok());
+
+        let tags_json = detail
+            .tags
+            .as_ref()
+            .and_then(|tags| crate::database::serialize_tags(tags).ok());
 
         details_stmt
             .execute(params![
@@ -151,7 +156,7 @@ pub async fn import_database(
                 detail.publisher,
                 detail.release_date,
                 detail.genres,
-                detail.tags,
+                tags_json,
                 detail.series,
                 detail.description_raw,
                 detail.description_ptbr,
@@ -254,9 +259,12 @@ fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, S
 
     let details_iter = stmt
         .query_map([], |row| {
-            // Deserializa JSON string para HashMap
+            // Deserializa JSON strings
             let links_json: Option<String> = row.get(19)?;
             let external_links = links_json.and_then(|s| serde_json::from_str(&s).ok());
+
+            let tags_json: Option<String> = row.get(6)?;
+            let tags = tags_json.map(|s| crate::database::deserialize_tags(&s));
 
             Ok(GameDetails {
                 game_id: row.get(0)?,
@@ -265,7 +273,7 @@ fn fetch_game_details(conn: &rusqlite::Connection) -> Result<Vec<GameDetails>, S
                 publisher: row.get(3)?,
                 release_date: row.get(4)?,
                 genres: row.get(5)?,
-                tags: row.get(6)?,
+                tags,
                 series: row.get(7)?,
                 description_raw: row.get(8)?,
                 description_ptbr: row.get(9)?,

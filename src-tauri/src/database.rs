@@ -221,6 +221,34 @@ pub fn init_db(app: AppHandle, state: State<AppState>) -> Result<String, String>
     Ok(format!("Banco de dados OK (v{})", version))
 }
 
+/// Serializa tags para salvar no banco
+pub fn serialize_tags(tags: &[crate::models::GameTag]) -> Result<String, String> {
+    serde_json::to_string(tags).map_err(|e| e.to_string())
+}
+
+/// Deserializa tags do banco (com fallback para formato antigo)
+pub fn deserialize_tags(tags_json: &str) -> Vec<crate::models::GameTag> {
+    use crate::utils::tag_utils::TagCategory;
+
+    // Tenta deserializar como novo formato
+    if let Ok(tags) = serde_json::from_str::<Vec<crate::models::GameTag>>(tags_json) {
+        return tags;
+    }
+
+    // Fallback: formato antigo (string separada por vírgulas)
+    tags_json
+        .split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|slug| crate::models::GameTag {
+            slug: slug.to_string(),
+            name: slug.to_string(),
+            category: TagCategory::Meta,
+            relevance: 5.0,
+        })
+        .collect()
+}
+
 // === BANCO DE DADOS PARA GERENCIAMENTO DE API KEYS (secrets.db) ===
 
 /// Obtém conexão com o banco de secrets a partir do AppState.

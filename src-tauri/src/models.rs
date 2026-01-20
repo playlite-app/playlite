@@ -6,6 +6,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+// Reexportar GameTag do utils para consistência
+pub use crate::utils::tag_utils::GameTag;
+
+// === Modelos de Dados ===
+
 /// Jogo na biblioteca do usuário.
 ///
 /// Representa um jogo adicionado à biblioteca pessoal, com metadados
@@ -52,17 +57,8 @@ pub struct Game {
 
 /// Detalhes adicionais do jogo (Schema v3).
 ///
-/// **Campos removidos:**
-/// - HLTB (hltb_main_story, hltb_main_extra, hltb_completionist)
-/// - URLs legadas (website_url, igdb_url, rawg_url, pcgamingwiki_url)
-/// - users_score (substituído por steam_review_*)
-/// - age_rating (substituído por esrb_rating, is_adult, adult_tags)
-///
-/// **Campos mantidos/novos:**
-/// - external_links: HashMap JSON com todos os links externos
-/// - steam_review_*: Dados completos de reviews da Steam
-/// - is_adult + adult_tags: Sistema de filtragem de conteúdo
-/// - median_playtime: Tempo médio via SteamSpy
+/// Contém metadados enriquecidos obtidos de APIs externas como RAWG,
+/// substituindo e expandindo os dados anteriores.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameDetails {
     #[serde(rename = "gameId")]
@@ -71,34 +67,34 @@ pub struct GameDetails {
     #[serde(rename = "steamAppId")]
     pub steam_app_id: Option<String>,
 
-    // === Metadados Básicos ===
+    // Metadados Básicos
     pub developer: Option<String>,
     pub publisher: Option<String>,
 
     #[serde(rename = "releaseDate")]
     pub release_date: Option<String>,
 
-    // === Categorização ===
+    // Categorização
     pub genres: Option<String>,
-    pub tags: Option<String>,
+    pub tags: Option<Vec<GameTag>>, // Array de tags categorizadas
     pub series: Option<String>,
 
-    // === Descrição ===
+    // Descrição
     #[serde(rename = "descriptionRaw")]
     pub description_raw: Option<String>,
 
     #[serde(rename = "descriptionPtbr")]
     pub description_ptbr: Option<String>,
 
-    // === Mídia ===
+    // Mídia
     #[serde(rename = "backgroundImage")]
     pub background_image: Option<String>,
 
-    // === Scores ===
+    // Scores
     #[serde(rename = "criticScore")]
     pub critic_score: Option<i32>, // Metacritic
 
-    // === Steam Reviews (substitui users_score) ===
+    // Steam Reviews
     #[serde(rename = "steamReviewLabel")]
     pub steam_review_label: Option<String>, // "Very Positive", "Mixed", etc.
 
@@ -111,7 +107,7 @@ pub struct GameDetails {
     #[serde(rename = "steamReviewUpdatedAt")]
     pub steam_review_updated_at: Option<String>,
 
-    // === Conteúdo Adulto (substitui age_rating) ===
+    // Conteúdo Adulto
     #[serde(rename = "esrbRating")]
     pub esrb_rating: Option<String>, // "E", "T", "M", etc.
 
@@ -121,17 +117,20 @@ pub struct GameDetails {
     #[serde(rename = "adultTags")]
     pub adult_tags: Option<String>, // Nudity, Gore, Sexual Content, etc.
 
-    // === Links Externos (substitui URLs individuais) ===
+    // Links Externos
     #[serde(rename = "externalLinks")]
     pub external_links: Option<HashMap<String, String>>,
     // Exemplo: {"website": "...", "steam": "...", "rawg": "...", "reddit": "..."}
 
-    // === Tempo de Jogo (substitui HLTB) ===
+    // Tempo de Jogo (Alternativa a HLTB)
     #[serde(rename = "medianPlaytime")]
     pub median_playtime: Option<i32>, // Mediana do SteamSpy em horas
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.
+///
+/// Representa um jogo adicionado à wishlist do usuário,
+/// incluindo informações de preço, disponibilidade e vouchers.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WishlistGame {
     pub id: String,
@@ -170,6 +169,8 @@ pub struct WishlistGame {
     pub added_at: Option<String>,
 }
 
+// === Sistema de Erros ===
+
 /// Erros tipados da aplicação para tratamento granular.
 #[allow(dead_code)]
 #[derive(Debug, Serialize)]
@@ -202,6 +203,8 @@ impl From<rusqlite::Error> for AppError {
     }
 }
 
+// === Modelos Adicionais ===
+
 /// Pontuação de gênero no perfil do usuário.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GenreScore {
@@ -223,6 +226,8 @@ pub struct UserProfile {
     #[serde(rename = "totalGames")]
     pub total_games: i32,
 }
+
+// === OAuth Token ===
 
 /// Token OAuth com informações de expiração.
 #[derive(Debug, Serialize, Deserialize)]
