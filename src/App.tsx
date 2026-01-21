@@ -1,16 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import { Game, RawgGame, UserPreferenceVector } from '@/types';
+import { Game } from '@/types';
 
 import AddGameModal from './components/AddGameModal';
 import GameDetailsModal from './components/game-details/GameDetailsModal';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
+import {
+  GameLibraryProvider,
+  UIProvider,
+  useGameLibrary,
+  useUI,
+} from './contexts';
 import { useDebounce } from './hooks/useDebounce';
 import { useGameDetails } from './hooks/useGameDetails';
-import { useLibraries } from './hooks/useLibraries.ts';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
 import Libraries from './pages/Libraries.tsx';
@@ -21,60 +26,53 @@ import Wishlist from './pages/Wishlist';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
 
 function AppContent() {
-  // Estado Global de Jogos e UI
+  // Contexts
   const { games, refreshGames, saveGame, removeGame, toggleFavorite } =
-    useLibraries();
-  const [searchTerm, setSearchTerm] = useState('');
+    useGameLibrary();
+  const {
+    activeSection,
+    setActiveSection,
+    searchTerm,
+    setSearchTerm,
+    isAddModalOpen,
+    gameToEdit,
+    selectedGameId,
+    setSelectedGameId,
+    hideAdult,
+    toggleAdultFilter,
+    trendingCache,
+    setTrendingCache,
+    trendingKey,
+    setTrendingKey,
+    profileCache,
+    setProfileCache,
+    openAddModal,
+    openEditModal,
+    closeAddModal,
+  } = useUI();
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [activeSection, setActiveSection] = useState('home');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [gameToEdit, setGameToEdit] = useState<Game | null>(null);
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+  const { confirm } = useConfirm();
+
+  // Selected game memo
   const selectedGame = useMemo(
     () => games.find(g => g.id === selectedGameId) || null,
     [games, selectedGameId]
   );
-  const [trendingCache, setTrendingCache] = useState<RawgGame[]>([]);
-  const [trendingKey, setTrendingKey] = useState(0);
-  const [profileCache, setProfileCache] = useState<UserPreferenceVector | null>(
-    null
-  );
-  const [hideAdult, setHideAdult] = useState(() => {
-    return localStorage.getItem('playlite_hide_adult') === 'true';
-  });
-
-  const toggleAdultFilter = () => {
-    const newValue = !hideAdult;
-    setHideAdult(newValue);
-    localStorage.setItem('playlite_hide_adult', String(newValue));
-  };
-
-  const { confirm } = useConfirm();
 
   const { details, loading, siblings } = useGameDetails(selectedGame, games);
 
-  // Handlers de UI e Ações
+  // Handlers
   const handleSettingsUpdate = () => {
     refreshGames();
     setTrendingCache([]);
     setTrendingKey(k => k + 1);
   };
 
-  const openAddModal = () => {
-    setGameToEdit(null);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (game: Game) => {
-    setGameToEdit(game);
-    setIsModalOpen(true);
-  };
-
   const handleSaveGameWrapper = async (data: Partial<Game>) => {
     try {
       await saveGame(data, gameToEdit?.id);
-      setIsModalOpen(false);
-      setGameToEdit(null);
+      closeAddModal();
     } catch (e) {
       toast.error('Erro ao salvar: ' + e);
     }
@@ -111,7 +109,7 @@ function AppContent() {
     setSelectedGameId(null);
   };
 
-  // Props comuns passadas para as listas de jogos
+  // Props comuns
   const commonGameActions = {
     onToggleFavorite: toggleFavorite,
     onGameClick: handleGameClick,
@@ -119,7 +117,7 @@ function AppContent() {
     onEditGame: openEditModal,
   };
 
-  // Roteamento Simples
+  // Roteamento
   const renderContent = () => {
     switch (activeSection) {
       case 'home':
@@ -199,8 +197,8 @@ function AppContent() {
       </main>
       <ErrorBoundary>
         <AddGameModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isAddModalOpen}
+          onClose={closeAddModal}
           onSave={handleSaveGameWrapper}
           gameToEdit={gameToEdit}
         />
@@ -222,7 +220,11 @@ function AppContent() {
 export default function App() {
   return (
     <ConfirmProvider>
-      <AppContent />
+      <GameLibraryProvider>
+        <UIProvider>
+          <AppContent />
+        </UIProvider>
+      </GameLibraryProvider>
     </ConfirmProvider>
   );
 }

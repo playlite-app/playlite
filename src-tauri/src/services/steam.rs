@@ -9,9 +9,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::Duration;
 
-// === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA (Requer API Key) ===
+// === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA, CONQUISTAS E WISHLIST (Requer API Key) ===
 
-/// Representa um jogo retornado pela API GetOwnedGames da Steam.
+// Estruturas auxiliares para deserializar respostas da API Steam
+
+/// Estruturas auxiliares para representar um jogo na biblioteca Steam.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SteamGame {
     pub appid: u32,
@@ -33,7 +35,7 @@ struct SteamApiResponse {
     response: SteamResponseData,
 }
 
-/// Representa uma conquista (achievement) de um jogo na Steam.
+/// Estrutura auxiliares para obter conquistas de um jogo.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SteamAchievement {
     pub apiname: String,
@@ -62,6 +64,31 @@ struct RecentGamesResponse {
 struct RecentGamesData {
     games: Option<Vec<SteamGame>>,
 }
+
+/// Estruturas auxiliares para importar wishlist de um usuário Steam.
+#[derive(Debug, Deserialize)]
+struct WishlistEntry {
+    name: String,
+    capsule: String, // Capa pequena (header image)
+    review_score: Option<i32>,
+    review_desc: Option<String>,
+    release_string: Option<String>,
+    added: i64,                     // Timestamp Unix
+    subs: Option<Vec<WishlistSub>>, // Informações de preço/pacote
+    #[serde(default)]
+    priority: i32,
+    background: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct WishlistSub {
+    id: u32,
+    price: Option<String>, // Cuidado: Steam retorna "1999" (centavos) ou string vazia
+    discount_block: Option<String>, // HTML com desconto
+    discount_pct: Option<i32>,
+}
+
+// Funções da API de Usuário
 
 /// Lista todos os jogos da biblioteca de um usuário Steam.
 pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<SteamGame>, String> {
@@ -140,6 +167,8 @@ pub async fn get_player_achievements(
 
 //  === API DA LOJA - METADADOS, REVIEWS E CONTEÚDO ADULTO (Pública) ===
 
+// Estruturas auxiliares para deserializar respostas da API da Loja Steam
+
 /// Detalhes da loja Steam para um aplicativo (jogo).
 #[derive(Debug, Clone)]
 pub struct SteamStoreData {
@@ -187,11 +216,13 @@ struct SteamSpyResponse {
     median_forever: u32,
 }
 
+// Funções da API da Loja
+
 /// Busca detalhes da loja (Conteúdo adulto, descrição, imagens)
 ///
 /// Retorna Option porque o jogo pode não existir na loja (removido/banido).
 pub async fn get_app_details(app_id: &str) -> Result<Option<SteamStoreData>, String> {
-    // Filtramos apenas os campos necessários para economizar banda
+    // Filtra apenas os campos necessários
     let url = format!(
         "{}?appids={}&l=brazilian&filters=basic,content_descriptors,categories,genres,release_date",
         STEAM_STORE_API_URL, app_id
