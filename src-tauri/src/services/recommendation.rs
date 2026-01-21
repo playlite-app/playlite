@@ -1,12 +1,13 @@
-//! Sistema de Recomendação v2.0 - Content-Based Filtering Avançado
+//! Sistema de Recomendação v2.1 - Content-Based Filtering com Tags Categorizadas
 //!
 //! Features:
-//! - Usa dados de game_details (genres, tags, series)
+//! - Usa dados de game_details (genres, tags categorizadas, series)
 //! - Penaliza jogos antigos (decaimento temporal)
-//! - Sistema de pesos balanceado
-//! - Sem compatibilidade com sistema v1 (código limpo)
+//! - Sistema de pesos por categoria de tag
+//! - Tags com relevância individual
 
 use crate::models::Game;
+use crate::utils::tag_utils::{category_multiplier, TagKey};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -24,18 +25,13 @@ const WEIGHT_USER_RATING: f32 = 8.0;
 /// Multiplicador para gêneros (peso padrão)
 const WEIGHT_GENRE: f32 = 1.0;
 
-/// Multiplicador para tags (peso menor que gênero)
-const WEIGHT_TAG: f32 = 0.5;
-
 /// Multiplicador para séries (peso moderado - evita viés excessivo)
 const WEIGHT_SERIES: f32 = 1.2;
 
 /// Decaimento por ano (0.95 = 5% de redução por ano de idade)
-/// Jogos de 10 anos atrás terão score multiplicado por ~0.60
 const AGE_DECAY_FACTOR: f32 = 0.95;
 
 /// Idade máxima considerada para decaimento (anos)
-/// Jogos mais velhos que isso não sofrem decaimento adicional
 const MAX_AGE_PENALTY: i32 = 15;
 
 // === ESTRUTURAS DE DADOS ===
@@ -45,7 +41,7 @@ const MAX_AGE_PENALTY: i32 = 15;
 pub struct GameWithDetails {
     pub game: Game,
     pub genres: Vec<String>,
-    pub tags: Vec<String>,
+    pub tags: Vec<crate::models::GameTag>,
     pub series: Option<String>,
     pub release_year: Option<i32>,
 }
@@ -56,8 +52,8 @@ pub struct UserPreferenceVector {
     /// Scores acumulados por gênero
     pub genres: HashMap<String, f32>,
 
-    /// Scores acumulados por tag
-    pub tags: HashMap<String, f32>,
+    /// Scores acumulados por tag (agora usa TagKey com categoria)
+    pub tags: HashMap<TagKey, f32>,
 
     /// Scores acumulados por série de jogos
     pub series: HashMap<String, f32>,
@@ -70,15 +66,12 @@ pub struct UserPreferenceVector {
     pub total_games: i32,
 }
 
-// ===  FUNÇÃO PRINCIPAL - CÁLCULO DE PERFIL ===
+// === FUNÇÃO PRINCIPAL - CÁLCULO DE PERFIL ===
 
 /// Calcula o perfil completo do usuário baseado na sua biblioteca
 ///
-/// IMPORTANTE: Espera que GameWithDetails já tenha sido montado pela
-/// camada de comandos Tauri, fazendo JOIN com game_details
-///
-/// Usa `games` slice para agregar scores por dimensão (gêneros, tags, séries)
-/// e retorna um `UserPreferenceVector` com os scores normalizados.
+/// Usa tags categorizadas com relevância individual e aplica multiplicadores
+/// por categoria (Mode > Narrative > Theme > Gameplay > Meta).
 pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector {
     let mut profile = UserPreferenceVector {
         genres: HashMap::new(),
@@ -104,13 +97,15 @@ pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector
 
         // Processamento de tags
         for tag in &game_with_details.tags {
-            if tag.is_empty() {
-                continue;
-            }
-            *profile.tags.entry(tag.clone()).or_insert(0.0) += weight * WEIGHT_TAG;
+            let key = TagKey::new(tag.category.clone(), tag.slug.clone());
+
+            // Combina: peso base do jogo × relevância da tag × multiplicador da categoria
+            let tag_weight = weight * tag.relevance * category_multiplier(&tag.category);
+
+            *profile.tags.entry(key).or_insert(0.0) += tag_weight;
         }
 
-        // Processamento de séries - Prioriza series do banco, fallback para detecção
+        // Processamento de séries
         if let Some(series) = get_series_name(game_with_details) {
             *profile.series.entry(series).or_insert(0.0) += weight * WEIGHT_SERIES;
         }
@@ -120,14 +115,6 @@ pub fn calculate_user_profile(games: &[GameWithDetails]) -> UserPreferenceVector
 }
 
 /// Calcula o peso/importância de um jogo individual
-///
-/// Combina múltiplos fatores:
-/// - Tempo jogado (até 100h)
-/// - Status de favorito
-/// - Avaliação do usuário (1-5 estrelas)
-///
-/// # Retorna
-/// Score base do jogo (tipicamente 1.0 a 250.0)
 fn calculate_game_weight(game: &Game) -> f32 {
     let mut weight = 1.0;
 
@@ -150,7 +137,7 @@ fn calculate_game_weight(game: &Game) -> f32 {
     weight
 }
 
-/// Obtém o nome da série de um jogo, se tiver no banco de dados
+/// Obtém o nome da série de um jogo
 fn get_series_name(game: &GameWithDetails) -> Option<String> {
     game.series.clone()
 }
@@ -159,11 +146,7 @@ fn get_series_name(game: &GameWithDetails) -> Option<String> {
 
 /// Calcula o score de afinidade entre o perfil do usuário e um jogo candidato
 ///
-/// Considera:
-/// - Gêneros em comum
-/// - Tags em comum
-/// - Pertencer à mesma série
-/// - **Penaliza jogos antigos** (decaimento temporal)
+/// Considera tags categorizadas, gêneros, séries e penaliza jogos antigos.
 pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32 {
     let mut score = 0.0;
 
@@ -176,25 +159,25 @@ pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32
 
     // Score de tags
     for tag in &game.tags {
-        if let Some(&tag_score) = profile.tags.get(tag) {
+        let key = TagKey::new(tag.category.clone(), tag.slug.clone());
+        if let Some(&tag_score) = profile.tags.get(&key) {
             score += tag_score;
         }
     }
 
-    // Bônus de série (prioriza series do banco, fallback para detecção)
+    // Bônus de série
     if let Some(series) = get_series_name(game) {
         if let Some(&series_score) = profile.series.get(&series) {
-            score += series_score * 1.5; // Peso extra para séries
+            score += series_score * 1.5;
         }
     }
 
-    // Jogos mais antigos recebem score reduzido
+    // Penalização por idade
     if let Some(release_year) = game.release_year {
-        let current_year = 2025; // Você pode obter dinamicamente se preferir
+        let current_year = 2025;
         let age = (current_year - release_year).clamp(0, MAX_AGE_PENALTY);
 
         if age > 0 {
-            // Aplica decaimento exponencial: score * (0.95^age)
             let age_multiplier = AGE_DECAY_FACTOR.powi(age);
             score *= age_multiplier;
         }
@@ -213,7 +196,6 @@ pub fn rank_games(
         .map(|g| (g.clone(), score_game(profile, g)))
         .collect();
 
-    // Ordena por score decrescente
     ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     ranked

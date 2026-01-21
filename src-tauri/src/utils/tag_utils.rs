@@ -39,7 +39,7 @@ pub struct TagMetadata {
 }
 
 /// Para uso no sistema de recomendação
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TagKey {
     pub category: TagCategory,
     pub slug: String,

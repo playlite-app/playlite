@@ -10,6 +10,7 @@ import {
   Tag,
   TrendingUp,
   Trophy,
+  Users,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +97,15 @@ export function GameSidebar({
 
     return null;
   };
+
+  // Lógica para extrair APENAS os modos de jogo
+  const gameModes =
+    details?.tags && Array.isArray(details.tags)
+      ? details.tags
+          .filter(t => t.category === 'mode') // Filtra só categoria 'mode'
+          .map(t => t.name) // Pega o nome (Singleplayer, Co-op...)
+          .join(', ') // Junta com vírgula
+      : null;
 
   return (
     <div className="space-y-6 p-6 lg:p-8">
@@ -199,6 +209,8 @@ export function GameSidebar({
             value={`ESRB ${details.esrbRating}`}
           />
         )}
+
+        <DetailRow icon={Users} label="Modo" value={gameModes ?? undefined} />
 
         {details?.estimatedPlaytime && details.estimatedPlaytime > 0 && (
           <DetailRow

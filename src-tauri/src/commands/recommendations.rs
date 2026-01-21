@@ -1,6 +1,6 @@
-//! Comandos Tauri para Sistema de Recomendação v2.0
+//! Comandos Tauri para Sistema de Recomendação v2.1
 //!
-//! Faz JOIN com game_details para obter genres, tags e series
+//! Faz JOIN com game_details para obter genres, tags categorizadas e series
 
 use crate::database::AppState;
 use crate::models::Game;
@@ -9,6 +9,7 @@ use crate::services::recommendation::{
     UserPreferenceVector,
 };
 use serde::Serialize;
+use std::collections::HashMap;
 use tauri::State;
 
 /// Estrutura simplificada de recomendação (game_id + score)
@@ -18,12 +19,46 @@ pub struct GameRecommendation {
     pub score: f32,
 }
 
-/// Retorna o perfil completo v2.0 com gêneros, tags e séries
+/// Retorna o perfil completo v2.1 com gêneros, tags categorizadas e séries
 #[tauri::command]
 pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, String> {
     let games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&games);
     Ok(profile)
+}
+
+/// Retorna o perfil formatado para o frontend (com tags como strings)
+///
+/// Converte TagKey para formato "category:slug" para facilitar uso no frontend
+#[tauri::command]
+pub fn get_user_profile_formatted(state: State<AppState>) -> Result<serde_json::Value, String> {
+    let games = fetch_all_games_with_details(&state)?;
+    let profile = calculate_user_profile(&games);
+
+    // Converte tags para formato mais amigável: "category:slug"
+    let tags_formatted: HashMap<String, f32> = profile
+        .tags
+        .into_iter()
+        .map(|(key, score)| {
+            let tag_key = format!(
+                "{}:{}",
+                serde_json::to_string(&key.category)
+                    .unwrap_or_default()
+                    .trim_matches('"')
+                    .to_lowercase(),
+                key.slug
+            );
+            (tag_key, score)
+        })
+        .collect();
+
+    Ok(serde_json::json!({
+        "genres": profile.genres,
+        "tags": tags_formatted,
+        "series": profile.series,
+        "totalPlaytime": profile.total_playtime,
+        "totalGames": profile.total_games,
+    }))
 }
 
 /// Ranqueia jogos da biblioteca do usuário baseado em afinidade
@@ -104,7 +139,7 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
                 g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
                 COALESCE(d.is_adult, 0), -- 15: is_adult
                 d.genres,                -- 16: genres
-                d.tags,                  -- 17: tags
+                d.tags,                  -- 17: tags (JSON de GameTag[])
                 d.series,                -- 18: series
                 d.release_date           -- 19: release_date
              FROM games g
@@ -148,15 +183,10 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
                 .unwrap_or_default();
 
             // Processa tags
-            let tags_str: Option<String> = row.get(17)?;
-            let tags = tags_str
+            let tags_json: Option<String> = row.get(17)?;
+            let tags: Vec<crate::models::GameTag> = tags_json
                 .as_ref()
-                .map(|s| {
-                    s.split(',')
-                        .map(|t| t.trim().to_string())
-                        .filter(|t| !t.is_empty())
-                        .collect()
-                })
+                .and_then(|json| serde_json::from_str(json).ok())
                 .unwrap_or_default();
 
             // Series

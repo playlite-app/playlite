@@ -170,7 +170,7 @@ export default function Playlist({
                 Suas Séries Favoritas
               </h3>
               <div className="flex flex-wrap gap-1.5">
-                {favoriteSeries.map(({ name }) => (
+                {favoriteSeries.map(name => (
                   <span
                     key={name}
                     className="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300"

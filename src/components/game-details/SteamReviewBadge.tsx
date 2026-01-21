@@ -40,12 +40,12 @@ export function SteamReviewBadge({
     >
       <div className="flex items-center gap-2">
         <Icon size={18} />
-        <span className="text-sm font-bold tracking-wide uppercase">
+        <span className="text-base font-bold tracking-wide uppercase">
           {label}
         </span>
       </div>
       {count && (
-        <div className="flex justify-between font-mono text-xs opacity-80">
+        <div className="flex justify-between font-mono text-sm opacity-80">
           <span>{count.toLocaleString()} reviews</span>
           {score && <span>{Math.round(score)}%</span>}
         </div>

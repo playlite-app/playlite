@@ -1,5 +1,5 @@
 import { Store } from '@tauri-apps/plugin-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Game } from '@/types';
 
@@ -23,6 +23,39 @@ const STORE_KEY = 'user_playlist_queue';
 export function usePlaylist(allGames: Game[]) {
   const [queueIds, setQueueIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const allGamesRef = useRef<Game[]>(allGames);
+
+  // Atualiza a ref sempre que allGames muda
+  useEffect(() => {
+    allGamesRef.current = allGames;
+
+    // Limpa IDs inválidos quando allGames é carregado
+    if (allGames.length > 0 && queueIds.length > 0) {
+      const validIds = queueIds.filter(id =>
+        allGames.some(game => game.id === id)
+      );
+
+      if (validIds.length !== queueIds.length) {
+        console.warn('Limpando IDs inválidos da playlist:', {
+          antes: queueIds.length,
+          depois: validIds.length,
+          removidos: queueIds.filter(id => !validIds.includes(id)),
+        });
+        setQueueIds(validIds);
+
+        // Salva a lista limpa no store
+        (async () => {
+          try {
+            const store = await Store.load(STORE_FILENAME);
+            await store.set(STORE_KEY, validIds);
+            await store.save();
+          } catch (e) {
+            console.error('Erro ao salvar playlist limpa:', e);
+          }
+        })();
+      }
+    }
+  }, [allGames, queueIds]);
 
   useEffect(() => {
     async function loadQueue() {
@@ -43,16 +76,20 @@ export function usePlaylist(allGames: Game[]) {
     loadQueue();
   }, []);
 
-  const saveQueue = async (newQueue: string[]) => {
+  const saveQueue = (newQueue: string[]) => {
+    // Atualiza o estado imediatamente (síncrono)
     setQueueIds(newQueue);
 
-    try {
-      const store = await Store.load(STORE_FILENAME);
-      await store.set(STORE_KEY, newQueue);
-      await store.save();
-    } catch (e) {
-      console.error('Erro ao salvar playlist:', e);
-    }
+    // Salva no store de forma assíncrona (não bloqueia a UI)
+    (async () => {
+      try {
+        const store = await Store.load(STORE_FILENAME);
+        await store.set(STORE_KEY, newQueue);
+        await store.save();
+      } catch (e) {
+        console.error('Erro ao salvar playlist:', e);
+      }
+    })();
   };
 
   const addToPlaylist = (gameId: string) => {
@@ -94,9 +131,11 @@ export function usePlaylist(allGames: Game[]) {
     saveQueue(newQueue);
   };
 
-  const playlistGames = queueIds
-    .map(id => allGames.find(g => g.id === id))
-    .filter((g): g is Game => !!g);
+  const playlistGames = useMemo(() => {
+    return queueIds
+      .map(id => allGamesRef.current.find(g => g.id === id))
+      .filter((g): g is Game => !!g);
+  }, [queueIds]);
 
   return {
     playlistGames,

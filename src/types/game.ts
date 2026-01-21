@@ -1,3 +1,35 @@
+export interface GameTag {
+  slug: string;
+  name: string;
+  category: TagCategory;
+  relevance: number;
+}
+
+export interface TagKey {
+  category: TagCategory;
+  slug: string;
+}
+
+export type TagCategory =
+  | 'mode'
+  | 'narrative'
+  | 'theme'
+  | 'gameplay'
+  | 'meta'
+  | 'technical'
+  | 'input';
+
+export const CATEGORY_MULTIPLIERS: Record<TagCategory | 'unknown', number> = {
+  gameplay: 2.0,
+  theme: 1.5,
+  narrative: 1.3,
+  mode: 1.2,
+  meta: 0.8,
+  technical: 0.7,
+  input: 0.5,
+  unknown: 0.5,
+};
+
 /**
  * Informações básicas do jogo - Schema 2.0
  *
@@ -32,20 +64,6 @@ export interface Game {
   addedAt: string;
 
   isAdult: boolean;
-}
-
-export interface GameTag {
-  slug: string;
-  name: string;
-  category:
-    | 'mode'
-    | 'narrative'
-    | 'theme'
-    | 'gameplay'
-    | 'meta'
-    | 'technical'
-    | 'input';
-  relevance: number;
 }
 
 /**

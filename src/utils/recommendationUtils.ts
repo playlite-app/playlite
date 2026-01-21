@@ -1,22 +1,33 @@
 import { useMemo } from 'react';
 
-import { UserPreferenceVector } from '@/types';
+import { CATEGORY_MULTIPLIERS, UserPreferenceVector } from '@/types';
+
+// Interface auxiliar para aceitar GameTag (local) ou RawgTag (API)
+interface TagWithSlug {
+  slug: string;
+  category?: string;
+}
 
 /**
- * Calcula score de afinidade para jogos EXTERNOS (ex: RAWG)
- * usando o perfil calculado pelo Rust.
+ * Hook otimizado para calcular afinidade com cache *
+ * Usa as tags categorizadas com multiplicadores por categoria.
  */
-
 export function useCalculateAffinity(profile: UserPreferenceVector | null) {
   return useMemo(() => {
     const cache = new Map<string, number>();
 
     return (
       genres: string[],
-      tags: string[] = [],
+      tags: TagWithSlug[] = [],
       series: string | null = null
     ) => {
-      const key = `${genres.slice().sort().join(',')}|${tags.slice().sort().join(',')}|${series}`;
+      // Gera chave de cache incluindo categoria das tags
+      const tagKey = tags
+        .map(t => `${t.category || 'unknown'}:${t.slug}`)
+        .sort()
+        .join(',');
+
+      const key = `${genres.slice().sort().join(',')}|${tagKey}|${series}`;
 
       if (cache.has(key)) {
         return cache.get(key)!;
@@ -27,13 +38,22 @@ export function useCalculateAffinity(profile: UserPreferenceVector | null) {
 
       return score;
     };
-  }, [profile]); // Só recalcula se perfil mudar
+  }, [profile]);
 }
 
+/**
+ * Calcula afinidade entre perfil do usuário e características de um jogo
+ *
+ * @param profile - Perfil de preferências do usuário
+ * @param genres - Lista de gêneros do jogo
+ * @param tags - Lista de tags do jogo (com categoria opcional)
+ * @param series - Nome da série do jogo (opcional)
+ * @returns Score de afinidade
+ */
 export function calculateAffinity(
   profile: UserPreferenceVector | null,
   genres: string[],
-  tags: string[] = [],
+  tags: TagWithSlug[] = [],
   series: string | null = null
 ): number {
   if (!profile) return 0;
@@ -42,12 +62,29 @@ export function calculateAffinity(
 
   // 1. Gêneros
   genres.forEach(g => {
-    if (profile.genres[g]) score += profile.genres[g];
+    const key = g.toLowerCase();
+
+    if (profile.genres[g]) {
+      score += profile.genres[g];
+    } else if (profile.genres[key]) {
+      score += profile.genres[key];
+    }
   });
 
-  // 2. Tags
-  tags.forEach(t => {
-    if (profile.tags[t]) score += profile.tags[t] * 0.5;
+  // 2. Tags - Usa categoria e multiplicadores
+  tags.forEach(tag => {
+    // Formato da chave: "category:slug" (igual ao backend)
+    const category = tag.category?.toLowerCase() || 'unknown';
+    const tagKey = `${category}:${tag.slug}`;
+
+    // Busca no perfil
+    if (profile.tags[tagKey]) {
+      // Aplica multiplicador da categoria
+      const multiplier =
+        CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS] ||
+        0.5;
+      score += profile.tags[tagKey] * multiplier;
+    }
   });
 
   // 3. Séries
@@ -64,23 +101,24 @@ export function calculateAffinity(
 export function getFavoriteSeries(
   profile: UserPreferenceVector | null,
   limit = 5
-) {
+): string[] {
   if (!profile || !profile.series) return [];
 
   return Object.entries(profile.series)
     .sort(([, a], [, b]) => b - a)
     .slice(0, limit)
-    .map(([name]) => ({ name }));
+    .map(([name]) => name);
 }
 
 /**
- * Verifica se uma série é favorita
+ * Verifica se uma série específica é favorita
  */
 export function isFavoriteSeries(
   profile: UserPreferenceVector | null,
-  series: string | undefined
-) {
-  if (!profile || !series) return false;
+  seriesName: string | null
+): boolean {
+  if (!profile || !seriesName || !profile.series) return false;
 
-  return (profile.series[series] || 0) > 50; // Threshold arbitrário
+  // Considera favorita se tiver um score relevante (ex: > 10)
+  return (profile.series[seriesName] || 0) > 10;
 }

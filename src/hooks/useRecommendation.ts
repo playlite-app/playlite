@@ -28,11 +28,10 @@ export function useRecommendation({
   const [loading, setLoading] = useState(!profileCache);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Carregar Perfil
+  // 1. Carregar Perfil - ATUALIZADO: usa get_user_profile_formatted
   useEffect(() => {
     if (profileCache) {
       setLoading(false);
-
       return;
     }
 
@@ -40,12 +39,16 @@ export function useRecommendation({
       setLoading(true);
 
       try {
-        const data = await invoke<UserPreferenceVector>('get_user_profile');
+        // Usa o novo comando que retorna formato amigável
+        const data = await invoke<UserPreferenceVector>(
+          'get_user_profile_formatted'
+        );
         setProfile(data);
 
         if (setProfileCache) setProfileCache(data);
       } catch (error) {
         console.error('Falha ao carregar perfil:', error);
+        setError('Erro ao carregar perfil de recomendações');
       } finally {
         setLoading(false);
       }
@@ -65,7 +68,7 @@ export function useRecommendation({
         'recommend_from_library',
         {
           minPlaytime: 0,
-          maxPlaytime: 300,
+          maxPlaytime: 300, // 5 horas
           limit: 10,
         }
       );
@@ -76,13 +79,13 @@ export function useRecommendation({
 
       setRecommendations(mapped);
     } catch (error) {
-      console.error('Erro ao buscar recomendações do backend:', error);
       console.error('Erro ao buscar recomendações:', error);
+      setError('Erro ao buscar recomendações');
       setRecommendations([]);
     } finally {
       setLoadingRecommendations(false);
     }
-  }, [allGames.length]);
+  }, [allGames]);
 
   useEffect(() => {
     refreshRecommendations();

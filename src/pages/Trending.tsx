@@ -161,8 +161,8 @@ export default function Trending(props: TrendingProps) {
       const genresA = a.genres?.map(g => g.name) || [];
       const genresB = b.genres?.map(g => g.name) || [];
 
-      const tagsA = a.tags?.map(t => t.name) || [];
-      const tagsB = b.tags?.map(t => t.name) || [];
+      const tagsA = a.tags?.map(t => ({ slug: t.name })) || [];
+      const tagsB = b.tags?.map(t => ({ slug: t.name })) || [];
 
       // Passa o profile e os arrays de strings para o utilitário
       const scoreA = calculateAffinity(
@@ -267,7 +267,7 @@ export default function Trending(props: TrendingProps) {
           {gridGames.map(game => {
             // Normalização para o Utilitário
             const genres = game.genres?.map(g => g.name) || [];
-            const tags = game.tags?.map(t => t.name) || [];
+            const tags = game.tags?.map(t => ({ slug: t.name })) || [];
 
             const affinity = calculateAffinity(
               profile,
@@ -275,10 +275,7 @@ export default function Trending(props: TrendingProps) {
               tags,
               game.series || null
             );
-            const isFavSeries = isFavoriteSeries(
-              profile,
-              game.series || undefined
-            );
+            const isFavSeries = isFavoriteSeries(profile, game.series || null);
 
             let badge: string | undefined;
 
@@ -337,7 +334,7 @@ export default function Trending(props: TrendingProps) {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
             {upcomingGames.map(game => {
               const genres = game.genres?.map(g => g.name) || [];
-              const tags = game.tags?.map(t => t.name) || [];
+              const tags = game.tags?.map(t => ({ slug: t.name })) || [];
 
               // Passamos profile + strings para os utilitários
               const affinity = calculateAffinity(
@@ -348,7 +345,7 @@ export default function Trending(props: TrendingProps) {
               );
               const isFavSeries = isFavoriteSeries(
                 profile,
-                game.series || undefined
+                game.series || null
               );
 
               let badge: string | undefined;

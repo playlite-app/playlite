@@ -75,8 +75,11 @@ export default function PlaylistItem({
             className="hover:text-primary h-6 w-6 rounded-full disabled:opacity-20"
             onClick={e => {
               e.stopPropagation();
+              e.preventDefault();
               onMoveUp();
             }}
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             disabled={index === 0}
             title="Mover para cima"
           >
@@ -93,8 +96,11 @@ export default function PlaylistItem({
             className="hover:text-primary h-6 w-6 rounded-full disabled:opacity-20"
             onClick={e => {
               e.stopPropagation();
+              e.preventDefault();
               onMoveDown();
             }}
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             disabled={index === total - 1}
             title="Mover para baixo"
           >
@@ -121,8 +127,11 @@ export default function PlaylistItem({
           className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/img:opacity-100"
           onClick={e => {
             e.stopPropagation();
+            e.preventDefault();
             onPlay();
           }}
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
         >
           <Play size={15} className="fill-white text-white lg:h-4 lg:w-4" />
         </div>
@@ -153,8 +162,11 @@ export default function PlaylistItem({
           className="bg-primary/90 hover:bg-primary text-primary-foreground flex h-7 items-center gap-1 px-2 shadow-sm"
           onClick={e => {
             e.stopPropagation();
+            e.preventDefault();
             launchGame(game);
           }}
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
           title="Jogar Agora"
         >
           <Play size={11} className="fill-current lg:h-3 lg:w-3" />
@@ -166,8 +178,11 @@ export default function PlaylistItem({
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
           onClick={e => {
             e.stopPropagation();
+            e.preventDefault();
             onRemove();
           }}
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
           title="Remover da fila"
         >
           <Trash2 size={15} className="lg:h-4 lg:w-4" />
