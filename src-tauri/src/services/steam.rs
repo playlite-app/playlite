@@ -170,7 +170,7 @@ pub async fn get_player_achievements(
 // Estruturas auxiliares para deserializar respostas da API da Loja Steam
 
 /// Detalhes da loja Steam para um aplicativo (jogo).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SteamStoreData {
     pub name: String,
     pub is_free: bool,
@@ -184,36 +184,31 @@ pub struct SteamStoreData {
     pub required_age: u32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContentDescriptors {
     pub ids: Vec<u32>,
     pub notes: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Category {
     pub id: u32,
     pub description: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Genre {
     pub id: String,
     pub description: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SteamReviewSummary {
     pub review_score: u32,
     pub review_score_desc: String,
     pub total_positive: u32,
     pub total_negative: u32,
     pub total_reviews: u32,
-}
-
-#[derive(Debug, Deserialize)]
-struct SteamSpyResponse {
-    median_forever: u32,
 }
 
 // Funções da API da Loja
@@ -452,6 +447,13 @@ pub fn detect_adult_content(data: &SteamStoreData) -> (bool, Vec<String>) {
     flags.dedup();
 
     (is_explicit, flags)
+}
+
+// === STEAMSPY (API não oficial) - ESTATÍSTICAS DE JOGO (Pública) ===
+
+#[derive(Debug, Deserialize)]
+struct SteamSpyResponse {
+    median_forever: u32,
 }
 
 /// Busca tempo médio de jogo no SteamSpy (em minutos)

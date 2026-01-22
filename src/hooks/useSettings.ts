@@ -1,6 +1,8 @@
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 
+import { CacheStats } from '@/types';
+
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { settingsService } from '../services/settingsService';
 
@@ -21,6 +23,11 @@ export function useSettings(onLibraryUpdate: () => void) {
     exporting: false,
     importingBackup: false,
     authenticating: false,
+    loadingCacheStats: false,
+    cleaningCache: false,
+    clearingAllCache: false,
+    refreshingReviews: false,
+    refreshingWishlistPrices: false,
   });
 
   const [status, setStatus] = useState<{
@@ -34,6 +41,10 @@ export function useSettings(onLibraryUpdate: () => void) {
     game: string;
   } | null>(null);
 
+  // Estado para estatísticas do cache
+  const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
+
+  // Carrega secrets ao iniciar
   useEffect(() => {
     settingsService
       .getSecrets()
@@ -49,61 +60,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
 
-  // Listener de Eventos
-  useEffect(() => {
-    // Ouve progresso
-    const unlistenProgress = listen(
-      'enrich_progress',
-      (event: {
-        payload: { current: number; total_found: number; last_game: string };
-      }) => {
-        const p = event.payload;
-        setProgress({
-          current: p.current,
-          total: p.total_found,
-          game: p.last_game,
-        });
-
-        const isCoverTask = p.last_game.startsWith('Capa:');
-
-        setLoading(prev => ({
-          ...prev,
-          enriching: !isCoverTask,
-          fetchingCovers: isCoverTask,
-        }));
-      }
-    );
-
-    const unlistenComplete = listen('enrich_complete', () => {
-      setLoading(prev => ({
-        ...prev,
-        enriching: false,
-        fetchingCovers: false,
-      }));
-      setProgress(null);
-      setStatus({
-        type: 'success',
-        message: 'Processo concluído com sucesso!',
-      });
-      onLibraryUpdate();
-    });
-
-    return () => {
-      unlistenProgress.then(f => f());
-      unlistenComplete.then(f => f());
-    };
-  }, [onLibraryUpdate]);
-
-  useEffect(() => {
-    if (status.type && status.message) {
-      const timer = setTimeout(() => {
-        setStatus({ type: null, message: '' });
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
-
+  // Define todas as ações
   const connectToItad = async () => {
     setLoading(prev => ({ ...prev, authenticating: true }));
     setStatus({ type: null, message: 'Aguardando login no navegador...' });
@@ -165,7 +122,10 @@ export function useSettings(onLibraryUpdate: () => void) {
 
   const enrichLibrary = async () => {
     setLoading(prev => ({ ...prev, enriching: true }));
-    setStatus({ type: null, message: 'Iniciando atualização de metadados...' });
+    setStatus({
+      type: null,
+      message: 'Iniciando atualização de metadados...',
+    });
 
     try {
       await settingsService.enrichLibrary();
@@ -230,12 +190,197 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   };
 
+  const loadCacheStats = async () => {
+    setLoading(prev => ({ ...prev, loadingCacheStats: true }));
+
+    try {
+      const stats = await settingsService.getCacheStats();
+      setCacheStats(stats);
+    } catch (error) {
+      console.error('Erro ao carregar stats do cache:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, loadingCacheStats: false }));
+    }
+  };
+
+  const cleanupCache = async () => {
+    setLoading(prev => ({ ...prev, cleaningCache: true }));
+    setStatus({ type: null, message: 'Limpando cache expirado...' });
+
+    try {
+      const msg = await settingsService.cleanupCache();
+      setStatus({ type: 'success', message: msg });
+      await loadCacheStats();
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+    } finally {
+      setLoading(prev => ({ ...prev, cleaningCache: false }));
+    }
+  };
+
+  const clearAllCache = async () => {
+    setLoading(prev => ({ ...prev, clearingAllCache: true }));
+    setStatus({ type: null, message: 'Limpando todo o cache...' });
+
+    try {
+      const msg = await settingsService.clearAllCache();
+      setStatus({ type: 'success', message: msg });
+      await loadCacheStats();
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+    } finally {
+      setLoading(prev => ({ ...prev, clearingAllCache: false }));
+    }
+  };
+
+  const refreshSteamReviews = async () => {
+    setLoading(prev => ({ ...prev, refreshingReviews: true }));
+    setStatus({ type: null, message: 'Iniciando atualização de reviews...' });
+
+    try {
+      await settingsService.refreshSteamReviews();
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+      setLoading(prev => ({ ...prev, refreshingReviews: false }));
+    }
+  };
+
+  const autoRefreshWishlistPrices = async () => {
+    setLoading(prev => ({ ...prev, refreshingWishlistPrices: true }));
+    setStatus({ type: null, message: 'Iniciando atualização de preços...' });
+
+    try {
+      await settingsService.autoRefreshWishlistPrices();
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+      setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
+    }
+  };
+
+  // Listeners para eventos de enriquecimento
+  useEffect(() => {
+    const setupListeners = async () => {
+      const unlistenProgress = await listen(
+        'enrich_progress',
+        (event: {
+          payload: { current: number; total_found: number; last_game: string };
+        }) => {
+          const p = event.payload;
+          setProgress({
+            current: p.current,
+            total: p.total_found,
+            game: p.last_game,
+          });
+
+          const isCoverTask = p.last_game.startsWith('Capa:');
+
+          setLoading(prev => ({
+            ...prev,
+            enriching: !isCoverTask,
+            fetchingCovers: isCoverTask,
+          }));
+        }
+      );
+
+      const unlistenComplete = await listen('enrich_complete', () => {
+        setLoading(prev => ({
+          ...prev,
+          enriching: false,
+          fetchingCovers: false,
+        }));
+        setProgress(null);
+        setStatus({
+          type: 'success',
+          message: 'Processo concluído com sucesso!',
+        });
+        onLibraryUpdate();
+      });
+
+      const unlistenRefreshProgress = await listen(
+        'refresh_progress',
+        (event: {
+          payload: {
+            current: number;
+            total: number;
+            item_name: string;
+            refresh_type: 'reviews' | 'prices';
+          };
+        }) => {
+          const p = event.payload;
+          setProgress({
+            current: p.current,
+            total: p.total,
+            game: p.item_name,
+          });
+
+          setLoading(prev => ({
+            ...prev,
+            refreshingReviews: p.refresh_type === 'reviews',
+            refreshingWishlistPrices: p.refresh_type === 'prices',
+          }));
+        }
+      );
+
+      const unlistenReviewsComplete = await listen(
+        'reviews_refresh_complete',
+        (event: { payload: string }) => {
+          setLoading(prev => ({ ...prev, refreshingReviews: false }));
+          setProgress(null);
+          setStatus({
+            type: 'success',
+            message: String(event.payload),
+          });
+          onLibraryUpdate();
+        }
+      );
+
+      const unlistenWishlistComplete = await listen(
+        'wishlist_refresh_complete',
+        (event: { payload: string }) => {
+          setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
+          setProgress(null);
+          setStatus({
+            type: 'success',
+            message: String(event.payload),
+          });
+        }
+      );
+
+      return () => {
+        unlistenProgress();
+        unlistenComplete();
+        unlistenRefreshProgress();
+        unlistenReviewsComplete();
+        unlistenWishlistComplete();
+      };
+    };
+
+    setupListeners();
+  }, [onLibraryUpdate]);
+
+  // Auto-close status messages
+  useEffect(() => {
+    if (status.type && status.message) {
+      const timer = setTimeout(() => {
+        setStatus({ type: null, message: '' });
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
+  // Carrega cache stats ao iniciar
+  useEffect(() => {
+    loadCacheStats();
+  }, []);
+
   return {
     keys,
     setKeys,
     loading,
     status,
     progress,
+    cacheStats,
     actions: {
       saveKeys,
       importLibrary,
@@ -244,6 +389,11 @@ export function useSettings(onLibraryUpdate: () => void) {
       exportDatabase,
       importDatabase,
       connectToItad,
+      loadCacheStats,
+      cleanupCache,
+      clearAllCache,
+      refreshSteamReviews,
+      autoRefreshWishlistPrices,
     },
   };
 }

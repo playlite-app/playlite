@@ -2,11 +2,18 @@
 //!
 //! Este módulo contém comandos Tauri para atualizar metadados de jogos na biblioteca
 //! do usuário, buscando informações de APIs externas como RAWG e Steam.
+//! Versão otimizada com cache SQLite e processamento em batch.
+//!
+//! Design notes:
+//! - Cache persistente via SQLite (metadata.db)
+//! - block_in_place usado para manter conexão SQLite durante awaits
+//! - Itens compartilhados com cover_enrichment estão em enrichment_shared
 
-use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH, STEAMSPY_RATE_LIMIT_MS};
+use crate::commands::enrichment_shared::{fetch_rawg_metadata, get_api_key, EnrichProgress};
+use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
-use crate::services::{playtime_estimator, rawg, steam};
+use crate::services::{metadata_cache, playtime_estimator, steam};
 use crate::utils::series;
 use rusqlite::params;
 use std::collections::{HashMap, HashSet};
@@ -24,14 +31,6 @@ pub struct ImportSummary {
     pub total_processed: i32,
     pub message: String,
     pub errors: Vec<String>,
-}
-
-#[derive(serde::Serialize, Clone)]
-struct EnrichProgress {
-    current: i32,
-    total_found: i32,
-    last_game: String,
-    status: String,
 }
 
 /// Estrutura intermediária
@@ -54,17 +53,13 @@ struct ProcessedGameDetails {
     esrb_rating: Option<String>,
     is_adult: bool,
     adult_tags: Option<String>,
-    external_links: Option<String>, // JSON
+    external_links: Option<String>,
     steam_app_id: Option<String>,
     median_playtime: Option<i32>,
-    estimated_playtime: Option<f32>, // Tempo estimado em horas
+    estimated_playtime: Option<f32>,
 }
 
 // === FUNÇÕES AUXILIARES ===
-
-fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
-    database::get_secret(app_handle, "rawg_api_key")
-}
 
 fn extract_steam_id_from_url(url: &str) -> Option<String> {
     if url.contains("store.steampowered.com/app/") {
@@ -79,16 +74,92 @@ fn extract_steam_id_from_url(url: &str) -> Option<String> {
     None
 }
 
-// === LÓGICA CORE ===
+// === ENRIQUECIMENTO COM CACHE ===
 
-/// Processa um único jogo: busca RAWG, infere Steam ID, busca Steam e monta o objeto final.
-async fn process_single_game(
+/// Busca dados Steam Store com cache
+async fn fetch_steam_store_data(
+    steam_id: &str,
+    cache_conn: &rusqlite::Connection,
+) -> Option<steam::SteamStoreData> {
+    let cache_key = format!("store_{}", steam_id);
+
+    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+        if let Ok(data) = serde_json::from_str::<steam::SteamStoreData>(&cached) {
+            return Some(data);
+        }
+    }
+
+    match steam::get_app_details(steam_id).await {
+        Ok(Some(data)) => {
+            if let Ok(json) = serde_json::to_string(&data) {
+                let _ =
+                    metadata_cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
+            }
+            Some(data)
+        }
+        _ => None,
+    }
+}
+
+/// Busca reviews Steam com cache
+async fn fetch_steam_reviews(
+    steam_id: &str,
+    cache_conn: &rusqlite::Connection,
+) -> Option<steam::SteamReviewSummary> {
+    let cache_key = format!("reviews_{}", steam_id);
+
+    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+        if let Ok(reviews) = serde_json::from_str::<steam::SteamReviewSummary>(&cached) {
+            return Some(reviews);
+        }
+    }
+
+    match steam::get_app_reviews(steam_id).await {
+        Ok(Some(reviews)) => {
+            if let Ok(json) = serde_json::to_string(&reviews) {
+                let _ =
+                    metadata_cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
+            }
+            Some(reviews)
+        }
+        _ => None,
+    }
+}
+
+/// Busca median playtime com cache
+async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection) -> Option<u32> {
+    let cache_key = format!("playtime_{}", steam_id);
+
+    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+        if let Ok(hours) = cached.parse::<u32>() {
+            return Some(hours);
+        }
+    }
+
+    match steam::get_median_playtime(steam_id).await {
+        Ok(Some(hours)) => {
+            let _ = metadata_cache::save_cached_api_data(
+                cache_conn,
+                "steam",
+                &cache_key,
+                &hours.to_string(),
+            );
+            Some(hours)
+        }
+        _ => None,
+    }
+}
+
+// === LÓGICA CORE (REFATORADA) ===
+
+/// Processa um único jogo com cache integrado (sem manter lock)
+async fn enrich_game_metadata(
     api_key: &str,
-    has_rawg: bool,
     game_id: &str,
     name: &str,
     platform: &str,
     platform_id: Option<String>,
+    cache_conn: &rusqlite::Connection,
 ) -> (ProcessedGameDetails, Vec<String>) {
     let series_name = series::infer_series(name);
     let mut details = ProcessedGameDetails {
@@ -117,8 +188,6 @@ async fn process_single_game(
     };
 
     let mut links_map: HashMap<String, String> = HashMap::new();
-
-    // Variável para coletar tags do jogo
     let mut found_raw_tags: Vec<String> = Vec::new();
 
     // 1. Estratégia de Steam ID
@@ -128,80 +197,60 @@ async fn process_single_game(
         None
     };
 
-    // 2. Busca na RAWG
-    if has_rawg {
-        if let Ok(results) = rawg::search_games(api_key, name).await {
-            if let Some(best_match) = results.first() {
-                if let Ok(rawg_det) =
-                    rawg::fetch_game_details(api_key, best_match.id.to_string()).await
-                {
-                    // Coleta as tags cruas
-                    found_raw_tags = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
+    // 2. Busca na RAWG (com cache)
+    if let Some(rawg_det) = fetch_rawg_metadata(api_key, name, cache_conn).await {
+        found_raw_tags = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
 
-                    // Extrai slugs de tags para classificação posterior
-                    let raw_tag_slugs: Vec<String> = rawg_det
-                        .tags
-                        .iter()
-                        .map(|t| t.slug.clone()) // Pega o slug da RAWG
-                        .collect();
+        let raw_tag_slugs: Vec<String> = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
 
-                    // Preenchimento
-                    details.description_raw = rawg_det.description_raw;
-                    details.release_date = rawg_det.released;
-                    details.genres = rawg_det
-                        .genres
-                        .iter()
-                        .map(|g| g.name.clone())
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    details.tags =
-                        crate::services::tag_service::classify_and_sort_tags(raw_tag_slugs, 10);
-                    details.developer = rawg_det.developers.first().map(|d| d.name.clone());
-                    details.publisher = rawg_det.publishers.first().map(|p| p.name.clone());
-                    details.critic_score = rawg_det.metacritic;
-                    details.background_image = rawg_det
-                        .background_image
-                        .or(best_match.background_image.clone());
-                    details.esrb_rating = rawg_det.esrb_rating.as_ref().map(|r| r.name.clone());
+        details.description_raw = rawg_det.description_raw;
+        details.release_date = rawg_det.released;
+        details.genres = rawg_det
+            .genres
+            .iter()
+            .map(|g| g.name.clone())
+            .collect::<Vec<_>>()
+            .join(", ");
+        details.tags = crate::services::tag_service::classify_and_sort_tags(raw_tag_slugs, 10);
+        details.developer = rawg_det.developers.first().map(|d| d.name.clone());
+        details.publisher = rawg_det.publishers.first().map(|p| p.name.clone());
+        details.critic_score = rawg_det.metacritic;
+        details.background_image = rawg_det.background_image;
+        details.esrb_rating = rawg_det.esrb_rating.as_ref().map(|r| r.name.clone());
 
-                    // Links
-                    if let Some(url) = &rawg_det.website {
-                        links_map.insert("website".to_string(), url.clone());
-                    }
-                    if let Some(url) = &rawg_det.reddit_url {
-                        links_map.insert("reddit".to_string(), url.clone());
-                    }
-                    if let Some(url) = &rawg_det.metacritic_url {
-                        links_map.insert("metacritic".to_string(), url.clone());
-                    }
-                    links_map.insert(
-                        "rawg".to_string(),
-                        format!("https://rawg.io/games/{}", best_match.slug),
-                    );
+        // Links
+        if let Some(url) = &rawg_det.website {
+            links_map.insert("website".to_string(), url.clone());
+        }
+        if let Some(url) = &rawg_det.reddit_url {
+            links_map.insert("reddit".to_string(), url.clone());
+        }
+        if let Some(url) = &rawg_det.metacritic_url {
+            links_map.insert("metacritic".to_string(), url.clone());
+        }
+        links_map.insert(
+            "rawg".to_string(),
+            format!("https://rawg.io/api/games/{}", rawg_det.id),
+        );
 
-                    // Tenta descobrir Steam ID via RAWG
-                    if target_steam_id.is_none() {
-                        for store_data in &rawg_det.stores {
-                            if store_data.store.slug == "steam" {
-                                if let Some(extracted_id) =
-                                    extract_steam_id_from_url(&store_data.url)
-                                {
-                                    info!(
-                                        "Steam ID descoberto via RAWG para '{}': {}",
-                                        name, extracted_id
-                                    );
-                                    target_steam_id = Some(extracted_id);
-                                    links_map.insert("steam".to_string(), store_data.url.clone());
-                                }
-                            }
-                        }
+        // Descobre Steam ID via RAWG
+        if target_steam_id.is_none() {
+            for store_data in &rawg_det.stores {
+                if store_data.store.slug == "steam" {
+                    if let Some(extracted_id) = extract_steam_id_from_url(&store_data.url) {
+                        info!(
+                            "Steam ID descoberto via RAWG para '{}': {}",
+                            name, extracted_id
+                        );
+                        target_steam_id = Some(extracted_id);
+                        links_map.insert("steam".to_string(), store_data.url.clone());
                     }
                 }
             }
         }
     }
 
-    // 3. Busca na Steam (Se tivermos ID)
+    // 3. Busca na Steam (com cache)
     if let Some(steam_id) = &target_steam_id {
         if !links_map.contains_key("steam") {
             links_map.insert(
@@ -211,8 +260,8 @@ async fn process_single_game(
         }
         details.steam_app_id = Some(steam_id.clone());
 
-        // A. Loja (Adult + Metadados fallback)
-        if let Ok(Some(store_data)) = steam::get_app_details(steam_id).await {
+        // A. Store data
+        if let Some(store_data) = fetch_steam_store_data(steam_id, cache_conn).await {
             let (detected_adult, flags) = steam::detect_adult_content(&store_data);
             details.is_adult = detected_adult;
             if !flags.is_empty() {
@@ -232,7 +281,7 @@ async fn process_single_game(
         }
 
         // B. Reviews
-        if let Ok(Some(reviews)) = steam::get_app_reviews(steam_id).await {
+        if let Some(reviews) = fetch_steam_reviews(steam_id, cache_conn).await {
             details.steam_review_label = Some(reviews.review_score_desc);
             details.steam_review_count = Some(reviews.total_reviews as i32);
             let total = reviews.total_positive + reviews.total_negative;
@@ -243,9 +292,8 @@ async fn process_single_game(
             details.steam_review_updated_at = Some(chrono::Utc::now().to_rfc3339());
         }
 
-        // C. Median Playtime (SteamSpy) + Heurística
-        if let Ok(Some(hours)) = steam::get_median_playtime(steam_id).await {
-            // Salva o dado bruto do SteamSpy (Mediana)
+        // C. Playtime
+        if let Some(hours) = fetch_steam_playtime(steam_id, cache_conn).await {
             details.median_playtime = Some(hours as i32);
 
             let genre_list: Vec<String> = details
@@ -254,13 +302,11 @@ async fn process_single_game(
                 .map(|s| s.trim().to_lowercase())
                 .collect();
 
-            // Calcula e salva a estimativa ajustada (Heurística)
             if let Some(estimated_hours) =
                 playtime_estimator::estimate_playtime(Some(hours), &genre_list, &details.tags)
             {
                 details.estimated_playtime = Some(estimated_hours as f32);
 
-                // Log para debug
                 info!(
                     "Playtime '{}': SteamSpy={}h -> Estimado={}h",
                     name, hours, estimated_hours
@@ -273,7 +319,6 @@ async fn process_single_game(
         details.external_links = serde_json::to_string(&links_map).ok();
     }
 
-    // === LOG DE DEBUG ===
     info!(
         "Processado {}: ESRB={:?}, Playtime={:?}, SteamID={:?}",
         name, details.esrb_rating, details.median_playtime, details.steam_app_id
@@ -284,12 +329,10 @@ async fn process_single_game(
 
 // === PERSISTÊNCIA ===
 
-/// Salva os detalhes processados no banco de dados.
 fn save_game_details(
     conn: &rusqlite::Connection,
     d: ProcessedGameDetails,
 ) -> Result<(), rusqlite::Error> {
-    // 1. Salva detalhes
     let tags_json = database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
 
     conn.execute(
@@ -309,7 +352,6 @@ fn save_game_details(
         ],
     )?;
 
-    // 2. Atualiza capa na tabela principal se necessário
     if let Some(img) = d.background_image {
         conn.execute(
             "UPDATE games SET cover_url = ?1 WHERE id = ?2 AND (cover_url IS NULL OR cover_url = '')",
@@ -322,26 +364,34 @@ fn save_game_details(
 
 // === COMANDOS PRINCIPAIS ===
 
-/// Atualiza metadados de jogos na biblioteca.
-///
-/// Processa jogos em lotes assíncronos, emitindo progresso via eventos.
-/// Continua até que todos os jogos sem detalhes sejam processados.
+/// Atualiza metadados de jogos na biblioteca (OTIMIZADO)
 #[tauri::command]
 pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
     let api_key = get_api_key(&app).unwrap_or_default();
-    let has_rawg = !api_key.is_empty();
+
+    if api_key.is_empty() {
+        return Err("API Key RAWG necessária para atualização de metadados".to_string());
+    }
 
     tauri::async_runtime::spawn(async move {
-        info!("Iniciando atualização de metadados...");
+        info!("Iniciando atualização de metadados com cache...");
 
-        // Armazena todas as tags encontradas (para estatísticas futuras, se necessário)
+        let state: State<AppState> = app_handle.state();
         let mut all_session_tags: HashSet<String> = HashSet::new();
 
-        loop {
-            let state: State<AppState> = app_handle.state();
+        // Limpeza de cache expirado no início
+        {
+            let cache_conn = state.metadata_db.lock().unwrap();
+            if let Ok(deleted) = metadata_cache::cleanup_expired_cache(&cache_conn) {
+                if deleted > 0 {
+                    info!("Cache cleanup: {} entradas removidas", deleted);
+                }
+            }
+        }
 
-            // 1. Busca lote de jogos
+        loop {
+            // 1. Busca batch de jogos
             let games_to_update: Vec<(String, String, String, Option<String>)> = {
                 let conn = match state.library_db.lock() {
                     Ok(c) => c,
@@ -350,10 +400,10 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                 let mut stmt = conn
                     .prepare(
                         "SELECT g.id, g.name, g.platform, g.platform_id
-                     FROM games g
-                     LEFT JOIN game_details gd ON g.id = gd.game_id
-                     WHERE gd.game_id IS NULL
-                     LIMIT ?",
+                         FROM games g
+                         LEFT JOIN game_details gd ON g.id = gd.game_id
+                         WHERE gd.game_id IS NULL
+                         LIMIT ?",
                     )
                     .unwrap();
 
@@ -371,7 +421,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
 
             let total_in_batch = games_to_update.len();
 
-            // 2. Processa cada jogo
+            // 2. Processa batch
             for (index, (game_id, name, platform, platform_id)) in
                 games_to_update.into_iter().enumerate()
             {
@@ -385,17 +435,28 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                     },
                 );
 
-                let (processed_data, raw_tags) = process_single_game(
-                    &api_key,
-                    has_rawg,
-                    &game_id,
-                    &name,
-                    &platform,
-                    platform_id,
-                )
-                .await;
+                // Primeiro fazer o processamento SEM async que precisa do cache
+                let (processed_data, raw_tags) = {
+                    let cache_conn = state.metadata_db.lock().unwrap();
 
-                // Adiciona as tags encontradas no acumulador global
+                    // Executar TUDO com a conexão disponível e fazer await dentro do block_in_place
+                    let result = tokio::task::block_in_place(|| {
+                        let rt = tokio::runtime::Handle::current();
+                        rt.block_on(async {
+                            enrich_game_metadata(
+                                &api_key,
+                                &game_id,
+                                &name,
+                                &platform,
+                                platform_id.clone(),
+                                &cache_conn,
+                            )
+                            .await
+                        })
+                    });
+                    result
+                };
+
                 for tag in raw_tags {
                     all_session_tags.insert(tag);
                 }
@@ -406,16 +467,20 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
                         warn!("Erro ao salvar metadados para {}: {}", name, e);
                     }
                 }
+            }
 
-                if has_rawg {
-                    sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
-                } else {
-                    sleep(Duration::from_millis(STEAMSPY_RATE_LIMIT_MS)).await;
-                }
+            // 3. Rate limit por batch
+            sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
+        }
+
+        // Estatísticas do cache
+        {
+            let cache_conn = state.metadata_db.lock().unwrap();
+            if let Ok(stats) = metadata_cache::get_cache_stats(&cache_conn) {
+                info!("Cache stats: {:?}", stats);
             }
         }
 
-        // Gera relatório de tags da sessão
         match crate::services::tag_service::generate_analysis_report(&app_handle, all_session_tags)
         {
             Ok(path) => info!("Relatório de tags salvo em: {}", path),
@@ -424,93 +489,6 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
 
         info!("Metadata update concluído.");
         let _ = app_handle.emit("enrich_complete", "Metadados atualizados!");
-    });
-
-    Ok(())
-}
-
-/// Busca capas faltantes via RAWG.
-///
-/// Busca a lista de jogos SEM CAPA, e atualiza cada um que encontrar a capa na RAWG.
-#[tauri::command]
-pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
-    let app_handle = app.clone();
-    let api_key = get_api_key(&app)?;
-
-    if api_key.is_empty() {
-        return Err("API Key RAWG necessária".to_string());
-    }
-
-    tauri::async_runtime::spawn(async move {
-        info!("Iniciando busca de capas faltantes...");
-
-        let state: State<AppState> = app_handle.state();
-        let mut total_updated = 0;
-        let mut total_failed = 0;
-
-        // 1. Busca TODOS os jogos que precisam de capa de uma vez
-        let games_without_cover: Vec<(String, String)> = {
-            let conn = state.library_db.lock().unwrap();
-            let mut stmt = conn
-                .prepare("SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = ''")
-                .unwrap();
-
-            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
-                .unwrap()
-                .flatten()
-                .collect()
-        };
-
-        if !games_without_cover.is_empty() {
-            let count = games_without_cover.len();
-
-            for (index, (game_id, name)) in games_without_cover.into_iter().enumerate() {
-                // Emite progresso com prefixo "Capa:" para o frontend identificar
-                let _ = app_handle.emit(
-                    "enrich_progress",
-                    EnrichProgress {
-                        current: (index + 1) as i32,
-                        total_found: count as i32,
-                        last_game: format!("Capa: {}", name),
-                        status: "running".to_string(),
-                    },
-                );
-
-                match rawg::search_games(&api_key, &name).await {
-                    Ok(results) => {
-                        if let Some(img) = results.first().and_then(|g| g.background_image.as_ref())
-                        {
-                            let conn = state.library_db.lock().unwrap();
-                            if conn
-                                .execute(
-                                    "UPDATE games SET cover_url = ?1 WHERE id = ?2",
-                                    params![img, game_id],
-                                )
-                                .is_ok()
-                            {
-                                total_updated += 1;
-                            } else {
-                                total_failed += 1;
-                            }
-                        } else {
-                            total_failed += 1;
-                        }
-                    }
-                    Err(_) => {
-                        total_failed += 1;
-                    }
-                }
-
-                sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
-            }
-        }
-
-        // Emite o evento final
-        info!(
-            "Busca de capas finalizada: {} sucesso, {} falhas",
-            total_updated, total_failed
-        );
-        let _ = app_handle.emit("enrich_complete", "Busca de capas finalizada.");
     });
 
     Ok(())

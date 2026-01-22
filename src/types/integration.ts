@@ -23,3 +23,12 @@ export interface ImportSummary {
   message: string;
   errors: string[];
 }
+
+export interface CacheStats {
+  total: number;
+  rawg_searches: number;
+  steam_store: number;
+  steam_reviews: number;
+  steam_playtime: number;
+  expired: number;
+}

@@ -6,10 +6,13 @@
 //! **Bancos de Dados:**
 //! - library.db: armazena a biblioteca de jogos e wishlist do usuário.
 //! - secrets.db: armazena secrets encriptados com AES-256-GCM.
+//! - metadata.db: cache para respostas de APIs externas (RAWG, Steam).
 //!
 //! **Versão do Schema:** v3
 
-use crate::constants::{DB_FILENAME_LIBRARY, DB_FILENAME_SECRETS, DB_JOURNAL_MODE};
+use crate::constants::{
+    DB_FILENAME_LIBRARY, DB_FILENAME_METADATA, DB_FILENAME_SECRETS, DB_JOURNAL_MODE,
+};
 use crate::security;
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
@@ -20,6 +23,7 @@ use tauri::{AppHandle, Manager};
 pub struct AppState {
     pub library_db: Mutex<Connection>,
     pub secrets_db: Mutex<Connection>,
+    pub metadata_db: Mutex<Connection>,
 }
 
 // === INICIALIZAÇÃO CENTRALIZADA ===
@@ -72,9 +76,28 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
         secrets_path
     );
 
+    // Conexão para metadata.db (cache)
+    let metadata_path = app_data_dir.join(DB_FILENAME_METADATA);
+    let metadata_conn = Connection::open(&metadata_path)
+        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_METADATA, e))?;
+
+    metadata_conn
+        .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
+        .map_err(|e| format!("Erro ao configurar WAL no metadata.db: {}", e))?;
+
+    // Inicializa schema do cache
+    crate::services::metadata_cache::initialize_cache_db(&metadata_conn)?;
+
+    tracing::info!(
+        "Banco {} inicializado em: {:?}",
+        DB_FILENAME_METADATA,
+        metadata_path
+    );
+
     Ok(AppState {
         library_db: Mutex::new(library_conn),
         secrets_db: Mutex::new(secrets_conn),
+        metadata_db: Mutex::new(metadata_conn),
     })
 }
 

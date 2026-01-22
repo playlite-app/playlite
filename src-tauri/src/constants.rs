@@ -36,5 +36,6 @@ pub const STEAMSPY_RATE_LIMIT_MS: u64 = 1000;
 #[allow(dead_code)]
 pub const DB_FILENAME_LIBRARY: &str = "library.db";
 pub const DB_FILENAME_SECRETS: &str = "secrets.db";
+pub const DB_FILENAME_METADATA: &str = "metadata.db";
 #[allow(dead_code)]
 pub const DB_JOURNAL_MODE: &str = "WAL";
