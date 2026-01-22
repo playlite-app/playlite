@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   Copy,
   ExternalLink,
@@ -61,6 +62,15 @@ export default function Wishlist() {
     }
   };
 
+  const handleImport = async () => {
+    try {
+      const count = await invoke('import_steam_wishlist');
+      toast.success(`${count} jogos importados da Steam!`);
+    } catch (error) {
+      toast.error(`Erro: ${error}`);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -115,6 +125,9 @@ export default function Wishlist() {
         </Button>
         <Button onClick={() => setShowAddModal(true)} variant="outline">
           <Plus /> Adicionar na Lista
+        </Button>
+        <Button onClick={() => handleImport()} variant="outline">
+          <Plus /> Importar da Steam
         </Button>
       </div>
       <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

@@ -79,6 +79,7 @@ pub fn run() {
             commands::wishlist::remove_from_wishlist,
             commands::wishlist::check_wishlist_status,
             commands::wishlist::refresh_prices,
+            commands::wishlist::import_steam_wishlist,
             // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
             // Comandos de Enriquecimento de Metadados

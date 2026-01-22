@@ -4,7 +4,7 @@
 
 use crate::database::{self, AppState};
 use crate::models::WishlistGame;
-use crate::services::{itad, rawg};
+use crate::services::{itad, rawg, steam};
 use rusqlite::params;
 use tauri::{AppHandle, State};
 use tracing::{error, info};
@@ -133,6 +133,73 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
         .unwrap_or(0);
 
     Ok(count > 0)
+}
+
+/// Importa a lista de desejos da Steam e salva no banco de dados.
+/// Retorna a quantidade de jogos importados/atualizados.
+#[tauri::command]
+pub async fn import_steam_wishlist(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<usize, String> {
+    // 1. Recuperar o Steam ID configurado
+    let steam_id = database::get_secret(&app, "steam_id")?;
+    if steam_id.is_empty() {
+        return Err("Steam ID não configurado. Vá em Configurações > Integrações.".to_string());
+    }
+
+    // 2. Buscar dados da API da Steam
+    // (Esta função deve estar pública em src/services/steam.rs)
+    let games = steam::fetch_wishlist(&steam_id).await?;
+    let total = games.len();
+
+    if total == 0 {
+        return Ok(0);
+    }
+
+    // 3. Salvar no Banco de Dados (usando block_on para async dentro de sync se necessário,
+    // mas aqui estamos num comando async, então usamos o mutex direto)
+    let count = {
+        let mut conn = state
+            .library_db
+            .lock()
+            .map_err(|_| "Falha ao acessar banco de dados")?;
+
+        // Iniciamos uma transação para ser MUITO mais rápido
+        let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+        for game in games {
+            tx.execute(
+                "INSERT OR REPLACE INTO wishlist (
+                    id, name, cover_url, store_url, store_platform,
+                    current_price, normal_price, lowest_price,
+                    currency, on_sale, added_at
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                params![
+                    game.id,
+                    game.name,
+                    game.cover_url,
+                    game.store_url,
+                    "Steam", // Forçamos a plataforma como Steam
+                    game.current_price,
+                    game.normal_price,
+                    // Se já tivermos um lowest_price menor no banco, idealmente manteríamos,
+                    // mas para simplificar o import, vamos assumir o atual.
+                    // Numa v2 podemos fazer um SELECT antes para comparar.
+                    game.current_price,
+                    game.currency,
+                    game.on_sale,
+                    game.added_at
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        }
+
+        tx.commit().map_err(|e| e.to_string())?;
+        total
+    };
+
+    Ok(count)
 }
 
 /// Atualiza os preços de todos os jogos na Wishlist usando a API da ITAD.

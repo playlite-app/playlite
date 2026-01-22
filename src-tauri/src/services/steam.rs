@@ -4,9 +4,11 @@
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
 use crate::constants::{REVIEW_API_URL, STEAMSPY_API_URL, STEAM_STORE_API_URL};
+use crate::models::WishlistGame;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::time::Duration;
 
 // === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA, CONQUISTAS E WISHLIST (Requer API Key) ===
@@ -163,6 +165,98 @@ pub async fn get_player_achievements(
         Ok(d) => Ok(d.playerstats.achievements.unwrap_or_default()),
         Err(_) => Ok(vec![]), // Falha no parse (jogo sem conquistas públicas)
     }
+}
+
+/// Busca a lista de desejos pública de um perfil Steam.
+///
+/// Retorna um vetor de `WishlistGame` pronto para o banco de dados.
+pub async fn fetch_wishlist(steam_id: &str) -> Result<Vec<WishlistGame>, String> {
+    let url = format!(
+        "https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0",
+        steam_id
+    );
+
+    let res = crate::utils::http_client::HTTP_CLIENT
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !res.status().is_success() {
+        return Err(format!(
+            "Erro ao acessar Wishlist (Status {}). Verifique se o perfil e a lista de desejos estão PÚBLICOS na Steam.",
+            res.status()
+        ));
+    }
+
+    // O JSON é um Map: { "appid": { dados... }, "appid2": { ... } }
+    let json_map: HashMap<String, WishlistEntry> = res.json().await.map_err(|e| {
+        format!(
+            "Falha ao ler JSON da Steam. O perfil pode estar privado. Detalhes: {}",
+            e
+        )
+    })?;
+
+    let mut wishlist_games = Vec::new();
+
+    for (app_id, entry) in json_map {
+        // Tenta extrair preço
+        let (price, final_price, discount) = if let Some(subs) = &entry.subs {
+            if let Some(sub) = subs.first() {
+                // Preço vem em centavos como string "1999" -> 19.99
+                // Se for grátis ou não lançado, pode vir vazio ou nulo
+                let normal = sub
+                    .price
+                    .as_ref()
+                    .and_then(|p| p.parse::<f64>().ok())
+                    .map(|p| p / 100.0)
+                    .unwrap_or(0.0);
+
+                let pct = sub.discount_pct.unwrap_or(0) as f64;
+
+                // Calcula preço final baseado no desconto
+                let current = if pct > 0.0 {
+                    normal * (1.0 - (pct / 100.0))
+                } else {
+                    normal
+                };
+
+                (Some(normal), Some(current), pct > 0.0)
+            } else {
+                (None, None, false)
+            }
+        } else {
+            (None, None, false)
+        };
+
+        // Formata data de adição
+        let added_at = chrono::DateTime::from_timestamp(entry.added, 0)
+            .map(|dt| dt.to_rfc3339())
+            .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
+
+        let game = WishlistGame {
+            id: app_id.clone(),
+            name: entry.name,
+            cover_url: Some(entry.capsule), // Usa a imagem 'capsule' (padrão da lista)
+            store_url: Some(format!("https://store.steampowered.com/app/{}", app_id)),
+            store_platform: Some("Steam".to_string()),
+            itad_id: None, // Será preenchido depois se integrarmos IsThereAnyDeal
+            current_price: final_price,
+            normal_price: price,
+            lowest_price: final_price, // Inicialmente assume o atual como menor
+            currency: Some("BRL".to_string()), // Assumindo BRL por enquanto (a API retorna na moeda do IP do servidor)
+            on_sale: discount,
+            voucher: None,
+            added_at: Some(added_at),
+        };
+
+        wishlist_games.push(game);
+    }
+
+    // Ordena pelos mais recentemente adicionados
+    wishlist_games.sort_by(|a, b| b.added_at.cmp(&a.added_at));
+
+    Ok(wishlist_games)
 }
 
 //  === API DA LOJA - METADADOS, REVIEWS E CONTEÚDO ADULTO (Pública) ===
