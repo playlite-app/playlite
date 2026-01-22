@@ -4,18 +4,14 @@
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
 use crate::constants::{REVIEW_API_URL, STEAMSPY_API_URL, STEAM_STORE_API_URL};
-use crate::models::WishlistGame;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
 use std::time::Duration;
 
-// === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA, CONQUISTAS E WISHLIST (Requer API Key) ===
+// === API DE USUÁRIO - IMPORTAÇÃO DE BIBLIOTECA E CONQUISTAS (Requer API Key) ===
 
-// Estruturas auxiliares para deserializar respostas da API Steam
-
-/// Estruturas auxiliares para representar um jogo na biblioteca Steam.
+/// Estrutura auxiliar para representar um jogo na biblioteca Steam.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SteamGame {
     pub appid: u32,
@@ -37,7 +33,7 @@ struct SteamApiResponse {
     response: SteamResponseData,
 }
 
-/// Estrutura auxiliares para obter conquistas de um jogo.
+/// Estrutura auxiliar para obter conquistas de um jogo.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SteamAchievement {
     pub apiname: String,
@@ -66,31 +62,6 @@ struct RecentGamesResponse {
 struct RecentGamesData {
     games: Option<Vec<SteamGame>>,
 }
-
-/// Estruturas auxiliares para importar wishlist de um usuário Steam.
-#[derive(Debug, Deserialize)]
-struct WishlistEntry {
-    name: String,
-    capsule: String, // Capa pequena (header image)
-    review_score: Option<i32>,
-    review_desc: Option<String>,
-    release_string: Option<String>,
-    added: i64,                     // Timestamp Unix
-    subs: Option<Vec<WishlistSub>>, // Informações de preço/pacote
-    #[serde(default)]
-    priority: i32,
-    background: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct WishlistSub {
-    id: u32,
-    price: Option<String>, // Cuidado: Steam retorna "1999" (centavos) ou string vazia
-    discount_block: Option<String>, // HTML com desconto
-    discount_pct: Option<i32>,
-}
-
-// Funções da API de Usuário
 
 /// Lista todos os jogos da biblioteca de um usuário Steam.
 pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<SteamGame>, String> {
@@ -143,7 +114,7 @@ pub async fn get_player_achievements(
     steam_id: &str,
     app_id: u32,
 ) -> Result<Vec<SteamAchievement>, String> {
-    // Usamos l=brazilian para tentar pegar nomes traduzidos se disponíveis
+    // Usa l=brazilian para tentar obter os nomes traduzidos se disponíveis
     let url = format!(
         "https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={}&key={}&steamid={}&l=brazilian",
         app_id, api_key, steam_id
@@ -155,7 +126,7 @@ pub async fn get_player_achievements(
         .await
         .map_err(|e| e.to_string())?;
 
-    // Jogos sem conquistas retornam 400 ou erro, então tratamos como lista vazia
+    // Jogos sem conquistas retornam 400 ou erro, e são tratados como lista vazia
     if !res.status().is_success() {
         return Ok(vec![]);
     }
@@ -167,101 +138,7 @@ pub async fn get_player_achievements(
     }
 }
 
-/// Busca a lista de desejos pública de um perfil Steam.
-///
-/// Retorna um vetor de `WishlistGame` pronto para o banco de dados.
-pub async fn fetch_wishlist(steam_id: &str) -> Result<Vec<WishlistGame>, String> {
-    let url = format!(
-        "https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0",
-        steam_id
-    );
-
-    let res = crate::utils::http_client::HTTP_CLIENT
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if !res.status().is_success() {
-        return Err(format!(
-            "Erro ao acessar Wishlist (Status {}). Verifique se o perfil e a lista de desejos estão PÚBLICOS na Steam.",
-            res.status()
-        ));
-    }
-
-    // O JSON é um Map: { "appid": { dados... }, "appid2": { ... } }
-    let json_map: HashMap<String, WishlistEntry> = res.json().await.map_err(|e| {
-        format!(
-            "Falha ao ler JSON da Steam. O perfil pode estar privado. Detalhes: {}",
-            e
-        )
-    })?;
-
-    let mut wishlist_games = Vec::new();
-
-    for (app_id, entry) in json_map {
-        // Tenta extrair preço
-        let (price, final_price, discount) = if let Some(subs) = &entry.subs {
-            if let Some(sub) = subs.first() {
-                // Preço vem em centavos como string "1999" -> 19.99
-                // Se for grátis ou não lançado, pode vir vazio ou nulo
-                let normal = sub
-                    .price
-                    .as_ref()
-                    .and_then(|p| p.parse::<f64>().ok())
-                    .map(|p| p / 100.0)
-                    .unwrap_or(0.0);
-
-                let pct = sub.discount_pct.unwrap_or(0) as f64;
-
-                // Calcula preço final baseado no desconto
-                let current = if pct > 0.0 {
-                    normal * (1.0 - (pct / 100.0))
-                } else {
-                    normal
-                };
-
-                (Some(normal), Some(current), pct > 0.0)
-            } else {
-                (None, None, false)
-            }
-        } else {
-            (None, None, false)
-        };
-
-        // Formata data de adição
-        let added_at = chrono::DateTime::from_timestamp(entry.added, 0)
-            .map(|dt| dt.to_rfc3339())
-            .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
-
-        let game = WishlistGame {
-            id: app_id.clone(),
-            name: entry.name,
-            cover_url: Some(entry.capsule), // Usa a imagem 'capsule' (padrão da lista)
-            store_url: Some(format!("https://store.steampowered.com/app/{}", app_id)),
-            store_platform: Some("Steam".to_string()),
-            itad_id: None, // Será preenchido depois se integrarmos IsThereAnyDeal
-            current_price: final_price,
-            normal_price: price,
-            lowest_price: final_price, // Inicialmente assume o atual como menor
-            currency: Some("BRL".to_string()), // Assumindo BRL por enquanto (a API retorna na moeda do IP do servidor)
-            on_sale: discount,
-            voucher: None,
-            added_at: Some(added_at),
-        };
-
-        wishlist_games.push(game);
-    }
-
-    // Ordena pelos mais recentemente adicionados
-    wishlist_games.sort_by(|a, b| b.added_at.cmp(&a.added_at));
-
-    Ok(wishlist_games)
-}
-
 //  === API DA LOJA - METADADOS, REVIEWS E CONTEÚDO ADULTO (Pública) ===
-
-// Estruturas auxiliares para deserializar respostas da API da Loja Steam
 
 /// Detalhes da loja Steam para um aplicativo (jogo).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -305,10 +182,7 @@ pub struct SteamReviewSummary {
     pub total_reviews: u32,
 }
 
-// Funções da API da Loja
-
-/// Busca detalhes da loja (Conteúdo adulto, descrição, imagens)
-///
+/// Busca detalhes da loja (Conteúdo adulto, descrição, imagens).
 /// Retorna Option porque o jogo pode não existir na loja (removido/banido).
 pub async fn get_app_details(app_id: &str) -> Result<Option<SteamStoreData>, String> {
     // Filtra apenas os campos necessários

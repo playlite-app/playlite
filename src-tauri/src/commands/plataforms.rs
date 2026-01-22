@@ -8,7 +8,7 @@
 use crate::constants::{self};
 use crate::database::AppState;
 use crate::services::steam;
-use crate::utils::game_logic;
+use crate::utils::status_logic;
 use chrono::{TimeZone, Utc};
 use rusqlite::params;
 use tauri::State;
@@ -62,7 +62,7 @@ pub async fn import_steam_library(
             )
             .unwrap_or(false);
 
-        let status = game_logic::calculate_status(game.playtime_forever);
+        let status = status_logic::calculate_status(game.playtime_forever);
 
         // Converte Unix Timestamp (Steam) para ISO 8601 (Banco)
         let last_played_iso = if game.rtime_last_played > 0 {

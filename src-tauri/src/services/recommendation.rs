@@ -144,8 +144,7 @@ fn get_series_name(game: &GameWithDetails) -> Option<String> {
 
 // === SISTEMA DE SCORING COM PENALIZAÇÃO POR IDADE ===
 
-/// Calcula o score de afinidade entre o perfil do usuário e um jogo candidato
-///
+/// Calcula o score de afinidade entre o perfil do usuário e um jogo candidato.
 /// Considera tags categorizadas, gêneros, séries e penaliza jogos antigos.
 pub fn score_game(profile: &UserPreferenceVector, game: &GameWithDetails) -> f32 {
     let mut score = 0.0;

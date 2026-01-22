@@ -1,7 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { open } from '@tauri-apps/plugin-dialog';
 import {
   Copy,
   ExternalLink,
+  FileJson,
   Loader2,
   Plus,
   RefreshCw,
@@ -9,19 +12,24 @@ import {
   Ticket,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import AddWishlistModal from '@/components/AddWishlistModal';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
 import { useWishlist } from '../hooks/useWishlist';
 import { openExternalLink } from '../utils/navigation';
 
-export default function Wishlist() {
+interface WishlistProps {
+  searchTerm?: string;
+}
+
+export default function Wishlist({ searchTerm = '' }: WishlistProps) {
   const {
     games,
     isLoading,
@@ -57,17 +65,64 @@ export default function Wishlist() {
   const handleRefreshClick = async () => {
     try {
       await refreshPrices();
+      toast.success('Preços atualizados com sucesso!');
     } catch {
       toast.error('Erro ao atualizar preços.');
     }
   };
 
-  const handleImport = async () => {
+  // Função para importar via JSON (Steam ou ITAD)
+  useEffect(() => {
+    const unlisten = listen('wishlist_updated', () => {
+      toast.success('Capas atualizadas!');
+      refreshList();
+    });
+
+    return () => {
+      unlisten.then(f => f());
+    };
+  }, [refreshList]);
+
+  const filteredGames = useMemo(() => {
+    if (!searchTerm) return games;
+
+    const lowerTerm = searchTerm.toLowerCase();
+
+    return games.filter(game => game.name.toLowerCase().includes(lowerTerm));
+  }, [games, searchTerm]);
+
+  const handleImportJson = async () => {
+    let loadingToast: string | number | undefined;
+
     try {
-      const count = await invoke('import_steam_wishlist');
-      toast.success(`${count} jogos importados da Steam!`);
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+      });
+
+      if (selected) {
+        loadingToast = toast.loading('Importando lista...');
+        const count = await invoke<number>('import_wishlist', {
+          filePath: selected,
+        });
+        toast.dismiss(loadingToast);
+
+        if (count > 0) {
+          toast.success(`${count} jogos importados! Buscando capas...`);
+          refreshList();
+          invoke('fetch_wishlist_covers').catch(console.error);
+        } else {
+          toast.info('Nenhum jogo novo encontrado.');
+        }
+      }
     } catch (error) {
-      toast.error(`Erro: ${error}`);
+      console.error(error);
+
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+
+      toast.error('Erro na importação: ' + error);
     }
   };
 
@@ -75,7 +130,7 @@ export default function Wishlist() {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="animate-spin" />
+        <Loader2 className="text-primary animate-spin" size={32} />
       </div>
     );
   }
@@ -87,11 +142,17 @@ export default function Wishlist() {
         <ShoppingCart className="mb-4 h-16 w-16 opacity-20" />
         <h3 className="text-lg font-medium">Sua lista está vazia</h3>
         <p className="mb-4 text-sm">
-          Vá para a aba "Em Alta" para descobrir novos jogos.
+          Você pode importar sua lista da Steam/ITAD ou adicionar manualmente.
         </p>
-        <Button onClick={() => setShowAddModal(true)} variant="outline">
-          <Plus /> Adicionar na Lista
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddModal(true)} variant="outline">
+            <Plus className="mr-2 h-4 w-4" /> Adicionar Manualmente
+          </Button>
+          <Button onClick={handleImportJson} variant="outline">
+            <FileJson className="mr-2 h-4 w-4" /> Importar JSON
+          </Button>
+        </div>
+
         <AddWishlistModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
@@ -102,8 +163,9 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="custom-scrollbar flex-1 overflow-y-auto p-8 pb-20">
+      {/* HEADER DA PÁGINA */}
+      <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-red-500/10 p-2 text-red-500">
             <ShoppingCart size={24} />
@@ -115,96 +177,126 @@ export default function Wishlist() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={handleRefreshClick}
-          disabled={isRefreshing || games.length === 0}
-          variant="outline"
-        >
-          <RefreshCw className={`${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Buscando Ofertas...' : 'Atualizar Preços'}
-        </Button>
-        <Button onClick={() => setShowAddModal(true)} variant="outline">
-          <Plus /> Adicionar na Lista
-        </Button>
-        <Button onClick={() => handleImport()} variant="outline">
-          <Plus /> Importar da Steam
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {games.map(game => {
-          let priceDisplay = 'Aguardando preço...';
 
-          if (game.currentPrice !== null && game.currentPrice !== undefined) {
-            const currency = game.currency || 'USD';
-            const currencySymbol =
-              currency === 'BRL' ? 'R$' : currency === 'USD' ? 'US$' : currency;
-            priceDisplay = `${currencySymbol} ${game.currentPrice.toFixed(2)}`;
-          }
-
-          // Use a URL da loja retornada pela ITAD ou construa URL do ITAD se tiver itadId
-          const targetUrl =
-            game.storeUrl ||
-            (game.itadId
-              ? `https://isthereanydeal.com/game/${game.itadId}/`
-              : null);
-
-          return (
-            <StandardGameCard
-              key={game.id}
-              title={game.name}
-              coverUrl={game.coverUrl}
-              subtitle={priceDisplay}
-              badge={
-                game.voucher ? (
-                  <div className="flex items-center gap-1">
-                    <Ticket size={10} />
-                    <span>CUPOM: {game.voucher}</span>
-                  </div>
-                ) : game.onSale ? (
-                  'OFERTA!'
-                ) : undefined
-              }
-              actions={
-                <>
-                  {/* Botão de Copiar Cupom (Só aparece se tiver voucher) */}
-                  {game.voucher && (
-                    <ActionButton
-                      icon={Copy}
-                      variant="glass"
-                      size={16}
-                      onClick={() => {
-                        navigator.clipboard.writeText(game.voucher || '');
-                        toast.success('Cupom copiado: ' + game.voucher);
-                      }}
-                      tooltip={`Copiar: ${game.voucher}`}
-                    />
-                  )}
-                  <ActionButton
-                    icon={Trash2}
-                    variant="destructive"
-                    size={16}
-                    onClick={() => handleRemoveClick(game.id, game.name)}
-                    tooltip="Remover"
-                  />
-                  <ActionButton
-                    icon={ExternalLink}
-                    variant="secondary"
-                    size={16}
-                    disabled={!targetUrl}
-                    onClick={() => {
-                      if (targetUrl) openExternalLink(targetUrl);
-                    }}
-                    tooltip={
-                      game.storePlatform
-                        ? `Abrir em ${game.storePlatform}`
-                        : 'Ver na ITAD'
-                    }
-                  />
-                </>
-              }
+        {/* BARRA DE FERRAMENTAS (Abaixo do Header) */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={handleRefreshClick}
+            disabled={isRefreshing || games.length === 0}
+            variant="outline"
+            className="flex-1 sm:flex-none"
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
             />
-          );
-        })}
+            {isRefreshing ? 'Buscando Ofertas...' : 'Atualizar Preços'}
+          </Button>
+          <div className="flex-1 sm:flex-none" /> {/* Espaçador */}
+          <Button
+            onClick={() => setShowAddModal(true)}
+            variant="secondary"
+            className="flex-1 sm:flex-none"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Adicionar Jogo
+          </Button>
+          <Button
+            onClick={handleImportJson}
+            variant="secondary"
+            className="flex-1 sm:flex-none"
+          >
+            <FileJson className="mr-2 h-4 w-4" /> Importar Arquivo
+          </Button>
+        </div>
+      </div>
+
+      <Separator className="my-6" />
+
+      {/* GRID DE JOGOS */}
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {filteredGames.length === 0 ? (
+          <div className="text-muted-foreground col-span-full py-10 text-center">
+            Nenhum jogo encontrado para "{searchTerm}"
+          </div>
+        ) : (
+          filteredGames.map(game => {
+            let priceDisplay = 'Aguardando...';
+
+            if (game.currentPrice !== null && game.currentPrice !== undefined) {
+              const currency = game.currency || 'BRL';
+              const currencySymbol =
+                currency === 'BRL'
+                  ? 'R$'
+                  : currency === 'USD'
+                    ? 'US$'
+                    : currency;
+              priceDisplay = `${currencySymbol} ${game.currentPrice.toFixed(2)}`;
+            }
+
+            // Use a URL da loja retornada pela ITAD ou construa URL do ITAD se tiver itadId
+            const targetUrl =
+              game.storeUrl ||
+              (game.itadId
+                ? `https://isthereanydeal.com/game/${game.itadId}/`
+                : null);
+
+            return (
+              <StandardGameCard
+                key={game.id}
+                title={game.name}
+                coverUrl={game.coverUrl}
+                subtitle={priceDisplay}
+                badge={
+                  game.voucher ? (
+                    <div className="flex items-center gap-1 font-mono text-xs">
+                      <Ticket size={10} />
+                      <span>{game.voucher}</span>
+                    </div>
+                  ) : game.onSale ? (
+                    'OFERTA!'
+                  ) : undefined
+                }
+                actions={
+                  <>
+                    {/* Botão de Copiar Cupom (Só aparece se tiver voucher) */}
+                    {game.voucher && (
+                      <ActionButton
+                        icon={Copy}
+                        variant="glass"
+                        size={16}
+                        onClick={() => {
+                          navigator.clipboard.writeText(game.voucher || '');
+                          toast.success('Cupom copiado: ' + game.voucher);
+                        }}
+                        tooltip={`Copiar: ${game.voucher}`}
+                      />
+                    )}
+                    <ActionButton
+                      icon={Trash2}
+                      variant="destructive"
+                      size={16}
+                      onClick={() => handleRemoveClick(game.id, game.name)}
+                      tooltip="Remover"
+                    />
+                    <ActionButton
+                      icon={ExternalLink}
+                      variant="secondary"
+                      size={16}
+                      disabled={!targetUrl}
+                      onClick={() => {
+                        if (targetUrl) openExternalLink(targetUrl);
+                      }}
+                      tooltip={
+                        game.storePlatform
+                          ? `Abrir em ${game.storePlatform}`
+                          : 'Ver na ITAD'
+                      }
+                    />
+                  </>
+                }
+              />
+            );
+          })
+        )}
       </div>
       <AddWishlistModal
         isOpen={showAddModal}

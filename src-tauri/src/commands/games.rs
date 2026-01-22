@@ -7,7 +7,7 @@ use crate::constants;
 use crate::database;
 use crate::database::AppState;
 use crate::models;
-use crate::utils::game_logic;
+use crate::utils::status_logic;
 use chrono::Utc;
 use rusqlite::params;
 use serde::Deserialize;
@@ -129,7 +129,7 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
     // Lógica Automática de Status
     let final_status = game
         .status
-        .unwrap_or_else(|| game_logic::calculate_status(game.playtime.unwrap_or(0)));
+        .unwrap_or_else(|| status_logic::calculate_status(game.playtime.unwrap_or(0)));
 
     let added_at = Utc::now().to_rfc3339();
     let platform = game.platform.unwrap_or("Manual".to_string());

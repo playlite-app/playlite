@@ -27,8 +27,7 @@ pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, 
     Ok(profile)
 }
 
-/// Retorna o perfil formatado para o frontend (com tags como strings)
-///
+/// Retorna o perfil formatado para o frontend (com tags como strings).
 /// Converte TagKey para formato "category:slug" para facilitar uso no frontend
 #[tauri::command]
 pub fn get_user_profile_formatted(state: State<AppState>) -> Result<serde_json::Value, String> {

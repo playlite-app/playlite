@@ -7,9 +7,9 @@
 //! - `oauth`: Funções auxiliares para autenticação OAuth.
 //! - `series`: Funções auxiliares para manipulação de séries de jogos.
 
-pub mod game_logic;
 pub mod http_client;
 pub mod logger;
 pub mod oauth;
 pub(crate) mod series;
+pub mod status_logic;
 pub(crate) mod tag_utils;

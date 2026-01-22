@@ -1,14 +1,13 @@
 //! Serviço para interagir com a API da IsThereAnyDeal (ITAD)
 
+use crate::constants::ITAD_API_URL;
 use crate::security;
 use crate::utils::http_client::HTTP_CLIENT;
-use serde::Deserialize;
-
-const API_BASE: &str = "https://api.isthereanydeal.com";
+use serde::{Deserialize, Serialize};
 
 // === ESTRUTURAS PÚBLICAS ===
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ItadLookupResult {
     pub found: bool,
     pub id: Option<String>,
@@ -16,13 +15,13 @@ pub struct ItadLookupResult {
     pub title: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ItadShop {
     pub id: u64,
     pub name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ItadPrice {
     pub price: f64,
     pub currency: String,
@@ -32,7 +31,7 @@ pub struct ItadPrice {
     pub voucher: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ItadGameOverview {
     pub id: String,
     pub title: Option<String>,
@@ -82,7 +81,7 @@ pub async fn find_game_id(title: &str) -> Result<String, String> {
 
     let url = format!(
         "{}/games/lookup/v1?key={}&title={}",
-        API_BASE,
+        ITAD_API_URL,
         key,
         urlencoding::encode(title)
     );
@@ -129,7 +128,7 @@ pub async fn get_prices(itad_ids: Vec<String>) -> Result<Vec<ItadGameOverview>, 
         return Ok(vec![]);
     }
 
-    let url = format!("{}/games/overview/v2?key={}&country=BR", API_BASE, key);
+    let url = format!("{}/games/overview/v2?key={}&country=BR", ITAD_API_URL, key);
 
     tracing::debug!("ITAD Prices Request: {} items", itad_ids.len());
 

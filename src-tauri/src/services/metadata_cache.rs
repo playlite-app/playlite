@@ -159,17 +159,6 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
     Ok(deleted)
 }
 
-/// Invalida (remove) cache específico
-pub fn invalidate_cache(conn: &Connection, source: &str, external_id: &str) -> Result<(), String> {
-    conn.execute(
-        "DELETE FROM api_cache WHERE source = ?1 AND external_id = ?2",
-        params![source, external_id],
-    )
-    .map_err(|e| format!("Erro ao invalidar cache: {}", e))?;
-
-    Ok(())
-}
-
 /// Retorna estatísticas do cache
 #[derive(Debug, serde::Serialize)]
 pub struct CacheStats {

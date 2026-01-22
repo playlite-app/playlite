@@ -79,16 +79,16 @@ pub fn run() {
             commands::wishlist::remove_from_wishlist,
             commands::wishlist::check_wishlist_status,
             commands::wishlist::refresh_prices,
-            commands::wishlist::import_steam_wishlist,
+            commands::wishlist::import_wishlist,
+            commands::wishlist::fetch_wishlist_covers,
             // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
             // Comandos de Enriquecimento de Metadados
             commands::metadata_enrichment::update_metadata,
+            // Comandos de Enriquecimento de Capas
             commands::cover_enrichment::fetch_missing_covers,
             // Comandos de Refresh de Metadados
-            commands::metadata_reflesh::refresh_steam_reviews,
-            commands::metadata_reflesh::auto_refresh_wishlist_prices,
-            commands::metadata_reflesh::force_refresh_game_reviews,
+            commands::metadata_reflesh::check_and_refresh_background,
             // Comandos de Busca de Metadados
             commands::metadata_search::get_trending_games,
             commands::metadata_search::get_upcoming_games,
@@ -113,12 +113,9 @@ pub fn run() {
             // Comandos de Conquistas de Jogos
             commands::achievements::get_recent_achievements,
             // Comandos de Cache de Metadados
-            commands::cache::get_cache_stats,
             commands::cache::cleanup_cache,
             commands::cache::clear_all_cache,
-            commands::cache::invalidate_game_cache,
             commands::cache::get_detailed_cache_stats,
-            commands::cache::invalidate_game_reviews,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

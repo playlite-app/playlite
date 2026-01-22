@@ -7,17 +7,6 @@ use crate::database::AppState;
 use crate::services::metadata_cache;
 use tauri::State;
 
-/// Retorna estatísticas do cache
-#[tauri::command]
-pub fn get_cache_stats(state: State<AppState>) -> Result<metadata_cache::CacheStats, String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
-
-    metadata_cache::get_cache_stats(&conn)
-}
-
 /// Remove entradas expiradas do cache
 #[tauri::command]
 pub fn cleanup_cache(state: State<AppState>) -> Result<String, String> {
@@ -44,33 +33,6 @@ pub fn clear_all_cache(state: State<AppState>) -> Result<String, String> {
         .map_err(|e| e.to_string())?;
 
     Ok(format!("Cache limpo: {} entradas removidas", deleted))
-}
-
-/// Invalida cache de um jogo específico
-#[tauri::command]
-pub fn invalidate_game_cache(
-    state: State<AppState>,
-    source: String,
-    external_id: String,
-) -> Result<(), String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
-
-    metadata_cache::invalidate_cache(&conn, &source, &external_id)
-}
-
-/// Invalida apenas reviews de um jogo (força re-fetch)
-#[tauri::command]
-pub fn invalidate_game_reviews(state: State<AppState>, steam_app_id: String) -> Result<(), String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
-
-    let cache_key = format!("reviews_{}", steam_app_id);
-    metadata_cache::invalidate_cache(&conn, "steam", &cache_key)
 }
 
 /// Estatísticas detalhadas por tipo de cache

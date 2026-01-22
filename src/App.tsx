@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
 import { Game } from '@/types';
@@ -53,6 +54,13 @@ function AppContent() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { confirm } = useConfirm();
+
+  // Inicia atualização em background de reviews e preços
+  useEffect(() => {
+    invoke('check_and_refresh_background').catch(err => {
+      console.error('Erro ao iniciar atualização em background:', err);
+    });
+  }, []);
 
   // Selected game memo
   const selectedGame = useMemo(
@@ -169,7 +177,7 @@ function AppContent() {
           />
         );
       case 'wishlist':
-        return <Wishlist />;
+        return <Wishlist searchTerm={debouncedSearchTerm} />;
       case 'settings':
         return <Settings onLibraryUpdate={handleSettingsUpdate} />;
       default:

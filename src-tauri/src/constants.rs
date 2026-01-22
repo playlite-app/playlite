@@ -9,6 +9,7 @@ pub const STEAM_PLAYER_API_URL: &str =
     "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001";
 pub(crate) const REVIEW_API_URL: &str = "https://store.steampowered.com/appreviews";
 pub(crate) const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
+pub const ITAD_API_URL: &str = "https://api.isthereanydeal.com";
 #[allow(dead_code)]
 pub(crate) const GEMINI_API_URL: &str =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";

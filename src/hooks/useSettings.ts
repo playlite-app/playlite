@@ -1,7 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
-
-import { CacheStats } from '@/types';
+import { toast } from 'sonner';
 
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { settingsService } from '../services/settingsService';
@@ -40,9 +39,6 @@ export function useSettings(onLibraryUpdate: () => void) {
     total: number;
     game: string;
   } | null>(null);
-
-  // Estado para estatísticas do cache
-  const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
 
   // Carrega secrets ao iniciar
   useEffect(() => {
@@ -190,19 +186,6 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   };
 
-  const loadCacheStats = async () => {
-    setLoading(prev => ({ ...prev, loadingCacheStats: true }));
-
-    try {
-      const stats = await settingsService.getCacheStats();
-      setCacheStats(stats);
-    } catch (error) {
-      console.error('Erro ao carregar stats do cache:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, loadingCacheStats: false }));
-    }
-  };
-
   const cleanupCache = async () => {
     setLoading(prev => ({ ...prev, cleaningCache: true }));
     setStatus({ type: null, message: 'Limpando cache expirado...' });
@@ -210,9 +193,11 @@ export function useSettings(onLibraryUpdate: () => void) {
     try {
       const msg = await settingsService.cleanupCache();
       setStatus({ type: 'success', message: msg });
-      await loadCacheStats();
+      toast.success(msg || 'Cache expirado limpo com sucesso!');
     } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
+      const errorMsg = String(error);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setLoading(prev => ({ ...prev, cleaningCache: false }));
     }
@@ -225,35 +210,13 @@ export function useSettings(onLibraryUpdate: () => void) {
     try {
       const msg = await settingsService.clearAllCache();
       setStatus({ type: 'success', message: msg });
-      await loadCacheStats();
+      toast.success(msg || 'Todo o cache foi limpo com sucesso!');
     } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
+      const errorMsg = String(error);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setLoading(prev => ({ ...prev, clearingAllCache: false }));
-    }
-  };
-
-  const refreshSteamReviews = async () => {
-    setLoading(prev => ({ ...prev, refreshingReviews: true }));
-    setStatus({ type: null, message: 'Iniciando atualização de reviews...' });
-
-    try {
-      await settingsService.refreshSteamReviews();
-    } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
-      setLoading(prev => ({ ...prev, refreshingReviews: false }));
-    }
-  };
-
-  const autoRefreshWishlistPrices = async () => {
-    setLoading(prev => ({ ...prev, refreshingWishlistPrices: true }));
-    setStatus({ type: null, message: 'Iniciando atualização de preços...' });
-
-    try {
-      await settingsService.autoRefreshWishlistPrices();
-    } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
-      setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
     }
   };
 
@@ -369,18 +332,12 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   }, [status]);
 
-  // Carrega cache stats ao iniciar
-  useEffect(() => {
-    loadCacheStats();
-  }, []);
-
   return {
     keys,
     setKeys,
     loading,
     status,
     progress,
-    cacheStats,
     actions: {
       saveKeys,
       importLibrary,
@@ -389,11 +346,8 @@ export function useSettings(onLibraryUpdate: () => void) {
       exportDatabase,
       importDatabase,
       connectToItad,
-      loadCacheStats,
       cleanupCache,
       clearAllCache,
-      refreshSteamReviews,
-      autoRefreshWishlistPrices,
     },
   };
 }

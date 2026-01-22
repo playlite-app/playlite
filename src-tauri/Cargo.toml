@@ -46,3 +46,4 @@ base64 = "0.22.1"
 uuid = { version = "1.19.0", features = ["v4"] }
 tiny_http = "0.12.0"
 futures = "0.3.31"
+constants = "0.3.1"

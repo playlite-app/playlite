@@ -1,12 +1,19 @@
 //! Módulo de gerenciamento de lista de desejos (wishlist).
 //!
 //! Adaptado para v2.0 com integração IsThereAnyDeal.
+//! Centraliza a importação via arquivos JSON (Steam e ITAD).
 
+use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database::{self, AppState};
 use crate::models::WishlistGame;
 use crate::services::{itad, rawg, steam};
-use rusqlite::params;
-use tauri::{AppHandle, State};
+use chrono::NaiveDate;
+use rusqlite::{params, Connection};
+use serde::Deserialize;
+use std::fs;
+use std::time::Duration;
+use tauri::{AppHandle, Emitter, Manager, State};
+use tokio::time::sleep;
 use tracing::{error, info};
 
 // Adaptador local para retorno de busca (compatível com frontend)
@@ -16,6 +23,279 @@ pub struct SearchResult {
     pub name: String,
     pub cover_url: Option<String>,
 }
+
+// === LÓGICA DE INSERÇÃO COMPARTILHADA ===
+
+/// Função auxiliar privada que contém o SQL de inserção.
+/// Aceita uma conexão (ou transação) já aberta.
+fn insert_game_internal(conn: &Connection, game: &WishlistGame) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "INSERT OR REPLACE INTO wishlist (
+            id, name, cover_url, store_url, store_platform,
+            current_price, normal_price, lowest_price,
+            currency, on_sale, voucher, itad_id, added_at
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        params![
+            game.id,
+            game.name,
+            game.cover_url,
+            game.store_url,
+            game.store_platform,
+            game.current_price,
+            game.normal_price,
+            game.lowest_price,
+            game.currency,
+            game.on_sale,
+            game.voucher,
+            game.itad_id,
+            game.added_at
+        ],
+    )?;
+    Ok(())
+}
+
+// === IMPORTAÇÃO POR ARQUIVOS EXTERNOS (Steam e ITAD) ===
+
+#[derive(Deserialize)]
+struct SteamExportRoot {
+    data: Vec<SteamExportItem>,
+}
+
+#[derive(Deserialize)]
+struct SteamExportItem {
+    title: String,
+    gameid: Vec<String>,        // ex: ["steam", "app/7520"]
+    price: Option<String>,      // ex: "R$ 73,99"
+    added_date: Option<String>, // ex: "26/12/2022"
+    release_date: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct ItadExportRoot {
+    data: ItadDataWrapper,
+}
+
+#[derive(Deserialize)]
+struct ItadDataWrapper {
+    data: Vec<ItadGroup>,
+}
+
+#[derive(Deserialize)]
+struct ItadGroup {
+    games: Vec<ItadGame>,
+}
+
+#[derive(Deserialize)]
+struct ItadGame {
+    id: String, // UUID do ITAD
+    title: String,
+    added: i64, // Timestamp Unix
+}
+
+// funções auxiliares de parsing
+
+fn parse_steam_price(price_str: Option<&String>) -> Option<f64> {
+    // Remove "R$", espaços e troca vírgula por ponto
+    price_str.as_ref().and_then(|s| {
+        let clean = s.replace("R$", "").replace(' ', "").replace(',', ".");
+        clean.parse::<f64>().ok()
+    })
+}
+
+fn parse_steam_date(date_str: Option<&String>) -> String {
+    if let Some(s) = date_str {
+        // Tenta DD/MM/YYYY
+        if let Ok(date) = NaiveDate::parse_from_str(s, "%d/%m/%Y") {
+            if let Some(datetime) = date.and_hms_opt(0, 0, 0) {
+                return datetime.and_utc().to_rfc3339();
+            }
+        }
+    }
+    chrono::Utc::now().to_rfc3339()
+}
+
+/// Tenta processar o conteúdo como exportação da Steam
+fn parse_steam_wishlist(content: &str) -> Option<Vec<WishlistGame>> {
+    let export: SteamExportRoot = serde_json::from_str(content).ok()?;
+    let mut games = Vec::new();
+
+    for item in export.data {
+        // Extrai ID da Steam ("app/7520" -> "7520")
+        let app_id = item
+            .gameid
+            .get(1)
+            .and_then(|s| s.strip_prefix("app/"))
+            .unwrap_or("0")
+            .to_string();
+
+        let price = parse_steam_price(item.price.as_ref());
+
+        // Steam Export não tem imagem direta, monta a URL padrão
+        let cover_url = format!(
+            "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg",
+            app_id
+        );
+
+        games.push(WishlistGame {
+            id: app_id.clone(),
+            name: item.title,
+            cover_url: Some(cover_url),
+            store_url: Some(format!("https://store.steampowered.com/app/{}", app_id)),
+            store_platform: Some("Steam".to_string()),
+            itad_id: None,
+            current_price: price,
+            normal_price: price,
+            lowest_price: price,
+            currency: Some("BRL".to_string()),
+            on_sale: false,
+            voucher: None,
+            added_at: Some(parse_steam_date(item.added_date.as_ref())),
+        });
+    }
+    Some(games)
+}
+
+/// Tenta processar o conteúdo como exportação da ITAD (IsThereAnyDeal)
+fn parse_itad_wishlist(content: &str) -> Option<Vec<WishlistGame>> {
+    let export: ItadExportRoot = serde_json::from_str(content).ok()?;
+    let mut games = Vec::new();
+
+    for group in export.data.data {
+        for item in group.games {
+            // Conversão de data Unix
+            let added_at = chrono::DateTime::from_timestamp(item.added, 0)
+                .map(|dt| dt.to_rfc3339())
+                .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
+
+            games.push(WishlistGame {
+                id: item.id, // Usa o UUID da ITAD como ID
+                name: item.title,
+                cover_url: None, // ITAD export não tem capa, frontend deve mostrar placeholder
+                store_url: None,
+                store_platform: Some("ITAD".to_string()),
+                itad_id: None,
+                current_price: None,
+                normal_price: None,
+                lowest_price: None,
+                currency: Some("BRL".to_string()),
+                on_sale: false,
+                voucher: None,
+                added_at: Some(added_at),
+            });
+        }
+    }
+    Some(games)
+}
+
+/// Importa wishlist a partir de um arquivo JSON local (Steam ou ITAD)
+#[tauri::command]
+pub async fn import_wishlist(
+    state: State<'_, AppState>,
+    file_path: String,
+) -> Result<usize, String> {
+    // 1. Lê o arquivo
+    let content =
+        fs::read_to_string(&file_path).map_err(|e| format!("Erro ao ler arquivo: {}", e))?;
+
+    // 2. Tenta detectar o formato usando os parsers do steam.rs e wishlist logic
+    let games = if let Some(steam_games) = parse_steam_wishlist(&content) {
+        info!("Detectado formato Steam Export");
+        steam_games
+    } else if let Some(itad_games) = parse_itad_wishlist(&content) {
+        info!("Detectado formato ITAD Backup");
+        itad_games
+    } else {
+        return Err("Formato de arquivo não reconhecido.".to_string());
+    };
+
+    let total = games.len();
+    if total == 0 {
+        return Ok(0);
+    }
+
+    // 3. Salva no banco
+    {
+        let mut conn = state.library_db.lock().map_err(|_| "Falha no DB")?;
+        let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+        for game in games {
+            insert_game_internal(&tx, &game).map_err(|e| e.to_string())?;
+        }
+        tx.commit().map_err(|e| e.to_string())?;
+    }
+
+    Ok(total)
+}
+
+/// Função para buscar capas faltantes na RAWG para jogos na Wishlist.
+/// Executa em background para não travar a interface.
+#[tauri::command]
+pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
+    // 1. Pega a API Key
+    let api_key = database::get_secret(&app, "rawg_api_key")?;
+    if api_key.is_empty() {
+        return Err("API Key da RAWG não configurada.".to_string());
+    }
+
+    // 2. Executa em background para não travar a interface
+    tauri::async_runtime::spawn(async move {
+        let state: State<AppState> = app.state();
+
+        // A. Busca quais jogos estão sem capa
+        let missing_covers: Vec<(String, String)> = {
+            let conn = state.library_db.lock().unwrap();
+            let mut stmt = conn
+                .prepare("SELECT id, name FROM wishlist WHERE cover_url IS NULL OR cover_url = ''")
+                .unwrap();
+
+            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+                .unwrap()
+                .flatten()
+                .collect()
+        };
+
+        if missing_covers.is_empty() {
+            return;
+        }
+
+        info!(
+            "Buscando capas para {} jogos da wishlist...",
+            missing_covers.len()
+        );
+
+        // B. Itera e busca na RAWG (Reaproveitando a lógica do search_wishlist_game)
+        for (id, name) in missing_covers {
+            // AQUI ESTÁ O REAPROVEITAMENTO: Chamamos o serviço rawg::search_games direto
+            match rawg::search_games(&api_key, &name).await {
+                Ok(results) => {
+                    // Pega o primeiro resultado que tenha imagem
+                    if let Some(first_match) = results.iter().find(|g| g.background_image.is_some())
+                    {
+                        if let Some(cover) = &first_match.background_image {
+                            let conn = state.library_db.lock().unwrap();
+                            let _ = conn.execute(
+                                "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
+                                params![cover, id],
+                            );
+                            info!("Capa atualizada para: {}", name);
+                        }
+                    }
+                }
+                Err(e) => error!("Erro RAWG para '{}': {}", name, e),
+            }
+
+            // Respeita o limite da API (importante!)
+            sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
+        }
+
+        // C. Avisa o frontend que terminou
+        let _ = app.emit("wishlist_updated", ());
+    });
+
+    Ok(())
+}
+
+// === GERENCIAMENTO DA WISHLIST (CRUD e Preços) ===
 
 /// Busca jogos na RAWG para adicionar à Wishlist.
 #[tauri::command]
@@ -52,14 +332,25 @@ pub fn add_to_wishlist(
     current_price: Option<f64>,
     itad_id: Option<String>,
 ) -> Result<String, String> {
+    let game = WishlistGame {
+        id,
+        name,
+        cover_url,
+        store_url,
+        store_platform: None,
+        itad_id,
+        current_price,
+        normal_price: current_price,
+        lowest_price: current_price,
+        currency: Some("BRL".to_string()),
+        on_sale: false,
+        voucher: None,
+        added_at: Some(chrono::Utc::now().to_rfc3339()),
+    };
+
     let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
 
-    match conn.execute(
-        "INSERT OR REPLACE INTO wishlist (
-            id, name, cover_url, store_url, current_price, itad_id, added_at
-         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, CURRENT_TIMESTAMP)",
-        params![id, name, cover_url, store_url, current_price, itad_id],
-    ) {
+    match insert_game_internal(&conn, &game) {
         Ok(_) => Ok("Adicionado à Wishlist!".to_string()),
         Err(e) => {
             error!("Erro SQL Wishlist: {}", e);
@@ -133,73 +424,6 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
         .unwrap_or(0);
 
     Ok(count > 0)
-}
-
-/// Importa a lista de desejos da Steam e salva no banco de dados.
-/// Retorna a quantidade de jogos importados/atualizados.
-#[tauri::command]
-pub async fn import_steam_wishlist(
-    app: AppHandle,
-    state: State<'_, AppState>,
-) -> Result<usize, String> {
-    // 1. Recuperar o Steam ID configurado
-    let steam_id = database::get_secret(&app, "steam_id")?;
-    if steam_id.is_empty() {
-        return Err("Steam ID não configurado. Vá em Configurações > Integrações.".to_string());
-    }
-
-    // 2. Buscar dados da API da Steam
-    // (Esta função deve estar pública em src/services/steam.rs)
-    let games = steam::fetch_wishlist(&steam_id).await?;
-    let total = games.len();
-
-    if total == 0 {
-        return Ok(0);
-    }
-
-    // 3. Salvar no Banco de Dados (usando block_on para async dentro de sync se necessário,
-    // mas aqui estamos num comando async, então usamos o mutex direto)
-    let count = {
-        let mut conn = state
-            .library_db
-            .lock()
-            .map_err(|_| "Falha ao acessar banco de dados")?;
-
-        // Iniciamos uma transação para ser MUITO mais rápido
-        let tx = conn.transaction().map_err(|e| e.to_string())?;
-
-        for game in games {
-            tx.execute(
-                "INSERT OR REPLACE INTO wishlist (
-                    id, name, cover_url, store_url, store_platform,
-                    current_price, normal_price, lowest_price,
-                    currency, on_sale, added_at
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-                params![
-                    game.id,
-                    game.name,
-                    game.cover_url,
-                    game.store_url,
-                    "Steam", // Forçamos a plataforma como Steam
-                    game.current_price,
-                    game.normal_price,
-                    // Se já tivermos um lowest_price menor no banco, idealmente manteríamos,
-                    // mas para simplificar o import, vamos assumir o atual.
-                    // Numa v2 podemos fazer um SELECT antes para comparar.
-                    game.current_price,
-                    game.currency,
-                    game.on_sale,
-                    game.added_at
-                ],
-            )
-            .map_err(|e| e.to_string())?;
-        }
-
-        tx.commit().map_err(|e| e.to_string())?;
-        total
-    };
-
-    Ok(count)
 }
 
 /// Atualiza os preços de todos os jogos na Wishlist usando a API da ITAD.

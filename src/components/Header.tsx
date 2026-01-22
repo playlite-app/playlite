@@ -24,7 +24,9 @@ export default function Header({
 }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
 
-  const isSearchable = ['libraries', 'favorites'].includes(activeSection);
+  const isSearchable = ['libraries', 'favorites', 'wishlist'].includes(
+    activeSection
+  );
 
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur md:px-6">

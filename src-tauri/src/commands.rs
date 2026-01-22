@@ -7,9 +7,12 @@
 //! - `achievements`: Comandos para buscar conquistas recentes de jogos via Steam API.
 //! - `ai_translation`: Comandos para tradução de descrições usando IA.
 //! - `backup`: Comandos relacionados a ‘backup’ e restauração de dados.
-//! - `cache_commands`: Comandos para gerenciar o cache de metadados.
+//! - `cache`: Comandos para gerenciar o cache de metadados.
+//! - `cover_enrichment`: Comandos para enriquecer capas de jogos via RAWG API.
+//! - `enrichment_shared`: Módulo compartilhado para funcionalidades de enriquecimento de metadados.
 //! - `games`: Comandos CRUD para a biblioteca de jogos.
 //! - `metadata_enrichment`: Comandos para enriquecer metadados de jogos via RAWG API.
+//! - `metadata_reflesh`: Comandos para atualizar metadados existentes na biblioteca.
 //! - `metadata_search`: Comandos para busca de jogos via RAWG API.
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
 //! - `recommendations`: Comandos para sistema de recomendação de jogos.

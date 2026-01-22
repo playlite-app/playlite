@@ -101,7 +101,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
     })
 }
 
-// === CRIAÇÃO DO SCHEMA ===
+// === BANCO DE DADOS DE GERENCIAMENTO DE BIBLIOTECAS E WISHLIST  ===
 
 /// Cria o schema completo do banco de dados (versão v3)
 ///
@@ -213,7 +213,6 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
 }
 
 /// Inicializa o banco de dados e verifica a versão do schema.
-///
 /// Se o banco estiver desatualizado (< v3), retorna erro com instruções para o usuário.
 #[tauri::command]
 pub fn init_db(app: AppHandle, state: State<AppState>) -> Result<String, String> {
@@ -276,7 +275,6 @@ pub fn deserialize_tags(tags_json: &str) -> Vec<crate::models::GameTag> {
 // === BANCO DE DADOS PARA GERENCIAMENTO DE API KEYS (secrets.db) ===
 
 /// Obtém conexão com o banco de secrets a partir do AppState.
-///
 /// Cria automaticamente a tabela `encrypted_keys` se não existir.
 fn get_secrets_connection<'a>(
     state: &'a State<AppState>,
@@ -300,9 +298,7 @@ fn get_secrets_connection<'a>(
     Ok(conn)
 }
 
-/// Salva um secret encriptado no banco.
-///
-/// Se a chave já existir, o valor é substituído (upsert).
+/// Salva um secret encriptado no banco. Se a chave já existir, o valor é substituído (upsert).
 pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), String> {
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
@@ -318,9 +314,7 @@ pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), St
     Ok(())
 }
 
-/// Recupera e decripta um secret do banco.
-///
-/// Se a chave não existir, retorna string vazia ao invés de erro.
+/// Recupera e decripta um secret do banco. Se a chave não existir, retorna string vazia ao invés de erro.
 pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;

@@ -1,13 +1,6 @@
-//! Módulo de refresh seletivo de metadados
+//! Módulo de atualização automática em background (Preços e Reviews).
 //!
-//! Responsável por atualizar dados que mudam com frequência (reviews, preços)
-//! sem re-processar metadados completos. Complementa metadata_enrichment.rs.
-//!
-//! Design principles:
-//! - Foco em atualizações incrementais e periódicas
-//! - Reutiliza cache e funções existentes
-//! - Não duplica lógica de enriquecimento inicial
-//! - Operações assíncronas em background
+//! Executa sem travar a UI e falha silenciosamente em caso de erro.
 
 use crate::database::AppState;
 use crate::services::{itad, metadata_cache, steam};
@@ -15,502 +8,300 @@ use rusqlite::params;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
-// === ESTRUTURAS DE PROGRESSO ===
-
-#[derive(serde::Serialize, Clone)]
-struct RefreshProgress {
-    current: i32,
-    total: i32,
-    item_name: String,
-    refresh_type: String, // "reviews" | "prices"
-}
-
-// === REFRESH DE REVIEWS STEAM ===
-
-/// Busca reviews Steam atualizados (reutiliza cache)
-async fn fetch_fresh_steam_reviews(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<steam::SteamReviewSummary> {
-    // Invalida cache antigo para forçar nova busca
-    let cache_key = format!("reviews_{}", steam_id);
-    let _ = metadata_cache::invalidate_cache(cache_conn, "steam", &cache_key);
-
-    // Busca novos dados (que serão salvos no cache automaticamente)
-    match steam::get_app_reviews(steam_id).await {
-        Ok(Some(reviews)) => {
-            if let Ok(json) = serde_json::to_string(&reviews) {
-                let _ =
-                    metadata_cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
-            }
-            Some(reviews)
-        }
-        _ => None,
-    }
-}
-
-/// Atualiza apenas os reviews Steam de jogos que precisam
-///
-/// Critério: reviews com mais de 7 dias ou nunca atualizados
+/// Comando disparado ao iniciar o app.
+/// Roda numa thread separada (spawn) para não bloquear a inicialização.
 #[tauri::command]
-pub async fn refresh_steam_reviews(app: AppHandle) -> Result<String, String> {
-    let app_handle = app.clone();
+pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), String> {
+    // Clone do app_handle para usar no spawn
+    let app_clone = app.clone();
 
+    // SPAWN: Isso garante que o Frontend continua fluido imediatamente
     tauri::async_runtime::spawn(async move {
-        info!("Iniciando refresh seletivo de Steam reviews...");
+        // Pequeno delay inicial para não competir com o boot do banco de dados
+        sleep(Duration::from_secs(5)).await;
 
-        let state: State<AppState> = app_handle.state();
-        let mut updated_count = 0;
-        let mut failed_count = 0;
+        info!("Iniciando ciclo de atualização em background...");
 
-        // 1. Busca jogos que precisam atualizar reviews
-        let games_to_update: Vec<(String, String, String)> = {
-            let conn = state.library_db.lock().unwrap();
-            let mut stmt = conn
-                .prepare(
-                    "SELECT gd.game_id, gd.steam_app_id, g.name
-                     FROM game_details gd
-                     JOIN games g ON g.id = gd.game_id
-                     WHERE gd.steam_app_id IS NOT NULL
-                       AND (
-                         gd.steam_review_updated_at IS NULL
-                         OR julianday('now') - julianday(gd.steam_review_updated_at) > 7
-                       )
-                     ORDER BY g.last_played DESC NULLS LAST",
-                )
-                .unwrap();
+        let state: State<AppState> = app_clone.state();
 
-            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-                .unwrap()
-                .flatten()
-                .collect()
-        };
-
-        let total = games_to_update.len();
-        info!("Encontrados {} jogos para atualizar reviews", total);
-
-        if total == 0 {
-            let _ = app_handle.emit(
-                "reviews_refresh_complete",
-                "Nenhum review precisa atualizar",
-            );
-            return;
+        // 1. Atualizar Reviews da Steam (Se cache > 7 dias)
+        if let Err(e) = refresh_steam_reviews_background(&state).await {
+            warn!("Erro não-crítico ao atualizar reviews: {}", e);
         }
 
-        // 2. Atualiza reviews de cada jogo
-        for (index, (game_id, steam_id, name)) in games_to_update.into_iter().enumerate() {
-            // Emite progresso
-            let _ = app_handle.emit(
-                "refresh_progress",
-                RefreshProgress {
-                    current: (index + 1) as i32,
-                    total: total as i32,
-                    item_name: name.clone(),
-                    refresh_type: "reviews".to_string(),
-                },
-            );
+        // 2. Atualizar Preços da Wishlist (Se cache > 3 dias)
+        sleep(Duration::from_secs(2)).await;
 
-            info!("Atualizando reviews: {} (Steam ID: {})", name, steam_id);
+        if let Err(e) = refresh_wishlist_prices_background(&app_clone, &state).await {
+            warn!("Erro não-crítico ao atualizar preços: {}", e);
+        }
 
-            // Busca reviews atualizados
-            let reviews_data = {
-                let cache_conn = state.metadata_db.lock().unwrap();
-                tokio::task::block_in_place(|| {
-                    let rt = tokio::runtime::Handle::current();
-                    rt.block_on(async { fetch_fresh_steam_reviews(&steam_id, &cache_conn).await })
+        info!("Ciclo de atualização em background finalizado.");
+        // Opcional: Avisar frontend que terminou (para debug), mas usuário comum nem precisa saber
+        let _ = app_clone.emit("background_refresh_complete", ());
+    });
+
+    Ok(())
+}
+
+/// Atualiza reviews apenas se o cache estiver expirado
+async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result<(), String> {
+    // A. Ler IDs da Steam do banco (Leitura rápida)
+    let steam_games: Vec<(u32, String)> = {
+        let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
+
+        conn.prepare("SELECT game_id, title FROM games WHERE platform = 'Steam'")
+            .and_then(|mut stmt| {
+                stmt.query_map([], |row| {
+                    let id_str: String = row.get(0)?;
+                    let title: String = row.get(1)?;
+                    Ok((id_str.parse::<u32>().unwrap_or(0), title))
                 })
-            };
-
-            match reviews_data {
-                Some(reviews) => {
-                    let total_reviews = reviews.total_positive + reviews.total_negative;
-                    let score = if total_reviews > 0 {
-                        Some((reviews.total_positive as f32 / total_reviews as f32) * 100.0)
-                    } else {
-                        None
-                    };
-
-                    // Atualiza apenas campos de review
-                    let conn = state.library_db.lock().unwrap();
-                    match conn.execute(
-                        "UPDATE game_details SET
-                            steam_review_label = ?1,
-                            steam_review_count = ?2,
-                            steam_review_score = ?3,
-                            steam_review_updated_at = ?4
-                         WHERE game_id = ?5",
-                        params![
-                            reviews.review_score_desc,
-                            reviews.total_reviews as i32,
-                            score,
-                            chrono::Utc::now().to_rfc3339(),
-                            game_id
-                        ],
-                    ) {
-                        Ok(_) => {
-                            updated_count += 1;
-                            info!(
-                                "Reviews atualizados: {} - {} ({:.1}%)",
-                                name,
-                                reviews.review_score_desc,
-                                score.unwrap_or(0.0)
-                            );
-                        }
-                        Err(e) => {
-                            failed_count += 1;
-                            warn!("Erro ao salvar reviews para {}: {}", name, e);
-                        }
-                    }
-                }
-                None => {
-                    failed_count += 1;
-                    warn!("Falha ao buscar reviews para {}", name);
-                }
-            }
-
-            // Rate limit (1 req/sec para Steam)
-            sleep(Duration::from_millis(1000)).await;
-        }
-
-        let summary = format!(
-            "{} reviews atualizados | {} falhas",
-            updated_count, failed_count
-        );
-
-        info!("🏁 Refresh de reviews concluído: {}", summary);
-        let _ = app_handle.emit("reviews_refresh_complete", summary.clone());
-    });
-
-    Ok("Atualização de reviews iniciada em background".to_string())
-}
-
-// === REFRESH DE PREÇOS WISHLIST ===
-
-/// Atualiza preços da wishlist de forma automática
-///
-/// Critério: jogos com preços desatualizados há mais de 3 dias
-#[tauri::command]
-pub async fn auto_refresh_wishlist_prices(app: AppHandle) -> Result<String, String> {
-    let app_handle = app.clone();
-
-    tauri::async_runtime::spawn(async move {
-        info!("Iniciando auto-refresh de preços da wishlist...");
-
-        let state: State<AppState> = app_handle.state();
-
-        // 1. Busca jogos que precisam atualizar
-        let games_to_update: Vec<(String, String, Option<String>)> = {
-            let conn = state.library_db.lock().unwrap();
-            let mut stmt = conn
-                .prepare(
-                    "SELECT id, name, itad_id
-                     FROM wishlist
-                     WHERE itad_id IS NOT NULL
-                       AND itad_id != ''
-                       AND (
-                         added_at IS NULL
-                         OR julianday('now') - julianday(added_at) > 3
-                       )
-                     ORDER BY added_at ASC NULLS FIRST",
-                )
-                .unwrap();
-
-            stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-                .unwrap()
-                .flatten()
-                .collect()
-        };
-
-        let total = games_to_update.len();
-
-        if total == 0 {
-            info!("Nenhum jogo da wishlist precisa atualizar preços");
-            let _ = app_handle.emit(
-                "wishlist_refresh_complete",
-                "Nenhum preço precisa atualizar",
-            );
-            return;
-        }
-
-        info!("{} jogos da wishlist precisam atualizar preços", total);
-
-        // 2. Coleta IDs para buscar em batch
-        let mut game_map = std::collections::HashMap::new();
-        let mut itad_ids = Vec::new();
-
-        for (local_id, name, itad_id) in games_to_update {
-            if let Some(id) = itad_id {
-                itad_ids.push(id.clone());
-                game_map.insert(id, (local_id, name));
-            }
-        }
-
-        // 3. Busca preços na ITAD
-        let overviews = match itad::get_prices(itad_ids).await {
-            Ok(data) => data,
-            Err(e) => {
-                warn!("Erro ao buscar preços na ITAD: {}", e);
-                let _ = app_handle.emit("wishlist_refresh_complete", format!("Erro: {}", e));
-                return;
-            }
-        };
-
-        info!("Recebidos {} resultados de preços da ITAD", overviews.len());
-
-        let mut updated_count = 0;
-        let mut failed_count = 0;
-
-        // 4. Atualiza apenas os preços
-        for (index, game_data) in overviews.iter().enumerate() {
-            if let Some((local_id, name)) = game_map.get(&game_data.id) {
-                // Emite progresso
-                let _ = app_handle.emit(
-                    "refresh_progress",
-                    RefreshProgress {
-                        current: (index + 1) as i32,
-                        total: overviews.len() as i32,
-                        item_name: name.clone(),
-                        refresh_type: "prices".to_string(),
-                    },
-                );
-
-                if let Some(deal) = &game_data.current {
-                    let lowest = game_data
-                        .lowest
-                        .as_ref()
-                        .map(|l| l.price)
-                        .unwrap_or(deal.price);
-                    let cut = deal.cut.unwrap_or(0) as f64;
-                    let normal_price = if cut > 0.0 {
-                        deal.price / (1.0 - (cut / 100.0))
-                    } else {
-                        deal.price
-                    };
-
-                    // Adquire lock apenas quando necessário
-                    let conn = state.library_db.lock().unwrap();
-                    match conn.execute(
-                        "UPDATE wishlist SET
-                            current_price = ?1,
-                            currency = ?2,
-                            lowest_price = ?3,
-                            store_platform = ?4,
-                            store_url = ?5,
-                            on_sale = ?6,
-                            normal_price = ?7,
-                            voucher = ?8,
-                            added_at = CURRENT_TIMESTAMP
-                         WHERE id = ?9",
-                        params![
-                            deal.price,
-                            deal.currency,
-                            lowest,
-                            deal.shop.name,
-                            deal.url,
-                            deal.cut > Some(0),
-                            normal_price,
-                            deal.voucher,
-                            local_id
-                        ],
-                    ) {
-                        Ok(_) => {
-                            updated_count += 1;
-                            info!(
-                                "Preço atualizado: {} - {} {}",
-                                name, deal.currency, deal.price
-                            );
-                        }
-                        Err(e) => {
-                            failed_count += 1;
-                            warn!("Erro ao atualizar preço de {}: {}", name, e);
-                        }
-                    }
-                    // Lock é liberado automaticamente aqui
-                } else {
-                    warn!("Nenhuma oferta atual disponível para: {}", name);
-                }
-            }
-        }
-
-        let summary = format!(
-            "{} preços atualizados | {} falhas",
-            updated_count, failed_count
-        );
-
-        info!("Auto-refresh de preços concluído: {}", summary);
-        let _ = app_handle.emit("wishlist_refresh_complete", summary.clone());
-    });
-
-    Ok("Atualização de preços iniciada em background".to_string())
-}
-
-// === REFRESH MANUAL FORÇADO ===
-
-/// Força refresh de reviews de um jogo específico
-///
-/// Útil quando usuário quer atualizar manualmente
-#[tauri::command]
-pub async fn force_refresh_game_reviews(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    game_id: String,
-) -> Result<String, String> {
-    info!("Forçando refresh de reviews para game_id: {}", game_id);
-
-    // 1. Busca Steam ID do jogo
-    let (steam_id, name): (String, String) = {
-        let conn = state.library_db.lock().unwrap();
-        conn.query_row(
-            "SELECT gd.steam_app_id, g.name
-             FROM game_details gd
-             JOIN games g ON g.id = gd.game_id
-             WHERE gd.game_id = ?1 AND gd.steam_app_id IS NOT NULL",
-            params![game_id],
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        )
-        .map_err(|e| format!("Jogo não encontrado ou sem Steam ID: {}", e))?
+                .and_then(|mapped| mapped.collect::<Result<Vec<_>, _>>())
+            })
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .filter(|(id, _)| *id > 0)
+            .collect()
     };
 
-    // 2. Busca reviews atualizados
-    let reviews = {
-        let cache_conn = state.metadata_db.lock().unwrap();
-        tokio::task::block_in_place(|| {
-            let rt = tokio::runtime::Handle::current();
-            rt.block_on(async { fetch_fresh_steam_reviews(&steam_id, &cache_conn).await })
-        })
+    if steam_games.is_empty() {
+        return Ok(());
     }
-    .ok_or_else(|| "Falha ao buscar reviews da Steam".to_string())?;
 
-    // 3. Atualiza no banco
-    let total_reviews = reviews.total_positive + reviews.total_negative;
-    let score = if total_reviews > 0 {
-        Some((reviews.total_positive as f32 / total_reviews as f32) * 100.0)
-    } else {
-        None
-    };
-
-    let conn = state.library_db.lock().unwrap();
-    conn.execute(
-        "UPDATE game_details SET
-            steam_review_label = ?1,
-            steam_review_count = ?2,
-            steam_review_score = ?3,
-            steam_review_updated_at = ?4
-         WHERE game_id = ?5",
-        params![
-            reviews.review_score_desc,
-            reviews.total_reviews as i32,
-            score,
-            chrono::Utc::now().to_rfc3339(),
-            game_id
-        ],
-    )
-    .map_err(|e| format!("Erro ao salvar reviews: {}", e))?;
-
-    let summary = format!(
-        "Reviews atualizados: {} - {} ({:.1}%)",
-        name,
-        reviews.review_score_desc,
-        score.unwrap_or(0.0)
+    info!(
+        "Verificando validade dos reviews para {} jogos...",
+        steam_games.len()
     );
+    let mut updated_count = 0;
 
-    info!("{}", summary);
-    let _ = app.emit("game_reviews_updated", game_id);
+    // B. Iterar jogos
+    for (app_id, _title) in steam_games {
+        let should_update = {
+            let cache_conn = state.metadata_db.lock().unwrap();
+            let cache_key = format!("reviews_{}", app_id);
+            // Verifica se o cache expirou
+            metadata_cache::get_cached_api_data(&cache_conn, "steam", &cache_key).is_none()
+        };
 
-    Ok(summary)
+        if should_update {
+            let app_id_str = app_id.to_string();
+            // C. Busca na API (Só se expirou)
+            match steam::get_app_reviews(&app_id_str).await {
+                Ok(Some(summary)) => {
+                    // D. Sucesso? Atualiza Library DB e Metadata Cache
+                    {
+                        // 1. Salva no Cache (para não buscar de novo por 7 dias)
+                        let cache_conn = state.metadata_db.lock().unwrap();
+                        let cache_key = format!("reviews_{}", app_id);
+                        let json = serde_json::to_string(&summary).unwrap_or_default();
+                        let _ = metadata_cache::save_cached_api_data(
+                            &cache_conn,
+                            "steam",
+                            &cache_key,
+                            &json,
+                        );
+                    }
+
+                    {
+                        // 2. Salva na Tabela de Jogos (Library)
+                        // Calcula a porcentagem de avaliações positivas
+                        let total = summary.total_reviews;
+                        let percent_positive = if total > 0 {
+                            (summary.total_positive as f64 / total as f64 * 100.0) as i32
+                        } else {
+                            0
+                        };
+
+                        let conn = state.library_db.lock().unwrap();
+                        let _ = conn.execute(
+                            "UPDATE games SET user_rating = ?1 WHERE game_id = ?2",
+                            params![percent_positive, app_id_str],
+                        );
+                    }
+                    updated_count += 1;
+                }
+                Ok(None) => { /* Jogo não tem reviews ou erro 404, ignora */ }
+                Err(e) => {
+                    // E. Erro de API/Conexão? IGNORA. Mantém o dado velho.
+                    warn!("Falha ao buscar review {}: {}", app_id, e);
+                }
+            }
+            // Rate limit suave
+            sleep(Duration::from_millis(200)).await;
+        }
+    }
+
+    if updated_count > 0 {
+        info!("{} reviews atualizados no banco.", updated_count);
+    }
+
+    Ok(())
 }
 
-/// Força refresh de preço de um jogo específico da wishlist
-#[tauri::command]
-pub async fn force_refresh_wishlist_price(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    wishlist_id: String,
-) -> Result<String, String> {
+/// Atualiza preços da Wishlist se o cache expirou
+async fn refresh_wishlist_prices_background(
+    app: &AppHandle,
+    state: &State<'_, AppState>,
+) -> Result<(), String> {
+    // A. Ler Wishlist com itad_id
+    let wishlist_items: Vec<(String, String, Option<String>)> = {
+        let conn = state.library_db.lock().map_err(|_| "Falha DB")?;
+
+        conn.prepare("SELECT id, name, itad_id FROM wishlist")
+            .and_then(|mut stmt| {
+                stmt.query_map([], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, Option<String>>(2)?,
+                    ))
+                })
+                .and_then(|mapped| mapped.collect::<Result<Vec<_>, _>>())
+            })
+            .map_err(|e| e.to_string())?
+    };
+
+    if wishlist_items.is_empty() {
+        return Ok(());
+    }
+
     info!(
-        "Forçando refresh de preço para wishlist_id: {}",
-        wishlist_id
+        "Verificando preços para {} itens da wishlist...",
+        wishlist_items.len()
     );
 
-    // 1. Busca ITAD ID do jogo
-    let (itad_id, name): (String, String) = {
-        let conn = state.library_db.lock().unwrap();
-        conn.query_row(
-            "SELECT itad_id, name FROM wishlist WHERE id = ?1 AND itad_id IS NOT NULL",
-            params![wishlist_id],
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        )
-        .map_err(|e| format!("Jogo não encontrado na wishlist ou sem ITAD ID: {}", e))?
-    };
+    // B. Coleta IDs da ITAD que precisam atualizar
+    let mut itad_ids_to_fetch = Vec::new();
+    let mut game_map = std::collections::HashMap::new();
 
-    // 2. Busca preço atualizado
-    let overviews = itad::get_prices(vec![itad_id.clone()]).await?;
+    for (local_id, name, itad_id_opt) in wishlist_items {
+        // Verifica se tem ITAD ID
+        let itad_id = match itad_id_opt {
+            Some(id) if !id.is_empty() => id,
+            _ => {
+                // Se não tem ITAD ID, tenta buscar
+                match itad::find_game_id(&name).await {
+                    Ok(found_id) => {
+                        // Salva no banco para cachear
+                        let conn = state.library_db.lock().unwrap();
+                        let _ = conn.execute(
+                            "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
+                            params![&found_id, &local_id],
+                        );
+                        found_id
+                    }
+                    Err(_) => {
+                        continue; // Pula se não encontrou
+                    }
+                }
+            }
+        };
 
-    let game_data = overviews
-        .first()
-        .ok_or_else(|| "Nenhum dado de preço retornado pela ITAD".to_string())?;
+        // Verifica Cache
+        let should_update = {
+            let cache_conn = state.metadata_db.lock().unwrap();
+            let cache_key = format!("price_{}", itad_id);
+            // Se não existe em cache ou expirou, precisa atualizar
+            metadata_cache::get_cached_api_data(&cache_conn, "itad", &cache_key).is_none()
+        };
 
-    let deal = game_data
-        .current
-        .as_ref()
-        .ok_or_else(|| "Nenhuma oferta atual disponível".to_string())?;
-
-    // 3. Atualiza no banco
-    let lowest = game_data
-        .lowest
-        .as_ref()
-        .map(|l| l.price)
-        .unwrap_or(deal.price);
-    let cut = deal.cut.unwrap_or(0) as f64;
-    let normal_price = if cut > 0.0 {
-        deal.price / (1.0 - (cut / 100.0))
-    } else {
-        deal.price
-    };
-
-    let conn = state.library_db.lock().unwrap();
-    conn.execute(
-        "UPDATE wishlist SET
-            current_price = ?1,
-            currency = ?2,
-            lowest_price = ?3,
-            store_platform = ?4,
-            store_url = ?5,
-            on_sale = ?6,
-            normal_price = ?7,
-            voucher = ?8,
-            added_at = CURRENT_TIMESTAMP
-         WHERE id = ?9",
-        params![
-            deal.price,
-            deal.currency,
-            lowest,
-            deal.shop.name,
-            deal.url,
-            deal.cut > Some(0),
-            normal_price,
-            deal.voucher,
-            wishlist_id
-        ],
-    )
-    .map_err(|e| format!("Erro ao salvar preço: {}", e))?;
-
-    let summary = format!(
-        "Preço atualizado: {} - {} {} {}",
-        name,
-        deal.currency,
-        deal.price,
-        if deal.cut > Some(0) {
-            format!("(-{}%)", deal.cut.unwrap())
-        } else {
-            String::new()
+        if should_update {
+            itad_ids_to_fetch.push(itad_id.clone());
+            game_map.insert(itad_id, (local_id, name));
         }
+    }
+
+    if itad_ids_to_fetch.is_empty() {
+        info!("Todos os preços estão atualizados no cache.");
+        return Ok(());
+    }
+
+    // C. Busca preços em lote da ITAD
+    info!(
+        "Buscando preços atualizados para {} jogos...",
+        itad_ids_to_fetch.len()
     );
 
-    info!("{}", summary);
-    let _ = app.emit("wishlist_price_updated", wishlist_id);
+    let overviews = match itad::get_prices(itad_ids_to_fetch).await {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Erro ao buscar preços da ITAD: {}", e);
+            return Err(e);
+        }
+    };
 
-    Ok(summary)
+    let mut updated_count = 0;
+
+    // D. Atualiza banco e cache
+    for game_data in overviews {
+        if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {
+            // Salva no cache como um JSON simplificado
+            {
+                let cache_conn = state.metadata_db.lock().unwrap();
+                let cache_key = format!("price_{}", game_data.id);
+
+                // Cria um JSON manual com os dados relevantes
+                let cache_data = serde_json::json!({
+                    "id": game_data.id,
+                    "current_price": game_data.current.as_ref().map(|d| d.price),
+                    "currency": game_data.current.as_ref().map(|d| &d.currency),
+                    "lowest_price": game_data.lowest.as_ref().map(|d| d.price),
+                });
+
+                let json = cache_data.to_string();
+                let _ =
+                    metadata_cache::save_cached_api_data(&cache_conn, "itad", &cache_key, &json);
+            }
+
+            // Atualiza preços no banco de dados
+            if let Some(deal) = game_data.current {
+                let lowest = game_data.lowest.map(|l| l.price).unwrap_or(deal.price);
+
+                let cut = deal.cut.unwrap_or(0) as f64;
+                let normal_price = if cut > 0.0 {
+                    deal.price / (1.0 - (cut / 100.0))
+                } else {
+                    deal.price
+                };
+
+                let conn = state.library_db.lock().unwrap();
+                match conn.execute(
+                    "UPDATE wishlist SET
+                        current_price = ?1,
+                        currency = ?2,
+                        lowest_price = ?3,
+                        store_platform = ?4,
+                        store_url = ?5,
+                        on_sale = ?6,
+                        normal_price = ?7,
+                        voucher = ?8
+                     WHERE id = ?9",
+                    params![
+                        deal.price,
+                        deal.currency,
+                        lowest,
+                        deal.shop.name,
+                        deal.url,
+                        deal.cut > Some(0),
+                        normal_price,
+                        deal.voucher,
+                        local_id
+                    ],
+                ) {
+                    Ok(_) => updated_count += 1,
+                    Err(e) => error!("Erro ao atualizar preço: {}", e),
+                }
+            }
+        }
+    }
+
+    if updated_count > 0 {
+        info!("{} preços atualizados na wishlist.", updated_count);
+        let _ = app.emit("wishlist_prices_updated", ());
+    }
+
+    Ok(())
 }

@@ -5,15 +5,13 @@ import {
   Database,
   Download,
   ExternalLink,
+  FileJson,
   Gamepad2,
-  HardDrive,
   Loader2,
   RefreshCcw,
   Save,
   Search,
-  ShoppingCart,
   Sparkles,
-  Star,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -59,7 +57,7 @@ const SettingsRow = ({
 );
 
 export default function Settings({ onLibraryUpdate }: SettingsProps) {
-  const { keys, setKeys, loading, status, progress, cacheStats, actions } =
+  const { keys, setKeys, loading, status, progress, actions } =
     useSettings(onLibraryUpdate);
 
   if (loading.initial) {
@@ -203,7 +201,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               </Button>
             </div>
 
-            {/* Feedback de Progresso (Mostra se QUALQUER um estiver rodando) */}
+            {/* Feedback de Progresso */}
             {(loading.enriching || loading.fetchingCovers) && progress && (
               <div className="text-muted-foreground animate-pulse text-center text-xs">
                 Processando: {progress.game} ({progress.current}/
@@ -248,190 +246,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 4: GERENCIAMENTO DE CACHE */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Gerenciamento de Cache</h3>
-          {cacheStats && (
-            <div className="text-muted-foreground text-xs">
-              {cacheStats.total} entradas armazenadas
-              {cacheStats.expired > 0 && (
-                <span className="ml-2 text-yellow-500">
-                  ({cacheStats.expired} expiradas)
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Estatísticas do Cache */}
-        <SettingsRow
-          icon={HardDrive}
-          title="Estatísticas do Cache"
-          description="Visualize dados armazenados localmente para acelerar atualizações."
-        >
-          <div className="space-y-2">
-            {loading.loadingCacheStats ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              </div>
-            ) : cacheStats ? (
-              <div className="bg-background/50 grid grid-cols-2 gap-2 rounded-lg border p-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">RAWG:</span>
-                  <span className="font-medium">
-                    {cacheStats.rawg_searches}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Steam Store:</span>
-                  <span className="font-medium">{cacheStats.steam_store}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Reviews:</span>
-                  <span className="font-medium">
-                    {cacheStats.steam_reviews}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Playtime:</span>
-                  <span className="font-medium">
-                    {cacheStats.steam_playtime}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center text-sm">
-                Nenhum dado de cache disponível
-              </p>
-            )}
-            <Button
-              onClick={actions.loadCacheStats}
-              variant="ghost"
-              size="sm"
-              className="w-full"
-              disabled={loading.loadingCacheStats}
-            >
-              {loading.loadingCacheStats ? (
-                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-              ) : (
-                <RefreshCcw className="mr-2 h-3 w-3" />
-              )}
-              Atualizar Estatísticas
-            </Button>
-          </div>
-        </SettingsRow>
-
-        {/* Atualização Seletiva de Reviews */}
-        <SettingsRow
-          icon={Star}
-          title="Atualizar Reviews Steam"
-          description="Atualiza apenas reviews desatualizados (> 7 dias) sem reprocessar metadados."
-        >
-          <div className="space-y-2">
-            <Button
-              onClick={actions.refreshSteamReviews}
-              variant="outline"
-              className="w-full"
-              disabled={loading.refreshingReviews}
-            >
-              {loading.refreshingReviews ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Star className="mr-2 h-4 w-4" />
-              )}
-              Atualizar Reviews
-            </Button>
-            {loading.refreshingReviews && progress && (
-              <div className="text-muted-foreground animate-pulse text-center text-xs">
-                Atualizando: {progress.game} ({progress.current}/
-                {progress.total})
-              </div>
-            )}
-          </div>
-        </SettingsRow>
-
-        {/* Atualização Automática de Preços */}
-        <SettingsRow
-          icon={ShoppingCart}
-          title="Atualizar Preços da Wishlist"
-          description="Atualiza preços desatualizados (> 3 dias) automaticamente."
-        >
-          <div className="space-y-2">
-            <Button
-              onClick={actions.autoRefreshWishlistPrices}
-              variant="outline"
-              className="w-full"
-              disabled={loading.refreshingWishlistPrices}
-            >
-              {loading.refreshingWishlistPrices ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="mr-2 h-4 w-4" />
-              )}
-              Verificar Ofertas
-            </Button>
-            {loading.refreshingWishlistPrices && progress && (
-              <div className="text-muted-foreground animate-pulse text-center text-xs">
-                Verificando: {progress.game} ({progress.current}/
-                {progress.total})
-              </div>
-            )}
-          </div>
-        </SettingsRow>
-
-        {/* Limpeza de Cache */}
-        <SettingsRow
-          icon={Database}
-          title="Limpar Cache"
-          description="Remova dados expirados ou todo o cache para liberar espaço."
-        >
-          <div className="flex gap-2">
-            <Button
-              onClick={actions.cleanupCache}
-              variant="outline"
-              className="flex-1"
-              disabled={
-                loading.cleaningCache || !cacheStats || cacheStats.expired === 0
-              }
-              title={
-                cacheStats?.expired === 0
-                  ? 'Nenhum dado expirado'
-                  : `Remover ${cacheStats?.expired} entradas expiradas`
-              }
-            >
-              {loading.cleaningCache ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCcw className="mr-2 h-4 w-4" />
-              )}
-              Expirados
-              {cacheStats && cacheStats.expired > 0 && (
-                <span className="ml-1 text-xs">({cacheStats.expired})</span>
-              )}
-            </Button>
-            <Button
-              onClick={actions.clearAllCache}
-              variant="outline"
-              className="flex-1 text-red-500 hover:bg-red-500/10"
-              disabled={
-                loading.clearingAllCache ||
-                !cacheStats ||
-                cacheStats.total === 0
-              }
-            >
-              {loading.clearingAllCache ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              Tudo
-            </Button>
-          </div>
-        </SettingsRow>
-      </section>
-
-      {/* SEÇÃO 5: ZONA DE DADOS */}
+      {/* SEÇÃO 4: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 
@@ -455,7 +270,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
 
         <SettingsRow
-          icon={Database}
+          icon={FileJson}
           title="Gerenciar Backup"
           description="Exporte ou restaure sua biblioteca completa (JSON)."
         >
@@ -487,6 +302,39 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                   <Upload className="mr-2 h-4 w-4" /> Exportar
                 </>
               )}
+            </Button>
+          </div>
+        </SettingsRow>
+
+        <SettingsRow
+          icon={Database}
+          title="Limpar Cache"
+          description="Remova dados expirados ou todo o cache para liberar espaço."
+        >
+          <div className="flex gap-2">
+            <Button
+              onClick={actions.cleanupCache}
+              variant="outline"
+              className="flex-1"
+            >
+              {loading.cleaningCache ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="mr-2 h-4 w-4" />
+              )}
+              Expirados
+            </Button>
+            <Button
+              onClick={actions.clearAllCache}
+              variant="outline"
+              className="flex-1 text-red-500 hover:bg-red-500/10"
+            >
+              {loading.clearingAllCache ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              Tudo
             </Button>
           </div>
         </SettingsRow>

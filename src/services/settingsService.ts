@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
 import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
-import { CacheStats, ImportSummary, KeysBatch } from '@/types';
+import { ImportSummary, KeysBatch } from '@/types';
 
 export const settingsService = {
   getSecrets: async (): Promise<KeysBatch> => {
@@ -141,14 +141,6 @@ export const settingsService = {
   },
 
   /**
-   * Obtém estatísticas detalhadas do cache de metadados.
-   * Mostra quantidade de entradas por tipo e quantas estão expiradas.
-   */
-  getCacheStats: async (): Promise<CacheStats> => {
-    return await invoke<CacheStats>('get_cache_stats');
-  },
-
-  /**
    * Remove apenas entradas expiradas do cache.
    * Mantém dados ainda válidos baseado nos TTLs configurados.
    */
@@ -162,21 +154,5 @@ export const settingsService = {
    */
   clearAllCache: async (): Promise<string> => {
     return await invoke<string>('clear_all_cache');
-  },
-
-  /**
-   * Atualiza reviews Steam de jogos desatualizados (> 7 dias).
-   * Executa em background e emite eventos de progresso.
-   */
-  refreshSteamReviews: async (): Promise<string> => {
-    return await invoke<string>('refresh_steam_reviews');
-  },
-
-  /**
-   * Atualiza preços da wishlist automaticamente (> 3 dias).
-   * Mais rápido que refresh manual - só atualiza o necessário.
-   */
-  autoRefreshWishlistPrices: async (): Promise<string> => {
-    return await invoke<string>('auto_refresh_wishlist_prices');
   },
 };

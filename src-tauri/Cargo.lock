@@ -15,6 +15,7 @@ dependencies = [
  "aes-gcm",
  "base64 0.22.1",
  "chrono",
+ "constants",
  "futures",
  "lazy_static",
  "once_cell",
@@ -585,6 +586,12 @@ checksum = "4ca0197aee26d1ae37445ee532fefce43251d24cc7c166799f4d46817f1d3973"
 dependencies = [
  "crossbeam-utils",
 ]
+
+[[package]]
+name = "constants"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9768924fec90d5f3de2256f3a35c6cd2ca801667cb83c19a2c9e0233b0afe478"
 
 [[package]]
 name = "convert_case"
