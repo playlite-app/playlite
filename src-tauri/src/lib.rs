@@ -83,16 +83,13 @@ pub fn run() {
             commands::wishlist::fetch_wishlist_covers,
             // Comandos de Importação de Plataformas
             commands::plataforms::import_steam_library,
-            // Comandos de Enriquecimento de Metadados
-            commands::metadata_enrichment::update_metadata,
-            // Comandos de Enriquecimento de Capas
-            commands::cover_enrichment::fetch_missing_covers,
-            // Comandos de Refresh de Metadados
-            commands::metadata_reflesh::check_and_refresh_background,
-            // Comandos de Busca de Metadados
-            commands::metadata_search::get_trending_games,
-            commands::metadata_search::get_upcoming_games,
-            commands::metadata_search::fetch_game_details,
+            // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
+            commands::metadata::enrichment::update_metadata,
+            commands::metadata::covers::fetch_missing_covers,
+            commands::metadata::refresh::check_and_refresh_background,
+            commands::metadata::search::get_trending_games,
+            commands::metadata::search::get_upcoming_games,
+            commands::metadata::search::fetch_game_details,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,

@@ -3,14 +3,17 @@ import { toast } from 'sonner';
 import { Game, RawgGame } from '@/types';
 
 export const launchGame = (game: Game | RawgGame | any) => {
-  // Se for um jogo da biblioteca local da plataforma Steam e tivermos ID
-  if (!game.platform || game.platform === 'Steam') {
-    window.open(`steam://rungameid/${game.id}`, '_self');
+  if (!game.platform || game.platform.toLowerCase() === 'steam') {
+    const steamId = game.platformId;
+    const steamUrl = `steam://rungameid/${steamId}`;
+
+    try {
+      window.open(steamUrl, '_self');
+      toast.success(`Iniciando ${game.name}...`);
+    } catch {
+      toast.error('Erro ao iniciar jogo');
+    }
   } else {
-    toast.info(
-      `O lançamento para ${
-        game.platform || 'esta plataforma'
-      } será implementado em breve!`
-    );
+    toast.info(`Lançamento para ${game.platform} será implementado em breve`);
   }
 };

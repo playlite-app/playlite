@@ -1,17 +1,15 @@
 //! Módulo compartilhado para enriquecimento de metadados
 //!
-//! Contém estruturas e funções reutilizadas por metadata_enrichment e cover_enrichment.
-//! Utiliza pub(crate) para limitar visibilidade ao crate.
+//! Contém estruturas e funções reutilizadas por enrichment e covers.
+//! Utiliza pub(super) para limitar visibilidade ao módulo metadata.
 
-use crate::database;
 use crate::services::{metadata_cache, rawg};
-use tauri::AppHandle;
 
 // === ESTRUTURAS COMPARTILHADAS ===
 
 /// Progresso de enriquecimento de metadados
 #[derive(serde::Serialize, Clone)]
-pub(crate) struct EnrichProgress {
+pub(super) struct EnrichProgress {
     pub current: i32,
     pub total_found: i32,
     pub last_game: String,
@@ -20,16 +18,11 @@ pub(crate) struct EnrichProgress {
 
 // === FUNÇÕES COMPARTILHADAS ===
 
-/// Função auxiliar para obter a chave API RAWG
-pub(crate) fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
-    database::get_secret(app_handle, "rawg_api_key")
-}
-
 /// Busca metadados RAWG com cache
 ///
-/// Esta função é compartilhada entre metadata_enrichment e cover_enrichment
+/// Esta função é compartilhada entre enrichment e covers
 /// para buscar informações de jogos na API RAWG com suporte a cache SQLite.
-pub(crate) async fn fetch_rawg_metadata(
+pub(super) async fn fetch_rawg_metadata(
     api_key: &str,
     name: &str,
     cache_conn: &rusqlite::Connection,

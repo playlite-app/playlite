@@ -7,9 +7,9 @@
 //! Design notes:
 //! - Cache persistente via SQLite (metadata.db)
 //! - block_in_place usado para manter conexão SQLite durante awaits
-//! - Itens compartilhados com cover_enrichment estão em enrichment_shared
+//! - Itens compartilhados com covers estão no módulo shared
 
-use crate::commands::enrichment_shared::{fetch_rawg_metadata, get_api_key, EnrichProgress};
+use super::shared::{fetch_rawg_metadata, EnrichProgress};
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
@@ -368,10 +368,9 @@ fn save_game_details(
 #[tauri::command]
 pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
-    let api_key = get_api_key(&app).unwrap_or_default();
-
+    let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("API Key RAWG necessária para atualização de metadados".to_string());
+        return Err("API Key da RAWG não configurada.".to_string());
     }
 
     tauri::async_runtime::spawn(async move {

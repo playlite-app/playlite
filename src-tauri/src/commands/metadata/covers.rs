@@ -2,7 +2,7 @@
 //!
 //! Permite buscar capas faltantes para jogos na biblioteca usando a API RAWG, com cache de metadados.
 
-use crate::commands::enrichment_shared::{fetch_rawg_metadata, EnrichProgress};
+use super::shared::{fetch_rawg_metadata, EnrichProgress};
 use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database;
 use crate::database::AppState;
@@ -12,18 +12,13 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::info;
 
-fn get_api_key(app_handle: &AppHandle) -> Result<String, String> {
-    database::get_secret(app_handle, "rawg_api_key")
-}
-
 /// Busca capas faltantes via RAWG (COM CACHE)
 #[tauri::command]
 pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
-    let api_key = get_api_key(&app)?;
-
+    let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("API Key RAWG necessária".to_string());
+        return Err("API Key da RAWG não configurada.".to_string());
     }
 
     tauri::async_runtime::spawn(async move {
