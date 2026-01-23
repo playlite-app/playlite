@@ -4,7 +4,7 @@
 //! Expõe comandos Tauri para uso no frontend.
 
 use crate::database::AppState;
-use crate::services::metadata_cache;
+use crate::services::cache;
 use tauri::State;
 
 /// Remove entradas expiradas do cache
@@ -15,7 +15,7 @@ pub fn cleanup_cache(state: State<AppState>) -> Result<String, String> {
         .lock()
         .map_err(|_| "Falha ao acessar metadata_db")?;
 
-    let deleted = metadata_cache::cleanup_expired_cache(&conn)?;
+    let deleted = cache::cleanup_expired_cache(&conn)?;
 
     Ok(format!("{} entradas removidas", deleted))
 }
@@ -93,7 +93,7 @@ pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheS
         )
         .unwrap_or(0);
 
-    let stats = metadata_cache::get_cache_stats(&conn)?;
+    let stats = cache::get_cache_stats(&conn)?;
 
     Ok(DetailedCacheStats {
         total,

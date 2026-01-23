@@ -113,7 +113,7 @@ pub async fn import_steam_library(
             updated += 1;
         }
     }
-    let message = format!("✓ {} novos, {} atualizados", inserted, updated);
+    let message = format!("{} novos, {} atualizados", inserted, updated);
     info!("{}", message);
 
     Ok(message)

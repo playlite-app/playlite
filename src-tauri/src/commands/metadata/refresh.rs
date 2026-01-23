@@ -3,7 +3,7 @@
 //! Executa sem travar a UI e falha silenciosamente em caso de erro.
 
 use crate::database::AppState;
-use crate::services::{itad, metadata_cache, steam};
+use crate::services::{cache, itad, steam};
 use rusqlite::params;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -90,7 +90,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
             let cache_conn = state.metadata_db.lock().unwrap();
             let cache_key = format!("reviews_{}", app_id);
             // Verifica se o cache expirou
-            metadata_cache::get_cached_api_data(&cache_conn, "steam", &cache_key).is_none()
+            cache::get_cached_api_data(&cache_conn, "steam", &cache_key).is_none()
         };
 
         if should_update {
@@ -104,12 +104,8 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
                         let cache_conn = state.metadata_db.lock().unwrap();
                         let cache_key = format!("reviews_{}", app_id);
                         let json = serde_json::to_string(&summary).unwrap_or_default();
-                        let _ = metadata_cache::save_cached_api_data(
-                            &cache_conn,
-                            "steam",
-                            &cache_key,
-                            &json,
-                        );
+                        let _ =
+                            cache::save_cached_api_data(&cache_conn, "steam", &cache_key, &json);
                     }
 
                     {
@@ -207,7 +203,7 @@ async fn refresh_wishlist_prices_background(
             let cache_conn = state.metadata_db.lock().unwrap();
             let cache_key = format!("price_{}", itad_id);
             // Se não existe em cache ou expirou, precisa atualizar
-            metadata_cache::get_cached_api_data(&cache_conn, "itad", &cache_key).is_none()
+            cache::get_cached_api_data(&cache_conn, "itad", &cache_key).is_none()
         };
 
         if should_update {
@@ -248,8 +244,7 @@ async fn refresh_wishlist_prices_background(
                 });
 
                 let json = cache_data.to_string();
-                let _ =
-                    metadata_cache::save_cached_api_data(&cache_conn, "itad", &cache_key, &json);
+                let _ = cache::save_cached_api_data(&cache_conn, "itad", &cache_key, &json);
             }
 
             // Atualiza preços no banco de dados

@@ -13,7 +13,7 @@ use super::shared::{fetch_rawg_metadata, EnrichProgress};
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
-use crate::services::{metadata_cache, playtime_estimator, steam};
+use crate::services::{cache, playtime, steam};
 use crate::utils::series;
 use rusqlite::params;
 use std::collections::{HashMap, HashSet};
@@ -83,7 +83,7 @@ async fn fetch_steam_store_data(
 ) -> Option<steam::SteamStoreData> {
     let cache_key = format!("store_{}", steam_id);
 
-    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
         if let Ok(data) = serde_json::from_str::<steam::SteamStoreData>(&cached) {
             return Some(data);
         }
@@ -92,8 +92,7 @@ async fn fetch_steam_store_data(
     match steam::get_app_details(steam_id).await {
         Ok(Some(data)) => {
             if let Ok(json) = serde_json::to_string(&data) {
-                let _ =
-                    metadata_cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
+                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
             }
             Some(data)
         }
@@ -108,7 +107,7 @@ async fn fetch_steam_reviews(
 ) -> Option<steam::SteamReviewSummary> {
     let cache_key = format!("reviews_{}", steam_id);
 
-    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
         if let Ok(reviews) = serde_json::from_str::<steam::SteamReviewSummary>(&cached) {
             return Some(reviews);
         }
@@ -117,8 +116,7 @@ async fn fetch_steam_reviews(
     match steam::get_app_reviews(steam_id).await {
         Ok(Some(reviews)) => {
             if let Ok(json) = serde_json::to_string(&reviews) {
-                let _ =
-                    metadata_cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
+                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
             }
             Some(reviews)
         }
@@ -130,7 +128,7 @@ async fn fetch_steam_reviews(
 async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection) -> Option<u32> {
     let cache_key = format!("playtime_{}", steam_id);
 
-    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
+    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
         if let Ok(hours) = cached.parse::<u32>() {
             return Some(hours);
         }
@@ -138,12 +136,8 @@ async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection)
 
     match steam::get_median_playtime(steam_id).await {
         Ok(Some(hours)) => {
-            let _ = metadata_cache::save_cached_api_data(
-                cache_conn,
-                "steam",
-                &cache_key,
-                &hours.to_string(),
-            );
+            let _ =
+                cache::save_cached_api_data(cache_conn, "steam", &cache_key, &hours.to_string());
             Some(hours)
         }
         _ => None,
@@ -211,7 +205,7 @@ async fn enrich_game_metadata(
             .map(|g| g.name.clone())
             .collect::<Vec<_>>()
             .join(", ");
-        details.tags = crate::services::tag_service::classify_and_sort_tags(raw_tag_slugs, 10);
+        details.tags = crate::services::tags::classify_and_sort_tags(raw_tag_slugs, 10);
         details.developer = rawg_det.developers.first().map(|d| d.name.clone());
         details.publisher = rawg_det.publishers.first().map(|p| p.name.clone());
         details.critic_score = rawg_det.metacritic;
@@ -299,7 +293,7 @@ async fn enrich_game_metadata(
                 .collect();
 
             if let Some(estimated_hours) =
-                playtime_estimator::estimate_playtime(Some(hours), &genre_list, &details.tags)
+                playtime::estimate_playtime(Some(hours), &genre_list, &details.tags)
             {
                 details.estimated_playtime = Some(estimated_hours as f32);
             }
@@ -366,7 +360,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
         // Limpeza de cache expirado no início
         {
             let cache_conn = state.metadata_db.lock().unwrap();
-            let _ = metadata_cache::cleanup_expired_cache(&cache_conn);
+            let _ = cache::cleanup_expired_cache(&cache_conn);
         }
 
         loop {
@@ -452,8 +446,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
             sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
         }
 
-        let _ =
-            crate::services::tag_service::generate_analysis_report(&app_handle, all_session_tags);
+        let _ = crate::services::tags::generate_analysis_report(&app_handle, all_session_tags);
         let _ = app_handle.emit("enrich_complete", "Metadados atualizados!");
     });
 

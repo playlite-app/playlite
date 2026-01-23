@@ -4,6 +4,7 @@
 
 use crate::utils::tag_utils::{GameTag, TagMetadata};
 use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::Serialize;
 use serde_json;
 use std::collections::{HashMap, HashSet};
@@ -25,7 +26,7 @@ struct AnalysisReport {
     timestamp: String,
     stats: TagStats,
     unknown_tags_count: usize,
-    unknown_tags: Vec<String>, // Lista das tags que não estão no seu JSON
+    unknown_tags: Vec<String>,
 }
 
 // Cache estático das regras de tags
@@ -36,9 +37,11 @@ static TAG_METADATA: Lazy<HashMap<String, TagMetadata>> = Lazy::new(|| {
     })
 });
 
+// Regex para normalização (compilada uma vez)
+static NORMALIZE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"-(\d+)$").unwrap());
+
 /// Carrega o metadata a partir da string embutida
 fn load_tag_metadata() -> Result<HashMap<String, TagMetadata>, Box<dyn std::error::Error>> {
-    // Parse direto da constante, sem IO de disco
     let tags: Vec<TagMetadata> = serde_json::from_str(TAG_METADATA_JSON)?;
 
     let map = tags
@@ -49,12 +52,21 @@ fn load_tag_metadata() -> Result<HashMap<String, TagMetadata>, Box<dyn std::erro
     Ok(map)
 }
 
-/// Classifica tags da RAWG usando as regras
+/// Normaliza slugs removendo sufixos numéricos (ex: "-2", "-3")
+/// Mantém números sem hífen (2d, 3d, 25d, 4x)
+pub fn normalize_tag_slug(slug: &str) -> String {
+    NORMALIZE_REGEX.replace(slug, "").to_string()
+}
+
+/// Classifica tags da RAWG usando as regras, normalizando slugs antes de buscar
 pub fn classify_tags(raw_tags: Vec<String>) -> Vec<GameTag> {
     raw_tags
         .iter()
         .filter_map(|slug| {
-            TAG_METADATA.get(slug).and_then(|metadata| {
+            // Normaliza o slug removendo sufixos numéricos
+            let normalized_slug = normalize_tag_slug(slug);
+
+            TAG_METADATA.get(&normalized_slug).and_then(|metadata| {
                 // Só retorna tags visíveis
                 if metadata.visible {
                     Some(GameTag {
@@ -71,9 +83,13 @@ pub fn classify_tags(raw_tags: Vec<String>) -> Vec<GameTag> {
         .collect()
 }
 
-/// Classifica e ordena tags por relevância
+/// Classifica e ordena tags por relevância, removendo duplicatas
 pub fn classify_and_sort_tags(raw_tags: Vec<String>, limit: usize) -> Vec<GameTag> {
     let mut classified = classify_tags(raw_tags);
+
+    // Remove duplicatas (tags com mesmo slug)
+    let mut seen = HashSet::new();
+    classified.retain(|tag| seen.insert(tag.slug.clone()));
 
     // Ordena por relevância (maior primeiro)
     classified.sort_by(|a, b| {
@@ -88,12 +104,14 @@ pub fn classify_and_sort_tags(raw_tags: Vec<String>, limit: usize) -> Vec<GameTa
     classified
 }
 
-/// Retorna tags desconhecidas (para logging/análise)
+/// Retorna tags desconhecidas (para logging/análise), já normalizadas
 pub fn get_unknown_tags(raw_tags: &[String]) -> Vec<String> {
     raw_tags
         .iter()
-        .filter(|slug| !TAG_METADATA.contains_key(*slug))
-        .cloned()
+        .map(|slug| normalize_tag_slug(slug))
+        .filter(|normalized| !TAG_METADATA.contains_key(normalized))
+        .collect::<HashSet<_>>() // Remove duplicatas
+        .into_iter()
         .collect()
 }
 
@@ -117,25 +135,24 @@ pub fn get_tag_stats() -> TagStats {
     }
 }
 
-/// Recebe um conjunto de TODAS as tags (slugs) encontradas durante o enriquecimento,
-/// gera um relatório e salva num arquivo JSON na pasta de logs do aplicativo.
+/// Gera relatório de análise com tags normalizadas
 pub fn generate_analysis_report(
     app: &AppHandle,
     encountered_slugs: HashSet<String>,
 ) -> Result<String, String> {
-    // 1. Calcula estatísticas gerais (já existentes)
     let stats = get_tag_stats();
 
-    // 2. Filtra quais das tags encontradas são desconhecidas
+    // Normaliza e filtra tags desconhecidas
     let mut unknown_tags: Vec<String> = encountered_slugs
         .into_iter()
-        .filter(|slug| !TAG_METADATA.contains_key(slug))
+        .map(|slug| normalize_tag_slug(&slug))
+        .filter(|normalized| !TAG_METADATA.contains_key(normalized))
+        .collect::<HashSet<_>>() // Remove duplicatas
+        .into_iter()
         .collect();
 
-    // Ordena para facilitar a leitura
     unknown_tags.sort();
 
-    // 3. Monta o relatório
     let report = AnalysisReport {
         timestamp: chrono::Local::now().to_rfc3339(),
         stats,
@@ -143,12 +160,9 @@ pub fn generate_analysis_report(
         unknown_tags,
     };
 
-    // 4. Define o caminho do arquivo
-    // Em Dev: Salva na pasta de logs do app (ex: AppData/Local/com.game-manager.dev/logs/tag_report.json)
     let log_dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
     let file_path = log_dir.join("tag_analysis_report.json");
 
-    // 5. Salva no disco
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     std::fs::write(&file_path, json).map_err(|e| e.to_string())?;
 

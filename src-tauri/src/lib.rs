@@ -108,9 +108,9 @@ pub fn run() {
             // Comandos de Conquistas de Jogos
             commands::achievements::get_recent_achievements,
             // Comandos de Cache de Metadados
-            commands::cache::cleanup_cache,
-            commands::cache::clear_all_cache,
-            commands::cache::get_detailed_cache_stats,
+            commands::caches::cleanup_cache,
+            commands::caches::clear_all_cache,
+            commands::caches::get_detailed_cache_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

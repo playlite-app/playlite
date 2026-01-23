@@ -18,7 +18,7 @@
 pub(crate) mod achievements;
 pub(crate) mod ai_translation;
 pub mod backup;
-pub mod cache;
+pub mod caches;
 pub mod games;
 pub mod metadata;
 pub mod plataforms;

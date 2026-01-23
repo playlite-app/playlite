@@ -3,7 +3,7 @@
 //! Contém estruturas e funções reutilizadas por enrichment e covers.
 //! Utiliza pub(super) para limitar visibilidade ao módulo metadata.
 
-use crate::services::{metadata_cache, rawg};
+use crate::services::{cache, rawg};
 
 // === ESTRUTURAS COMPARTILHADAS ===
 
@@ -30,7 +30,7 @@ pub(super) async fn fetch_rawg_metadata(
     // Tenta buscar no cache primeiro
     let cache_key = format!("search_{}", name.to_lowercase());
 
-    if let Some(cached) = metadata_cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
+    if let Some(cached) = cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
         if let Ok(details) = serde_json::from_str::<rawg::GameDetails>(&cached) {
             return Some(details);
         }
@@ -44,9 +44,8 @@ pub(super) async fn fetch_rawg_metadata(
                     Ok(details) => {
                         // Salva no cache
                         if let Ok(json) = serde_json::to_string(&details) {
-                            let _ = metadata_cache::save_cached_api_data(
-                                cache_conn, "rawg", &cache_key, &json,
-                            );
+                            let _ =
+                                cache::save_cached_api_data(cache_conn, "rawg", &cache_key, &json);
                         }
                         Some(details)
                     }

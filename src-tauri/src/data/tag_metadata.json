@@ -84,6 +84,55 @@
     "visible": true
   },
   {
+    "slug": "4-player-local",
+    "name": "4 Player Local",
+    "category": "mode",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "local-co-op",
+    "name": "Local Co-op",
+    "category": "mode",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "online-co-op",
+    "name": "Online Co-op",
+    "category": "mode",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "online-pvp",
+    "name": "Online PvP",
+    "category": "mode",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "cross-platform-multiplayer",
+    "name": "Cross-Platform Multiplayer",
+    "category": "mode",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "lan-co-op",
+    "name": "LAN Co-op",
+    "category": "mode",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "mmorpg",
+    "name": "MMORPG",
+    "category": "mode",
+    "relevance": 9,
+    "visible": true
+  },
+  {
     "slug": "story-rich",
     "name": "Story Rich",
     "category": "narrative",
@@ -149,6 +198,69 @@
   {
     "slug": "emotional",
     "name": "Emotional",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "choose-your-own-adventure",
+    "name": "Choose Your Own Adventure",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "dynamic-narration",
+    "name": "Dynamic Narration",
+    "category": "narrative",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "narration",
+    "name": "Narration",
+    "category": "narrative",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "comedy",
+    "name": "Comedy",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "drama",
+    "name": "Drama",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "romance",
+    "name": "Romance",
+    "category": "narrative",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "mystery",
+    "name": "Mystery",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "detective",
+    "name": "Detective",
+    "category": "narrative",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "psychological",
+    "name": "Psychological",
     "category": "narrative",
     "relevance": 7,
     "visible": true
@@ -287,6 +399,181 @@
     "visible": true
   },
   {
+    "slug": "aliens",
+    "name": "Aliens",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "apocalypse",
+    "name": "Apocalypse",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "cold-war",
+    "name": "Cold War",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "world-war-ii",
+    "name": "World War II",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "alternate-history",
+    "name": "Alternate History",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "dinosaurs",
+    "name": "Dinosaurs",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "dragons",
+    "name": "Dragons",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "robots",
+    "name": "Robots",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "demons",
+    "name": "Demons",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "magic",
+    "name": "Magic",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "crime",
+    "name": "Crime",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "mafia",
+    "name": "Mafia",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "assassin",
+    "name": "Assassin",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "ninja",
+    "name": "Ninja",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "war",
+    "name": "War",
+    "category": "theme",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "survival-horror",
+    "name": "Survival Horror",
+    "category": "theme",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "dark",
+    "name": "Dark",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "dark-humor",
+    "name": "Dark Humor",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "dark-comedy",
+    "name": "Dark Comedy",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "nature",
+    "name": "Nature",
+    "category": "theme",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "futuristic",
+    "name": "Futuristic",
+    "category": "theme",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "modern",
+    "name": "Modern",
+    "category": "theme",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "1980s",
+    "name": "1980s",
+    "category": "theme",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "1990s",
+    "name": "1990s",
+    "category": "theme",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "prehistoric",
+    "name": "Prehistoric",
+    "category": "theme",
+    "relevance": 5,
+    "visible": true
+  },
+  {
     "slug": "action",
     "name": "Action",
     "category": "gameplay",
@@ -305,6 +592,41 @@
     "name": "RPG",
     "category": "gameplay",
     "relevance": 9,
+    "visible": true
+  },
+  {
+    "slug": "action-rpg",
+    "name": "Action RPG",
+    "category": "gameplay",
+    "relevance": 9,
+    "visible": true
+  },
+  {
+    "slug": "jrpg",
+    "name": "JRPG",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "tactical-rpg",
+    "name": "Tactical RPG",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "party-based-rpg",
+    "name": "Party-Based RPG",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "action-adventure",
+    "name": "Action-Adventure",
+    "category": "gameplay",
+    "relevance": 8,
     "visible": true
   },
   {
@@ -329,6 +651,13 @@
     "visible": true
   },
   {
+    "slug": "turn-based-tactics",
+    "name": "Turn-Based Tactics",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
     "slug": "real-time",
     "name": "Real-Time",
     "category": "gameplay",
@@ -338,6 +667,27 @@
   {
     "slug": "real-time-strategy",
     "name": "Real-Time Strategy",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "real-time-tactics",
+    "name": "Real-Time Tactics",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "real-time-with-pause",
+    "name": "Real-Time with Pause",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "rts",
+    "name": "RTS",
     "category": "gameplay",
     "relevance": 8,
     "visible": true
@@ -357,6 +707,20 @@
     "visible": true
   },
   {
+    "slug": "grand-strategy",
+    "name": "Grand Strategy",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "4x",
+    "name": "4X",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
     "slug": "puzzle",
     "name": "Puzzle",
     "category": "gameplay",
@@ -364,10 +728,38 @@
     "visible": true
   },
   {
+    "slug": "puzzle-platformer",
+    "name": "Puzzle Platformer",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
     "slug": "platformer",
     "name": "Platformer",
     "category": "gameplay",
     "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "2d-platformer",
+    "name": "2D Platformer",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "3d-platformer",
+    "name": "3D Platformer",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "precision-platformer",
+    "name": "Precision Platformer",
+    "category": "gameplay",
+    "relevance": 7,
     "visible": true
   },
   {
@@ -387,6 +779,13 @@
   {
     "slug": "roguelite",
     "name": "Roguelite",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "action-roguelike",
+    "name": "Action Roguelike",
     "category": "gameplay",
     "relevance": 8,
     "visible": true
@@ -420,6 +819,13 @@
     "visible": true
   },
   {
+    "slug": "nonlinear",
+    "name": "Nonlinear",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
     "slug": "exploration",
     "name": "Exploration",
     "category": "gameplay",
@@ -445,6 +851,20 @@
     "name": "Simulation",
     "category": "gameplay",
     "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "life-sim",
+    "name": "Life Sim",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "dating-sim",
+    "name": "Dating Sim",
+    "category": "gameplay",
+    "relevance": 6,
     "visible": true
   },
   {
@@ -476,6 +896,13 @@
     "visible": true
   },
   {
+    "slug": "first-person-shooter",
+    "name": "First-Person Shooter",
+    "category": "gameplay",
+    "relevance": 9,
+    "visible": true
+  },
+  {
     "slug": "third-person",
     "name": "Third Person",
     "category": "gameplay",
@@ -483,10 +910,52 @@
     "visible": true
   },
   {
+    "slug": "third-person-shooter",
+    "name": "Third-Person Shooter",
+    "category": "gameplay",
+    "relevance": 8,
+    "visible": true
+  },
+  {
     "slug": "shooter",
     "name": "Shooter",
     "category": "gameplay",
     "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "top-down-shooter",
+    "name": "Top-Down Shooter",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "twin-stick-shooter",
+    "name": "Twin Stick Shooter",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "shoot-em-up",
+    "name": "Shoot 'Em Up",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "bullet-hell",
+    "name": "Bullet Hell",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "looter-shooter",
+    "name": "Looter Shooter",
+    "category": "gameplay",
+    "relevance": 7,
     "visible": true
   },
   {
@@ -508,6 +977,13 @@
     "name": "Fighting",
     "category": "gameplay",
     "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "2d-fighter",
+    "name": "2D Fighter",
+    "category": "gameplay",
+    "relevance": 7,
     "visible": true
   },
   {
@@ -560,6 +1036,13 @@
     "visible": true
   },
   {
+    "slug": "time-management",
+    "name": "Time Management",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
     "slug": "point-and-click",
     "name": "Point & Click",
     "category": "gameplay",
@@ -578,6 +1061,13 @@
     "name": "Interactive Fiction",
     "category": "gameplay",
     "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "text-based",
+    "name": "Text-Based",
+    "category": "gameplay",
+    "relevance": 5,
     "visible": true
   },
   {
@@ -700,6 +1190,223 @@
     "visible": true
   },
   {
+    "slug": "2d",
+    "name": "2D",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "3d",
+    "name": "3D",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "25d",
+    "name": "2.5D",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "top-down",
+    "name": "Top-Down",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "isometric",
+    "name": "Isometric",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "side-scroller",
+    "name": "Side Scroller",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "driving",
+    "name": "Driving",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "flight",
+    "name": "Flight",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "fishing",
+    "name": "Fishing",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "cooking",
+    "name": "Cooking",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "building",
+    "name": "Building",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "automation",
+    "name": "Automation",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "physics",
+    "name": "Physics",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "hacking",
+    "name": "Hacking",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "bullet-time",
+    "name": "Bullet Time",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "qte",
+    "name": "QTE",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "quick-time-events",
+    "name": "Quick Time Events",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "collectathon",
+    "name": "Collectathon",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "escape",
+    "name": "Escape",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "room-escape",
+    "name": "Room Escape",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "mystery-dungeon",
+    "name": "Mystery Dungeon",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "swordplay",
+    "name": "Swordplay",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "immersive-sim",
+    "name": "Immersive Sim",
+    "category": "gameplay",
+    "relevance": 7,
+    "visible": true
+  },
+  {
+    "slug": "wargame",
+    "name": "Wargame",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "hex-grid",
+    "name": "Hex Grid",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "diplomacy",
+    "name": "Diplomacy",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "economy",
+    "name": "Economy",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
+    "slug": "capitalism",
+    "name": "Capitalism",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "minigames",
+    "name": "Minigames",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "score-attack",
+    "name": "Score Attack",
+    "category": "gameplay",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "crowd-combat",
+    "name": "Crowd Combat",
+    "category": "gameplay",
+    "relevance": 6,
+    "visible": true
+  },
+  {
     "slug": "windows",
     "name": "Windows",
     "category": "technical",
@@ -728,6 +1435,20 @@
     "visible": false
   },
   {
+    "slug": "vr",
+    "name": "VR",
+    "category": "technical",
+    "relevance": 8,
+    "visible": true
+  },
+  {
+    "slug": "3d-vision",
+    "name": "3D Vision",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
     "slug": "controller",
     "name": "Controller",
     "category": "input",
@@ -742,8 +1463,92 @@
     "visible": false
   },
   {
-    "slug": "vr",
-    "name": "VR",
+    "slug": "controller-support",
+    "name": "Controller Support",
+    "category": "input",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "full-controller-support",
+    "name": "Full Controller Support",
+    "category": "input",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "partial-controller-support",
+    "name": "Partial Controller Support",
+    "category": "input",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "steam-cloud",
+    "name": "Steam Cloud",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "steam-achievements",
+    "name": "Steam Achievements",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "steam-trading-cards",
+    "name": "Steam Trading Cards",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "steam-workshop",
+    "name": "Steam Workshop",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "steam-leaderboards",
+    "name": "Steam Leaderboards",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "valve-anti-cheat-enabled",
+    "name": "Valve Anti-Cheat Enabled",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "captions-available",
+    "name": "Captions Available",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "commentary-available",
+    "name": "Commentary Available",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "achievements",
+    "name": "Achievements",
+    "category": "technical",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "stats",
+    "name": "Stats",
     "category": "technical",
     "relevance": 0,
     "visible": false
@@ -791,6 +1596,13 @@
     "visible": true
   },
   {
+    "slug": "pixel-graphics",
+    "name": "Pixel Graphics",
+    "category": "meta",
+    "relevance": 6,
+    "visible": true
+  },
+  {
     "slug": "anime",
     "name": "Anime",
     "category": "meta",
@@ -803,5 +1615,327 @@
     "category": "meta",
     "relevance": 5,
     "visible": true
+  },
+  {
+    "slug": "old-school",
+    "name": "Old School",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "classic",
+    "name": "Classic",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "cult-classic",
+    "name": "Cult Classic",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "remake",
+    "name": "Remake",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "colorful",
+    "name": "Colorful",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "stylized",
+    "name": "Stylized",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "beautiful",
+    "name": "Beautiful",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "cute",
+    "name": "Cute",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "cartoony",
+    "name": "Cartoony",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "cartoon",
+    "name": "Cartoon",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "hand-drawn",
+    "name": "Hand-drawn",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "comic-book",
+    "name": "Comic Book",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "realistic",
+    "name": "Realistic",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "low-poly",
+    "name": "Low Poly",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "minimalist",
+    "name": "Minimalist",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "abstract",
+    "name": "Abstract",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "surreal",
+    "name": "Surreal",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "psychedelic",
+    "name": "Psychedelic",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "gore",
+    "name": "Gore",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "blood",
+    "name": "Blood",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "violent",
+    "name": "Violent",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "mature",
+    "name": "Mature",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "nudity",
+    "name": "Nudity",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "sexual-content",
+    "name": "Sexual Content",
+    "category": "meta",
+    "relevance": 3,
+    "visible": true
+  },
+  {
+    "slug": "nsfw",
+    "name": "NSFW",
+    "category": "meta",
+    "relevance": 3,
+    "visible": true
+  },
+  {
+    "slug": "hentai",
+    "name": "Hentai",
+    "category": "meta",
+    "relevance": 3,
+    "visible": true
+  },
+  {
+    "slug": "lgbtq",
+    "name": "LGBTQ+",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "female-protagonist",
+    "name": "Female Protagonist",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "villain-protagonist",
+    "name": "Villain Protagonist",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "silent-protagonist",
+    "name": "Silent Protagonist",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "family-friendly",
+    "name": "Family Friendly",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "short",
+    "name": "Short",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "episodic",
+    "name": "Episodic",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "replay-value",
+    "name": "Replay Value",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "addictive",
+    "name": "Addictive",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "fun",
+    "name": "Fun",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "funny",
+    "name": "Funny",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "masterpiece",
+    "name": "Masterpiece",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "soundtrack",
+    "name": "Soundtrack",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "level-editor",
+    "name": "Level Editor",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "includes-level-editor",
+    "name": "Includes Level Editor",
+    "category": "meta",
+    "relevance": 5,
+    "visible": true
+  },
+  {
+    "slug": "based-on-a-novel",
+    "name": "Based on a Novel",
+    "category": "meta",
+    "relevance": 4,
+    "visible": true
+  },
+  {
+    "slug": "benchmark",
+    "name": "Benchmark",
+    "category": "meta",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "in-app-purchases",
+    "name": "In-App Purchases",
+    "category": "meta",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "remote-play-together",
+    "name": "Remote Play Together",
+    "category": "meta",
+    "relevance": 0,
+    "visible": false
+  },
+  {
+    "slug": "family-sharing",
+    "name": "Family Sharing",
+    "category": "meta",
+    "relevance": 0,
+    "visible": false
   }
 ]

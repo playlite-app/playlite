@@ -74,7 +74,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
         .map_err(|e| format!("Erro ao configurar WAL no metadata.db: {}", e))?;
 
     // Inicializa schema do cache
-    crate::services::metadata_cache::initialize_cache_db(&metadata_conn)?;
+    crate::services::cache::initialize_cache_db(&metadata_conn)?;
 
     Ok(AppState {
         library_db: Mutex::new(library_conn),

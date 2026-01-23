@@ -258,9 +258,8 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
 
         let mut updated_count = 0;
 
-        // B. Itera e busca na RAWG (Reaproveitando a lógica do search_wishlist_game)
+        // B. Itera e busca na RAWG
         for (id, name) in missing_covers {
-            // AQUI ESTÁ O REAPROVEITAMENTO: Chamamos o serviço rawg::search_games direto
             match rawg::search_games(&api_key, &name).await {
                 Ok(results) => {
                     // Pega o primeiro resultado que tenha imagem
@@ -289,7 +288,7 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
 
         // C. Log resumido e avisa o frontend
         if updated_count > 0 {
-            info!("✓ {} capas atualizadas", updated_count);
+            info!("{} capas atualizadas", updated_count);
         }
         let _ = app.emit("wishlist_updated", ());
     });
@@ -544,8 +543,8 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
     }
 
     if updated_count > 0 {
-        info!("✓ {} preços atualizados", updated_count);
+        info!("{} preços atualizados", updated_count);
     }
 
-    Ok(format!("✓ {} preços atualizados", updated_count))
+    Ok(format!("{} preços atualizados", updated_count))
 }
