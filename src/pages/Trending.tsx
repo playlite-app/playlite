@@ -26,8 +26,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { Game, Giveaway, RawgGame } from '@/types';
+import { Game, Giveaway, RawgGame, UserPreferenceVector } from '@/types';
 
 import { ErrorState } from '../components/ErrorState';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -48,7 +49,6 @@ interface TrendingProps {
   setCachedGames: (games: RawgGame[]) => void;
 }
 
-// Lista de filtros disponíveis
 const PLATFORM_OPTIONS = [
   { id: 'Steam', label: 'Steam' },
   { id: 'Epic Games Store', label: 'Epic Games' },
@@ -58,6 +58,43 @@ const PLATFORM_OPTIONS = [
   { id: 'Itch.io', label: 'Itch.io' },
   { id: 'IndieGala', label: 'IndieGala' },
 ];
+
+// Chave para localStorage
+const STORAGE_KEY = 'trending_platform_filters';
+
+// Helper para calcular afinidade e badge de um jogo
+function calculateGameAffinity(
+  game: RawgGame,
+  profile: UserPreferenceVector | null
+): {
+  genres: string[];
+  tags: { slug: string }[];
+  affinity: number;
+  isFavSeries: boolean;
+  badge?: string;
+} {
+  const genres = game.genres?.map(g => g.name) || [];
+  const tags = game.tags?.map(t => ({ slug: t.name })) || [];
+  const affinity = calculateAffinity(
+    profile,
+    genres,
+    tags,
+    game.series || null
+  );
+  const isFavSeries = isFavoriteSeries(profile, game.series || null);
+
+  let badge: string | undefined;
+
+  if (isFavSeries) {
+    badge = 'SÉRIE FAVORITA';
+  } else if (affinity > 80) {
+    badge = 'TOP PICK';
+  } else if (affinity > 50) {
+    badge = 'PARA VOCÊ';
+  }
+
+  return { genres, tags, affinity, isFavSeries, badge };
+}
 
 export default function Trending(props: TrendingProps) {
   const isOnline = useNetworkStatus();
@@ -78,13 +115,28 @@ export default function Trending(props: TrendingProps) {
   const [heroIndex, setHeroIndex] = useState(0);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
-    'Steam',
-    'Epic Games Store',
-    'Prime Gaming',
-    'GOG',
-    'Ubisoft',
-  ]);
+
+  // Carrega filtros do localStorage na inicialização
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      return saved
+        ? JSON.parse(saved)
+        : ['Steam', 'Epic Games Store', 'Prime Gaming', 'GOG', 'Ubisoft'];
+    } catch {
+      return ['Steam', 'Epic Games Store', 'Prime Gaming', 'GOG', 'Ubisoft'];
+    }
+  });
+
+  // Persiste filtros no localStorage sempre que mudam
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedPlatforms));
+    } catch (error) {
+      console.error('Erro ao salvar filtros:', error);
+    }
+  }, [selectedPlatforms]);
 
   // Carrega Jogos Grátis
   useEffect(() => {
@@ -313,8 +365,8 @@ export default function Trending(props: TrendingProps) {
         {/* Header da Seção + Filtro de Loja */}
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-500/10 p-2 text-blue-500">
-              <Gift size={24} />
+            <div className="rounded-lg bg-green-500/10 bg-linear-to-br to-emerald-600 p-2.5 text-white shadow-lg">
+              <Gift size={20} />
             </div>
             <div>
               <h2 className="text-2xl font-bold tracking-tight">
@@ -326,24 +378,24 @@ export default function Trending(props: TrendingProps) {
             </div>
           </div>
 
-          {/* Botão de Filtro - Estilo 'secondary' */}
+          {/* Botão de Filtro */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="secondary"
                 size="sm"
-                className="gap-2 font-medium"
+                className="w-40 gap-2 font-medium"
               >
                 <Filter size={16} />
                 Filtrar Lojas
                 {selectedPlatforms.length < PLATFORM_OPTIONS.length && (
-                  <span className="bg-background text-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm">
+                  <span className="bg-primary text-primary-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
                     {selectedPlatforms.length}
                   </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuLabel>Plataformas</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {PLATFORM_OPTIONS.map(platform => (
@@ -359,19 +411,23 @@ export default function Trending(props: TrendingProps) {
           </DropdownMenu>
         </div>
 
-        {/* Grid de Jogos Grátis */}
+        {/* Grid de Jogos Grátis - Aumentado para 3 colunas */}
         {filteredGiveaways.length === 0 && !loading ? (
-          <div className="text-muted-foreground rounded-lg border border-dashed py-8 text-center">
-            Nenhum jogo encontrado com os filtros atuais.
+          <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+            <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />
+            <p className="text-base font-medium">
+              Nenhum jogo encontrado com os filtros atuais
+            </p>
+            <p className="mt-1 text-sm">Tente selecionar outras plataformas</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {loading
-              ? Array.from({ length: 4 }).map((_, i) => (
+              ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="space-y-3">
                     <Skeleton className="aspect-video w-full rounded-lg" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
                   </div>
                 ))
               : filteredGiveaways.map((game: Giveaway) => (
@@ -388,9 +444,11 @@ export default function Trending(props: TrendingProps) {
           </div>
         )}
 
+        <Separator className="mt-8" />
+
         {/* 4. Mais Sugestões (Trending Grid) */}
         <div className="mb-6 flex items-center gap-2 pt-8">
-          <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
+          <div className="rounded-lg bg-yellow-500/10 p-2 text-yellow-400">
             <TrendingUp size={20} />
           </div>
           <h2 className="text-2xl font-bold">Mais Sugestões</h2>
@@ -398,23 +456,7 @@ export default function Trending(props: TrendingProps) {
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {gridGames.map(game => {
-            const genres = game.genres?.map(g => g.name) || [];
-            const tags = game.tags?.map(t => ({ slug: t.name })) || [];
-            const affinity = calculateAffinity(
-              profile,
-              genres,
-              tags,
-              game.series || null
-            );
-            const isFavSeries = isFavoriteSeries(profile, game.series || null);
-
-            let badge: string | undefined;
-
-            if (isFavSeries) badge = 'SÉRIE FAVORITA';
-            else if (affinity > 80)
-              badge = 'TOP PICK'; // Ajustado thresholds para simplificar
-            else if (affinity > 50) badge = 'PARA VOCÊ';
-
+            const { genres, badge } = calculateGameAffinity(game, profile);
             const isInWishlist = wishlistGames.some(
               w => w.id === game.id.toString()
             );
@@ -454,7 +496,7 @@ export default function Trending(props: TrendingProps) {
         {/* 5. Lançamentos Aguardados */}
         {upcomingGames.length > 0 && (
           <>
-            <div className="mb-6 flex items-center gap-2 pt-8">
+            <div className="mb-6 flex items-center gap-2 pt-12">
               <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
                 <Clock size={20} />
               </div>
@@ -463,24 +505,7 @@ export default function Trending(props: TrendingProps) {
 
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
               {upcomingGames.map(game => {
-                const genres = game.genres?.map(g => g.name) || [];
-                const tags = game.tags?.map(t => ({ slug: t.name })) || [];
-                const affinity = calculateAffinity(
-                  profile,
-                  genres,
-                  tags,
-                  game.series || null
-                );
-                const isFavSeries = isFavoriteSeries(
-                  profile,
-                  game.series || null
-                );
-
-                let badge: string | undefined;
-
-                if (isFavSeries) badge = 'SÉRIE FAVORITA';
-                else if (affinity > 80) badge = 'PARA VOCÊ';
-
+                const { badge } = calculateGameAffinity(game, profile);
                 const isInWishlist = wishlistGames.some(
                   w => w.id === game.id.toString()
                 );
