@@ -199,10 +199,8 @@ pub async fn import_wishlist(
 
     // 2. Tenta detectar o formato usando os parsers do steam.rs e wishlist logic
     let games = if let Some(steam_games) = parse_steam_wishlist(&content) {
-        info!("Detectado formato Steam Export");
         steam_games
     } else if let Some(itad_games) = parse_itad_wishlist(&content) {
-        info!("Detectado formato ITAD Backup");
         itad_games
     } else {
         return Err("Formato de arquivo não reconhecido.".to_string());
@@ -258,10 +256,7 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
             return;
         }
 
-        info!(
-            "Buscando capas para {} jogos da wishlist...",
-            missing_covers.len()
-        );
+        let mut updated_count = 0;
 
         // B. Itera e busca na RAWG (Reaproveitando a lógica do search_wishlist_game)
         for (id, name) in missing_covers {
@@ -273,11 +268,15 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
                     {
                         if let Some(cover) = &first_match.background_image {
                             let conn = state.library_db.lock().unwrap();
-                            let _ = conn.execute(
-                                "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
-                                params![cover, id],
-                            );
-                            info!("Capa atualizada para: {}", name);
+                            if conn
+                                .execute(
+                                    "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
+                                    params![cover, id],
+                                )
+                                .is_ok()
+                            {
+                                updated_count += 1;
+                            }
                         }
                     }
                 }
@@ -288,7 +287,10 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
             sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
         }
 
-        // C. Avisa o frontend que terminou
+        // C. Log resumido e avisa o frontend
+        if updated_count > 0 {
+            info!("✓ {} capas atualizadas", updated_count);
+        }
         let _ = app.emit("wishlist_updated", ());
     });
 
@@ -462,18 +464,14 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
             }
             _ => {
                 // Se não tem ID, busca na API (Lookup)
-                info!("Buscando ID ITAD para: {}", name);
                 match itad::find_game_id(&name).await {
                     Ok(found_id) => {
                         // Salva no banco para cachear e não buscar na próxima vez
                         let conn = state.library_db.lock().unwrap();
-                        match conn.execute(
+                        let _ = conn.execute(
                             "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
                             params![&found_id, &local_id],
-                        ) {
-                            Ok(_) => info!("ITAD ID salvo no banco para '{}'", name),
-                            Err(e) => error!("Erro ao salvar ITAD ID: {}", e),
-                        }
+                        );
                         found_id
                     }
                     Err(e) => {
@@ -492,12 +490,7 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
         return Ok("Nenhum jogo correspondente encontrado na ITAD.".to_string());
     }
 
-    info!(
-        "Buscando preços para {} jogos na ITAD",
-        itad_ids_to_fetch.len()
-    );
     let overviews = itad::get_prices(itad_ids_to_fetch).await?;
-    info!("Recebidos {} resultados de preços da ITAD", overviews.len());
 
     let mut updated_count = 0;
 
@@ -505,20 +498,10 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
     let conn = state.library_db.lock().unwrap();
 
     for game_data in overviews {
-        if let Some((local_id, game_name)) = game_map.get(&game_data.id) {
-            info!(
-                "Processando preços para jogo: {} | ITAD ID: {}",
-                game_name, game_data.id
-            );
-
+        if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {
             // Pega a melhor oferta atual
             if let Some(deal) = game_data.current {
                 let lowest = game_data.lowest.map(|l| l.price).unwrap_or(deal.price);
-
-                info!(
-                    "Atualizando preços - Jogo: {} | Preço: {} {} | Loja: {}",
-                    game_name, deal.currency, deal.price, deal.shop.name
-                );
 
                 let cut = deal.cut.unwrap_or(0) as f64;
                 let normal_price = if cut > 0.0 {
@@ -552,15 +535,17 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
                     Ok(_) => {
                         updated_count += 1;
                     }
-                    Err(e) => error!("Erro ao salvar '{}': {}", game_name, e),
+                    Err(e) => error!("Erro ao salvar preço: {}", e),
                 }
-            } else {
-                info!("Nenhuma oferta atual disponível para: {}", game_name);
             }
         } else {
             error!("ITAD ID {} não encontrado no mapa local", game_data.id);
         }
     }
 
-    Ok(format!("Preços atualizados para {} jogos.", updated_count))
+    if updated_count > 0 {
+        info!("✓ {} preços atualizados", updated_count);
+    }
+
+    Ok(format!("✓ {} preços atualizados", updated_count))
 }

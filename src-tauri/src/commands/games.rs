@@ -104,8 +104,6 @@ fn validate_input(game: &GameInput) -> Result<(), String> {
 /// Insere dados na tabela 'games' após as validações necessárias.
 #[tauri::command]
 pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
-    println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
-
     validate_input(&game)?;
 
     let conn = state
@@ -167,8 +165,6 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// **Nota:** Não retorna erro se ‘ID’ não existe (‘update’ silencioso).
 #[tauri::command]
 pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
-    println!("PAYLOAD RECEBIDO NO RUST: {:?}", game);
-
     validate_input(&game)?;
 
     let conn = state

@@ -43,13 +43,9 @@ pub fn run() {
             let _guard = logger::init_logging(log_dir.clone());
             app.manage(_guard);
 
-            tracing::info!("Aplicação iniciada! Logs em: {:?}", log_dir);
-
             // === SEGURANÇA ===
 
             security::init_security(app_handle).expect("Falha ao inicializar sistema de segurança");
-
-            // tracing::info!("Sistema de segurança inicializado");
 
             // === BANCOS DE DADOS ===
 
@@ -58,7 +54,8 @@ pub fn run() {
 
             app.manage(db_state);
 
-            // tracing::info!("Bancos de dados inicializados com sucesso");
+            // Log único de sucesso
+            tracing::info!("Playlite iniciado com sucesso");
 
             Ok(())
         })

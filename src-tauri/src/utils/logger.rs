@@ -11,15 +11,16 @@ use tracing_subscriber::{filter::EnvFilter, fmt, layer::SubscriberExt, util::Sub
 use tracing_subscriber::Layer;
 
 pub fn init_logging(log_dir: PathBuf) -> WorkerGuard {
-    // Configura rotação de dev_logs: cria um arquivo novo por dia - Ex: app.log.2026-01-02
+    // Configura rotação de logs: cria um arquivo novo por dia - Ex: playlite.log.2026-01-02
     let file_appender = tracing_appender::rolling::daily(log_dir, "playlite.log");
 
-    // O WorkerGuard garante que os dev_logs sejam escritos antes do app fechar
+    // O WorkerGuard garante que os logs sejam escritos antes do app fechar
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
-    // Configura o formato do log
+    // Configura o formato do log para arquivo
+    // Apenas INFO+ para reduzir ruído (DEBUG fica disponível via variável de ambiente)
     let registry = tracing_subscriber::registry()
-        .with(EnvFilter::new("info,game_manager_lib=debug,tao=error"))
+        .with(EnvFilter::new("warn,game_manager_lib=info,tao=error"))
         .with(
             fmt::Layer::default()
                 .with_writer(non_blocking)
@@ -29,12 +30,12 @@ pub fn init_logging(log_dir: PathBuf) -> WorkerGuard {
                 .with_line_number(true),
         );
 
-    // Adiciona layer para stdout APENAS em modo de desenvolvimento (debug)
+    // Em modo dev: stdout apenas para WARN+ (erros importantes)
     #[cfg(debug_assertions)]
     let registry = registry.with(
         fmt::Layer::default()
             .with_writer(std::io::stdout)
-            .with_filter(tracing_subscriber::filter::LevelFilter::DEBUG),
+            .with_filter(tracing_subscriber::filter::LevelFilter::WARN),
     );
 
     registry.init();

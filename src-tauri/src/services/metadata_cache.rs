@@ -35,7 +35,6 @@ pub fn initialize_cache_db(conn: &Connection) -> Result<(), String> {
     )
     .map_err(|e| format!("Erro ao criar índice: {}", e))?;
 
-    info!("Schema do cache inicializado");
     Ok(())
 }
 
@@ -88,23 +87,12 @@ pub fn get_cached_api_data(conn: &Connection, source: &str, external_id: &str) -
             // Usa a chave completa (external_id) para determinar TTL
             let full_key = external_id;
             if is_cache_expired(full_key, updated_at) {
-                info!(
-                    "Cache expirado para {}:{} (age: {}s, TTL: {}s)",
-                    source,
-                    external_id,
-                    current_timestamp() - updated_at,
-                    get_ttl_for_cache_type(full_key)
-                );
                 None
             } else {
-                info!("Cache HIT: {}:{}", source, external_id);
                 Some(payload)
             }
         }
-        Err(rusqlite::Error::QueryReturnedNoRows) => {
-            info!("Cache MISS: {}:{}", source, external_id);
-            None
-        }
+        Err(rusqlite::Error::QueryReturnedNoRows) => None,
         Err(e) => {
             warn!("Erro ao buscar cache: {}", e);
             None

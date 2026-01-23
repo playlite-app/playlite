@@ -5,15 +5,26 @@
 use crate::database::AppState;
 use crate::services::{itad, metadata_cache, steam};
 use rusqlite::params;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{error, info, warn};
 
+// Flag global para evitar execuções duplicadas
+static BACKGROUND_REFRESH_RUNNING: AtomicBool = AtomicBool::new(false);
+
 /// Comando disparado ao iniciar o app.
 /// Roda numa thread separada (spawn) para não bloquear a inicialização.
+/// Protegido contra execução duplicada (React Strict Mode chama useEffect 2x).
 #[tauri::command]
 pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), String> {
+    // Verifica se já está rodando (previne duplicação)
+    if BACKGROUND_REFRESH_RUNNING.swap(true, Ordering::SeqCst) {
+        // Já existe uma instância rodando, ignora esta chamada
+        return Ok(());
+    }
+
     // Clone do app_handle para usar no spawn
     let app_clone = app.clone();
 
@@ -22,25 +33,25 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), String> 
         // Pequeno delay inicial para não competir com o boot do banco de dados
         sleep(Duration::from_secs(5)).await;
 
-        info!("Iniciando ciclo de atualização em background...");
-
         let state: State<AppState> = app_clone.state();
 
         // 1. Atualizar Reviews da Steam (Se cache > 7 dias)
         if let Err(e) = refresh_steam_reviews_background(&state).await {
-            warn!("Erro não-crítico ao atualizar reviews: {}", e);
+            warn!("Falha ao atualizar reviews: {}", e);
         }
 
         // 2. Atualizar Preços da Wishlist (Se cache > 3 dias)
         sleep(Duration::from_secs(2)).await;
 
         if let Err(e) = refresh_wishlist_prices_background(&app_clone, &state).await {
-            warn!("Erro não-crítico ao atualizar preços: {}", e);
+            warn!("Falha ao atualizar preços: {}", e);
         }
 
-        info!("Ciclo de atualização em background finalizado.");
-        // Opcional: Avisar frontend que terminou (para debug), mas usuário comum nem precisa saber
+        // Opcional: Avisar frontend que terminou (para debug)
         let _ = app_clone.emit("background_refresh_complete", ());
+
+        // Reseta o flag para permitir futuras execuções (ex: se usuário recarregar o app)
+        BACKGROUND_REFRESH_RUNNING.store(false, Ordering::SeqCst);
     });
 
     Ok(())
@@ -52,7 +63,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
     let steam_games: Vec<(u32, String)> = {
         let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
 
-        conn.prepare("SELECT game_id, title FROM games WHERE platform = 'Steam'")
+        conn.prepare("SELECT platform_id, title FROM games WHERE platform = 'Steam'")
             .and_then(|mut stmt| {
                 stmt.query_map([], |row| {
                     let id_str: String = row.get(0)?;
@@ -71,10 +82,6 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
         return Ok(());
     }
 
-    info!(
-        "Verificando validade dos reviews para {} jogos...",
-        steam_games.len()
-    );
     let mut updated_count = 0;
 
     // B. Iterar jogos
@@ -117,7 +124,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
 
                         let conn = state.library_db.lock().unwrap();
                         let _ = conn.execute(
-                            "UPDATE games SET user_rating = ?1 WHERE game_id = ?2",
+                            "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_id = ?2",
                             params![percent_positive, app_id_str],
                         );
                     }
@@ -135,7 +142,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
     }
 
     if updated_count > 0 {
-        info!("{} reviews atualizados no banco.", updated_count);
+        info!("{} avaliações atualizadas", updated_count);
     }
 
     Ok(())
@@ -167,11 +174,6 @@ async fn refresh_wishlist_prices_background(
     if wishlist_items.is_empty() {
         return Ok(());
     }
-
-    info!(
-        "Verificando preços para {} itens da wishlist...",
-        wishlist_items.len()
-    );
 
     // B. Coleta IDs da ITAD que precisam atualizar
     let mut itad_ids_to_fetch = Vec::new();
@@ -215,16 +217,10 @@ async fn refresh_wishlist_prices_background(
     }
 
     if itad_ids_to_fetch.is_empty() {
-        info!("Todos os preços estão atualizados no cache.");
         return Ok(());
     }
 
     // C. Busca preços em lote da ITAD
-    info!(
-        "Buscando preços atualizados para {} jogos...",
-        itad_ids_to_fetch.len()
-    );
-
     let overviews = match itad::get_prices(itad_ids_to_fetch).await {
         Ok(data) => data,
         Err(e) => {
@@ -299,7 +295,7 @@ async fn refresh_wishlist_prices_background(
     }
 
     if updated_count > 0 {
-        info!("{} preços atualizados na wishlist.", updated_count);
+        info!("{} preços atualizados", updated_count);
         let _ = app.emit("wishlist_prices_updated", ());
     }
 

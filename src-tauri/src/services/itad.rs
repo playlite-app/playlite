@@ -77,8 +77,6 @@ pub async fn find_game_id(title: &str) -> Result<String, String> {
         return Err("API Key da ITAD não configurada".into());
     }
 
-    tracing::info!("ITAD Lookup - Buscando jogo: '{}'", title);
-
     let url = format!(
         "{}/games/lookup/v1?key={}&title={}",
         ITAD_API_URL,

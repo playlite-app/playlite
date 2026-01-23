@@ -55,12 +55,6 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
     // Cria schema completo
     create_schema(&library_conn)?;
 
-    tracing::info!(
-        "Banco {} inicializado em: {:?}",
-        DB_FILENAME_LIBRARY,
-        library_path
-    );
-
     // Conexão para secrets.db
     let secrets_path = app_data_dir.join(DB_FILENAME_SECRETS);
     let secrets_conn = Connection::open(&secrets_path)
@@ -69,12 +63,6 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
     secrets_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| format!("Erro ao configurar WAL no secrets.db: {}", e))?;
-
-    tracing::info!(
-        "Banco {} inicializado em: {:?}",
-        DB_FILENAME_SECRETS,
-        secrets_path
-    );
 
     // Conexão para metadata.db (cache)
     let metadata_path = app_data_dir.join(DB_FILENAME_METADATA);
@@ -87,12 +75,6 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
     // Inicializa schema do cache
     crate::services::metadata_cache::initialize_cache_db(&metadata_conn)?;
-
-    tracing::info!(
-        "Banco {} inicializado em: {:?}",
-        DB_FILENAME_METADATA,
-        metadata_path
-    );
 
     Ok(AppState {
         library_db: Mutex::new(library_conn),
@@ -206,8 +188,6 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
     // Marca versão do schema
     conn.pragma_update(None, "user_version", 3)
         .map_err(|e| format!("Erro ao definir versão do schema: {}", e))?;
-
-    tracing::info!("Schema v3 criado com sucesso");
 
     Ok(())
 }

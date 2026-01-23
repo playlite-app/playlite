@@ -238,10 +238,6 @@ async fn enrich_game_metadata(
             for store_data in &rawg_det.stores {
                 if store_data.store.slug == "steam" {
                     if let Some(extracted_id) = extract_steam_id_from_url(&store_data.url) {
-                        info!(
-                            "Steam ID descoberto via RAWG para '{}': {}",
-                            name, extracted_id
-                        );
                         target_steam_id = Some(extracted_id);
                         links_map.insert("steam".to_string(), store_data.url.clone());
                     }
@@ -306,11 +302,6 @@ async fn enrich_game_metadata(
                 playtime_estimator::estimate_playtime(Some(hours), &genre_list, &details.tags)
             {
                 details.estimated_playtime = Some(estimated_hours as f32);
-
-                info!(
-                    "Playtime '{}': SteamSpy={}h -> Estimado={}h",
-                    name, hours, estimated_hours
-                );
             }
         }
     }
@@ -318,11 +309,6 @@ async fn enrich_game_metadata(
     if !links_map.is_empty() {
         details.external_links = serde_json::to_string(&links_map).ok();
     }
-
-    info!(
-        "Processado {}: ESRB={:?}, Playtime={:?}, SteamID={:?}",
-        name, details.esrb_rating, details.median_playtime, details.steam_app_id
-    );
 
     (details, found_raw_tags)
 }
@@ -374,19 +360,13 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
     }
 
     tauri::async_runtime::spawn(async move {
-        info!("Iniciando atualização de metadados com cache...");
-
         let state: State<AppState> = app_handle.state();
         let mut all_session_tags: HashSet<String> = HashSet::new();
 
         // Limpeza de cache expirado no início
         {
             let cache_conn = state.metadata_db.lock().unwrap();
-            if let Ok(deleted) = metadata_cache::cleanup_expired_cache(&cache_conn) {
-                if deleted > 0 {
-                    info!("Cache cleanup: {} entradas removidas", deleted);
-                }
-            }
+            let _ = metadata_cache::cleanup_expired_cache(&cache_conn);
         }
 
         loop {
@@ -472,21 +452,8 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
             sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
         }
 
-        // Estatísticas do cache
-        {
-            let cache_conn = state.metadata_db.lock().unwrap();
-            if let Ok(stats) = metadata_cache::get_cache_stats(&cache_conn) {
-                info!("Cache stats: {:?}", stats);
-            }
-        }
-
-        match crate::services::tag_service::generate_analysis_report(&app_handle, all_session_tags)
-        {
-            Ok(path) => info!("Relatório de tags salvo em: {}", path),
-            Err(e) => warn!("Falha ao salvar relatório de tags: {}", e),
-        }
-
-        info!("Metadata update concluído.");
+        let _ =
+            crate::services::tag_service::generate_analysis_report(&app_handle, all_session_tags);
         let _ = app_handle.emit("enrich_complete", "Metadados atualizados!");
     });
 
