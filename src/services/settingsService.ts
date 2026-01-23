@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
-import { ERROR_MESSAGES, parseBackupError } from '@/constants/errorMessages.ts';
+import { ERROR_MESSAGES, parseBackupError } from '@/errors/errorMessages.ts';
 import { ImportSummary, KeysBatch } from '@/types';
 
 export const settingsService = {

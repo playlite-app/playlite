@@ -31,6 +31,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-shell",
  "tauri-plugin-store",
+ "thiserror 2.0.18",
  "tiny_http",
  "tokio",
  "tracing",
@@ -475,7 +476,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2297,7 +2298,7 @@ dependencies = [
  "once_cell",
  "png",
  "serde",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "windows-sys 0.60.2",
 ]
 
@@ -3267,7 +3268,7 @@ checksum = "a4e608c6638b9c18977b00b475ac1f28d14e84b27d8d42f70e0bf1e3dec127ac"
 dependencies = [
  "getrandom 0.2.16",
  "libredox",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -3994,7 +3995,7 @@ dependencies = [
  "cc",
  "hashbrown 0.16.1",
  "js-sys",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -4233,7 +4234,7 @@ dependencies = [
  "tauri-runtime",
  "tauri-runtime-wry",
  "tauri-utils",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "tokio",
  "tray-icon",
  "url",
@@ -4285,7 +4286,7 @@ dependencies = [
  "sha2",
  "syn 2.0.112",
  "tauri-utils",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "time",
  "url",
  "uuid",
@@ -4337,7 +4338,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "tauri-plugin-fs",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "url",
 ]
 
@@ -4358,7 +4359,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "tauri-utils",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "toml 0.9.10+spec-1.1.0",
  "url",
 ]
@@ -4375,7 +4376,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "tauri-specta",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4394,7 +4395,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-plugin",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "url",
  "windows",
  "zbus",
@@ -4417,7 +4418,7 @@ dependencies = [
  "shared_child",
  "tauri",
  "tauri-plugin",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "tokio",
 ]
 
@@ -4432,7 +4433,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-plugin",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "tokio",
  "tracing",
 ]
@@ -4455,7 +4456,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tauri-utils",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "url",
  "webkit2gtk",
  "webview2-com",
@@ -4501,7 +4502,7 @@ dependencies = [
  "specta",
  "specta-typescript",
  "tauri",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4534,7 +4535,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "swift-rs",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "toml 0.9.10+spec-1.1.0",
  "url",
  "urlpattern",
@@ -4588,11 +4589,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.17"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f63587ca0f12b72a0600bcba1d40081f830876000bb46dd2337a3051618f4fc8"
+checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
- "thiserror-impl 2.0.17",
+ "thiserror-impl 2.0.18",
 ]
 
 [[package]]
@@ -4608,9 +4609,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.17"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ff15c8ecd7de3849db632e14d18d2571fa09dfc5ed93479bc4485c7a517c913"
+checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4900,7 +4901,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "786d480bce6247ab75f005b14ae1624ad978d3029d9113f0a22fa1ac773faeaf"
 dependencies = [
  "crossbeam-channel",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "time",
  "tracing-subscriber",
 ]
@@ -4973,7 +4974,7 @@ dependencies = [
  "once_cell",
  "png",
  "serde",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "windows-sys 0.60.2",
 ]
 
@@ -5447,7 +5448,7 @@ version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36695906a1b53a3bf5c4289621efedac12b73eeb0b89e7e1a89b517302d5d75c"
 dependencies = [
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "windows",
  "windows-core 0.61.2",
 ]
@@ -5982,7 +5983,7 @@ dependencies = [
  "sha2",
  "soup3",
  "tao-macros",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "url",
  "webkit2gtk",
  "webkit2gtk-sys",

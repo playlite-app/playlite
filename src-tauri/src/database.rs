@@ -13,6 +13,7 @@
 use crate::constants::{
     DB_FILENAME_LIBRARY, DB_FILENAME_METADATA, DB_FILENAME_SECRETS, DB_JOURNAL_MODE,
 };
+use crate::errors::AppError;
 use crate::security;
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
@@ -279,7 +280,7 @@ fn get_secrets_connection<'a>(
 }
 
 /// Salva um secret encriptado no banco. Se a chave já existir, o valor é substituído (upsert).
-pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), String> {
+pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), AppError> {
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
 
@@ -288,14 +289,13 @@ pub fn set_secret(app: &AppHandle, key_name: &str, value: &str) -> Result<(), St
     conn.execute(
         "INSERT OR REPLACE INTO encrypted_keys (key, value) VALUES (?1, ?2)",
         params![key_name, encrypted],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(())
 }
 
 /// Recupera e decripta um secret do banco. Se a chave não existir, retorna string vazia ao invés de erro.
-pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
+pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, AppError> {
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
 
@@ -311,20 +311,19 @@ pub fn get_secret(app: &AppHandle, key_name: &str) -> Result<String, String> {
             Ok(decrypted)
         }
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(String::new()),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(AppError::DatabaseError(e.to_string())),
     }
 }
 
 /// Remove um secret do banco permanentemente.
-pub fn delete_secret(app: &AppHandle, key_name: &str) -> Result<(), String> {
+pub fn delete_secret(app: &AppHandle, key_name: &str) -> Result<(), AppError> {
     let state: tauri::State<AppState> = app.state();
     let conn = get_secrets_connection(&state)?;
 
     conn.execute(
         "DELETE FROM encrypted_keys WHERE key = ?1",
         params![key_name],
-    )
-    .map_err(|e: rusqlite::Error| e.to_string())?;
+    )?;
 
     Ok(())
 }

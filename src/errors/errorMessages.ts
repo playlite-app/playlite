@@ -1,3 +1,5 @@
+import { isAppError } from '@/types/errors';
+
 /**
  * Mensagens de erro centralizadas
  * Facilita manutenção, tradução e consistência
@@ -57,6 +59,52 @@ export function matchesErrorPattern(
  * Extrai mensagem de erro amigável baseada no erro recebido
  */
 export function parseBackupError(error: unknown): string {
+  // Se for um AppError estruturado, trata de forma especial
+  if (isAppError(error)) {
+    switch (error.type) {
+      case 'ValidationError':
+        // Validações específicas
+        if (error.message.includes('backup inválido')) {
+          return ERROR_MESSAGES.BACKUP_INVALID_FILE;
+        }
+
+        if (error.message.includes('incompatível')) {
+          return ERROR_MESSAGES.BACKUP_INCOMPATIBLE_VERSION;
+        }
+
+        return error.message;
+
+      case 'IoError':
+        if (error.message.includes('No such file')) {
+          return ERROR_MESSAGES.FILE_NOT_FOUND;
+        }
+
+        return `Erro ao acessar arquivo: ${error.message}`;
+
+      case 'DatabaseError':
+        return ERROR_MESSAGES.DatabaseError;
+
+      case 'NetworkError':
+        return ERROR_MESSAGES.NetworkError;
+
+      case 'MutexError':
+        return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
+
+      case 'SerializationError':
+        return `Erro ao processar dados: ${error.message}`;
+
+      case 'AlreadyExists':
+        return error.message;
+
+      case 'NotFound':
+        return error.message;
+
+      default:
+        return error.message;
+    }
+  }
+
+  // Fallback para erros não estruturados (legacy)
   const errorStr = String(error);
 
   // Verifica permissões de diálogo
@@ -89,22 +137,6 @@ export function parseBackupError(error: unknown): string {
   if (errorStr.includes('No such file')) {
     return ERROR_MESSAGES.FILE_NOT_FOUND;
   }
-
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'type' in error &&
-    error.type === 'DatabaseError'
-  )
-    return ERROR_MESSAGES.DatabaseError;
-
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'type' in error &&
-    error.type === 'NetworkError'
-  )
-    return ERROR_MESSAGES.NetworkError;
 
   // Erro genérico
   return errorStr;

@@ -1,6 +1,6 @@
 // === ARQUIVO CENTRALIZADO COM CONSTANTES DO BACKEND ===
 
-// === URLs e ENDPOOINTS ===
+// === URLs e ENDPOINTS ===
 pub const STEAM_CDN_URL: &str = "https://cdn.cloudflare.steamstatic.com";
 #[allow(dead_code)]
 pub const STEAM_STORE_API_URL: &str = "https://store.steampowered.com/api/appdetails";

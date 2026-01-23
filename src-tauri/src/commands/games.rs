@@ -6,6 +6,7 @@
 use crate::constants;
 use crate::database;
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::models;
 use crate::utils::status_logic;
 use chrono::Utc;
@@ -40,59 +41,68 @@ pub struct GameInput {
 ///
 /// Evita duplicação de código entre add e ‘update’.
 /// Valida nome, URL da capa, plataforma, tempo jogado e avaliação.
-fn validate_input(game: &GameInput) -> Result<(), String> {
+fn validate_input(game: &GameInput) -> Result<(), AppError> {
     if game.name.trim().is_empty() {
-        return Err("Nome do jogo não pode ser vazio".to_string());
+        return Err(AppError::ValidationError(
+            "Nome do jogo não pode ser vazio".to_string(),
+        ));
     }
 
     if game.name.len() > constants::MAX_NAME_LENGTH {
-        return Err(format!(
+        return Err(AppError::ValidationError(format!(
             "Nome muito longo (max {})",
             constants::MAX_NAME_LENGTH
-        ));
+        )));
     }
 
     if let Some(ref url_str) = game.cover_url {
         if url_str.len() > constants::MAX_URL_LENGTH {
-            return Err(format!(
+            return Err(AppError::ValidationError(format!(
                 "URL da capa muito longa (máximo {} caracteres)",
                 constants::MAX_URL_LENGTH
-            ));
+            )));
         }
         // Validação básica de URL
         if !url_str.starts_with("http") && !url_str.starts_with("asset://") {
-            let url = Url::parse(url_str).map_err(|_| "URL inválida.")?;
+            let url = Url::parse(url_str)
+                .map_err(|_| AppError::ValidationError("URL inválida.".to_string()))?;
             if url.scheme() != "http" && url.scheme() != "https" {
-                return Err("A URL deve ser HTTP, HTTPS ou Asset local.".to_string());
+                return Err(AppError::ValidationError(
+                    "A URL deve ser HTTP, HTTPS ou Asset local.".to_string(),
+                ));
             }
         }
     }
 
     if let Some(ref p) = game.platform {
         if p.len() > constants::MAX_PLATFORM_LENGTH {
-            return Err(format!(
+            return Err(AppError::ValidationError(format!(
                 "Plataforma muito longa (max {})",
                 constants::MAX_PLATFORM_LENGTH
-            ));
+            )));
         }
     }
 
     if let Some(time) = game.playtime {
         if time < 0 {
-            return Err("Tempo jogado não pode ser negativo".to_string());
+            return Err(AppError::ValidationError(
+                "Tempo jogado não pode ser negativo".to_string(),
+            ));
         }
         if time > constants::MAX_PLAYTIME {
-            return Err("Tempo jogado excessivo".to_string());
+            return Err(AppError::ValidationError(
+                "Tempo jogado excessivo".to_string(),
+            ));
         }
     }
 
     if let Some(r) = game.user_rating {
         if !(constants::MIN_RATING..=constants::MAX_RATING).contains(&r) {
-            return Err(format!(
+            return Err(AppError::ValidationError(format!(
                 "Avaliação deve estar entre {} e {}",
                 constants::MIN_RATING,
                 constants::MAX_RATING
-            ));
+            )));
         }
     }
 
@@ -103,25 +113,22 @@ fn validate_input(game: &GameInput) -> Result<(), String> {
 ///
 /// Insere dados na tabela 'games' após as validações necessárias.
 #[tauri::command]
-pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), AppError> {
     validate_input(&game)?;
 
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state.library_db.lock()?;
 
     // Verifica duplicidade
-    let exists: bool = conn
-        .query_row(
-            "SELECT EXISTS(SELECT 1 FROM games WHERE id = ?1)",
-            params![game.id],
-            |row| row.get(0),
-        )
-        .map_err(|e| format!("Erro SQL: {}", e))?;
+    let exists: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM games WHERE id = ?1)",
+        params![game.id],
+        |row| row.get(0),
+    )?;
 
     if exists {
-        return Err("Já existe um jogo com este ID".to_string());
+        return Err(AppError::AlreadyExists(
+            "Já existe um jogo com este ID".to_string(),
+        ));
     }
 
     // Lógica Automática de Status
@@ -151,8 +158,7 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
             game.playtime,
             added_at
         ],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(())
 }
@@ -162,15 +168,12 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
 /// Atualiza os campos, preservando added_at e favorite, com os novos valores fornecidos.
 /// Realiza as mesmas validações de 'add_game'.
 ///
-/// **Nota:** Não retorna erro se ‘ID’ não existe (‘update’ silencioso).
+/// **Nota:** Não retorna erro se 'ID' não existe ('update' silencioso).
 #[tauri::command]
-pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String> {
+pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), AppError> {
     validate_input(&game)?;
 
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+    let conn = state.library_db.lock()?;
 
     conn.execute(
         "UPDATE games SET
@@ -196,8 +199,7 @@ pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String
             game.launch_args,
             game.id
         ],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(())
 }
@@ -207,11 +209,8 @@ pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), String
 /// Retorna a lista completa de jogos ordenada conforme armazenada no banco.
 /// Inclui todos os campos, inclusive o status de favorito.
 #[tauri::command]
-pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, AppError> {
+    let conn = state.library_db.lock()?;
 
     let mut stmt = conn
         .prepare(
@@ -222,8 +221,7 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
          FROM games g
          LEFT JOIN game_details gd ON g.id = gd.game_id
          ORDER BY g.name ASC"
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
 
     let games = stmt
         .query_map([], |row| {
@@ -246,10 +244,8 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
                 developer: row.get(15)?,
                 is_adult: row.get(16)?,
             })
-        })
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(games)
 }
@@ -263,12 +259,11 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, String> {
 pub fn get_library_game_details(
     state: State<AppState>,
     game_id: String,
-) -> Result<Option<models::GameDetails>, String> {
-    let conn = state.library_db.lock().map_err(|_| "Falha mutex")?;
+) -> Result<Option<models::GameDetails>, AppError> {
+    let conn = state.library_db.lock()?;
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT
+    let mut stmt = conn.prepare(
+        "SELECT
                 game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
                 description_raw, description_ptbr, background_image, critic_score,
                 steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
@@ -276,46 +271,43 @@ pub fn get_library_game_details(
                 estimated_playtime
              FROM game_details
              WHERE game_id = ?1",
-        )
-        .map_err(|e| e.to_string())?;
+    )?;
 
-    let mut rows = stmt
-        .query_map(params![game_id], |row| {
-            let links_json: Option<String> = row.get(19)?; // external_links
-            let external_links = links_json.and_then(|json| serde_json::from_str(&json).ok());
+    let mut rows = stmt.query_map(params![game_id], |row| {
+        let links_json: Option<String> = row.get(19)?; // external_links
+        let external_links = links_json.and_then(|json| serde_json::from_str(&json).ok());
 
-            let tags_json: Option<String> = row.get(6)?;
-            let tags = tags_json.map(|s| database::deserialize_tags(&s));
+        let tags_json: Option<String> = row.get(6)?;
+        let tags = tags_json.map(|s| database::deserialize_tags(&s));
 
-            Ok(models::GameDetails {
-                game_id: row.get(0)?,
-                steam_app_id: row.get(1)?,
-                developer: row.get(2)?,
-                publisher: row.get(3)?,
-                release_date: row.get(4)?,
-                genres: row.get(5)?,
-                tags,
-                series: row.get(7)?,
-                description_raw: row.get(8)?,
-                description_ptbr: row.get(9)?,
-                background_image: row.get(10)?,
-                critic_score: row.get(11)?,
-                steam_review_label: row.get(12)?,
-                steam_review_count: row.get(13)?,
-                steam_review_score: row.get(14)?,
-                steam_review_updated_at: row.get(15)?,
-                esrb_rating: row.get(16)?,
-                is_adult: row.get(17).unwrap_or(false),
-                adult_tags: row.get(18)?,
-                external_links,
-                median_playtime: row.get(20)?,
-                estimated_playtime: row.get(21)?,
-            })
+        Ok(models::GameDetails {
+            game_id: row.get(0)?,
+            steam_app_id: row.get(1)?,
+            developer: row.get(2)?,
+            publisher: row.get(3)?,
+            release_date: row.get(4)?,
+            genres: row.get(5)?,
+            tags,
+            series: row.get(7)?,
+            description_raw: row.get(8)?,
+            description_ptbr: row.get(9)?,
+            background_image: row.get(10)?,
+            critic_score: row.get(11)?,
+            steam_review_label: row.get(12)?,
+            steam_review_count: row.get(13)?,
+            steam_review_score: row.get(14)?,
+            steam_review_updated_at: row.get(15)?,
+            esrb_rating: row.get(16)?,
+            is_adult: row.get(17).unwrap_or(false),
+            adult_tags: row.get(18)?,
+            external_links,
+            median_playtime: row.get(20)?,
+            estimated_playtime: row.get(21)?,
         })
-        .map_err(|e| e.to_string())?;
+    })?;
 
     if let Some(row) = rows.next() {
-        Ok(Some(row.map_err(|e| e.to_string())?))
+        Ok(Some(row?))
     } else {
         Ok(None)
     }
@@ -328,17 +320,13 @@ pub fn get_library_game_details(
 ///
 /// **Nota:** Esta operação é idempotente e não retorna erro se o ‘ID’ não existir.
 #[tauri::command]
-pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), AppError> {
+    let conn = state.library_db.lock()?;
 
     conn.execute(
         "UPDATE games SET favorite = NOT favorite WHERE id = ?1",
         params![id],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(())
 }
@@ -349,13 +337,12 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), String>
 /// Não há validação do valor; espera-se que o frontend envie valores válidos.
 /// A lista de status possíveis inclui "completed", "playing", "backlog" e "abandoned".
 #[tauri::command]
-pub fn set_game_status(state: State<AppState>, id: String, status: String) -> Result<(), String> {
-    let conn = state.library_db.lock().map_err(|_| "Falha no mutex")?;
+pub fn set_game_status(state: State<AppState>, id: String, status: String) -> Result<(), AppError> {
+    let conn = state.library_db.lock()?;
     conn.execute(
         "UPDATE games SET status = ?1 WHERE id = ?2",
         params![status, id],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
     Ok(())
 }
 
@@ -364,13 +351,13 @@ pub fn set_game_status(state: State<AppState>, id: String, status: String) -> Re
 /// Atualiza o campo 'user_rating' com o valor fornecido.
 /// Aceita valores de 0 a 5, onde 0 remove a avaliação (define como NULL).
 #[tauri::command]
-pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Result<(), String> {
+pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Result<(), AppError> {
     // Validação rápida
     if !(0..=5).contains(&rating) {
-        return Err("Rating inválido".to_string());
+        return Err(AppError::ValidationError("Rating inválido".to_string()));
     }
 
-    let conn = state.library_db.lock().map_err(|_| "Falha no mutex")?;
+    let conn = state.library_db.lock()?;
 
     // Se rating for 0, remove a avaliação (NULL)
     let val = if rating == 0 { None } else { Some(rating) };
@@ -378,8 +365,7 @@ pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Resul
     conn.execute(
         "UPDATE games SET user_rating = ?1 WHERE id = ?2",
         params![val, id],
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
     Ok(())
 }
 
@@ -387,14 +373,10 @@ pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Resul
 ///
 /// **Nota:** Esta ação é irreversível e exclui todos os dados relacionados ao jogo.
 #[tauri::command]
-pub fn delete_game(state: State<AppState>, id: String) -> Result<(), String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+pub fn delete_game(state: State<AppState>, id: String) -> Result<(), AppError> {
+    let conn = state.library_db.lock()?;
 
-    conn.execute("DELETE FROM games WHERE id = ?1", params![id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM games WHERE id = ?1", params![id])?;
 
     Ok(())
 }

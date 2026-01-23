@@ -13,6 +13,7 @@ use super::shared::{fetch_rawg_metadata, EnrichProgress};
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::services::{cache, playtime, steam};
 use crate::utils::series;
 use rusqlite::params;
@@ -20,7 +21,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
-use tracing::warn;
+use tracing::{info, warn};
 
 // === ESTRUTURAS DE DADOS ===
 
@@ -346,14 +347,18 @@ fn save_game_details(
 
 /// Atualiza metadados de jogos na biblioteca (OTIMIZADO)
 #[tauri::command]
-pub async fn update_metadata(app: AppHandle) -> Result<(), String> {
+pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
     let app_handle = app.clone();
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
+        return Err(AppError::ValidationError(
+            "API Key da RAWG não configurada.".to_string(),
+        ));
     }
 
     tauri::async_runtime::spawn(async move {
+        info!("Iniciando enriquecimento com cache...");
+
         let state: State<AppState> = app_handle.state();
         let mut all_session_tags: HashSet<String> = HashSet::new();
 

@@ -173,40 +173,6 @@ pub struct WishlistGame {
     pub added_at: Option<String>,
 }
 
-// === Sistema de Erros ===
-
-/// Erros tipados da aplicação para tratamento granular.
-#[allow(dead_code)]
-#[derive(Debug, Serialize)]
-#[serde(tag = "type", content = "message")]
-pub enum AppError {
-    DatabaseError(String),
-    ValidationError(String),
-    NetworkError(String),
-    NotFound(String),
-    MutexError,
-}
-
-impl std::fmt::Display for AppError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AppError::DatabaseError(msg) => write!(f, "Erro de banco de dados: {}", msg),
-            AppError::ValidationError(msg) => write!(f, "Erro de validação: {}", msg),
-            AppError::NetworkError(msg) => write!(f, "Erro de rede: {}", msg),
-            AppError::NotFound(msg) => write!(f, "Não encontrado: {}", msg),
-            AppError::MutexError => {
-                write!(f, "Erro interno: falha ao acessar recurso compartilhado")
-            }
-        }
-    }
-}
-
-impl From<rusqlite::Error> for AppError {
-    fn from(err: rusqlite::Error) -> Self {
-        AppError::DatabaseError(err.to_string())
-    }
-}
-
 // === Modelos Adicionais ===
 
 /// Pontuação de gênero no perfil do usuário.

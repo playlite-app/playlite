@@ -3,6 +3,7 @@
 //! Retorna as 5 conquistas mais recentes dos jogos jogados nas últimas 2 semanas.
 
 use crate::database;
+use crate::errors::AppError;
 use crate::services::steam;
 use serde::Serialize;
 use tauri::AppHandle;
@@ -18,7 +19,9 @@ pub struct DashboardAchievement {
 /// Busca as 5 conquistas mais recentes dos jogos jogados nas últimas 2 semanas.
 /// Retorna uma lista vazia se não houver conquistas ou se as credenciais não estiverem configuradas.
 #[tauri::command]
-pub async fn get_recent_achievements(app: AppHandle) -> Result<Vec<DashboardAchievement>, String> {
+pub async fn get_recent_achievements(
+    app: AppHandle,
+) -> Result<Vec<DashboardAchievement>, AppError> {
     // 1. Pega credenciais
     let api_key = database::get_secret(&app, "steam_api_key")?;
     let steam_id = database::get_secret(&app, "steam_id")?;

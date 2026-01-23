@@ -5,6 +5,7 @@
 
 use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database::{self, AppState};
+use crate::errors::AppError;
 use crate::models::WishlistGame;
 use crate::services::{itad, rawg};
 use chrono::NaiveDate;
@@ -28,7 +29,7 @@ pub struct SearchResult {
 
 /// Função auxiliar privada que contém o SQL de inserção.
 /// Aceita uma conexão (ou transação) já aberta.
-fn insert_game_internal(conn: &Connection, game: &WishlistGame) -> Result<(), rusqlite::Error> {
+fn insert_game_internal(conn: &Connection, game: &WishlistGame) -> Result<(), AppError> {
     conn.execute(
         "INSERT OR REPLACE INTO wishlist (
             id, name, cover_url, store_url, store_platform,
@@ -191,10 +192,9 @@ fn parse_itad_wishlist(content: &str) -> Option<Vec<WishlistGame>> {
 pub async fn import_wishlist(
     state: State<'_, AppState>,
     file_path: String,
-) -> Result<usize, String> {
+) -> Result<usize, AppError> {
     // 1. Lê o arquivo
-    let content =
-        fs::read_to_string(&file_path).map_err(|e| format!("Erro ao ler arquivo: {}", e))?;
+    let content = fs::read_to_string(&file_path)?;
 
     // 2. Tenta detectar o formato usando os parsers do steam.rs e wishlist logic
     let games = if let Some(steam_games) = parse_steam_wishlist(&content) {
@@ -202,7 +202,9 @@ pub async fn import_wishlist(
     } else if let Some(itad_games) = parse_itad_wishlist(&content) {
         itad_games
     } else {
-        return Err("Formato de arquivo não reconhecido.".to_string());
+        return Err(AppError::ValidationError(
+            "Formato de arquivo não reconhecido.".to_string(),
+        ));
     };
 
     let total = games.len();
@@ -212,13 +214,13 @@ pub async fn import_wishlist(
 
     // 3. Salva no banco
     {
-        let mut conn = state.library_db.lock().map_err(|_| "Falha no DB")?;
-        let tx = conn.transaction().map_err(|e| e.to_string())?;
+        let mut conn = state.library_db.lock()?;
+        let tx = conn.transaction()?;
 
         for game in games {
-            insert_game_internal(&tx, &game).map_err(|e| e.to_string())?;
+            insert_game_internal(&tx, &game)?;
         }
-        tx.commit().map_err(|e| e.to_string())?;
+        tx.commit()?;
     }
 
     Ok(total)
@@ -227,11 +229,13 @@ pub async fn import_wishlist(
 /// Função para buscar capas faltantes na RAWG para jogos na Wishlist.
 /// Executa em background para não travar a interface.
 #[tauri::command]
-pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
+pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), AppError> {
     // 1. Pega a API Key
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
+        return Err(AppError::ValidationError(
+            "API Key da RAWG não configurada.".to_string(),
+        ));
     }
 
     // 2. Executa em background para não travar a interface
@@ -302,14 +306,18 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), String> {
 pub async fn search_wishlist_game(
     app: AppHandle,
     query: String,
-) -> Result<Vec<SearchResult>, String> {
+) -> Result<Vec<SearchResult>, AppError> {
     // Usa RAWG para buscar o jogo e a capa
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("Configure a chave da RAWG nas configurações.".to_string());
+        return Err(AppError::ValidationError(
+            "Configure a chave da RAWG nas configurações.".to_string(),
+        ));
     }
 
-    let results = rawg::search_games(&api_key, &query).await?;
+    let results = rawg::search_games(&api_key, &query)
+        .await
+        .map_err(AppError::NetworkError)?;
 
     Ok(results
         .into_iter()
@@ -331,7 +339,7 @@ pub fn add_to_wishlist(
     store_url: Option<String>,
     current_price: Option<f64>,
     itad_id: Option<String>,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let game = WishlistGame {
         id,
         name,
@@ -348,39 +356,30 @@ pub fn add_to_wishlist(
         added_at: Some(chrono::Utc::now().to_rfc3339()),
     };
 
-    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
+    let conn = state.library_db.lock()?;
 
-    match insert_game_internal(&conn, &game) {
-        Ok(_) => Ok("Adicionado à Wishlist!".to_string()),
-        Err(e) => {
-            error!("Erro SQL Wishlist: {}", e);
-            Err(e.to_string())
-        }
-    }
+    insert_game_internal(&conn, &game)?;
+
+    Ok("Adicionado à Wishlist!".to_string())
 }
 
 /// Remove um jogo da lista de desejos.
 #[tauri::command]
-pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String, String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String, AppError> {
+    let conn = state.library_db.lock()?;
 
-    conn.execute("DELETE FROM wishlist WHERE id = ?1", params![id])
-        .map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM wishlist WHERE id = ?1", params![id])?;
 
     Ok("Jogo removido da lista de desejos.".to_string())
 }
 
 /// Recupera todos os jogos da lista de desejos.
 #[tauri::command]
-pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String> {
-    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
+pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, AppError> {
+    let conn = state.library_db.lock()?;
 
     let mut stmt = conn
-        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id FROM wishlist ORDER BY added_at DESC")
-        .map_err(|e| e.to_string())?;
+        .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id FROM wishlist ORDER BY added_at DESC")?;
 
     let games = stmt
         .query_map([], |row| {
@@ -399,21 +398,16 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, String>
                 added_at: row.get(11)?,
                 itad_id: row.get(12)?,
             })
-        })
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(games)
 }
 
 /// Verifica se um jogo está na lista de desejos.
 #[tauri::command]
-pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool, String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool, AppError> {
+    let conn = state.library_db.lock()?;
 
     let count: i32 = conn
         .query_row(
@@ -428,23 +422,23 @@ pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool,
 
 /// Atualiza os preços de todos os jogos na Wishlist usando a API da ITAD.
 #[tauri::command]
-pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Result<String, String> {
+pub async fn refresh_prices(
+    _app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, AppError> {
     // 1. Busca todos os jogos da Wishlist local
     let games_to_check: Vec<(String, String, Option<String>)> = {
-        let conn = state.library_db.lock().unwrap();
-        let mut stmt = conn
-            .prepare("SELECT id, name, itad_id FROM wishlist")
-            .unwrap();
-        stmt.query_map([], |row| {
+        let conn = state.library_db.lock()?;
+        let mut stmt = conn.prepare("SELECT id, name, itad_id FROM wishlist")?;
+        let rows = stmt.query_map([], |row| {
             Ok((
                 row.get::<_, String>(0)?,
                 row.get::<_, String>(1)?,
                 row.get::<_, Option<String>>(2)?,
             ))
-        })
-        .unwrap()
-        .filter_map(|r| r.ok())
-        .collect()
+        })?;
+
+        rows.filter_map(|r| r.ok()).collect()
     };
 
     if games_to_check.is_empty() {
@@ -465,7 +459,7 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
                 match itad::find_game_id(&name).await {
                     Ok(found_id) => {
                         // Salva no banco para cachear e não buscar na próxima vez
-                        let conn = state.library_db.lock().unwrap();
+                        let conn = state.library_db.lock()?;
                         let _ = conn.execute(
                             "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
                             params![&found_id, &local_id],
@@ -488,12 +482,14 @@ pub async fn refresh_prices(_app: AppHandle, state: State<'_, AppState>) -> Resu
         return Ok("Nenhum jogo correspondente encontrado na ITAD.".to_string());
     }
 
-    let overviews = itad::get_prices(itad_ids_to_fetch).await?;
+    let overviews = itad::get_prices(itad_ids_to_fetch)
+        .await
+        .map_err(AppError::NetworkError)?;
 
     let mut updated_count = 0;
 
     // 4. Atualiza o banco com os preços novos
-    let conn = state.library_db.lock().unwrap();
+    let conn = state.library_db.lock()?;
 
     for game_data in overviews {
         if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {

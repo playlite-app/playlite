@@ -7,6 +7,7 @@
 
 use crate::constants::{self};
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::services::steam;
 use crate::utils::status_logic;
 use chrono::{TimeZone, Utc};
@@ -38,9 +39,12 @@ pub async fn import_steam_library(
     state: State<'_, AppState>,
     api_key: String,
     steam_id: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     // Busca jogos via Steam API
-    let steam_games = steam::list_steam_games(&api_key, &steam_id).await?;
+    let steam_games = steam::list_steam_games(&api_key, &steam_id)
+        .await
+        .map_err(AppError::NetworkError)?;
+
     if steam_games.is_empty() {
         return Ok("Nenhum jogo encontrado.".to_string());
     }
@@ -49,7 +53,7 @@ pub async fn import_steam_library(
     let mut updated = 0;
     let now = Utc::now().to_rfc3339();
 
-    let conn = state.library_db.lock().map_err(|_| "Mutex error")?;
+    let conn = state.library_db.lock()?;
 
     for game in steam_games {
         let exists: bool = conn
@@ -113,6 +117,7 @@ pub async fn import_steam_library(
             updated += 1;
         }
     }
+
     let message = format!("{} novos, {} atualizados", inserted, updated);
     info!("{}", message);
 

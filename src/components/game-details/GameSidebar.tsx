@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game';
 import { formatTime } from '@/utils/formatTime';
-import { getPlaytimeCategory } from '@/utils/PlaytimeUtils.ts';
+import { getPlaytimeCategory } from '@/utils/playtime.ts';
 
 import { GameLinks } from './GameLinks';
 import { SteamReviewBadge } from './SteamReviewBadge';

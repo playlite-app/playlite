@@ -3,6 +3,7 @@
 //! Faz JOIN com game_details para obter genres, tags categorizadas e series
 
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::models::Game;
 use crate::services::recommendation::{
     calculate_user_profile, parse_release_year, rank_games, score_game, GameWithDetails,
@@ -21,7 +22,7 @@ pub struct GameRecommendation {
 
 /// Retorna o perfil completo v2.1 com gêneros, tags categorizadas e séries
 #[tauri::command]
-pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, String> {
+pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, AppError> {
     let games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&games);
     Ok(profile)
@@ -30,7 +31,7 @@ pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, 
 /// Retorna o perfil formatado para o frontend (com tags como strings).
 /// Converte TagKey para formato "category:slug" para facilitar uso no frontend
 #[tauri::command]
-pub fn get_user_profile_formatted(state: State<AppState>) -> Result<serde_json::Value, String> {
+pub fn get_user_profile_formatted(state: State<AppState>) -> Result<serde_json::Value, AppError> {
     let games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&games);
 
@@ -67,7 +68,7 @@ pub fn recommend_from_library(
     min_playtime: Option<i32>,
     max_playtime: Option<i32>,
     limit: Option<usize>,
-) -> Result<Vec<GameRecommendation>, String> {
+) -> Result<Vec<GameRecommendation>, AppError> {
     let all_games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&all_games);
 
@@ -108,14 +109,14 @@ pub fn recommend_from_library(
 
 /// Calcula o score de afinidade de um jogo específico
 #[tauri::command]
-pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32, String> {
+pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32, AppError> {
     let all_games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&all_games);
 
     let game = all_games
         .into_iter()
         .find(|g| g.game.id == game_id)
-        .ok_or_else(|| format!("Jogo {} não encontrado", game_id))?;
+        .ok_or_else(|| AppError::NotFound(format!("Jogo {} não encontrado", game_id)))?;
 
     let score = score_game(&profile, &game);
     Ok(score)
@@ -124,88 +125,79 @@ pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32,
 // === HELPER FUNCTIONS - JOIN COM game_details ===
 
 /// Busca todos os jogos COM detalhes (JOIN com game_details)
-fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithDetails>, String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear mutex")?;
+fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithDetails>, AppError> {
+    let conn = state.library_db.lock()?;
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT
-                g.id, g.name, g.cover_url, d.developer, g.platform, g.platform_id,
-                g.install_path, g.executable_path, g.launch_args,
-                g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
-                COALESCE(d.is_adult, 0), -- 15: is_adult
-                d.genres,                -- 16: genres
-                d.tags,                  -- 17: tags (JSON de GameTag[])
-                d.series,                -- 18: series
-                d.release_date           -- 19: release_date
-             FROM games g
-             LEFT JOIN game_details d ON g.id = d.game_id",
-        )
-        .map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare(
+        "SELECT
+            g.id, g.name, g.cover_url, d.developer, g.platform, g.platform_id,
+            g.install_path, g.executable_path, g.launch_args,
+            g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
+            COALESCE(d.is_adult, 0), -- 15: is_adult
+            d.genres,                -- 16: genres
+            d.tags,                  -- 17: tags (JSON de GameTag[])
+            d.series,                -- 18: series
+            d.release_date           -- 19: release_date
+         FROM games g
+         LEFT JOIN game_details d ON g.id = d.game_id",
+    )?;
 
-    let games_iter = stmt
-        .query_map([], |row| {
-            // Monta Game base
-            let game = Game {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                cover_url: row.get(2)?,
-                genres: None,
-                developer: row.get(3)?,
-                platform: row.get(4)?,
-                platform_id: row.get(5)?,
-                install_path: row.get(6)?,
-                executable_path: row.get(7)?,
-                launch_args: row.get(8)?,
-                user_rating: row.get(9)?,
-                favorite: row.get(10)?,
-                status: row.get(11)?,
-                playtime: row.get(12)?,
-                last_played: row.get(13)?,
-                added_at: row.get(14)?,
-                is_adult: row.get(15)?,
-            };
+    let games_iter = stmt.query_map([], |row| {
+        // Monta Game base
+        let game = Game {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            cover_url: row.get(2)?,
+            genres: None,
+            developer: row.get(3)?,
+            platform: row.get(4)?,
+            platform_id: row.get(5)?,
+            install_path: row.get(6)?,
+            executable_path: row.get(7)?,
+            launch_args: row.get(8)?,
+            user_rating: row.get(9)?,
+            favorite: row.get(10)?,
+            status: row.get(11)?,
+            playtime: row.get(12)?,
+            last_played: row.get(13)?,
+            added_at: row.get(14)?,
+            is_adult: row.get(15)?,
+        };
 
-            // Processa genres
-            let genres_str: Option<String> = row.get(16)?;
-            let genres = genres_str
-                .as_ref()
-                .map(|s| {
-                    s.split(',')
-                        .map(|g| g.trim().to_string())
-                        .filter(|g| !g.is_empty() && g != "Desconhecido")
-                        .collect()
-                })
-                .unwrap_or_default();
-
-            // Processa tags
-            let tags_json: Option<String> = row.get(17)?;
-            let tags: Vec<crate::models::GameTag> = tags_json
-                .as_ref()
-                .and_then(|json| serde_json::from_str(json).ok())
-                .unwrap_or_default();
-
-            // Series
-            let series: Option<String> = row.get(18)?;
-
-            // Release year
-            let release_date: Option<String> = row.get(19)?;
-            let release_year = release_date.as_ref().and_then(|d| parse_release_year(d));
-
-            Ok(GameWithDetails {
-                game,
-                genres,
-                tags,
-                series,
-                release_year,
+        // Processa genres
+        let genres_str: Option<String> = row.get(16)?;
+        let genres = genres_str
+            .as_ref()
+            .map(|s| {
+                s.split(',')
+                    .map(|g| g.trim().to_string())
+                    .filter(|g| !g.is_empty() && g != "Desconhecido")
+                    .collect()
             })
-        })
-        .map_err(|e| e.to_string())?;
+            .unwrap_or_default();
 
-    games_iter
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())
+        // Processa tags
+        let tags_json: Option<String> = row.get(17)?;
+        let tags: Vec<crate::models::GameTag> = tags_json
+            .as_ref()
+            .and_then(|json| serde_json::from_str(json).ok())
+            .unwrap_or_default();
+
+        // Series
+        let series: Option<String> = row.get(18)?;
+
+        // Release year
+        let release_date: Option<String> = row.get(19)?;
+        let release_year = release_date.as_ref().and_then(|d| parse_release_year(d));
+
+        Ok(GameWithDetails {
+            game,
+            genres,
+            tags,
+            series,
+            release_year,
+        })
+    })?;
+
+    Ok(games_iter.collect::<Result<Vec<_>, _>>()?)
 }

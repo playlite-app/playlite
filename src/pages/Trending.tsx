@@ -39,7 +39,7 @@ import { openExternalLink } from '../utils/navigation';
 import {
   calculateAffinity,
   isFavoriteSeries,
-} from '../utils/recommendationUtils';
+} from '../utils/recommendation.ts';
 
 interface TrendingProps {
   userGames: Game[];

@@ -16,7 +16,7 @@ import PlaylistItem from '../components/PlaylistItem';
 import { usePlaylist } from '../hooks/usePlaylist';
 import { useRecommendation } from '../hooks/useRecommendation';
 import { launchGame } from '../utils/launcher';
-import { getFavoriteSeries } from '../utils/recommendationUtils';
+import { getFavoriteSeries } from '../utils/recommendation.ts';
 
 interface PlaylistProps {
   allGames: Game[];

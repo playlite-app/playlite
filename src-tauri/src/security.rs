@@ -6,6 +6,7 @@
 //!
 //! Fornece uma API simplificada para o resto da aplicação.
 
+use crate::errors::AppError;
 use crate::{crypto, secrets};
 use base64::{engine::general_purpose, Engine as _};
 use tauri::AppHandle;
@@ -32,9 +33,10 @@ pub fn init_security(app: &AppHandle) -> Result<(), String> {
 ///
 /// **Retorna:**
 /// - Base64 do payload encriptado (nonce + ciphertext)
-pub fn encrypt(app: &AppHandle, plaintext: &str) -> Result<String, String> {
-    let master_key = secrets::master_key(app)?;
-    let encrypted_bytes = crypto::encrypt(master_key, plaintext.as_bytes())?;
+pub fn encrypt(app: &AppHandle, plaintext: &str) -> Result<String, AppError> {
+    let master_key = secrets::master_key(app).map_err(AppError::DatabaseError)?;
+    let encrypted_bytes =
+        crypto::encrypt(master_key, plaintext.as_bytes()).map_err(AppError::DatabaseError)?;
     Ok(general_purpose::STANDARD.encode(&encrypted_bytes))
 }
 
@@ -50,13 +52,14 @@ pub fn encrypt(app: &AppHandle, plaintext: &str) -> Result<String, String> {
 /// **Erros:**
 /// - Se o formato Base64 for inválido
 /// - Se a descriptografia falhar (chave incorreta, payload corrompido)
-pub fn decrypt(app: &AppHandle, encrypted: &str) -> Result<String, String> {
-    let master_key = secrets::master_key(app)?;
+pub fn decrypt(app: &AppHandle, encrypted: &str) -> Result<String, AppError> {
+    let master_key = secrets::master_key(app).map_err(AppError::DatabaseError)?;
     let encrypted_bytes = general_purpose::STANDARD
         .decode(encrypted)
-        .map_err(|e| e.to_string())?;
-    let decrypted_bytes = crypto::decrypt(master_key, &encrypted_bytes)?;
-    String::from_utf8(decrypted_bytes).map_err(|e| e.to_string())
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    let decrypted_bytes =
+        crypto::decrypt(master_key, &encrypted_bytes).map_err(AppError::DatabaseError)?;
+    String::from_utf8(decrypted_bytes).map_err(|e| AppError::DatabaseError(e.to_string()))
 }
 
 /// Retorna a API Key da IsThereAnyDeal embutida no binário.

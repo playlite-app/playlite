@@ -6,6 +6,7 @@ use super::shared::{fetch_rawg_metadata, EnrichProgress};
 use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database;
 use crate::database::AppState;
+use crate::errors::AppError;
 use rusqlite::params;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -14,11 +15,13 @@ use tracing::info;
 
 /// Busca capas faltantes via RAWG (COM CACHE)
 #[tauri::command]
-pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), String> {
+pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), AppError> {
     let app_handle = app.clone();
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     if api_key.is_empty() {
-        return Err("API Key da RAWG não configurada.".to_string());
+        return Err(AppError::ValidationError(
+            "API Key da RAWG não configurada.".to_string(),
+        ));
     }
 
     tauri::async_runtime::spawn(async move {

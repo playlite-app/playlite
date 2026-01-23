@@ -6,6 +6,7 @@
 //! A chave de criptografia é derivada de características únicas via `security::init_security()`.
 
 use crate::database;
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -29,7 +30,7 @@ pub struct KeysBatch {
 /// Busca e descriptografa todas as credenciais armazenadas,
 /// retornando strings vazias para secrets não configurados.
 #[tauri::command]
-pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, String> {
+pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, AppError> {
     Ok(KeysBatch {
         steam_id: database::get_secret(&app, "steam_id")?,
         steam_api_key: database::get_secret(&app, "steam_api_key")?,
@@ -49,9 +50,9 @@ pub fn set_secrets(
     steam_api_key: Option<String>,
     rawg_api_key: Option<String>,
     gemini_api_key: Option<String>,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     // Helper para salvar ou deletar baseado no valor
-    let save_or_delete = |key: &str, value: Option<String>| -> Result<(), String> {
+    let save_or_delete = |key: &str, value: Option<String>| -> Result<(), AppError> {
         if let Some(v) = value {
             let trimmed = v.trim();
             if trimmed.is_empty() {
@@ -75,11 +76,13 @@ pub fn set_secrets(
 ///
 /// Versão genérica que permite configurar qualquer secret suportado fornecendo nome e valor.
 #[tauri::command]
-pub fn set_secret(app: AppHandle, key_name: String, key_value: String) -> Result<(), String> {
+pub fn set_secret(app: AppHandle, key_name: String, key_value: String) -> Result<(), AppError> {
     let trimmed_val = key_value.trim();
 
     if trimmed_val.is_empty() {
-        return Err("Valor não pode ser vazio".to_string());
+        return Err(AppError::ValidationError(
+            "Valor não pode ser vazio".to_string(),
+        ));
     }
 
     database::set_secret(&app, &key_name, trimmed_val)
@@ -89,7 +92,7 @@ pub fn set_secret(app: AppHandle, key_name: String, key_value: String) -> Result
 ///
 /// Busca e descriptografa uma credencial específica do banco.
 #[tauri::command]
-pub fn get_secret(app: AppHandle, key_name: String) -> Result<String, String> {
+pub fn get_secret(app: AppHandle, key_name: String) -> Result<String, AppError> {
     database::get_secret(&app, &key_name)
 }
 
@@ -97,7 +100,7 @@ pub fn get_secret(app: AppHandle, key_name: String) -> Result<String, String> {
 ///
 /// Exclui a credencial criptografada do banco de dados. Operação irreversível.
 #[tauri::command]
-pub fn delete_secret(app: AppHandle, key_name: String) -> Result<(), String> {
+pub fn delete_secret(app: AppHandle, key_name: String) -> Result<(), AppError> {
     database::delete_secret(&app, &key_name)
 }
 
@@ -106,9 +109,9 @@ pub fn delete_secret(app: AppHandle, key_name: String) -> Result<(), String> {
 /// Retorna lista com os nomes de todas as credenciais que podem
 /// ser configuradas, útil para validação no frontend.
 #[tauri::command]
-pub fn list_secrets() -> Result<Vec<String>, String> {
-    Ok(database::list_supported_keys()
+pub fn list_secrets() -> Vec<String> {
+    database::list_supported_keys()
         .into_iter()
         .map(|s| s.to_string())
-        .collect())
+        .collect()
 }

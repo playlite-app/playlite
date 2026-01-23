@@ -11,6 +11,7 @@ pub mod commands;
 mod constants;
 mod crypto;
 mod database;
+mod errors;
 pub mod models;
 mod secrets;
 mod security;

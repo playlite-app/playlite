@@ -276,12 +276,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         >
           <div className="flex gap-2">
             <Button
-              onClick={actions.exportDatabase}
+              onClick={actions.importDatabase}
               variant="outline"
               className="flex-1"
-              disabled={loading.exporting}
+              disabled={loading.importingBackup}
             >
-              {loading.exporting ? (
+              {loading.importingBackup ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
@@ -290,12 +290,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               )}
             </Button>
             <Button
-              onClick={actions.importDatabase}
+              onClick={actions.exportDatabase}
               variant="outline"
               className="flex-1"
-              disabled={loading.importingBackup}
+              disabled={loading.exporting}
             >
-              {loading.importingBackup ? (
+              {loading.exporting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>

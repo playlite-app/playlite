@@ -4,33 +4,26 @@
 //! Expõe comandos Tauri para uso no frontend.
 
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::services::cache;
 use tauri::State;
 
 /// Remove entradas expiradas do cache
 #[tauri::command]
-pub fn cleanup_cache(state: State<AppState>) -> Result<String, String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
+pub fn cleanup_cache(state: State<AppState>) -> Result<String, AppError> {
+    let conn = state.metadata_db.lock()?;
 
-    let deleted = cache::cleanup_expired_cache(&conn)?;
+    let deleted = cache::cleanup_expired_cache(&conn).map_err(AppError::DatabaseError)?;
 
     Ok(format!("{} entradas removidas", deleted))
 }
 
 /// Limpa TODO o cache (use com cuidado)
 #[tauri::command]
-pub fn clear_all_cache(state: State<AppState>) -> Result<String, String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
+pub fn clear_all_cache(state: State<AppState>) -> Result<String, AppError> {
+    let conn = state.metadata_db.lock()?;
 
-    let deleted = conn
-        .execute("DELETE FROM api_cache", [])
-        .map_err(|e| e.to_string())?;
+    let deleted = conn.execute("DELETE FROM api_cache", [])?;
 
     Ok(format!("Cache limpo: {} entradas removidas", deleted))
 }
@@ -47,11 +40,8 @@ pub struct DetailedCacheStats {
 }
 
 #[tauri::command]
-pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheStats, String> {
-    let conn = state
-        .metadata_db
-        .lock()
-        .map_err(|_| "Falha ao acessar metadata_db")?;
+pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheStats, AppError> {
+    let conn = state.metadata_db.lock()?;
 
     let total: i32 = conn
         .query_row("SELECT COUNT(*) FROM api_cache", [], |row| row.get(0))
@@ -93,7 +83,7 @@ pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheS
         )
         .unwrap_or(0);
 
-    let stats = cache::get_cache_stats(&conn)?;
+    let stats = cache::get_cache_stats(&conn).map_err(AppError::DatabaseError)?;
 
     Ok(DetailedCacheStats {
         total,

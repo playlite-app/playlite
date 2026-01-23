@@ -3,6 +3,7 @@
 //! Executa sem travar a UI e falha silenciosamente em caso de erro.
 
 use crate::database::AppState;
+use crate::errors::AppError;
 use crate::services::{cache, itad, steam};
 use rusqlite::params;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -18,7 +19,7 @@ static BACKGROUND_REFRESH_RUNNING: AtomicBool = AtomicBool::new(false);
 /// Roda numa thread separada (spawn) para não bloquear a inicialização.
 /// Protegido contra execução duplicada (React Strict Mode chama useEffect 2x).
 #[tauri::command]
-pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), String> {
+pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError> {
     // Verifica se já está rodando (previne duplicação)
     if BACKGROUND_REFRESH_RUNNING.swap(true, Ordering::SeqCst) {
         // Já existe uma instância rodando, ignora esta chamada
