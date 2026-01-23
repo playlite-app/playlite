@@ -1,21 +1,33 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   Clock,
   ExternalLink,
   Filter,
   Flame,
   Gamepad2,
+  Gift,
   Heart,
   Loader2,
   TrendingUp,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
+import { FreeGameCard } from '@/components/FreeGameCard.tsx';
 import Hero from '@/components/Hero';
 import StandardGameCard from '@/components/StandardGameCard.tsx';
 import { Button } from '@/components/ui/button';
-import { Game, RawgGame } from '@/types';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { Game, Giveaway, RawgGame } from '@/types';
 
 import { ErrorState } from '../components/ErrorState';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -36,13 +48,24 @@ interface TrendingProps {
   setCachedGames: (games: RawgGame[]) => void;
 }
 
+// Lista de filtros disponíveis
+const PLATFORM_OPTIONS = [
+  { id: 'Steam', label: 'Steam' },
+  { id: 'Epic Games Store', label: 'Epic Games' },
+  { id: 'Prime Gaming', label: 'Prime Gaming' },
+  { id: 'GOG', label: 'GOG' },
+  { id: 'Ubisoft', label: 'Ubisoft' },
+  { id: 'Itch.io', label: 'Itch.io' },
+  { id: 'IndieGala', label: 'IndieGala' },
+];
+
 export default function Trending(props: TrendingProps) {
   const isOnline = useNetworkStatus();
 
   const {
     games,
     allGenres,
-    loading,
+    loading: gamesLoading,
     error,
     selectedGenre,
     setSelectedGenre,
@@ -53,7 +76,50 @@ export default function Trending(props: TrendingProps) {
   const { games: wishlistGames } = useWishlist();
   const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
+    'Steam',
+    'Epic Games Store',
+    'Prime Gaming',
+    'GOG',
+    'Ubisoft',
+  ]);
 
+  // Carrega Jogos Grátis
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await invoke<Giveaway[]>('get_active_giveaways');
+        setGiveaways(data);
+      } catch (error) {
+        console.error('Erro ao buscar jogos grátis:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Lógica de Filtragem (Memoizada)
+  const filteredGiveaways = useMemo(() => {
+    return giveaways.filter(game => {
+      return selectedPlatforms.some(platform =>
+        game.platforms.includes(platform)
+      );
+    });
+  }, [giveaways, selectedPlatforms]);
+
+  // Handler para alternar filtros
+  const togglePlatform = (platformId: string) => {
+    setSelectedPlatforms(prev =>
+      prev.includes(platformId)
+        ? prev.filter(p => p !== platformId)
+        : [...prev, platformId]
+    );
+  };
+
+  // Carrega Upcoming
   useEffect(() => {
     const fetchUpcoming = async () => {
       try {
@@ -111,8 +177,7 @@ export default function Trending(props: TrendingProps) {
     return <ErrorState type="api" message={error} onRetry={handleRetry} />;
   }
 
-  // Loading State
-  if (loading) {
+  if (gamesLoading) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center space-y-4">
         <Loader2 className="text-primary h-10 w-10 animate-spin" />
@@ -123,7 +188,7 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
-  // Lógica do Hero e Grid
+  // Lógica do Hero
   const heroGames = games.slice(0, 5);
   const currentHero = heroGames[heroIndex];
   const isHeroInWishlist = wishlistGames.some(
@@ -133,7 +198,6 @@ export default function Trending(props: TrendingProps) {
   const prevHero = () =>
     setHeroIndex(prev => (prev - 1 + heroGames.length) % heroGames.length);
 
-  // Empty State
   if (!currentHero) {
     return (
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center">
@@ -141,10 +205,6 @@ export default function Trending(props: TrendingProps) {
           <Gamepad2 className="h-12 w-12 opacity-50" />
         </div>
         <h3 className="text-lg font-medium">Nenhum jogo encontrado</h3>
-        <p className="mt-2 max-w-xs text-center text-sm">
-          Não conseguimos carregar as sugestões no momento. Verifique seus
-          filtros ou tente recarregar.
-        </p>
         <Button variant="outline" className="mt-6" onClick={handleRetry}>
           Recarregar
         </Button>
@@ -157,14 +217,10 @@ export default function Trending(props: TrendingProps) {
 
   if (profile) {
     gridGames = [...gridGames].sort((a, b) => {
-      // Normalização: Extrai strings dos arrays de objetos da RAWG
       const genresA = a.genres?.map(g => g.name) || [];
       const genresB = b.genres?.map(g => g.name) || [];
-
       const tagsA = a.tags?.map(t => ({ slug: t.name })) || [];
       const tagsB = b.tags?.map(t => ({ slug: t.name })) || [];
-
-      // Passa o profile e os arrays de strings para o utilitário
       const scoreA = calculateAffinity(
         profile,
         genresA,
@@ -182,15 +238,14 @@ export default function Trending(props: TrendingProps) {
     });
   }
 
-  // Renderização Principal
   return (
-    <div className="custom-scrollbar bg-background flex-1 overflow-y-auto pb-10">
-      {/* Hero */}
+    <div className="custom-scrollbar bg-background flex-1 overflow-y-auto">
+      {/* 1. Hero */}
       <Hero
         title={currentHero.name}
         backgroundUrl={currentHero.backgroundImage}
         coverUrl={currentHero.backgroundImage}
-        genres={currentHero.genres.map(g => g.name)} // Normaliza gêneros para string[]
+        genres={currentHero.genres.map(g => g.name)}
         rating={currentHero.rating}
         showNavigation={heroGames.length > 1}
         onNext={nextHero}
@@ -213,7 +268,6 @@ export default function Trending(props: TrendingProps) {
               />{' '}
               Lista de Desejos
             </Button>
-
             <Button
               variant="outline"
               className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10"
@@ -227,7 +281,7 @@ export default function Trending(props: TrendingProps) {
         }
       />
 
-      {/* Barra de Filtros */}
+      {/* 2. Barra de Filtros de Gênero (Sticky) */}
       <div className="bg-background/80 border-border sticky top-0 z-20 border-b p-4 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6">
           <div className="text-muted-foreground flex items-center gap-2">
@@ -238,7 +292,7 @@ export default function Trending(props: TrendingProps) {
           <select
             value={selectedGenre}
             onChange={e => setSelectedGenre(e.target.value)}
-            className="bg-secondary text-secondary-foreground focus:ring-primary cursor-pointer rounded-md border-none px-3 py-1.5 text-sm focus:ring-1"
+            className="bg-secondary text-secondary-foreground focus:ring-primary cursor-pointer rounded-md border-none px-3 py-1.5 text-sm font-medium outline-none focus:ring-1"
           >
             <option value="all">Todos os Gêneros</option>
             {allGenres.map(g => (
@@ -254,9 +308,88 @@ export default function Trending(props: TrendingProps) {
         </div>
       </div>
 
-      {/* Sugestões (Trending Grid) */}
+      {/* 3. Container Principal de Conteúdo (Jogos Grátis) */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6 flex items-center gap-2">
+        {/* Header da Seção + Filtro de Loja */}
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-500/10 p-2 text-blue-500">
+              <Gift size={24} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Jogos Grátis
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Resgate ofertas por tempo limitado
+              </p>
+            </div>
+          </div>
+
+          {/* Botão de Filtro - Estilo 'secondary' */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 font-medium"
+              >
+                <Filter size={16} />
+                Filtrar Lojas
+                {selectedPlatforms.length < PLATFORM_OPTIONS.length && (
+                  <span className="bg-background text-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] shadow-sm">
+                    {selectedPlatforms.length}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Plataformas</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {PLATFORM_OPTIONS.map(platform => (
+                <DropdownMenuCheckboxItem
+                  key={platform.id}
+                  checked={selectedPlatforms.includes(platform.id)}
+                  onCheckedChange={() => togglePlatform(platform.id)}
+                >
+                  {platform.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Grid de Jogos Grátis */}
+        {filteredGiveaways.length === 0 && !loading ? (
+          <div className="text-muted-foreground rounded-lg border border-dashed py-8 text-center">
+            Nenhum jogo encontrado com os filtros atuais.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-video w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))
+              : filteredGiveaways.map((game: Giveaway) => (
+                  <FreeGameCard
+                    key={game.id}
+                    title={game.title}
+                    image={game.image}
+                    worth={game.worth}
+                    platforms={game.platforms}
+                    url={game.open_giveaway_url}
+                    endDate={game.end_date}
+                  />
+                ))}
+          </div>
+        )}
+
+        {/* 4. Mais Sugestões (Trending Grid) */}
+        <div className="mb-6 flex items-center gap-2 pt-8">
           <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
             <TrendingUp size={20} />
           </div>
@@ -265,10 +398,8 @@ export default function Trending(props: TrendingProps) {
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {gridGames.map(game => {
-            // Normalização para o Utilitário
             const genres = game.genres?.map(g => g.name) || [];
             const tags = game.tags?.map(t => ({ slug: t.name })) || [];
-
             const affinity = calculateAffinity(
               profile,
               genres,
@@ -279,9 +410,9 @@ export default function Trending(props: TrendingProps) {
 
             let badge: string | undefined;
 
-            if (isFavSeries && affinity > 150) badge = 'SÉRIE FAVORITA';
-            else if (affinity > 120) badge = 'MATCH PERFEITO';
-            else if (affinity > 80) badge = 'TOP PICK';
+            if (isFavSeries) badge = 'SÉRIE FAVORITA';
+            else if (affinity > 80)
+              badge = 'TOP PICK'; // Ajustado thresholds para simplificar
             else if (affinity > 50) badge = 'PARA VOCÊ';
 
             const isInWishlist = wishlistGames.some(
@@ -319,81 +450,78 @@ export default function Trending(props: TrendingProps) {
             );
           })}
         </div>
-      </div>
 
-      {/* Lançamentos Aguardados */}
-      {upcomingGames.length > 0 && (
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-6 flex items-center gap-2">
-            <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
-              <Clock size={20} />
+        {/* 5. Lançamentos Aguardados */}
+        {upcomingGames.length > 0 && (
+          <>
+            <div className="mb-6 flex items-center gap-2 pt-8">
+              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+                <Clock size={20} />
+              </div>
+              <h2 className="text-2xl font-bold">Lançamentos Aguardados</h2>
             </div>
-            <h2 className="text-2xl font-bold">Lançamentos Aguardados</h2>
-          </div>
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
-            {upcomingGames.map(game => {
-              const genres = game.genres?.map(g => g.name) || [];
-              const tags = game.tags?.map(t => ({ slug: t.name })) || [];
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
+              {upcomingGames.map(game => {
+                const genres = game.genres?.map(g => g.name) || [];
+                const tags = game.tags?.map(t => ({ slug: t.name })) || [];
+                const affinity = calculateAffinity(
+                  profile,
+                  genres,
+                  tags,
+                  game.series || null
+                );
+                const isFavSeries = isFavoriteSeries(
+                  profile,
+                  game.series || null
+                );
 
-              // Passamos profile + strings para os utilitários
-              const affinity = calculateAffinity(
-                profile,
-                genres,
-                tags,
-                game.series || null
-              );
-              const isFavSeries = isFavoriteSeries(
-                profile,
-                game.series || null
-              );
+                let badge: string | undefined;
 
-              let badge: string | undefined;
+                if (isFavSeries) badge = 'SÉRIE FAVORITA';
+                else if (affinity > 80) badge = 'PARA VOCÊ';
 
-              if (isFavSeries) badge = 'SÉRIE FAVORITA';
-              else if (affinity > 80) badge = 'PARA VOCÊ';
-              else if (affinity > 50) badge = 'MATCH';
+                const isInWishlist = wishlistGames.some(
+                  w => w.id === game.id.toString()
+                );
 
-              const isInWishlist = wishlistGames.some(
-                w => w.id === game.id.toString()
-              );
-
-              return (
-                <StandardGameCard
-                  key={game.id}
-                  title={game.name}
-                  coverUrl={game.backgroundImage}
-                  subtitle={
-                    game.released
-                      ? `Lança: ${new Date(game.released).toLocaleDateString()}`
-                      : 'Em breve'
-                  }
-                  badge={badge}
-                  actions={
-                    <>
-                      <ActionButton
-                        icon={Heart}
-                        variant={isInWishlist ? 'glass-destructive' : 'glass'}
-                        onClick={() => handleWishlistClick(game)}
-                        tooltip="Lista de Desejos"
-                      />
-                      <ActionButton
-                        icon={ExternalLink}
-                        variant="secondary"
-                        size={16}
-                        onClick={() =>
-                          openExternalLink(`https://rawg.io/games/${game.id}`)
-                        }
-                        tooltip="Ver Detalhes"
-                      />
-                    </>
-                  }
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
+                return (
+                  <StandardGameCard
+                    key={game.id}
+                    title={game.name}
+                    coverUrl={game.backgroundImage}
+                    subtitle={
+                      game.released
+                        ? `Lança: ${new Date(game.released).toLocaleDateString()}`
+                        : 'Em breve'
+                    }
+                    badge={badge}
+                    actions={
+                      <>
+                        <ActionButton
+                          icon={Heart}
+                          variant={isInWishlist ? 'glass-destructive' : 'glass'}
+                          onClick={() => handleWishlistClick(game)}
+                          tooltip="Lista de Desejos"
+                        />
+                        <ActionButton
+                          icon={ExternalLink}
+                          variant="secondary"
+                          size={16}
+                          onClick={() =>
+                            openExternalLink(`https://rawg.io/games/${game.id}`)
+                          }
+                          tooltip="Ver Detalhes"
+                        />
+                      </>
+                    }
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

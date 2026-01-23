@@ -10,6 +10,7 @@
 //! - `steam`: Integração com a API Steam para importar jogos e obter detalhes.
 //! - `tag_service`: Serviço para classificação e gerenciamento de tags de jogos.
 
+pub(crate) mod gamerpower;
 pub(crate) mod gemini;
 pub mod itad;
 pub(crate) mod metadata_cache;

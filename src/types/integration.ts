@@ -32,3 +32,13 @@ export interface CacheStats {
   steam_playtime: number;
   expired: number;
 }
+
+export interface Giveaway {
+  id: number;
+  title: string;
+  image: string;
+  worth: string;
+  platforms: string;
+  open_giveaway_url: string;
+  end_date: string | null;
+}

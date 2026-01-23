@@ -1,6 +1,7 @@
 //! Comandos para busca de metadados externos
 
 use crate::database;
+use crate::services::gamerpower::{self, Giveaway};
 use crate::services::rawg;
 use tauri::AppHandle;
 
@@ -23,4 +24,9 @@ pub async fn get_trending_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, S
 pub async fn get_upcoming_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, String> {
     let api_key = database::get_secret(&app, "rawg_api_key")?;
     rawg::fetch_upcoming_games(&api_key).await
+}
+
+#[tauri::command]
+pub async fn get_active_giveaways(_app: AppHandle) -> Result<Vec<Giveaway>, String> {
+    gamerpower::fetch_giveaways().await
 }

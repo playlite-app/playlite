@@ -32,6 +32,7 @@ export function useRecommendation({
   useEffect(() => {
     if (profileCache) {
       setLoading(false);
+
       return;
     }
 
