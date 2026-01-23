@@ -70,6 +70,7 @@ pub fn run() {
             commands::games::toggle_favorite,
             commands::games::delete_game,
             commands::games::update_game,
+            commands::games::update_game_details,
             // Comandos da Lista de Desejos
             commands::wishlist::search_wishlist_game,
             commands::wishlist::add_to_wishlist,

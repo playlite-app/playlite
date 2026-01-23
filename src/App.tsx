@@ -68,7 +68,10 @@ function AppContent() {
     [games, selectedGameId]
   );
 
-  const { details, loading, siblings } = useGameDetails(selectedGame, games);
+  const { details, loading, siblings, refresh } = useGameDetails(
+    selectedGame,
+    games
+  );
 
   // Handlers
   const handleSettingsUpdate = () => {
@@ -218,6 +221,7 @@ function AppContent() {
           loading={loading}
           siblings={siblings}
           onSwitchGame={handleSwitchGame}
+          onRefresh={refresh}
         />
       </ErrorBoundary>
       <Toaster />

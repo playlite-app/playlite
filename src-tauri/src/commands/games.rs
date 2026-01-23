@@ -37,6 +37,18 @@ pub struct GameInput {
     pub launch_args: Option<String>,
 }
 
+/// Dados de entrada para atualizar detalhes adicionais do jogo.
+///
+/// Usado para atualizar a tabela 'game_details'.
+#[derive(serde::Deserialize)]
+pub struct UpdateGameDetailsInput {
+    pub id: String,
+    pub description: Option<String>, // Vamos salvar na descrição PT-BR
+    pub developer: Option<String>,
+    pub publisher: Option<String>,
+    pub released: Option<String>,
+}
+
 /// Função auxiliar privada para validar dados de entrada.
 ///
 /// Evita duplicação de código entre add e ‘update’.
@@ -377,6 +389,59 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), AppError> {
     let conn = state.library_db.lock()?;
 
     conn.execute("DELETE FROM games WHERE id = ?1", params![id])?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn update_game_details(
+    state: State<AppState>,
+    payload: UpdateGameDetailsInput,
+) -> Result<(), String> {
+    let conn = state
+        .library_db
+        .lock()
+        .map_err(|_| "Falha ao bloquear banco de dados".to_string())?;
+
+    // Verifica se já existe
+    let exists: bool = conn
+        .query_row(
+            "SELECT 1 FROM game_details WHERE game_id = ?1",
+            params![payload.id],
+            |_| Ok(true),
+        )
+        .unwrap_or(false);
+
+    if exists {
+        conn.execute(
+            "UPDATE game_details SET
+                description_ptbr = ?1,
+                developer = ?2,
+                publisher = ?3,
+                release_date = ?4
+             WHERE game_id = ?5",
+            params![
+                payload.description,
+                payload.developer,
+                payload.publisher,
+                payload.released,
+                payload.id
+            ],
+        )
+        .map_err(|e| e.to_string())?;
+    } else {
+        conn.execute(
+            "INSERT INTO game_details (game_id, description_ptbr, developer, publisher, release_date)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                payload.id,
+                payload.description,
+                payload.developer,
+                payload.publisher,
+                payload.released
+            ],
+        ).map_err(|e| e.to_string())?;
+    }
 
     Ok(())
 }
