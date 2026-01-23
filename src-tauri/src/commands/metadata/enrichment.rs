@@ -20,7 +20,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
-use tracing::{info, warn};
+use tracing::warn;
 
 // === ESTRUTURAS DE DADOS ===
 

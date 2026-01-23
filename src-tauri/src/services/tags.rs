@@ -104,17 +104,6 @@ pub fn classify_and_sort_tags(raw_tags: Vec<String>, limit: usize) -> Vec<GameTa
     classified
 }
 
-/// Retorna tags desconhecidas (para logging/análise), já normalizadas
-pub fn get_unknown_tags(raw_tags: &[String]) -> Vec<String> {
-    raw_tags
-        .iter()
-        .map(|slug| normalize_tag_slug(slug))
-        .filter(|normalized| !TAG_METADATA.contains_key(normalized))
-        .collect::<HashSet<_>>() // Remove duplicatas
-        .into_iter()
-        .collect()
-}
-
 /// Retorna estatísticas das tags
 pub fn get_tag_stats() -> TagStats {
     let total = TAG_METADATA.len();

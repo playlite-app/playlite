@@ -13,7 +13,7 @@ fn get_known_series() -> &'static Vec<String> {
         let mut list: Vec<String> =
             serde_json::from_str(json_content).expect("Erro ao carregar known_series.json");
         // Ordena por tamanho (maior para menor) para prioridade correta
-        list.sort_by(|a, b| b.len().cmp(&a.len()));
+        list.sort_by_key(|b| std::cmp::Reverse(b.len()));
         list
     })
 }

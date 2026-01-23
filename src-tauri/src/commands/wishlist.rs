@@ -6,7 +6,7 @@
 use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database::{self, AppState};
 use crate::models::WishlistGame;
-use crate::services::{itad, rawg, steam};
+use crate::services::{itad, rawg};
 use chrono::NaiveDate;
 use rusqlite::{params, Connection};
 use serde::Deserialize;
@@ -67,7 +67,6 @@ struct SteamExportItem {
     gameid: Vec<String>,        // ex: ["steam", "app/7520"]
     price: Option<String>,      // ex: "R$ 73,99"
     added_date: Option<String>, // ex: "26/12/2022"
-    release_date: Option<String>,
 }
 
 #[derive(Deserialize)]
