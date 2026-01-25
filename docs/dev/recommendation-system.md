@@ -1,96 +1,118 @@
 # Sistema de Recomendação
 
-O diferencial do **Playlite** é oferecer descoberta de jogos inteligente sem enviar seus dados para a nuvem. Todo o
-processamento de Machine Learning acontece localmente no seu dispositivo.
+O Playlite utiliza um **sistema híbrido de recomendação**, combinando informações do próprio usuário com padrões globais
+de consumo de jogos, sempre respeitando a filosofia **local-first** e **privacy-first**.
 
-## Filosofia Local-First
+Nenhum dado pessoal do usuário é enviado para servidores externos. Todo o processamento acontece localmente no
+aplicativo ou é pré-computado offline.
 
-Diferente de sistemas comerciais (Steam, Netflix) que processam dados em servidores massivos usando Filtragem
-Colaborativa (comparando você com outros usuários), o Playlite usa **Filtragem Baseada em Conteúdo** (Content-Based
-Filtering).
+---
 
-- **Privacidade:** Seu histórico de jogos nunca sai do seu computador.
-- **Performance:** Cálculos otimizados em Rust para rodar em milissegundos.
-- **Independência:** Funciona sem internet.
+## Visão Geral da Abordagem
 
-## Arquitetura do Pipeline
+O sistema combina duas estratégias complementares:
 
-O sistema segue um fluxo linear de processamento de dados:
+1. **Filtragem Baseada em Conteúdo (Content-Based Filtering)**
+2. **Filtragem Colaborativa Offline (Collaborative Filtering)**
+
+Essas abordagens são combinadas para gerar recomendações relevantes, estáveis e explicáveis.
+
+---
+
+## 1. Filtragem Baseada em Conteúdo
+
+A filtragem baseada em conteúdo analisa exclusivamente a biblioteca do usuário para construir um **Perfil de
+Preferências**.
+
+São considerados sinais explícitos e implícitos, como:
+
+* Jogos marcados como favoritos
+* Avaliações pessoais (1–5 estrelas)
+* Tempo de jogo
+* Gêneros, tags e séries associadas aos jogos
+
+Esses sinais são convertidos em vetores de preferência que representam o gosto do usuário.
+
+### Scoring Local
+
+Cada jogo da biblioteca recebe um peso de relevância baseado em heurísticas simples e explicáveis:
+
+* Favoritos possuem peso alto
+* Avaliações influenciam moderadamente
+* Tempo jogado contribui de forma complementar
+
+Jogos não jogados ou sem avaliação não distorcem o perfil.
+
+---
+
+## 2. Filtragem Colaborativa Offline
+
+A filtragem colaborativa é baseada em padrões globais de consumo extraídos de datasets públicos de avaliações de jogos.
+
+### Características
+
+* Processamento **offline**, fora do aplicativo
+* Uso de **feedback implícito** (avaliações positivas)
+* Similaridade calculada entre jogos, não entre usuários
+
+O resultado é um conjunto de relações do tipo:
+
+> "Jogadores que gostaram de X também gostaram de Y"
+
+Esses dados são exportados para um arquivo JSON e distribuídos com o aplicativo.
+
+---
+
+## 3. Combinação das Estratégias (Modelo Híbrido)
+
+Durante a recomendação, o Playlite combina os dois sinais:
+
+* O **perfil do usuário** determina quais jogos da sua biblioteca são mais representativos do seu gosto
+* A **filtragem colaborativa** sugere jogos semelhantes a esses títulos
+
+De forma simplificada:
 
 ```text
-[Dados Brutos] -> [Vetorização] -> [Cálculo de Perfil] -> [Scoring & Ranking] -> [Recomendação]
-      ^                 ^                   ^                     ^                     ^
-      |                 |                   |                     |                     |
- (SQLite/API)    (Features/Tags)    (Pesos: 50pts Fav)    (Similaridade)        (Top N Jogos)
+score_final =
+  α × content_based_score +
+  β × collaborative_score
 ```
 
-## 1. Construção do Perfil de Usuário
+Onde α e β são pesos ajustáveis.
 
-Antes de recomendar, o sistema precisa entender o que você gosta. Para isso, ele analisa sua biblioteca atual e gera um
-**Perfil de Preferências**.
+---
 
-A função `calculate_user_profile` (no backend) atribui pesos aos jogos que você já tem para determinar seus gêneros
-favoritos.
+## 4. Regras de Negócio
 
-### Algoritmo de Pontuação (Scoring)
+Após o cálculo matemático, regras adicionais garantem uma melhor experiência:
 
-Para cada jogo na sua biblioteca, calculamos um score de relevância baseado na seguinte heurística:
+* Penalização de jogos excessivamente populares
+* Diversidade de gêneros e estilos
+* Remoção de sugestões repetitivas
 
-```rust
-// Fonte: services/recommendation.rs
+---
 
-let score = (horas_jogadas * 2)      // Engajamento: 2 pontos por hora
-+ (is_favorito * 50)       // Preferência explícita: 50 pontos
-+ (rating_estrelas * 10);  // Qualidade percebida: 10 pontos por estrela
-```
+## 5. Explicabilidade
 
-**Exemplo:** Um jogo que você jogou por 10 horas, marcou como Favorito e deu 5 estrelas terá:
+As recomendações são acompanhadas de explicações determinísticas, baseadas em dados estruturados:
 
-```
-(10 * 2) + 50 + (5 * 10) = 120 pontos
-```
+* Gêneros em comum
+* Tags relevantes
+* Séries favoritas
 
-Esses pontos são então distribuídos para os gêneros daquele jogo, criando um vetor de "Gêneros Predominantes" do
-usuário.
+Isso garante transparência e elimina a necessidade de LLMs para explicação.
 
-## 2. Motor de Similaridade (Machine Learning)
+---
 
-Com o perfil do usuário em mãos, o sistema compara esse vetor contra o banco de dados de jogos possíveis (sugestões).
+## Benefícios da Abordagem
 
-### Content-Based Filtering
+* Funciona 100% offline
+* Preserva a privacidade do usuário
+* Escala bem para bibliotecas grandes
+* Fácil de manter e evoluir
+* Adequada para um aplicativo desktop local-first
 
-Utilizamos algoritmos de similaridade vetorial para encontrar jogos geometricamente próximos aos seus gostos.
+---
 
-**Similaridade de Cosseno:** Calcula o ângulo entre o "Vetor do Usuário" e o "Vetor do Jogo".
-
-## 3. Motor de Regras (Rules Engine)
-
-Após o cálculo matemático, aplicamos regras de negócio para garantir que a recomendação seja útil na prática.
-
-| Regra                | Descrição                                                          |
-|----------------------|--------------------------------------------------------------------|
-| Penalização Temporal | Reduz levemente o score de jogos sugeridos repetidamente.          |
-| Diversidade          | Tenta garantir que a lista final não tenha apenas um único gênero. |
-
-## 4. Camada de Explicação (LLM Opcional) - em Desenvolvimento
-
-O Playlite suportará futuramente o uso de Large Language Models (LLMs) locais (como Llama 3 ou Mistral via Ollama) ou
-opcionalmente consumindo APIs para explicar a recomendação em linguagem natural.
-
-::: warning Nota
-O LLM não escolhe o jogo. Ele apenas recebe os dados do motor de recomendação e gera um texto explicativo.
-:::
-
-**Exemplo de Prompt Interno:**
-
-```
-Contexto: O usuário gosta de RPGs e tem 100h em 'The Witcher 3'.
-Recomendação do Sistema: 'Cyberpunk 2077'.
-Tarefa: Explique em uma frase por que 'Cyberpunk 2077' é uma boa escolha.
-```
-
-## Evolução Futura
-
-**Short-term:** Refinar os pesos da heurística com base no feedback do usuário (botões "Não tenho interesse").
-
-**Mid-term:** Suporte a tags customizadas para refinar a vetorização.
+Este sistema foi projetado para equilibrar **qualidade de recomendação**, **simplicidade técnica** e **controle do
+usuário**.

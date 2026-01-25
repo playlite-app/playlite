@@ -28,6 +28,10 @@ export default defineConfig({
             text: 'Sistema de Recomendação',
             link: '/dev/recommendation-system',
           },
+          {
+            text: 'Filtragem Colaborativa Offline',
+            link: '/dev/filtering-collaborative',
+          },
         ],
       },
       {

@@ -1,115 +1,92 @@
-# Sistema de Recomendação
+# Pipeline de Dados – Filtragem Colaborativa
 
-O Playlite utiliza um **sistema híbrido de recomendação**, combinando informações do próprio usuário com padrões globais de consumo de jogos, sempre respeitando a filosofia **local-first** e **privacy-first**.
+Esta pasta contém exclusivamente os **artefatos de ciência de dados** usados para gerar as recomendações colaborativas
+do Playlite.
 
-Nenhum dado pessoal do usuário é enviado para servidores externos. Todo o processamento acontece localmente no aplicativo ou é pré-computado offline.
-
----
-
-## Visão Geral da Abordagem
-
-O sistema combina duas estratégias complementares:
-
-1. **Filtragem Baseada em Conteúdo (Content-Based Filtering)**
-2. **Filtragem Colaborativa Offline (Collaborative Filtering)**
-
-Essas abordagens são combinadas para gerar recomendações relevantes, estáveis e explicáveis.
+Diferente do código da aplicação, que roda no dispositivo do usuário, tudo aqui é executado **offline, em batch**,
+durante o desenvolvimento. O resultado final é um conjunto de arquivos prontos para consumo pelo aplicativo.
 
 ---
 
-## 1. Filtragem Baseada em Conteúdo
+## 🎯 Papel desta Pasta no Projeto
 
-A filtragem baseada em conteúdo analisa exclusivamente a biblioteca do usuário para construir um **Perfil de Preferências**.
+O Playlite foi projetado para ser simples, rápido e local-first. Para manter essas características, qualquer
+processamento pesado é **retirado do runtime da aplicação**.
 
-São considerados sinais explícitos e implícitos, como:
+Esta pasta existe para:
 
-- Jogos marcados como favoritos
-- Avaliações pessoais (1–5 estrelas)
-- Tempo de jogo
-- Gêneros, tags e séries associadas aos jogos
-
-Esses sinais são convertidos em vetores de preferência que representam o gosto do usuário.
-
-### Scoring Local
-
-Cada jogo da biblioteca recebe um peso de relevância baseado em heurísticas simples e explicáveis:
-
-- Favoritos possuem peso alto
-- Avaliações influenciam moderadamente
-- Tempo jogado contribui de forma complementar
-
-Jogos não jogados ou sem avaliação não distorcem o perfil.
+* Processar grandes volumes de dados de avaliações de jogos
+* Extrair padrões globais de preferência entre jogadores
+* Transformar esses padrões em dados estáticos
+* Alimentar o sistema de recomendação do app sem custo computacional adicional
 
 ---
 
-## 2. Filtragem Colaborativa Offline
+## 🧠 O que NÃO acontece aqui
 
-A filtragem colaborativa é baseada em padrões globais de consumo extraídos de datasets públicos de avaliações de jogos.
+É importante destacar que esta pasta **não**:
 
-### Características
+* Processa dados do usuário do Playlite
+* Executa inferência em tempo real
+* Interage com o banco SQLite do aplicativo
+* Depende de serviços externos em produção
 
-- Processamento **offline**, fora do aplicativo
-- Uso de **feedback implícito** (avaliações positivas)
-- Similaridade calculada entre jogos, não entre usuários
-
-O resultado é um conjunto de relações do tipo:
-
-> "Jogadores que gostaram de X também gostaram de Y"
-
-Esses dados são exportados para um arquivo JSON e distribuídos com o aplicativo.
+Tudo aqui é isolado do usuário final.
 
 ---
 
-## 3. Combinação das Estratégias (Modelo Híbrido)
-
-Durante a recomendação, o Playlite combina os dois sinais:
-
-- O **perfil do usuário** determina quais jogos da sua biblioteca são mais representativos do seu gosto
-- A **filtragem colaborativa** sugere jogos semelhantes a esses títulos
-
-De forma simplificada:
+## 📦 Estrutura da Pasta
 
 ```text
-score_final =
-  α × content_based_score +
-  β × collaborative_score
+data/
+ ├─ README.md          # Visão geral do pipeline de dados
+ ├─ scripts/           # Scripts Python para processamento batch
+ ├─ notebooks/         # Análises exploratórias e validação
+ ├─ datasets/          # Datasets brutos (não versionados)
+ ├─ outputs/           # Arquivos JSON finais consumidos pelo app
 ```
 
-Onde α e β são pesos ajustáveis.
+---
+
+## 🔁 Fluxo de Trabalho Esperado
+
+O fluxo típico de uso desta pasta é:
+
+1. Adicionar ou atualizar datasets em `datasets/`
+2. Explorar e validar dados em `notebooks/`
+3. Consolidar lógica em `scripts/`
+4. Gerar arquivos finais em `outputs/`
+5. Copiar os JSONs consolidados para o projeto principal
 
 ---
 
-## 4. Regras de Negócio
+## 📊 Tipo de Processamento Realizado
 
-Após o cálculo matemático, regras adicionais garantem uma melhor experiência:
+Os scripts desta pasta são responsáveis por:
 
-- Penalização de jogos excessivamente populares
-- Diversidade de gêneros e estilos
-- Remoção de sugestões repetitivas
+* Filtragem de jogos com volume mínimo de avaliações
+* Conversão de avaliações em feedback implícito
+* Cálculo de similaridade entre jogos
+* Limitação e ordenação de vizinhos similares
+* Preparação de metadados auxiliares (popularidade, categorias)
 
----
-
-## 5. Explicabilidade
-
-As recomendações são acompanhadas de explicações determinísticas, baseadas em dados estruturados:
-
-- Gêneros em comum
-- Tags relevantes
-- Séries favoritas
-
-Isso garante transparência e elimina a necessidade de LLMs para explicação.
+Nenhuma decisão de recomendação é tomada aqui — apenas **dados são preparados**.
 
 ---
 
-## Benefícios da Abordagem
+## 🔒 Privacidade e Ética
 
-- Funciona 100% offline
-- Preserva a privacidade do usuário
-- Escala bem para bibliotecas grandes
-- Fácil de manter e evoluir
-- Adequada para um aplicativo desktop local-first
+* Nenhum dado pessoal do usuário do Playlite é utilizado
+* Nenhuma identificação individual é preservada nos outputs
+* O objetivo é extrair padrões agregados, não comportamentos individuais
 
 ---
 
-Este sistema foi projetado para equilibrar **qualidade de recomendação**, **simplicidade técnica** e **controle do usuário**.
+## 📌 Observações
 
+* A origem dos datasets será documentada futuramente
+* Os arquivos em `outputs/` devem ser considerados artefatos versionáveis
+* Esta pasta pode evoluir conforme novas estratégias forem testadas
+
+Esta separação garante que o Playlite continue sendo um aplicativo **leve, rápido e previsível**, mesmo oferecendo
+funcionalidades avançadas de recomendação.

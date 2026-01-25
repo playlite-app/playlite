@@ -81,14 +81,14 @@ desenvolvimento, alternativas mais seguras foram avaliadas.
 
 1. **Criptografia simétrica (AES-256) com derivação de chave (Argon2)**
 
-  - Implementada experimentalmente.
-  - Utilizou derivação deliberadamente lenta para mitigar força bruta.
+- Implementada experimentalmente.
+- Utilizou derivação deliberadamente lenta para mitigar força bruta.
 
 2. **Keyring/credential store do sistema operacional**
 
-  - Avaliado como solução mais adequada para aplicações desktop comerciais.
-  - No ambiente atual, falhou por falta de assinatura de código e/ou reputação do app, levando o sistema a recusar o
-    armazenamento.
+- Avaliado como solução mais adequada para aplicações desktop comerciais.
+- No ambiente atual, falhou por falta de assinatura de código e/ou reputação do app, levando o sistema a recusar o
+  armazenamento.
 
 **Motivação:**
 
@@ -120,11 +120,11 @@ Esta decisão é consciente, documentada e reversível, alinhada ao estágio atu
 
 ## 7. Estratégia de Recomendação de Jogos
 
-### 7.1 Abordagem Inicial (MVP)
+### 7.1 Content-Based Filtering
 
 **Decisão:** Regras simples e filtros baseados em metadados.
 
-Exemplos:
+Sinais considerados:
 
 - Gêneros mais jogados
 - Tags favoritas
@@ -139,21 +139,21 @@ Exemplos:
 
 ---
 
-### 7.2 Abordagem com Machine Learning Clássico (Futuro)
+### 7.2 Collaborative Filtering Offline
 
 **Decisão:** Modelos de ML supervisionados ou não supervisionados treinados localmente.
 
-Exemplos:
+Parte do processamento ocorre offline, utilizando datasets públicos, com distribuição de artefatos estáticos junto ao
+aplicativo.
 
-- K-Means para clusterização de jogos
+Algoritmo escolhido:
+
 - Similaridade por cosseno
-- KNN baseado em features dos jogos
 
 **Motivação:**
 
-- Aproveitar conhecimentos prévios em ciência de dados
 - Custo computacional moderado
-- Possibilidade de treinar com dados do próprio usuário
+- Resultados potencialmente mais precisos
 
 **Consequências:**
 
