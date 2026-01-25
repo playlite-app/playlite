@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { GameDetails } from '@/types';
+import { handleBackendError } from '@/utils/errorHandler';
 
 interface GameEditFormProps {
   gameId: string;
@@ -46,8 +47,10 @@ export function GameEditForm({
       toast.success('Detalhes atualizados com sucesso!');
       onSuccess();
     } catch (error) {
-      toast.error('Erro ao salvar detalhes do jogo.');
-      console.error('Erro ao atualizar detalhes do jogo:', error);
+      // Detecta se é um AppError, formata a mensagem e mostra o toast
+      handleBackendError(error, {
+        defaultMessage: 'Não foi possível salvar as alterações.',
+      });
     } finally {
       setLoading(false);
     }

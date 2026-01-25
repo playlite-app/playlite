@@ -57,13 +57,16 @@ para explorar Rust, Tauri, React e sistemas de recomendação.
 
 ## 🤖 Sistema de Recomendação
 
-O sistema de recomendação é baseado em **Machine Learning clássico**, priorizando performance, privacidade e
-funcionamento offline.
+O Playlite utiliza um sistema híbrido de recomendação, combinando:
 
-- Content-based filtering
-- Similaridade entre jogos
-- Regras de negócio
-- LLM opcional apenas para explicação das sugestões
+- Filtragem baseada em conteúdo (perfil do usuário)
+- Filtragem colaborativa offline (padrões globais da Steam)
+
+Todo o processamento acontece localmente, sem coleta de dados do usuário.
+
+- ⭐ Avaliações e favoritos influenciam o peso das recomendações
+- 👥 Padrões de outros jogadores são usados sem identificação pessoal
+- 📦 Dados colaborativos são pré-processados e distribuídos com o app
 
 ## 🚀 Como rodar localmente
 

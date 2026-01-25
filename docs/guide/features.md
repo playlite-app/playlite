@@ -45,6 +45,16 @@ Não sabe o que jogar a seguir? O Playlite ajuda você a decidir.
 - **Playlist (Fila de Jogos):** Defina a ordem da sua jogatina. Uma lista dedicada para organizar os próximos títulos
   que você quer experimentar, acabando com a paralisia da escolha.
 
+### Recomendações Inteligentes
+
+O Playlite sugere jogos com base em dois fatores:
+
+- **Seu gosto pessoal:** jogos favoritos, avaliações e gêneros mais jogados
+- **Padrões da comunidade:** jogadores que gostaram dos mesmos jogos que você
+
+Tudo acontece localmente, sem envio de dados para a internet.
+As recomendações são rápidas, privadas e explicáveis.
+
 ## Backup e Segurança
 
 Seus dados são seus. Diferente de serviços na nuvem que podem desaparecer, aqui você tem o controle.

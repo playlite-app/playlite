@@ -1,6 +1,7 @@
 # Architecture Decision Record (ADR)
 
-Este documento registra as principais decisões arquiteturais do projeto **Game Manager**, explicando o contexto e os motivos por trás das escolhas técnicas.
+Este documento registra as principais decisões arquiteturais do projeto **Game Manager**, explicando o contexto e os
+motivos por trás das escolhas técnicas.
 
 ---
 
@@ -69,26 +70,30 @@ Criar uma aplicação desktop para gerenciamento de biblioteca de jogos, com foc
 
 ## 6. Segurança de Credenciais e Dados Sensíveis
 
-**Decisão:** Armazenar credenciais de APIs (ex.: Steam API Key, Steam ID) em arquivo local **em texto plano**, de forma consciente, durante o estágio atual do projeto (MVP).
+**Decisão:** Armazenar credenciais de APIs (ex.: Steam API Key, Steam ID) em arquivo local **em texto plano**, de forma
+consciente, durante o estágio atual do projeto (MVP).
 
 **Contexto:**
-O projeto precisa persistir credenciais de acesso a APIs externas para funcionar corretamente. Durante o desenvolvimento, alternativas mais seguras foram avaliadas.
+O projeto precisa persistir credenciais de acesso a APIs externas para funcionar corretamente. Durante o
+desenvolvimento, alternativas mais seguras foram avaliadas.
 
 **Alternativas avaliadas:**
 
 1. **Criptografia simétrica (AES-256) com derivação de chave (Argon2)**
 
-   - Implementada experimentalmente.
-   - Utilizou derivação deliberadamente lenta para mitigar força bruta.
+  - Implementada experimentalmente.
+  - Utilizou derivação deliberadamente lenta para mitigar força bruta.
 
 2. **Keyring/credential store do sistema operacional**
 
-   - Avaliado como solução mais adequada para aplicações desktop comerciais.
-   - No ambiente atual, falhou por falta de assinatura de código e/ou reputação do app, levando o sistema a recusar o armazenamento.
+  - Avaliado como solução mais adequada para aplicações desktop comerciais.
+  - No ambiente atual, falhou por falta de assinatura de código e/ou reputação do app, levando o sistema a recusar o
+    armazenamento.
 
 **Motivação:**
 
-- A derivação de chave (Argon2) introduziu latência perceptível (~3s) na leitura das credenciais, impactando negativamente a UX.
+- A derivação de chave (Argon2) introduziu latência perceptível (~3s) na leitura das credenciais, impactando
+  negativamente a UX.
 - O keyring do SO não funcionou de forma confiável no contexto atual de desenvolvimento (MVP sem assinatura).
 - O aplicativo é:
   - *local-first*
@@ -108,7 +113,8 @@ Dado esse contexto, o risco foi considerado aceitável para um **MVP de portfól
 
 **Plano futuro:**
 
-- Em uma versão comercial ou distribuída amplamente, tornar obrigatório o uso de keyring nativo do sistema operacional, preferencialmente com o aplicativo assinado.
+- Em uma versão comercial ou distribuída amplamente, tornar obrigatório o uso de keyring nativo do sistema operacional,
+  preferencialmente com o aplicativo assinado.
 
 Esta decisão é consciente, documentada e reversível, alinhada ao estágio atual do projeto.
 
@@ -156,21 +162,21 @@ Exemplos:
 
 ---
 
-### 7.3 Uso de LLM Opcional (Futuro)
+### 7.3 Explicação das Recomendações
 
-**Decisão:** Uso opcional de LLMs locais (ex: Ollama) ou APIs gratuitas apenas para explicação das recomendações.
+**Decisão:** A explicação das recomendações é gerada de forma determinística, sem uso de LLMs.
 
 **Motivação:**
 
-- Melhor experiência do usuário
-- Explicabilidade das sugestões
-- Evitar dependência total de LLMs para inferência
+- As razões da recomendação são diretamente derivadas de dados estruturados (gêneros, tags, séries).
+- Evita dependência de APIs externas ou modelos locais.
+- Garante explicações rápidas, previsíveis e offline.
 
 **Consequências:**
 
-- Dependência de hardware do usuário (modelo local)
-- Possível latência
-- Funcionalidade opcional, não obrigatória
+- Menor complexidade
+- Maior transparência
+- Melhor alinhamento com a filosofia local-first
 
 ---
 
@@ -184,16 +190,14 @@ Exemplos:
 - Reduz custos
 - Simplicidade
 
-**Observação:**
-Experimentos futuros podem incluir serviços em cloud para:
+**Observação:** Experimentos futuros podem incluir serviços em cloud para:
 
 - sincronização
-- backup
-- recomendações avançadas
 
 ### 8.1 Uso de Ferramentas de IA e Análises Automatizadas
 
-**Decisão:** Utilizar ferramentas de IA (ex.: GitHub Copilot) como suporte para análise de código e identificação de melhorias, sem adoção automática das recomendações.
+**Decisão:** Utilizar ferramentas de IA (ex.: GitHub Copilot) como suporte para análise de código e identificação de
+melhorias, sem adoção automática das recomendações.
 
 **Motivação:**
 

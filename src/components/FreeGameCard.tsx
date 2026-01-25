@@ -86,10 +86,10 @@ export function FreeGameCard({
         />
 
         {/* Overlay gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity" />
 
         {/* Badge "GRÁTIS" - Maior e mais chamativo */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 shadow-lg">
+        <div className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg bg-linear-to-r from-green-500 to-emerald-500 px-3 py-2 shadow-lg">
           <Gift size={16} className="text-white" />
           <span className="text-sm font-bold tracking-wide text-white uppercase">
             Grátis

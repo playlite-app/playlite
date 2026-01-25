@@ -68,7 +68,7 @@ export default function GameDetailsModal({
         />
 
         {/* Layout Principal */}
-        <div className="bg-background grid h-[calc(95vh-12rem)] grid-cols-1 gap-0 overflow-hidden md:h-[calc(90vh-8rem)] lg:grid-cols-12">
+        <div className="bg-background grid h-[calc(95vh-10rem)] grid-cols-1 gap-0 overflow-hidden md:h-[calc(90vh-10rem)] lg:grid-cols-12">
           {/* Coluna 1: Sidebar (Escondida em modo edição para dar espaço ao form) */}
           {!isEditing && (
             <div className="border-border bg-muted/5 custom-scrollbar overflow-y-auto border-r lg:col-span-4">

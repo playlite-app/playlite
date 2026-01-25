@@ -16,15 +16,8 @@ export function GameHeader({
   onEditToggle,
   isEditing,
 }: GameHeaderProps) {
-  // Configuração de tamanhos fixos para Desktop
-  const HEADER_HEIGHT = 'h-56'; // Altura total do componente
-  const CONTENT_HEIGHT = 'h-40'; // Altura compartilhada (Capa e Texto)
-  const COVER_WIDTH = 'w-28'; // Largura da capa
-
   return (
-    <div
-      className={`bg-muted relative w-full shrink-0 overflow-hidden ${HEADER_HEIGHT}`}
-    >
+    <div className="bg-muted relative h-44 w-full shrink-0 overflow-hidden">
       {/* --- GRUPO DE AÇÕES (Topo Direito) --- */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
         <button
@@ -60,28 +53,24 @@ export function GameHeader({
       <div className="absolute inset-0 bg-linear-to-b from-black/30 via-transparent to-black/90" />
 
       {/* --- CONTEÚDO (Alinhado embaixo) --- */}
-      <div className="absolute bottom-0 left-0 z-10 flex w-full items-end p-8">
-        {/* CAPA (Tamanho Fixo) */}
+      <div className="absolute bottom-0 left-0 z-10 flex w-full items-center gap-4 p-6">
+        {/* CAPA */}
         {game.coverUrl ? (
           <img
             src={game.coverUrl}
             alt=""
-            className={`mr-6 rounded-lg object-cover shadow-2xl ${CONTENT_HEIGHT} ${COVER_WIDTH} bg-muted`}
+            className="bg-muted h-32 w-24 shrink-0 rounded-lg object-cover shadow-2xl"
           />
         ) : (
-          <div
-            className={`bg-muted flex items-center justify-center rounded-lg shadow-2xl ${CONTENT_HEIGHT} ${COVER_WIDTH}`}
-          >
+          <div className="bg-muted flex h-32 w-24 shrink-0 items-center justify-center rounded-lg shadow-2xl">
             <ImageOff className="h-10 w-10 opacity-50" />
           </div>
         )}
 
         {/* COLUNA DE TEXTO */}
-        <div
-          className={`flex flex-1 flex-col justify-between pb-1 ${CONTENT_HEIGHT}`}
-        >
+        <div className="flex min-h-32 flex-1 flex-col justify-center gap-3">
           {/* TÍTULO */}
-          <h1 className="line-clamp-2 text-5xl leading-none font-black tracking-tight text-white drop-shadow-xl">
+          <h1 className="line-clamp-2 text-5xl leading-tight font-black tracking-tight text-white drop-shadow-xl">
             {game.name}
           </h1>
 

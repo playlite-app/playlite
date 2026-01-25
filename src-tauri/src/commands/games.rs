@@ -10,7 +10,7 @@ use crate::errors::AppError;
 use crate::models;
 use crate::utils::status_logic;
 use chrono::Utc;
-use rusqlite::params;
+use rusqlite::{params, OptionalExtension};
 use serde::Deserialize;
 use tauri::State;
 use url::Url;
@@ -43,7 +43,7 @@ pub struct GameInput {
 #[derive(serde::Deserialize)]
 pub struct UpdateGameDetailsInput {
     pub id: String,
-    pub description: Option<String>, // Vamos salvar na descrição PT-BR
+    pub description: Option<String>, // Salva na descrição PT-BR
     pub developer: Option<String>,
     pub publisher: Option<String>,
     pub released: Option<String>,
@@ -393,54 +393,67 @@ pub fn delete_game(state: State<AppState>, id: String) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Atualiza detalhes adicionais de um jogo na biblioteca.
+///
+/// Insere ou atualiza os campos na tabela 'game_details' conforme o ID do jogo.
+/// Se os detalhes já existirem, realiza um UPDATE; caso contrário, faz um INSERT.
+/// Aceita os campos: descrição (traduzido), desenvolvedor, publicadora e data de lançamento.
 #[tauri::command]
 pub fn update_game_details(
     state: State<AppState>,
     payload: UpdateGameDetailsInput,
-) -> Result<(), String> {
-    let conn = state
-        .library_db
-        .lock()
-        .map_err(|_| "Falha ao bloquear banco de dados".to_string())?;
+) -> Result<(), AppError> {
+    let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
 
-    // Verifica se já existe
-    let exists: bool = conn
+    // Verifica o estado atual do jogo no banco
+    let current_state: Option<Option<String>> = conn
         .query_row(
-            "SELECT 1 FROM game_details WHERE game_id = ?1",
+            "SELECT description_ptbr FROM game_details WHERE game_id = ?1",
             params![payload.id],
-            |_| Ok(true),
+            |row| row.get(0),
         )
-        .unwrap_or(false);
+        .optional()?; // O '?' converte erro de SQL para AppError
 
-    if exists {
-        conn.execute(
-            "UPDATE game_details SET
-                description_ptbr = ?1,
-                developer = ?2,
-                publisher = ?3,
-                release_date = ?4
-             WHERE game_id = ?5",
-            params![
-                payload.description,
-                payload.developer,
-                payload.publisher,
-                payload.released,
-                payload.id
-            ],
-        )
-        .map_err(|e| e.to_string())?;
-    } else {
-        conn.execute(
-            "INSERT INTO game_details (game_id, description_ptbr, developer, publisher, release_date)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![
-                payload.id,
-                payload.description,
-                payload.developer,
-                payload.publisher,
-                payload.released
-            ],
-        ).map_err(|e| e.to_string())?;
+    match current_state {
+        // CASO 1: Registro existe
+        Some(description_ptbr_atual) => {
+            // VALIDAÇÃO: Se a descrição PT-BR for nula, impede a edição
+            if description_ptbr_atual.is_none() {
+                return Err(AppError::ValidationError(
+                    "A descrição precisa ser traduzida (ou gerada) antes de ser editada manualmente.".to_string()
+                ));
+            }
+            conn.execute(
+                "UPDATE game_details SET
+                    description_ptbr = ?1,
+                    developer = ?2,
+                    publisher = ?3,
+                    release_date = ?4
+                 WHERE game_id = ?5",
+                params![
+                    payload.description,
+                    payload.developer,
+                    payload.publisher,
+                    payload.released,
+                    payload.id
+                ],
+            )?;
+        }
+
+        // CASO 2: detalhes do jogo não existe (Novo Jogo Manual)
+        None => {
+            conn.execute(
+                "INSERT INTO game_details (game_id, description_ptbr, developer, publisher, release_date)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    payload.id,
+                    payload.description, // Define a primeira versão como "traduzida"
+                    payload.developer,
+                    payload.publisher,
+                    payload.released
+                ],
+            )?;
+        }
     }
 
     Ok(())
