@@ -70,12 +70,11 @@ Criar uma aplicação desktop para gerenciamento de biblioteca de jogos, com foc
 
 ## 6. Segurança de Credenciais e Dados Sensíveis
 
-**Decisão:** Armazenar credenciais de APIs (ex.: Steam API Key, Steam ID) em arquivo local **em texto plano**, de forma
-consciente, durante o estágio atual do projeto (MVP).
+**Decisão:** Armazenar credenciais de APIs em banco de dados SQLite criptografado com AES-256, mas sem derivação de
+chave lenta (Argon2), optando por uma abordagem menos segura, porém mais rápida e prática para o contexto do projeto.
 
 **Contexto:**
-O projeto precisa persistir credenciais de acesso a APIs externas para funcionar corretamente. Durante o
-desenvolvimento, alternativas mais seguras foram avaliadas.
+O projeto precisa persistir credenciais de acesso a APIs externas para funcionar corretamente.
 
 **Alternativas avaliadas:**
 
@@ -87,36 +86,7 @@ desenvolvimento, alternativas mais seguras foram avaliadas.
 2. **Keyring/credential store do sistema operacional**
 
 - Avaliado como solução mais adequada para aplicações desktop comerciais.
-- No ambiente atual, falhou por falta de assinatura de código e/ou reputação do app, levando o sistema a recusar o
-  armazenamento.
-
-**Motivação:**
-
-- A derivação de chave (Argon2) introduziu latência perceptível (~3s) na leitura das credenciais, impactando
-  negativamente a UX.
-- O keyring do SO não funcionou de forma confiável no contexto atual de desenvolvimento (MVP sem assinatura).
-- O aplicativo é:
-  - *local-first*
-  - de uso individual
-  - sem dados sensíveis de terceiros
-  - não exposto à internet como serviço
-
-Dado esse contexto, o risco foi considerado aceitável para um **MVP de portfólio e aprendizado**.
-
-**Consequências:**
-
-- As credenciais ficam armazenadas em texto plano no ambiente local do usuário.
-- O risco é parcialmente mitigado por:
-  - execução local
-  - ausência de sincronização automática
-  - escopo limitado da aplicação
-
-**Plano futuro:**
-
-- Em uma versão comercial ou distribuída amplamente, tornar obrigatório o uso de keyring nativo do sistema operacional,
-  preferencialmente com o aplicativo assinado.
-
-Esta decisão é consciente, documentada e reversível, alinhada ao estágio atual do projeto.
+- Falhou por falta de assinatura de código e/ou reputação do app, e o sistema a recusou o armazenamento.
 
 ## 7. Estratégia de Recomendação de Jogos
 
@@ -221,7 +191,35 @@ Decisões de não implementação são consideradas tão importantes quanto as i
 
 ---
 
-## 9. Documentação e Open Source
+## 9. Tradução automática com IA
+
+**Decisão:** Utilizar ferramentas de LLM Gemini para traduzir a descrição do jogo.
+
+**Motivação:** melhorar a experiência do usuário no uso da aplicação bem como explorar a integração de LLMs em
+funcionalidades relevantes do aplicativo.
+
+**Alternativas avaliadas:**
+
+1. Não utilizar tradução automática
+
+- Simplicidade
+- Menor custo
+- Experiência do usuário inferior
+
+2. Utilizar serviços de tradução tradicionais (ex.: Google Translate API, DeepL)
+
+- Custo mais elevado
+- Limitações de uso para bibliotecas grandes
+- Necessidade de cadastro de cartão de crédito e complexidade adicional
+
+**Consequências:**
+
+- Custo controlado com uso moderado
+- Melhoria significativa na experiência do usuário final
+
+---
+
+## 10. Documentação e Open Source
 
 **Decisão:** Documentação enxuta no GitHub (README, CONTRIBUTING, ADR).
 
@@ -233,6 +231,6 @@ Decisões de não implementação são consideradas tão importantes quanto as i
 
 ---
 
-## 10. Status
+## 11. Status
 
 Este ADR representa o estado atual das decisões arquiteturais e pode evoluir conforme o projeto crescer.

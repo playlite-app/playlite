@@ -2,7 +2,8 @@
 
 Este documento descreve a estratégia de **Filtragem Colaborativa baseada em itens** utilizada pelo Playlite.
 
-Diferente de sistemas tradicionais que calculam recomendações em tempo real comparando usuários entre si, o Playlite utiliza um modelo **pré-computado**, distribuído junto com o aplicativo.
+Diferente de sistemas tradicionais que calculam recomendações em tempo real comparando usuários entre si, o Playlite
+utiliza um modelo **pré-computado**, distribuído junto com o aplicativo.
 
 ---
 
@@ -31,15 +32,26 @@ Essa abordagem é mais estável do que user-based CF em datasets grandes e espar
 
 ## Fonte dos Dados
 
-> **Nota:** A origem específica dos datasets será documentada futuramente.
+## Fonte dos Dados
 
-De forma geral, são utilizados datasets públicos contendo:
+O modelo é treinado com o dataset público **Game Recommendations on Steam**, que agrega interações reais de usuários da
+plataforma Steam.
 
-* Identificador do jogo
-* Identificador do usuário
-* Avaliação positiva ou negativa
+* **Dataset:** [Game Recommendations on Steam (Kaggle)](https://www.kaggle.com/ds/2871694)
+* **Autor:** Anton Kozyriev
+* **Licença:** CC0: Public Domain
 
-Somente avaliações positivas são consideradas.
+### Pré-processamento e Limpeza
+
+Para evitar o problema de "Cold Start" e garantir a relevância das recomendações, o dataset bruto é filtrado antes do
+treinamento. São removidos:
+
+1. **Jogos de Baixa Qualidade:** Títulos com menos de 70% de aprovação.
+2. **Jogos de Nicho Extremo:** Títulos com menos de 100 avaliações (evita viés de poucos usuários).
+3. **Ruído de Usuário:** Contas com tempo de jogo insignificante (< 2 horas).
+
+O resultado final é um subconjunto de **~14.000 jogos** de alta relevância, representando cerca de 28% do catálogo
+original, mas mantendo a maioria das interações significativas.
 
 ---
 
@@ -123,4 +135,5 @@ Essas limitações são aceitáveis dentro da proposta local-first.
 
 ---
 
-Este modelo foi escolhido por equilibrar **qualidade**, **simplicidade** e **controle do usuário**, sendo adequado para um aplicativo desktop offline.
+Este modelo foi escolhido por equilibrar **qualidade**, **simplicidade** e **controle do usuário**, sendo adequado para
+um aplicativo desktop offline.

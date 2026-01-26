@@ -35,14 +35,11 @@ Tudo aqui é isolado do usuário final.
 
 ---
 
-## 🛠️ Dataset
+## 🛠️ Dados Utilizados
 
-Game Recommendations on Steam (Kaggle): contém interações reais de usuários Steam com jogos. Ele inclui se o
+Dataset Game Recommendations on Steam (Kaggle): contém interações reais de usuários Steam com jogos. Ele inclui se o
 usuário recomendou ou não o jogo e pode ser utilizado para construir a matriz implícita de preferências necessária para
 a filtragem colaborativa do Playlite.
-
-Dataset disponível em: https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam  
-Consultado no dia: 25/01/2026
 
 ---
 
@@ -83,6 +80,40 @@ Os scripts desta pasta são responsáveis por:
 * Preparação de metadados auxiliares (popularidade, categorias)
 
 Nenhuma decisão de recomendação é tomada aqui — apenas **dados são preparados**.
+---
+
+## 📉 Estatísticas do Processamento
+
+Os dados brutos passam por um rigoroso pipeline de limpeza para garantir que apenas interações de alta qualidade
+alimentem o modelo. Abaixo estão as métricas da última execução (`2026-01-25`):
+
+### Funil de Dados (Data Funnel)
+
+Redução de ruído para manter apenas jogos e usuários estatisticamente relevantes:
+
+| Métrica        | Dataset Original | Dataset Filtrado | Redução    |
+|:---------------|:-----------------|:-----------------|:-----------|
+| **Jogos**      | 50.872           | 14.319           | **-71,9%** |
+| **Usuários**   | 14.3M            | 6.2M             | **-56,6%** |
+| **Avaliações** | 41.1M            | 25.2M            | **-38,7%** |
+
+### Critérios de Corte
+
+Foram mantidos apenas dados que atendem aos seguintes requisitos simultâneos:
+
+* **Jogos:** Mínimo de **100 avaliações** e **70% de aprovação** (foco em jogos estabelecidos e bem avaliados).
+* **Usuários:** Mínimo de **2 reviews** e **2 horas de jogo** (removendo bots e contas inativas).
+
+### Matriz de Interação Resultante
+
+A matriz final utilizada para o cálculo de similaridade possui as seguintes características:
+
+* **Dimensões:** 5.9M Usuários x 12k Jogos
+* **Esparsidade:** 99,96% (Apenas 0,03% da matriz possui valores preenchidos)
+* **Interações Totais:** ~25.2 Milhões
+
+> **Nota:** A alta esparsidade confirma a necessidade do uso de algoritmos baseados em *Cosine Similarity*, que
+> performam melhor neste cenário do que abordagens baseadas em densidade.
 
 ---
 
@@ -91,6 +122,21 @@ Nenhuma decisão de recomendação é tomada aqui — apenas **dados são prepar
 * Nenhum dado pessoal do usuário do Playlite é utilizado
 * Nenhuma identificação individual é preservada nos outputs
 * O objetivo é extrair padrões agregados, não comportamentos individuais
+
+---
+
+## Data Source & Credits
+
+Este projeto utiliza o dataset **Game Recommendations on Steam** fornecido por Anton Kozyriev via Kaggle.
+
+- **Autor:** Anton Kozyriev
+- **Fonte:** [Kaggle Dataset](https://www.kaggle.com/ds/2871694)
+- **DOI:** [10.34740/kaggle/ds/2871694](https://doi.org/10.34740/kaggle/ds/2871694)
+- **Licença:** CC0: Public Domain
+- **Acessado em:** January 2026
+
+**Citation:**
+> Kozyriev, A. (2023). *Game Recommendations on Steam* [Data set]. Kaggle. https://doi.org/10.34740/KAGGLE/DS/2871694
 
 ---
 

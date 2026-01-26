@@ -51,9 +51,10 @@ A filtragem colaborativa é baseada em padrões globais de consumo extraídos de
 
 ### Características
 
-* Processamento **offline**, fora do aplicativo
-* Uso de **feedback implícito** (avaliações positivas)
-* Similaridade calculada entre jogos, não entre usuários
+* Processamento **offline**, fora do aplicativo.
+* Baseado em **~25 milhões de interações** processadas de datasets públicos da Steam.
+* Uso de **feedback implícito** (avaliações positivas filtradas por tempo de jogo).
+* Similaridade calculada entre jogos, não entre usuários.
 
 O resultado é um conjunto de relações do tipo:
 
