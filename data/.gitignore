@@ -1,7 +1,3 @@
-# Datasets (2GB+)
-data/raw/*.csv
-data/raw/*.json
-
-# Arquivos processados grandes
-data/processed/*.parquet
-data/processed/filtered_metadata.json
+# Ignora datasets original e processados
+data/raw/
+data/processed/

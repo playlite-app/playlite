@@ -18,7 +18,8 @@ import pandas as pd
 
 # Configurações
 SCRIPT_DIR = Path(__file__).parent  # data/scripts
-PROCESSED_DIR = SCRIPT_DIR.parent / "processed"
+PROCESSED_DIR = SCRIPT_DIR.parent / "processed"  # data/processed
+REPORTS_DIR = SCRIPT_DIR.parent / "reports"  # data/reports
 
 # Parâmetros de normalização
 MAX_HOURS_CAP = 50.0  # Cap de horas para normalização
@@ -204,14 +205,18 @@ def generate_summary(interactions, unique_users, unique_games):
     }
 
     # Salvar
-    with open(PROCESSED_DIR / "interactions_summary.json", 'w', encoding='utf-8') as f:
+    with open(REPORTS_DIR / "interactions_summary.json", 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2)
 
-    print(f"  Resumo salvo em: {PROCESSED_DIR / 'interactions_summary.json'}")
+    print(f"  Resumo salvo em: {REPORTS_DIR / 'interactions_summary.json'}")
 
 
 def main():
     """Executa o pipeline de construção de interações"""
+    # Criar diretórios de saída se não existirem
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
     try:
         interactions = build_interactions()
 

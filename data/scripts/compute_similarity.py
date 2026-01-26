@@ -20,11 +20,12 @@ from tqdm import tqdm
 # Configurações - usar caminho relativo baseado na localização do script
 SCRIPT_DIR = Path(__file__).parent  # data/scripts
 PROCESSED_DIR = SCRIPT_DIR.parent / "processed"  # data/processed
+REPORTS_DIR = SCRIPT_DIR.parent / "reports"  # data/reports
 
 # Parâmetros do algoritmo
-TOP_K_SIMILAR = 20  # Manter apenas top-K jogos similares por jogo
+TOP_K_SIMILAR = 15  # Manter apenas top-K jogos similares por jogo
 MIN_SHARED_USERS = 30  # Mínimo de usuários em comum para considerar similaridade
-MIN_SIMILARITY_SCORE = 0.1  # Score mínimo para salvar
+MIN_SIMILARITY_SCORE = 0.15  # Score mínimo para salvar
 BATCH_SIZE = 1000  # Processar usuários em batches
 
 
@@ -161,7 +162,7 @@ def compute_pairwise_similarities(user_games, game_norms):
         shared_users = pair_shared_users[(app_id_1, app_id_2)]
 
         # Confidence (baseado em usuários em comum)
-        confidence = min(shared_users / 200, 1.0)
+        confidence = min(shared_users / 150, 1.0)
 
         # Só salvar se passar no threshold
         if cosine_sim >= MIN_SIMILARITY_SCORE:
@@ -339,10 +340,10 @@ def generate_summary(similarities_df, total_pairs_computed):
         }
     }
 
-    with open(PROCESSED_DIR / "similarity_summary.json", 'w', encoding='utf-8') as f:
+    with open(REPORTS_DIR / "similarity_summary.json", 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2)
 
-    print(f"  Resumo salvo: {PROCESSED_DIR / 'similarity_summary.json'}")
+    print(f"  Resumo salvo: {REPORTS_DIR / 'similarity_summary.json'}")
 
 
 def main():
@@ -351,6 +352,10 @@ def main():
     print("CÁLCULO DE SIMILARIDADE ITEM-ITEM (COSINE SIMILARITY)")
     print("=" * 70)
     print()
+
+    # Criar diretórios de saída se não existirem
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     try:
         # 1. Carregar interações
@@ -392,7 +397,6 @@ def main():
         print()
         print(f"Arquivos gerados em: {PROCESSED_DIR}/")
         print("  - similarity_raw.parquet")
-        print("  - similarity_summary.json")
 
     except Exception as e:
         print(f"\nERRO: {e}")

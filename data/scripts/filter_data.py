@@ -20,6 +20,7 @@ import pandas as pd
 SCRIPT_DIR = Path(__file__).parent  # data/scripts
 RAW_DIR = SCRIPT_DIR.parent / "raw"  # data/raw
 PROCESSED_DIR = SCRIPT_DIR.parent / "processed"  # data/processed
+REPORTS_DIR = SCRIPT_DIR.parent / "reports"  # data/reports
 
 # Filtros definidos
 MIN_USER_REVIEWS = 100
@@ -287,7 +288,7 @@ def generate_summary(valid_games, valid_users, filtered_reviews, metadata,
     }
 
     # Salvar
-    with open(PROCESSED_DIR / "filter_summary.json", 'w', encoding='utf-8') as f:
+    with open(REPORTS_DIR / "filter_summary.json", 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2)
 
     print("\nDados Originais:")
@@ -311,6 +312,8 @@ def generate_summary(valid_games, valid_users, filtered_reviews, metadata,
     print(f"  Média reviews/usuário: {summary['statistics']['avg_reviews_per_user']:.1f}")
     print(f"  Média horas/review: {summary['statistics']['avg_hours_per_review']:.1f}")
 
+    print(f"\n Resumo salvo em: {REPORTS_DIR / 'filter_sumary.json'}")
+
 
 def main():
     """Executa o pipeline completo de filtragem"""
@@ -320,6 +323,9 @@ def main():
 
     # Criar diretório de saída se não existir
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Criar diretório de relatórios se não existir
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Executar filtragens na ordem correta e coletar contagens originais
     valid_games, original_games = filter_games()
@@ -341,7 +347,6 @@ def main():
     print("  - filtered_users.parquet")
     print("  - filtered_reviews.parquet")
     print("  - filtered_metadata.json")
-    print("  - filter_summary.json")
 
 
 if __name__ == "__main__":
