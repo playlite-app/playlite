@@ -80,6 +80,7 @@ Os scripts desta pasta são responsáveis por:
 * Preparação de metadados auxiliares (popularidade, categorias)
 
 Nenhuma decisão de recomendação é tomada aqui — apenas **dados são preparados**.
+
 ---
 
 ## 📉 Estatísticas do Processamento
