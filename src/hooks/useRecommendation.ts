@@ -28,7 +28,7 @@ export function useRecommendation({
   const [loading, setLoading] = useState(!profileCache);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Carregar Perfil - ATUALIZADO: usa get_user_profile_formatted
+  // 1. Carregar Perfil do Usuário
   useEffect(() => {
     if (profileCache) {
       setLoading(false);
@@ -40,10 +40,7 @@ export function useRecommendation({
       setLoading(true);
 
       try {
-        // Usa o novo comando que retorna formato amigável
-        const data = await invoke<UserPreferenceVector>(
-          'get_user_profile_formatted'
-        );
+        const data = await invoke<UserPreferenceVector>('get_user_profile');
         setProfile(data);
 
         if (setProfileCache) setProfileCache(data);

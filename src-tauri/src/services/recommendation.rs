@@ -49,19 +49,11 @@ pub struct GameWithDetails {
 /// Vetor de preferências do usuário com múltiplas dimensões
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserPreferenceVector {
-    /// Scores acumulados por gênero
     pub genres: HashMap<String, f32>,
-
-    /// Scores acumulados por tag (agora usa TagKey com categoria)
     pub tags: HashMap<TagKey, f32>,
-
-    /// Scores acumulados por série de jogos
     pub series: HashMap<String, f32>,
-
-    /// Metadados estatísticos
     #[serde(rename = "totalPlaytime")]
     pub total_playtime: i32,
-
     #[serde(rename = "totalGames")]
     pub total_games: i32,
 }

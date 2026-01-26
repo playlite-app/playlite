@@ -7,7 +7,6 @@ use crate::errors::AppError;
 use crate::models::Game;
 use crate::services::recommendation::{
     calculate_user_profile, parse_release_year, rank_games, score_game, GameWithDetails,
-    UserPreferenceVector,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -20,18 +19,11 @@ pub struct GameRecommendation {
     pub score: f32,
 }
 
-/// Retorna o perfil completo v2.1 com gêneros, tags categorizadas e séries
+/// Retorna o perfil do usuário formatado para o frontend.
+/// Converte TagKey para formato "category:slug" para facilitar uso no frontend.
+/// Tags são retornadas como Record<string, number> no formato "category:slug"
 #[tauri::command]
-pub fn get_user_profile(state: State<AppState>) -> Result<UserPreferenceVector, AppError> {
-    let games = fetch_all_games_with_details(&state)?;
-    let profile = calculate_user_profile(&games);
-    Ok(profile)
-}
-
-/// Retorna o perfil formatado para o frontend (com tags como strings).
-/// Converte TagKey para formato "category:slug" para facilitar uso no frontend
-#[tauri::command]
-pub fn get_user_profile_formatted(state: State<AppState>) -> Result<serde_json::Value, AppError> {
+pub fn get_user_profile(state: State<AppState>) -> Result<serde_json::Value, AppError> {
     let games = fetch_all_games_with_details(&state)?;
     let profile = calculate_user_profile(&games);
 

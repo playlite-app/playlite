@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-01-26T22:56:26.443356+00:00",
+  "source_file": "similarity_raw.parquet",
+  "output_file": "collaborative_index.json",
+  "version": "cf-item-item-v1",
+  "parameters": {
+    "top_k": 10,
+    "min_score": 0.01,
+    "normalization": "per_game_max"
+  },
+  "input_data": {
+    "total_entries": 5723,
+    "unique_games_origin": 2102,
+    "unique_games_similar": 2097,
+    "score_stats": {
+      "min": 0.0054,
+      "max": 0.4621,
+      "mean": 0.0641,
+      "median": 0.0378
+    }
+  },
+  "output_data": {
+    "games_with_similars": 1973,
+    "games_filtered": 129,
+    "total_pairs_exported": 4741,
+    "coverage_pct": 93.86,
+    "similars_per_game": {
+      "min": 1,
+      "max": 10,
+      "mean": 2.4,
+      "median": 1
+    },
+    "normalized_scores": {
+      "min": 0.0338,
+      "max": 1.0,
+      "mean": 0.7163,
+      "median": 0.8237
+    }
+  },
+  "file_stats": {
+    "size_mb": 0.36,
+    "estimated_memory_rust_mb": 96.79
+  },
+  "quality_metrics": {
+    "avg_similars_per_game": 2.4,
+    "games_with_full_topk": 69,
+    "games_with_full_topk_pct": 3.5
+  },
+  "recommendations": [
+    {
+      "severity": "warning",
+      "message": "Média de similares muito baixa (2.4). Considere reduzir MIN_SCORE ou ajustar confidence no compute_similarity.py"
+    }
+  ]
+}

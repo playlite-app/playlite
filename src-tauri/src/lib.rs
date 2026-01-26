@@ -102,7 +102,6 @@ pub fn run() {
             commands::backup::import_database,
             // Comando de Recomendação
             commands::recommendations::get_user_profile,
-            commands::recommendations::get_user_profile_formatted,
             commands::recommendations::recommend_from_library,
             commands::recommendations::get_game_affinity,
             // Comando de Tradução de Descrição
