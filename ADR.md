@@ -141,10 +141,8 @@ Sinais considerados:
 
 ### 7.2 Collaborative Filtering Offline
 
-**Decisão:** Modelos de ML supervisionados ou não supervisionados treinados localmente.
-
-Parte do processamento ocorre offline, utilizando datasets públicos, com distribuição de artefatos estáticos junto ao
-aplicativo.
+**Decisão:** Filtragem Colaborativa Baseada em Itens usando feedback implícito (avaliações positivas), pré-computada
+offline com Python. Utiliza datasets públicos, com distribuição de artefatos estáticos junto ao aplicativo.
 
 Algoritmo escolhido:
 

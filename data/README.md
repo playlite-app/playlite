@@ -35,6 +35,17 @@ Tudo aqui é isolado do usuário final.
 
 ---
 
+## 🛠️ Dataset
+
+Game Recommendations on Steam (Kaggle): contém interações reais de usuários Steam com jogos. Ele inclui se o
+usuário recomendou ou não o jogo e pode ser utilizado para construir a matriz implícita de preferências necessária para
+a filtragem colaborativa do Playlite.
+
+Dataset disponível em: https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam  
+Consultado no dia: 25/01/2026
+
+---
+
 ## 📦 Estrutura da Pasta
 
 ```text
@@ -42,7 +53,8 @@ data/
  ├─ README.md          # Visão geral do pipeline de dados
  ├─ scripts/           # Scripts Python para processamento batch
  ├─ notebooks/         # Análises exploratórias e validação
- ├─ datasets/          # Datasets brutos (não versionados)
+ ├─ raw/               # Datasets brutos (não versionados)
+ ├─ processed/         # Dados intermediários gerados pelos scripts
  ├─ outputs/           # Arquivos JSON finais consumidos pelo app
 ```
 
@@ -84,9 +96,8 @@ Nenhuma decisão de recomendação é tomada aqui — apenas **dados são prepar
 
 ## 📌 Observações
 
-* A origem dos datasets será documentada futuramente
-* Os arquivos em `outputs/` devem ser considerados artefatos versionáveis
-* Esta pasta pode evoluir conforme novas estratégias forem testadas
+* Os arquivos em `outputs/` são artefatos versionados.
+* Esta pasta pode evoluir conforme novas estratégias forem testadas.
 
 Esta separação garante que o Playlite continue sendo um aplicativo **leve, rápido e previsível**, mesmo oferecendo
 funcionalidades avançadas de recomendação.
