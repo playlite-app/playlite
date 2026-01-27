@@ -89,10 +89,14 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
     // B. Iterar jogos
     for (app_id, _title) in steam_games {
         let should_update = {
-            let cache_conn = state.metadata_db.lock().unwrap();
-            let cache_key = format!("reviews_{}", app_id);
-            // Verifica se o cache expirou
-            cache::get_cached_api_data(&cache_conn, "steam", &cache_key).is_none()
+            match state.metadata_db.lock() {
+                Ok(cache_conn) => {
+                    let cache_key = format!("reviews_{}", app_id);
+                    // Verifica se o cache expirou
+                    cache::get_cached_api_data(&cache_conn, "steam", &cache_key).is_none()
+                }
+                Err(_) => false, // Se erro ao acessar cache, pula atualização
+            }
         };
 
         if should_update {
@@ -103,11 +107,17 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
                     // D. Sucesso? Atualiza Library DB e Metadata Cache
                     {
                         // 1. Salva no Cache (para não buscar de novo por 7 dias)
-                        let cache_conn = state.metadata_db.lock().unwrap();
-                        let cache_key = format!("reviews_{}", app_id);
-                        let json = serde_json::to_string(&summary).unwrap_or_default();
-                        let _ =
-                            cache::save_cached_api_data(&cache_conn, "steam", &cache_key, &json);
+                        if let Ok(cache_conn) = state.metadata_db.lock() {
+                            let cache_key = format!("reviews_{}", app_id);
+                            if let Ok(json) = serde_json::to_string(&summary) {
+                                let _ = cache::save_cached_api_data(
+                                    &cache_conn,
+                                    "steam",
+                                    &cache_key,
+                                    &json,
+                                );
+                            }
+                        }
                     }
 
                     {
@@ -120,11 +130,12 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
                             0
                         };
 
-                        let conn = state.library_db.lock().unwrap();
-                        let _ = conn.execute(
-                            "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_id = ?2",
-                            params![percent_positive, app_id_str],
-                        );
+                        if let Ok(conn) = state.library_db.lock() {
+                            let _ = conn.execute(
+                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_id = ?2",
+                                params![percent_positive, app_id_str],
+                            );
+                        }
                     }
                     updated_count += 1;
                 }
@@ -234,19 +245,20 @@ async fn refresh_wishlist_prices_background(
         if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {
             // Salva no cache como um JSON simplificado
             {
-                let cache_conn = state.metadata_db.lock().unwrap();
-                let cache_key = format!("price_{}", game_data.id);
+                if let Ok(cache_conn) = state.metadata_db.lock() {
+                    let cache_key = format!("price_{}", game_data.id);
 
-                // Cria um JSON manual com os dados relevantes
-                let cache_data = serde_json::json!({
-                    "id": game_data.id,
-                    "current_price": game_data.current.as_ref().map(|d| d.price),
-                    "currency": game_data.current.as_ref().map(|d| &d.currency),
-                    "lowest_price": game_data.lowest.as_ref().map(|d| d.price),
-                });
+                    // Cria um JSON manual com os dados relevantes
+                    let cache_data = serde_json::json!({
+                        "id": game_data.id,
+                        "current_price": game_data.current.as_ref().map(|d| d.price),
+                        "currency": game_data.current.as_ref().map(|d| &d.currency),
+                        "lowest_price": game_data.lowest.as_ref().map(|d| d.price),
+                    });
 
-                let json = cache_data.to_string();
-                let _ = cache::save_cached_api_data(&cache_conn, "itad", &cache_key, &json);
+                    let json = cache_data.to_string();
+                    let _ = cache::save_cached_api_data(&cache_conn, "itad", &cache_key, &json);
+                }
             }
 
             // Atualiza preços no banco de dados
@@ -260,32 +272,33 @@ async fn refresh_wishlist_prices_background(
                     deal.price
                 };
 
-                let conn = state.library_db.lock().unwrap();
-                match conn.execute(
-                    "UPDATE wishlist SET
-                        current_price = ?1,
-                        currency = ?2,
-                        lowest_price = ?3,
-                        store_platform = ?4,
-                        store_url = ?5,
-                        on_sale = ?6,
-                        normal_price = ?7,
-                        voucher = ?8
-                     WHERE id = ?9",
-                    params![
-                        deal.price,
-                        deal.currency,
-                        lowest,
-                        deal.shop.name,
-                        deal.url,
-                        deal.cut > Some(0),
-                        normal_price,
-                        deal.voucher,
-                        local_id
-                    ],
-                ) {
-                    Ok(_) => updated_count += 1,
-                    Err(e) => error!("Erro ao atualizar preço: {}", e),
+                if let Ok(conn) = state.library_db.lock() {
+                    match conn.execute(
+                        "UPDATE wishlist SET
+                            current_price = ?1,
+                            currency = ?2,
+                            lowest_price = ?3,
+                            store_platform = ?4,
+                            store_url = ?5,
+                            on_sale = ?6,
+                            normal_price = ?7,
+                            voucher = ?8
+                         WHERE id = ?9",
+                        params![
+                            deal.price,
+                            deal.currency,
+                            lowest,
+                            deal.shop.name,
+                            deal.url,
+                            deal.cut > Some(0),
+                            normal_price,
+                            deal.voucher,
+                            local_id
+                        ],
+                    ) {
+                        Ok(_) => updated_count += 1,
+                        Err(e) => error!("Erro ao atualizar preço: {}", e),
+                    }
                 }
             }
         }

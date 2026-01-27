@@ -415,7 +415,10 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
                 // Primeiro fazer o processamento SEM async que precisa do cache
                 let (processed_data, raw_tags) = {
-                    let cache_conn = state.metadata_db.lock().unwrap();
+                    let cache_conn = match state.metadata_db.lock() {
+                        Ok(c) => c,
+                        Err(_) => continue,
+                    };
 
                     // Executar TUDO com a conexão disponível e fazer await dentro do block_in_place
                     let result = tokio::task::block_in_place(|| {
@@ -440,9 +443,10 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 }
 
                 {
-                    let conn = state.library_db.lock().unwrap();
-                    if let Err(e) = save_game_details(&conn, processed_data) {
-                        warn!("Erro ao salvar metadados para {}: {}", name, e);
+                    if let Ok(conn) = state.library_db.lock() {
+                        if let Err(e) = save_game_details(&conn, processed_data) {
+                            warn!("Erro ao salvar metadados para {}: {}", name, e);
+                        }
                     }
                 }
             }

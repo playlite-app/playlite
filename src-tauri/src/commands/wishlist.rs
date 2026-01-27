@@ -92,8 +92,6 @@ struct ItadGame {
     added: i64, // Timestamp Unix
 }
 
-// funções auxiliares de parsing
-
 fn parse_steam_price(price_str: Option<&String>) -> Option<f64> {
     // Remove "R$", espaços e troca vírgula por ponto
     price_str.as_ref().and_then(|s| {
@@ -227,7 +225,6 @@ pub async fn import_wishlist(
 }
 
 /// Função para buscar capas faltantes na RAWG para jogos na Wishlist.
-/// Executa em background para não travar a interface.
 #[tauri::command]
 pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), AppError> {
     // 1. Pega a API Key
@@ -269,15 +266,16 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), AppError> {
                     if let Some(first_match) = results.iter().find(|g| g.background_image.is_some())
                     {
                         if let Some(cover) = &first_match.background_image {
-                            let conn = state.library_db.lock().unwrap();
-                            if conn
-                                .execute(
-                                    "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
-                                    params![cover, id],
-                                )
-                                .is_ok()
-                            {
-                                updated_count += 1;
+                            if let Ok(conn) = state.library_db.lock() {
+                                if conn
+                                    .execute(
+                                        "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
+                                        params![cover, id],
+                                    )
+                                    .is_ok()
+                                {
+                                    updated_count += 1;
+                                }
                             }
                         }
                     }
