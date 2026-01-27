@@ -6,6 +6,14 @@ import { ERROR_MESSAGES } from '@/errors/errorMessages';
 
 import { settingsService } from '../services/settingsService';
 
+/**
+ * Hook para gerenciar as configurações do aplicativo, incluindo chaves de API,
+ * importação de biblioteca, enriquecimento de metadados, backup e restauração,
+ * autenticação com serviços externos e gerenciamento de cache.
+ *
+ * @param onLibraryUpdate - Função callback chamada quando a biblioteca é atualizada
+ * @returns Objeto contendo estados, chaves e ações relacionadas às configurações
+ */
 export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({
     steamId: '',

@@ -43,6 +43,22 @@ interface UseRecommendationProps {
   hybridParams?: { minPlaytime?: number; maxPlaytime?: number; limit?: number };
 }
 
+/**
+ * Hook para gerenciar o sistema de recomendação de jogos.
+ * Suporta abordagens Content-Based, Collaborative Filtering e Híbrida.
+ * Inclui persistência local para blacklist de jogos ignorados e configurações do usuário.
+ *
+ * @param profileCache - Perfil de preferências em cache (opcional)
+ * @param setProfileCache - Função para atualizar o cache do perfil (opcional)
+ * @param allGames - Lista completa de jogos para recomendações
+ * @param enableContentBased - Ativa recomendações Content-Based
+ * @param enableCollaborative - Ativa recomendações Collaborative Filtering
+ * @param enableHybrid - Ativa recomendações Híbridas
+ * @param contentBasedParams - Parâmetros de filtro para Content-Based
+ * @param collaborativeParams - Parâmetros de filtro para Collaborative Filtering
+ * @param hybridParams - Parâmetros de filtro para Híbrido
+ * @returns Objeto contendo perfil, listas de recomendações, estados de carregamento e ações de feedback
+ */
 export function useRecommendation({
   profileCache,
   setProfileCache,

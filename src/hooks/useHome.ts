@@ -14,6 +14,18 @@ interface UseHomeProps {
   setProfileCache: (profile: UserPreferenceVector) => void;
 }
 
+/**
+ * Hook para gerenciar os dados e estados da página inicial do aplicativo.
+ * Inclui estatísticas da biblioteca, jogos em andamento, recomendações,
+ * jogos mais jogados, gêneros principais e jogos em tendência.
+ *
+ * @param games - Lista completa de jogos na biblioteca do usuário
+ * @param trendingCache - Cache local dos jogos em tendência
+ * @param setTrendingCache - Função para atualizar o cache de jogos em tendência
+ * @param profileCache - Cache local do perfil de preferências do usuário
+ * @param setProfileCache - Função para atualizar o cache do perfil de preferências
+ * @returns Objeto contendo dados e estados para a página inicial
+ */
 export function useHome({
   games: library,
   trendingCache,

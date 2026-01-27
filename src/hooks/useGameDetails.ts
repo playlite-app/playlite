@@ -3,6 +3,14 @@ import { useEffect, useState } from 'react';
 
 import { Game, GameDetails, GamePlatformLink } from '@/types';
 
+/**
+ * Hook para gerenciar os detalhes de um jogo selecionado, incluindo o carregamento
+ * de informações locais e a identificação de versões em outras plataformas.
+ *
+ * @param selectedGame - Jogo atualmente selecionado
+ * @param allGames - Lista completa de jogos para identificar versões relacionadas
+ * @returns Objeto contendo detalhes do jogo, estado de carregamento, versões relacionadas e função para recarregar dados
+ */
 export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
   const [details, setDetails] = useState<GameDetails | null>(null);
   const [loading, setLoading] = useState(false);
