@@ -8,3 +8,6 @@
 
 # Database files
 *.db
+
+# Data files
+data/

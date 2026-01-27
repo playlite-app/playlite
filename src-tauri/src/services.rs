@@ -11,7 +11,7 @@
 //! - `tags`: Serviço para classificação e gerenciamento de tags de jogos.
 
 pub(crate) mod cache;
-mod cf_aggregator;
+pub(crate) mod cf_aggregator;
 pub(crate) mod gamerpower;
 pub(crate) mod gemini;
 pub mod itad;

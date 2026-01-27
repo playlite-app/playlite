@@ -1,8 +1,14 @@
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::path::Path;
+
+use once_cell::sync::OnceCell;
 
 use crate::services::recommendation::{calculate_game_weight, GameWithDetails};
 
+// === Estruturas de leitura do JSON ===
+
+/// Estrutura bruta do índice CF lido do JSON
 #[derive(Debug, Deserialize)]
 struct CollaborativeIndexRaw {
     version: String,
@@ -17,40 +23,80 @@ pub struct Similar {
     pub score: f32,
 }
 
+/// Índice CF final usado pelo backend
+/// steam_app_id -> similares
 pub type CFIndex = HashMap<u32, Vec<Similar>>;
 
-/// Carrega o índice CF exportado pelo Python
-pub fn load_cf_index(path: &str) -> anyhow::Result<CFIndex> {
+/// Cache global do índice CF
+static CF_INDEX: OnceCell<CFIndex> = OnceCell::new();
+
+// === Inicialização / Cache ===
+
+/// Inicializa o índice CF no startup do app
+///
+/// Deve ser chamado UMA vez (ex: AppState)
+pub fn init_cf_index<P: AsRef<Path>>(path: P) -> anyhow::Result<()> {
+    let path = path.as_ref();
+
     let json = std::fs::read_to_string(path)?;
     let raw: CollaborativeIndexRaw = serde_json::from_str(&json)?;
 
-    let index = raw
+    let index: CFIndex = raw
         .index
         .into_iter()
         .filter_map(|(k, v)| k.parse::<u32>().ok().map(|id| (id, v)))
         .collect();
 
-    Ok(index)
+    let total_games = index.len();
+    let total_pairs: usize = index.values().map(|v| v.len()).sum();
+
+    CF_INDEX
+        .set(index)
+        .map_err(|_| anyhow::anyhow!("CF_INDEX já foi inicializado"))?;
+
+    log::info!(
+        "[CF] Índice carregado com sucesso | jogos={} pares={} média={:.2}",
+        total_games,
+        total_pairs,
+        total_pairs as f32 / total_games.max(1) as f32
+    );
+
+    Ok(())
 }
+
+/// Acesso seguro ao índice CF
+#[inline]
+fn get_cf_index() -> Option<&'static CFIndex> {
+    CF_INDEX.get()
+}
+
+// === Agregação de candidatos CF ===
 
 /// Agrega candidatos CF a partir da biblioteca do usuário
 ///
 /// Retorna:
-/// HashMap<steam_app_id, cf_score>
-pub fn build_cf_candidates(
-    cf_index: &CFIndex,
-    user_games: &[GameWithDetails],
-) -> HashMap<u32, f32> {
+/// - scores CF por steam_app_id
+/// - métricas para logging
+pub fn build_cf_candidates(user_games: &[GameWithDetails]) -> (HashMap<u32, f32>, CFStats) {
     let mut scores: HashMap<u32, f32> = HashMap::new();
+
+    let Some(cf_index) = get_cf_index() else {
+        return (scores, CFStats::empty(user_games.len()));
+    };
+
+    let mut games_with_steam_id = 0;
+    let mut games_with_cf_match = 0;
 
     for game in user_games {
         let Some(steam_id) = game.steam_app_id else {
-            continue; // jogos sem Steam ID ficam fora do CF
+            continue;
         };
+        games_with_steam_id += 1;
 
         let Some(similars) = cf_index.get(&steam_id) else {
             continue;
         };
+        games_with_cf_match += 1;
 
         let source_weight = calculate_game_weight(&game.game);
 
@@ -63,5 +109,52 @@ pub fn build_cf_candidates(
         }
     }
 
-    scores
+    let stats = CFStats {
+        total_games: user_games.len(),
+        games_with_steam_id,
+        games_with_cf_match,
+    };
+
+    stats.log();
+
+    (scores, stats)
+}
+
+// === Métricas / Logging ===
+
+#[derive(Debug, Clone)]
+pub struct CFStats {
+    pub total_games: usize,
+    pub games_with_steam_id: usize,
+    pub games_with_cf_match: usize,
+}
+
+/// Métricas de cobertura do CF na biblioteca do usuário
+impl CFStats {
+    fn empty(total: usize) -> Self {
+        Self {
+            total_games: total,
+            games_with_steam_id: 0,
+            games_with_cf_match: 0,
+        }
+    }
+
+    pub fn log(&self) {
+        if self.total_games == 0 {
+            log::info!("[CF] Biblioteca vazia");
+            return;
+        }
+
+        let pct_steam = self.games_with_steam_id as f32 / self.total_games as f32 * 100.0;
+        let pct_cf = self.games_with_cf_match as f32 / self.total_games as f32 * 100.0;
+        let pct_fallback = 100.0 - pct_cf;
+
+        log::info!(
+            "[CF] Jogos na biblioteca={} | SteamID={:.1}% | CF ativo={:.1}% | Fallback CB={:.1}%",
+            self.total_games,
+            pct_steam,
+            pct_cf,
+            pct_fallback
+        );
+    }
 }
