@@ -114,6 +114,8 @@ pub fn run() {
             commands::recommendations::get_user_profile,
             commands::recommendations::recommend_from_library,
             commands::recommendations::get_game_affinity,
+            commands::recommendations::recommend_collaborative_library,
+            commands::recommendations::recommend_hybrid_library,
             // Comando de Tradução de Descrição
             commands::ai_translation::translate_description,
             // Comandos de Conquistas de Jogos

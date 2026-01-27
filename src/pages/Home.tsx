@@ -12,6 +12,7 @@ import {
   Sparkles,
   TrendingUp,
   Trophy,
+  Users,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -51,9 +52,10 @@ export default function Home({
     stats,
     continuePlaying,
     backlogRecommendations,
+    collaborativeRecs,
     mostPlayed,
     topGenres,
-    loading,
+    profileLoading,
     trending,
     loadingRecommendations,
   } = useHome({
@@ -66,7 +68,7 @@ export default function Home({
 
   const [heroIndex, setHeroIndex] = useState(0);
 
-  if (loading) {
+  if (profileLoading) {
     return (
       <div className="animate-in fade-in flex h-full flex-1 flex-col items-center justify-center gap-4 duration-700">
         <div className="relative flex items-center justify-center">
@@ -249,15 +251,15 @@ export default function Home({
           </section>
         )}
 
-        {/* Recomendações */}
-        <section>
+        {/* Recomendados para você - Content-based */}
+        <section className="mb-12">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
-                  <Dna size={24} />
-                </div>
-                <h2 className="text-2xl font-bold">Recomendados</h2>
+              <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
+                <Dna size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Recomendados para você</h2>
               </div>
             </div>
             <Button
@@ -269,14 +271,13 @@ export default function Home({
             </Button>
           </div>
 
-          {/* Lógica de Loading adicionada */}
           {loadingRecommendations ? (
             <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-white/10">
               <Loader2 className="text-muted-foreground animate-spin" />
             </div>
           ) : backlogRecommendations.length > 0 ? (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {backlogRecommendations.slice(0, 5).map(game => (
+              {backlogRecommendations.map(game => (
                 <StandardGameCard
                   key={game.id}
                   title={game.name}
@@ -303,6 +304,53 @@ export default function Home({
             </div>
           )}
         </section>
+
+        {/* Jogadores como você - Collaborative Filtering */}
+        {collaborativeRecs.length > 0 && (
+          <section className="animate-in fade-in slide-in-from-bottom-4 mb-12 duration-700">
+            <Separator className="mb-8 opacity-50" />
+
+            <div className="mb-6 flex items-center gap-2">
+              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+                <Users size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">
+                  Jogadores como você gostaram
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Tendências na comunidade Steam para o seu perfil
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {collaborativeRecs.map(game => (
+                <StandardGameCard
+                  key={`cf-${game.id}`}
+                  title={game.name}
+                  coverUrl={game.coverUrl}
+                  subtitle="Popular na Comunidade"
+                  // Badge Azul
+                  badge={
+                    <span className="flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-xs font-bold text-blue-400">
+                      <Users size={10} /> Community
+                    </span>
+                  }
+                  onClick={() => onGameClick(game)}
+                  actions={
+                    <ActionButton
+                      icon={Play}
+                      variant="secondary"
+                      onClick={() => launchGame(game)}
+                      tooltip="Jogar Agora"
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Grid Inferior (Mais Jogados + Gêneros) - Estatísticas */}
         <div className="mb-6 flex items-center gap-2">

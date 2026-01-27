@@ -23,19 +23,34 @@ export function useHome({
   const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
   const [loadingTrending, setLoadingTrending] = useState(false);
 
-  // Integração com o Hook de Recomendação
+  // Recomendações (Atualizado para retornar CB e CF)
   const {
     profile,
-    recommendations,
+    recommendations: backlogRecommendations, // CB (Perfil)
+    collaborativeRecs, // CF (Social)
     loadingRecommendations,
     loading: profileLoading,
   } = useRecommendation({
     profileCache,
     setProfileCache,
     allGames: library,
+    enableContentBased: true,
+    enableCollaborative: true,
+    // Configuração CB: Backlog geral
+    contentBasedParams: {
+      minPlaytime: 0,
+      maxPlaytime: 300,
+      limit: 5,
+    },
+    // Configuração CF: Sugestões rápidas
+    collaborativeParams: {
+      minPlaytime: 0,
+      maxPlaytime: 120,
+      limit: 5,
+    },
   });
 
-  // Busca Trending (Mantido igual)
+  // Busca Trending
   useEffect(() => {
     async function fetchTrendingIfNeeded() {
       if (trendingCache.length > 0) {
@@ -55,76 +70,84 @@ export function useHome({
           setTrending(result);
           setTrendingCache(result);
         }
-      } catch (e) {
-        console.warn('Home: Falha ao buscar trending', e);
+      } catch (error) {
+        console.error('Erro ao carregar trending:', error);
       } finally {
         setLoadingTrending(false);
       }
     }
     fetchTrendingIfNeeded();
-  }, [trendingCache]);
+  }, [trendingCache, setTrendingCache]);
 
-  // Stats
-  const totalGames = library.length;
-  const totalPlaytime = library.reduce((acc, g) => acc + (g.playtime ?? 0), 0);
-  const totalFavorites = library.filter(g => g.favorite).length;
+  // Estatísticas da Biblioteca
+  const stats = useMemo(() => {
+    const totalPlaytime = library.reduce(
+      (acc, g) => acc + (g.playtime ?? 0),
+      0
+    );
+    const totalFavorites = library.filter(g => g.favorite).length;
+
+    return {
+      totalGames: library.length,
+      totalPlaytime,
+      totalFavorites,
+    };
+  }, [library]);
 
   // Continue Jogando
-  const continuePlaying = library
-    .filter(g => (g.playtime ?? 0) > 0 && (g.playtime ?? 0) < 50)
-    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
-    .slice(0, 5);
-
-  // Recomendações
-  const backlogRecommendations = recommendations;
+  const continuePlaying = useMemo(() => {
+    return library
+      .filter(g => (g.playtime ?? 0) > 0 && (g.playtime ?? 0) < 600)
+      .sort(
+        (a, b) =>
+          (b.lastPlayed ? new Date(b.lastPlayed).getTime() : 0) -
+          (a.lastPlayed ? new Date(a.lastPlayed).getTime() : 0)
+      )
+      .slice(0, 5);
+  }, [library]);
 
   // Mais Jogados
-  const mostPlayed = [...library]
-    .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
-    .slice(0, 3);
+  const mostPlayed = useMemo(() => {
+    return [...library]
+      .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
+      .slice(0, 3);
+  }, [library]);
 
-  // Gêneros Mais Comuns
-  const genreStats = useMemo(
-    () =>
-      library.reduce(
-        (acc, game) => {
-          if (game.genres) {
-            game.genres.split(',').forEach((g: string) => {
-              const clean = g.trim();
+  // Top Gêneros
+  const topGenres = useMemo(() => {
+    const genreStats = library.reduce(
+      (acc, game) => {
+        if (game.genres) {
+          game.genres.split(',').forEach((g: string) => {
+            const clean = g.trim();
 
-              if (clean !== 'Desconhecido') {
-                acc[clean] = (acc[clean] || 0) + 1;
-              }
-            });
-          }
+            if (clean !== 'Desconhecido' && clean !== '') {
+              acc[clean] = (acc[clean] || 0) + 1;
+            }
+          });
+        }
 
-          return acc;
-        },
-        {} as Record<string, number>
-      ),
-    [library]
-  );
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-  const topGenres = useMemo(
-    () =>
-      Object.entries(genreStats)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 6),
-    [genreStats]
-  );
+    return Object.entries(genreStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+  }, [library]);
 
   return {
-    stats: { totalGames, totalPlaytime, totalFavorites },
+    stats,
     continuePlaying,
-    backlogRecommendations,
+    backlogRecommendations, // Content-Based
+    collaborativeRecs, // Collaborative Filtering
+    loadingRecommendations,
     mostPlayed,
     topGenres,
     trending,
+    loadingTrending,
     profile,
-    loadingRecommendations,
-    loading:
-      profileLoading ||
-      loadingRecommendations ||
-      (loadingTrending && trending.length === 0),
+    profileLoading,
   };
 }

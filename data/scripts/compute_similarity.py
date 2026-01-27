@@ -24,7 +24,7 @@ REPORTS_DIR = SCRIPT_DIR.parent / "reports"  # data/reports
 
 # Parâmetros do algoritmo
 TOP_K_SIMILAR = 20  # Manter apenas top-K jogos similares por jogo
-MIN_SHARED_USERS = 20  # Mínimo de usuários em comum para considerar similaridade
+MIN_SHARED_USERS = 25  # Mínimo de usuários em comum para considerar similaridade
 MIN_SIMILARITY_SCORE = 0.1  # Score mínimo para salvar
 BATCH_SIZE = 1000  # Processar usuários em batches
 
@@ -162,7 +162,7 @@ def compute_pairwise_similarities(user_games, game_norms):
         shared_users = pair_shared_users[(app_id_1, app_id_2)]
 
         # Confidence (baseado em usuários em comum)
-        confidence = min(shared_users / 150, 1.0)
+        confidence = min(shared_users / 100, 1.0)
 
         # Só salvar se passar no threshold
         if cosine_sim >= MIN_SIMILARITY_SCORE:

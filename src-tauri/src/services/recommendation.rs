@@ -199,6 +199,45 @@ pub fn rank_games(
     ranked
 }
 
+/// Ranqueia jogos APENAS baseando-se na Filtragem Colaborativa (Social Score).
+///
+/// Filtra jogos que não possuem correspondência no índice CF.
+/// Retorna apenas jogos com score social > 0.0.
+pub fn rank_games_collaborative(
+    candidates: &[GameWithDetails],
+    cf_scores: &HashMap<u32, f32>,
+) -> Vec<(GameWithDetails, f32)> {
+    let mut ranked: Vec<_> = candidates
+        .iter()
+        .filter_map(|g| {
+            // Tenta pegar o ID da Steam
+            let steam_id = g.steam_app_id?;
+
+            // Verifica se existe um score social para este jogo
+            // Se score <= 0, o jogo não é relevante socialmente para este perfil
+            let score = cf_scores.get(&steam_id).cloned()?;
+
+            if score > 0.0 {
+                Some((g.clone(), score))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Ordena decrescente (maior score primeiro)
+    ranked.sort_by(|(_, score_a), (_, score_b)| {
+        score_b
+            .partial_cmp(score_a)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    ranked
+}
+
+/// Ranqueia jogos usando abordagem híbrida (Content-Based + Collaborative Filtering)
+///
+/// Combina os scores de ambas as abordagens usando pesos pré-definidos.
 pub fn rank_games_hybrid(
     profile: &UserPreferenceVector,
     candidates: &[GameWithDetails],

@@ -1,3 +1,10 @@
+//! Módulo de agregação de recomendações baseado em Collaborative Filtering (CF)
+//!
+//! Carrega um índice CF pré-computado a partir de um arquivo JSON
+//! e agrega scores de recomendação baseados na biblioteca do usuário.
+//! Esses scores são ponderados pela importância do jogo na biblioteca do usuário.
+//! O resultado é um mapa de scores CF por jogo candidato.
+
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;

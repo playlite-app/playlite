@@ -42,9 +42,17 @@ export default function Playlist({
   const { confirm } = useConfirm();
 
   // Usa o hook para pegar as recomendações DO BACKEND e o perfil
-  const { recommendations, profile } = useRecommendation({
+  const { hybridRecs, profile } = useRecommendation({
     profileCache,
     allGames,
+    enableHybrid: true, // Ativa o novo comando
+    enableContentBased: false, // Desliga os outros para economizar processamento nesta tela
+    enableCollaborative: false,
+    hybridParams: {
+      minPlaytime: 0,
+      maxPlaytime: 600, // Sugere jogos com até 10h (foco em terminar ou começar)
+      limit: 20,
+    },
   });
 
   const handleRemoveFromPlaylist = async (game: Game) => {
@@ -62,9 +70,7 @@ export default function Playlist({
   };
 
   // Sugestões: Filtra os jogos já na playlist e limita a 10 sugestões
-  const suggestions = recommendations
-    .filter(g => !isInPlaylist(g.id))
-    .slice(0, 10);
+  const suggestions = hybridRecs.filter(g => !isInPlaylist(g.id)).slice(0, 10);
 
   // Séries favoritas: Usa o utilitário
   const favoriteSeries = getFavoriteSeries(profile);
@@ -155,14 +161,20 @@ export default function Playlist({
       <div className="bg-muted/10 border-border flex w-72 shrink-0 flex-col overflow-hidden border-l backdrop-blur-sm md:w-80 lg:w-80 xl:w-96 2xl:w-120">
         <div className="border-border/40 bg-muted/20 shrink-0 border-b p-5 lg:p-6">
           <div className="mb-1 flex items-center gap-2 text-purple-500">
-            <Sparkles size={19} className="fill-purple-500/20 lg:h-5 lg:w-5" />
-            <h2 className="text-lg font-bold">Recomendados</h2>
+            {/* Ícone duplo para representar Híbrido */}
+            <div className="flex">
+              <Sparkles
+                size={19}
+                className="fill-purple-500/20 lg:h-5 lg:w-5"
+              />
+            </div>
+            <h2 className="text-lg font-bold">Sugestões Inteligentes</h2>
           </div>
           <p className="text-muted-foreground text-sm">
-            Baseado no seu perfil.
+            Combinação do seu perfil + comunidade.
           </p>
         </div>
-
+        {/* Séries favoritas */}
         <div className="custom-scrollbar flex-1 overflow-y-auto p-4 lg:p-5">
           {favoriteSeries.length > 0 && (
             <div className="mb-4 rounded-lg bg-purple-500/10 p-3">
@@ -181,7 +193,7 @@ export default function Playlist({
               </div>
             </div>
           )}
-
+          {/* Lista de Sugestões */}
           <div className="grid grid-cols-1 gap-3.5 lg:gap-4 xl:grid-cols-2">
             {suggestions.map(game => (
               <div key={game.id} className="group relative">
@@ -189,6 +201,14 @@ export default function Playlist({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   className="text-xs"
+                  // Badge opcional para score híbrido alto
+                  badge={
+                    (game as any).matchScore > 0.8 ? (
+                      <span className="rounded border border-purple-500/20 bg-purple-500/10 px-1 text-[10px] font-bold text-purple-400">
+                        Best Match
+                      </span>
+                    ) : undefined
+                  }
                   actions={
                     <Button
                       size="sm"
@@ -209,7 +229,7 @@ export default function Playlist({
               </div>
             ))}
           </div>
-
+          {/* Empty State */}
           {suggestions.length === 0 && (
             <div className="space-y-2 py-10 text-center">
               <p className="text-muted-foreground text-sm">

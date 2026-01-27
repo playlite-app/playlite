@@ -99,6 +99,103 @@ pub fn recommend_from_library(
     Ok(result)
 }
 
+/// Retorna jogos da biblioteca do usuário baseados em scores CF calculados a partir do índice.
+#[tauri::command]
+pub async fn recommend_collaborative_library(
+    state: State<'_, AppState>,
+    min_playtime: Option<i32>,
+    max_playtime: Option<i32>,
+    limit: usize,
+) -> Result<Vec<GameRecommendation>, AppError> {
+    // 1. Busca todos os jogos com detalhes
+    let games_with_details = fetch_all_games_with_details(&state)?;
+
+    // 2. Calcula os scores CF baseados no histórico do usuário
+    // (Usa a função existente no cf_aggregator)
+    let (cf_scores, stats) =
+        crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
+
+    // Se não houver matches suficientes, retorna vazio para não mostrar seção "quebrada"
+    if stats.games_with_cf_match == 0 {
+        return Ok(vec![]);
+    }
+
+    // 3. Filtra candidatos (Backlog: jogos pouco jogados)
+    let min = min_playtime.unwrap_or(0);
+    let max = max_playtime.unwrap_or(999999);
+
+    let candidates: Vec<_> = games_with_details
+        .into_iter()
+        .filter(|g| {
+            let pt = g.game.playtime.unwrap_or(0);
+            pt >= min && pt <= max
+        })
+        .collect();
+
+    // 4. Ranqueia usando a NOVA função Pura (CF Only)
+    let ranked = crate::services::recommendation::rank_games_collaborative(&candidates, &cf_scores);
+
+    // 5. Formata retorno
+    let result = ranked
+        .into_iter()
+        .take(limit)
+        .map(|(g, score)| GameRecommendation {
+            game_id: g.game.id,
+            score,
+        })
+        .collect();
+
+    Ok(result)
+}
+
+/// Recomenda jogos usando uma abordagem HÍBRIDA (Content-Based + Collaborative).
+#[tauri::command]
+pub async fn recommend_hybrid_library(
+    state: State<'_, AppState>,
+    min_playtime: Option<i32>,
+    max_playtime: Option<i32>,
+    limit: usize,
+) -> Result<Vec<GameRecommendation>, AppError> {
+    // 1. Busca todos os jogos
+    let games_with_details = fetch_all_games_with_details(&state)?;
+
+    // 2. Calcula o Perfil do Usuário (Content-Based)
+    let profile = calculate_user_profile(&games_with_details);
+
+    // 3. Calcula os scores Sociais (Collaborative Filtering)
+    // Nota: Mesmo que o CF falhe ou retorne vazio, o híbrido funciona (cai para CB puro)
+    let (cf_scores, _) = crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
+
+    // 4. Filtra candidatos (Backlog: jogos pouco jogados)
+    let min = min_playtime.unwrap_or(0);
+    let max = max_playtime.unwrap_or(999999);
+
+    let candidates: Vec<_> = games_with_details
+        .into_iter()
+        .filter(|g| {
+            let pt = g.game.playtime.unwrap_or(0);
+            pt >= min && pt <= max
+        })
+        .collect();
+
+    // 5. Ranqueia usando a função HÍBRIDA que você já criou
+    // Ela usa pesos: 65% CB + 35% CF (conforme recommendation.rs)
+    let ranked =
+        crate::services::recommendation::rank_games_hybrid(&profile, &candidates, &cf_scores);
+
+    // 6. Formata retorno
+    let result = ranked
+        .into_iter()
+        .take(limit)
+        .map(|(g, score)| GameRecommendation {
+            game_id: g.game.id,
+            score,
+        })
+        .collect();
+
+    Ok(result)
+}
+
 /// Calcula o score de afinidade de um jogo específico
 #[tauri::command]
 pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32, AppError> {
