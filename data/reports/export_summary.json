@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-26T22:56:26.443356+00:00",
+  "generated_at": "2026-01-26T23:51:08.251794+00:00",
   "source_file": "similarity_raw.parquet",
   "output_file": "collaborative_index.json",
   "version": "cf-item-item-v1",
@@ -13,43 +13,43 @@
     "unique_games_origin": 2102,
     "unique_games_similar": 2097,
     "score_stats": {
-      "min": 0.0054,
+      "min": 0.0072,
       "max": 0.4621,
-      "mean": 0.0641,
-      "median": 0.0378
+      "mean": 0.0709,
+      "median": 0.0504
     }
   },
   "output_data": {
-    "games_with_similars": 1973,
-    "games_filtered": 129,
-    "total_pairs_exported": 4741,
-    "coverage_pct": 93.86,
+    "games_with_similars": 2041,
+    "games_filtered": 61,
+    "total_pairs_exported": 5059,
+    "coverage_pct": 97.1,
     "similars_per_game": {
       "min": 1,
       "max": 10,
-      "mean": 2.4,
+      "mean": 2.48,
       "median": 1
     },
     "normalized_scores": {
-      "min": 0.0338,
+      "min": 0.0289,
       "max": 1.0,
-      "mean": 0.7163,
-      "median": 0.8237
+      "mean": 0.7092,
+      "median": 0.803
     }
   },
   "file_stats": {
-    "size_mb": 0.36,
-    "estimated_memory_rust_mb": 96.79
+    "size_mb": 0.38,
+    "estimated_memory_rust_mb": 103.22
   },
   "quality_metrics": {
-    "avg_similars_per_game": 2.4,
-    "games_with_full_topk": 69,
-    "games_with_full_topk_pct": 3.5
+    "avg_similars_per_game": 2.48,
+    "games_with_full_topk": 82,
+    "games_with_full_topk_pct": 4.02
   },
   "recommendations": [
     {
       "severity": "warning",
-      "message": "Média de similares muito baixa (2.4). Considere reduzir MIN_SCORE ou ajustar confidence no compute_similarity.py"
+      "message": "Média de similares muito baixa (2.5). Considere reduzir MIN_SCORE ou ajustar confidence no compute_similarity.py"
     }
   ]
 }

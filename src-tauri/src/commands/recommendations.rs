@@ -129,7 +129,8 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
             d.genres,                -- 16: genres
             d.tags,                  -- 17: tags (JSON de GameTag[])
             d.series,                -- 18: series
-            d.release_date           -- 19: release_date
+            d.release_date,          -- 19: release_date
+            d.steam_app_id           -- 20: steam_app_id
          FROM games g
          LEFT JOIN game_details d ON g.id = d.game_id",
     )?;
@@ -182,12 +183,17 @@ fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithD
         let release_date: Option<String> = row.get(19)?;
         let release_year = release_date.as_ref().and_then(|d| parse_release_year(d));
 
+        // Steam App ID (convertido de String para u32)
+        let steam_app_id: Option<String> = row.get(20)?;
+        let steam_app_id = steam_app_id.and_then(|s| s.parse::<u32>().ok());
+
         Ok(GameWithDetails {
             game,
             genres,
             tags,
             series,
             release_year,
+            steam_app_id,
         })
     })?;
 

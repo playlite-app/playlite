@@ -13,6 +13,7 @@ name = "Playlite"
 version = "2.0.0"
 dependencies = [
  "aes-gcm",
+ "anyhow",
  "base64 0.22.1",
  "chrono",
  "lazy_static",

@@ -47,3 +47,4 @@ uuid = { version = "1.19.0", features = ["v4"] }
 tiny_http = "0.12.0"
 regex = "1.12.2"
 thiserror = "2.0.18"
+anyhow = "1.0.100"
