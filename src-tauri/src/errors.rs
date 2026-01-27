@@ -1,7 +1,6 @@
 use serde::Serialize;
 use thiserror::Error;
 
-#[allow(dead_code)]
 #[derive(Debug, Error, Serialize)]
 #[serde(tag = "type", content = "message")]
 pub enum AppError {

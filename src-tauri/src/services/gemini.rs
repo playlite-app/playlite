@@ -1,3 +1,9 @@
+//! Serviço para interagir com a API Gemini da Google para tradução de texto.
+//!
+//! Utiliza o modelo Gemini 2.5 para traduções de descrições de jogos.
+//! **Função Principal:**
+//! - `translate_text`: Traduz texto para português brasileiro mantendo termos técnicos de jogos em inglês.
+
 use crate::constants::GEMINI_API_URL;
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::Deserialize;
@@ -12,11 +18,7 @@ struct GeminiResponse {
 
 #[derive(Deserialize, Debug)]
 struct GeminiError {
-    #[allow(dead_code)]
-    code: i32,
     message: String,
-    #[allow(dead_code)]
-    status: String,
 }
 
 #[derive(Deserialize, Debug)]

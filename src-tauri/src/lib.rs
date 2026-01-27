@@ -59,8 +59,6 @@ pub fn run() {
 
             if let Err(e) = services::cf_aggregator::init_cf_index() {
                 tracing::warn!("CF desativado (fallback CB ativo): {}", e);
-            } else {
-                tracing::info!("CF index carregado com sucesso");
             }
 
             // Log de inicialização completa

@@ -1,10 +1,12 @@
-//! Tipos de dados principais da aplicação.
+//! Modelos de dados do banco de dados.
 //!
-//! Define structs para jogos, wishlist, perfil do usuário e sistema de erros.
+//! Define as structs que representam as tabelas do banco:
+//! - Game: tabela `games`
+//! - GameDetails: tabela `game_details`
+//! - WishlistGame: tabela `wishlist`
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 // Reexportar GameTag do utils para consistência
 pub use crate::utils::tag_utils::GameTag;
@@ -171,50 +173,4 @@ pub struct WishlistGame {
 
     #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
-}
-
-// === Modelos Adicionais ===
-
-/// Pontuação de gênero no perfil do usuário.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GenreScore {
-    pub name: String,
-    pub score: f32,
-    #[serde(rename = "gameCount")]
-    pub game_count: i32,
-}
-
-/// Perfil agregado do usuário com estatísticas da biblioteca.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UserProfile {
-    #[serde(rename = "topGenres")]
-    pub top_genres: Vec<GenreScore>,
-
-    #[serde(rename = "totalPlaytime")]
-    pub total_playtime: i32,
-
-    #[serde(rename = "totalGames")]
-    pub total_games: i32,
-}
-
-// === OAuth Token ===
-
-/// Token OAuth com informações de expiração.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct OAuthToken {
-    pub access_token: String,
-    pub refresh_token: Option<String>,
-    pub expires_at: u64,
-}
-
-/// Verifica se o token OAuth expirou.
-impl OAuthToken {
-    pub fn is_expired(&self) -> bool {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-
-        now >= self.expires_at
-    }
 }

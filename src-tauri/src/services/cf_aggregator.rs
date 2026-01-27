@@ -20,12 +20,6 @@ const COLLABORATIVE_INDEX_JSON: &str = include_str!("../../data/collaborative_in
 /// Estrutura bruta do índice CF lido do JSON
 #[derive(Debug, Deserialize)]
 struct CollaborativeIndexRaw {
-    #[allow(dead_code)]
-    version: String,
-    #[allow(dead_code)]
-    generated_at: String,
-    #[allow(dead_code)]
-    source: String,
     index: HashMap<String, Vec<Similar>>,
 }
 
