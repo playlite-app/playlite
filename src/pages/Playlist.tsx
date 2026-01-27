@@ -4,7 +4,15 @@ import {
   Droppable,
   DropResult,
 } from '@hello-pangea/dnd';
-import { Gamepad2, PlusCircle, Sparkles } from 'lucide-react';
+import {
+  ChevronDown,
+  Gamepad2,
+  Loader2,
+  PlusCircle,
+  Sparkles,
+  ThumbsDown,
+} from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/StandardGameCard';
@@ -41,19 +49,21 @@ export default function Playlist({
 
   const { confirm } = useConfirm();
 
-  // Usa o hook para pegar as recomendações DO BACKEND e o perfil
-  const { hybridRecs, profile } = useRecommendation({
-    profileCache,
-    allGames,
-    enableHybrid: true, // Ativa o novo comando
-    enableContentBased: false, // Desliga os outros para economizar processamento nesta tela
-    enableCollaborative: false,
-    hybridParams: {
-      minPlaytime: 0,
-      maxPlaytime: 600, // Sugere jogos com até 10h (foco em terminar ou começar)
-      limit: 20,
-    },
-  });
+  // Estado para controlar paginação ("Ver Mais")
+  const [recLimit, setRecLimit] = useState(10);
+
+  // Usa o hook em modo Híbrido + Feedback
+  const { hybridRecs, profile, markAsNotUseful, loadingRecommendations } =
+    useRecommendation({
+      profileCache,
+      allGames,
+      enableHybrid: true, // Ativa modo híbrido para playlist
+      hybridParams: {
+        minPlaytime: 0,
+        maxPlaytime: 600,
+        limit: recLimit, // Limite dinâmico
+      },
+    });
 
   const handleRemoveFromPlaylist = async (game: Game) => {
     const confirmed = await confirm({
@@ -69,10 +79,10 @@ export default function Playlist({
     }
   };
 
-  // Sugestões: Filtra os jogos já na playlist e limita a 10 sugestões
-  const suggestions = hybridRecs.filter(g => !isInPlaylist(g.id)).slice(0, 10);
+  // Filtra sugestões para não mostrar jogos já na playlist
+  const suggestions = hybridRecs.filter(g => !isInPlaylist(g.id));
 
-  // Séries favoritas: Usa o utilitário
+  // Séries favoritas
   const favoriteSeries = getFavoriteSeries(profile);
 
   const handleOnDragEnd = (result: DropResult) => {
@@ -83,6 +93,7 @@ export default function Playlist({
 
   return (
     <div className="bg-background flex h-full flex-row overflow-hidden">
+      {/* Coluna esquerda: Playlist (Fila) */}
       <div className="border-border/50 bg-background/50 flex min-w-0 flex-1 flex-col overflow-hidden border-r">
         <div className="border-border/40 shrink-0 border-b px-5 pt-5 pb-3 lg:px-8 lg:pt-6 lg:pb-4">
           <div className="mb-2 flex items-center gap-2.5 lg:gap-3">
@@ -157,11 +168,10 @@ export default function Playlist({
         </div>
       </div>
 
-      {/* Coluna direita: Sugestões */}
+      {/* Coluna direita: Sugestões de jogos */}
       <div className="bg-muted/10 border-border flex w-72 shrink-0 flex-col overflow-hidden border-l backdrop-blur-sm md:w-80 lg:w-80 xl:w-96 2xl:w-120">
         <div className="border-border/40 bg-muted/20 shrink-0 border-b p-5 lg:p-6">
           <div className="mb-1 flex items-center gap-2 text-purple-500">
-            {/* Ícone duplo para representar Híbrido */}
             <div className="flex">
               <Sparkles
                 size={19}
@@ -174,8 +184,9 @@ export default function Playlist({
             Combinação do seu perfil + comunidade.
           </p>
         </div>
-        {/* Séries favoritas */}
+
         <div className="custom-scrollbar flex-1 overflow-y-auto p-4 lg:p-5">
+          {/* Séries favoritas */}
           {favoriteSeries.length > 0 && (
             <div className="mb-4 rounded-lg bg-purple-500/10 p-3">
               <h3 className="mb-2 text-xs font-bold text-purple-400">
@@ -193,7 +204,8 @@ export default function Playlist({
               </div>
             </div>
           )}
-          {/* Lista de Sugestões */}
+
+          {/* Grid de Cards de Recomendação */}
           <div className="grid grid-cols-1 gap-3.5 lg:gap-4 xl:grid-cols-2">
             {suggestions.map(game => (
               <div key={game.id} className="group relative">
@@ -201,40 +213,83 @@ export default function Playlist({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   className="text-xs"
-                  // Badge opcional para score híbrido alto
-                  badge={
-                    (game as any).matchScore > 0.8 ? (
-                      <span className="rounded border border-purple-500/20 bg-purple-500/10 px-1 text-[10px] font-bold text-purple-400">
-                        Best Match
-                      </span>
-                    ) : undefined
-                  }
+                  // Ações: Adicionar e Feedback Negativo
                   actions={
-                    <Button
-                      size="sm"
-                      className="h-8 w-full gap-1 bg-white/90 text-black shadow-lg hover:bg-white"
-                      onClick={e => {
-                        e.stopPropagation();
-                        addToPlaylist(game.id);
-                        toast.success(`${game.name} na fila!`);
-                      }}
-                      title="Adicionar à fila"
-                    >
-                      <PlusCircle size={14} />
-                      <span className="text-xs font-bold">Add</span>
-                    </Button>
+                    <div className="flex w-full gap-2">
+                      <Button
+                        size="sm"
+                        className="h-8 flex-1 gap-1 bg-white/90 text-black shadow-lg hover:bg-white"
+                        onClick={e => {
+                          e.stopPropagation();
+                          addToPlaylist(game.id);
+                          toast.success(`${game.name} na fila!`);
+                        }}
+                        title="Adicionar à fila"
+                      >
+                        <PlusCircle size={14} />
+                        <span className="text-xs font-bold">Add</span>
+                      </Button>
+
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-8 w-8 shrink-0 bg-black/40 text-white hover:bg-red-500/20 hover:text-red-400"
+                        onClick={e => {
+                          e.stopPropagation();
+                          markAsNotUseful(game.id);
+                          toast.info('Recomendação ocultada', {
+                            description:
+                              'Não recomendaremos este jogo novamente.',
+                          });
+                        }}
+                        title="Não tenho interesse (Ocultar)"
+                      >
+                        <ThumbsDown size={14} />
+                      </Button>
+                    </div>
                   }
                   onClick={() => onGameClick(game)}
                 />
               </div>
             ))}
           </div>
+
+          {/* Botão Ver Mais + Contador */}
+          {suggestions.length > 0 && (
+            <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+              <span className="text-muted-foreground text-xs">
+                Mostrando {suggestions.length} recomendações
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs hover:bg-white/5"
+                onClick={() => setRecLimit(prev => prev + 10)}
+                disabled={loadingRecommendations}
+              >
+                {loadingRecommendations ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <ChevronDown size={12} />
+                )}
+                Ver Mais
+              </Button>
+            </div>
+          )}
+
           {/* Empty State */}
-          {suggestions.length === 0 && (
+          {suggestions.length === 0 && !loadingRecommendations && (
             <div className="space-y-2 py-10 text-center">
               <p className="text-muted-foreground text-sm">
                 Sem sugestões novas no momento.
               </p>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setRecLimit(prev => prev + 10)}
+              >
+                Tentar carregar mais
+              </Button>
             </div>
           )}
         </div>

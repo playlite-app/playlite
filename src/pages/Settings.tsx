@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  BrainCircuit,
   CheckCircle,
   CloudDownload,
   Database,
@@ -7,6 +8,7 @@ import {
   ExternalLink,
   FileJson,
   Gamepad2,
+  History,
   Loader2,
   RefreshCcw,
   Save,
@@ -15,12 +17,14 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
+import { useRecommendation } from '../hooks/useRecommendation';
 import { useSettings } from '../hooks/useSettings';
 
 interface SettingsProps {
@@ -59,6 +63,57 @@ const SettingsRow = ({
 export default function Settings({ onLibraryUpdate }: SettingsProps) {
   const { keys, setKeys, loading, status, progress, actions } =
     useSettings(onLibraryUpdate);
+
+  // Hook de Recomendação para gerenciar configs
+  const { config, updateConfig, resetFeedback, ignoredIds } =
+    useRecommendation();
+
+  // Estado local para sliders
+  const [localWeights, setLocalWeights] = useState(50); // 0-100 representation
+  const [localDecay, setLocalDecay] = useState(95); // 0-100 representation
+
+  // Sincroniza estado local quando a config carrega
+  useEffect(() => {
+    if (config) {
+      // Converte pesos (0.0-1.0) para slider (0-100)
+      // Usa collaborative_weight como referência para o slider
+      // 0 = 100% CB, 100 = 100% CF
+      const total = config.content_weight + config.collaborative_weight;
+      const collabShare = (config.collaborative_weight / total) * 100;
+      setLocalWeights(Math.round(collabShare));
+
+      // Age decay: 0.90 a 1.00 -> mapeado para 0-100 visualmente
+      // Usa valor multiplicado por 100: 0.95 -> 95
+      setLocalDecay(Math.round(config.age_decay * 100));
+    }
+  }, [config.content_weight, config.collaborative_weight, config.age_decay]);
+
+  // Handler para salvar slider de pesos
+  const handleWeightChange = (val: number) => {
+    setLocalWeights(val);
+    const collab = val / 100;
+    const content = 1.0 - collab;
+
+    updateConfig({
+      ...config,
+      content_weight: Number(content.toFixed(2)),
+      collaborative_weight: Number(collab.toFixed(2)),
+    });
+  };
+
+  // Handler para salvar slider de idade
+  const handleDecayChange = (val: number) => {
+    setLocalDecay(val);
+    updateConfig({
+      ...config,
+      age_decay: val / 100,
+    });
+  };
+
+  // Handler para Toggle de Séries
+  const toggleSeries = (checked: boolean) => {
+    updateConfig({ ...config, favor_series: checked });
+  };
 
   if (loading.initial) {
     return (
@@ -102,7 +157,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
       {/* SEÇÃO 1: PLATAFORMAS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Plataformas</h3>
-
         <SettingsRow
           icon={Gamepad2}
           title="Credenciais da Steam"
@@ -146,10 +200,132 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 2: METADADOS */}
+      {/* SEÇÃO 2: ALGORITMO DE RECOMENDAÇÃO */}
+      <section className="space-y-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+          Algoritmo de Recomendação
+        </h3>
+
+        {/* Slider: Perfil vs Comunidade */}
+        <SettingsRow
+          icon={BrainCircuit}
+          title="Foco da Recomendação"
+          description="Ajuste o peso entre seu gosto pessoal (tags/gêneros) e o que é popular na comunidade."
+        >
+          <div className="space-y-3 pt-2">
+            <div className="text-muted-foreground flex justify-between text-xs font-medium">
+              <span>Meu Perfil ({100 - localWeights}%)</span>
+              <span>Comunidade ({localWeights}%)</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={localWeights}
+              onChange={e => handleWeightChange(parseInt(e.target.value))}
+              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
+            />
+            <p className="text-muted-foreground text-xs">
+              {localWeights < 30
+                ? 'Focado estritamente no que você joga.'
+                : localWeights > 70
+                  ? 'Focado em tendências e descobertas.'
+                  : 'Equilíbrio entre gosto pessoal e tendências.'}
+            </p>
+          </div>
+        </SettingsRow>
+
+        {/* Slider: Age Decay */}
+        <SettingsRow
+          icon={History}
+          title="Fator Nostalgia"
+          description="Define o quanto jogos antigos são penalizados nas recomendações."
+        >
+          <div className="space-y-3 pt-2">
+            <div className="text-muted-foreground flex justify-between text-xs font-medium">
+              <span>Novidades (90%)</span>
+              <span>Clássicos (100%)</span>
+            </div>
+            <input
+              type="range"
+              min="90"
+              max="100"
+              step="1"
+              value={localDecay}
+              onChange={e => handleDecayChange(parseInt(e.target.value))}
+              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
+            />
+            <p className="text-muted-foreground text-xs">
+              Valor atual: {localDecay}%.{' '}
+              {localDecay === 100
+                ? 'Mesmo peso de lançamentos.'
+                : 'Jogos antigos perdem relevância.'}
+            </p>
+          </div>
+        </SettingsRow>
+
+        {/* Toggle: Séries & Reset */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Checkbox Series (Simulado com div e input se não tiver Switch) */}
+          <div className="bg-card flex flex-col justify-between gap-4 rounded-xl border p-6">
+            <div className="space-y-1">
+              <h3 className="font-semibold">Priorizar Séries</h3>
+              <p className="text-muted-foreground text-sm">
+                Dar peso extra para sequências de jogos que você gosta.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={config.favor_series}
+                  onChange={e => toggleSeries(e.target.checked)}
+                />
+                {/* Toggle: Muda de Cinza para Verde (bg-green-500) se ativado */}
+                <div className="peer bg-input h-6 w-11 rounded-full peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-300 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
+                {/* Texto Dinâmico */}
+                <span
+                  className={`ml-3 text-sm font-medium transition-colors ${
+                    config.favor_series
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {config.favor_series ? 'Ativado' : 'Desativado'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Reset Feedback */}
+          <div className="bg-card flex flex-col justify-between gap-4 rounded-xl border p-6">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-red-500/80">Limpar Feedback</h3>
+              <p className="text-muted-foreground text-sm">
+                Restaurar {ignoredIds.length} jogos marcados como "Não Útil".
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetFeedback();
+                toast.success('Histórico de feedback limpo!');
+              }}
+              disabled={ignoredIds.length === 0}
+              className="w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* SEÇÃO 3: METADADOS (Mantido igual) */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
-        {/* RAWG */}
+        {/* ... (Conteúdo Metadados mantido) ... */}
         <SettingsRow
           icon={Search}
           title="RAWG.io"
@@ -171,7 +347,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         >
           <div className="w-full space-y-2">
             <div className="flex gap-2">
-              {/* BOTÃO 1: Metadados (Usa loading.enriching) */}
               <Button
                 onClick={actions.enrichLibrary}
                 variant="outline"
@@ -185,7 +360,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 )}
               </Button>
 
-              {/* BOTÃO 2: Capas (Usa loading.fetchingCovers) */}
               <Button
                 onClick={actions.fetchMissingCovers}
                 variant="outline"
@@ -200,8 +374,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 )}
               </Button>
             </div>
-
-            {/* Feedback de Progresso */}
             {(loading.enriching || loading.fetchingCovers) && progress && (
               <div className="text-muted-foreground animate-pulse text-center text-xs">
                 Processando: {progress.game} ({progress.current}/
@@ -212,12 +384,11 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: TRADUÇÃO COM IA */}
+      {/* SEÇÃO 4: TRADUÇÃO COM IA (Mantido igual) */}
       <section className="space-y-4">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
           Tradução com IA
         </h3>
-
         <SettingsRow
           icon={Sparkles}
           title="Google Gemini"
@@ -246,7 +417,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 4: ZONA DE DADOS */}
+      {/* SEÇÃO 5: ZONA DE DADOS (Mantido igual) */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 

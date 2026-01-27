@@ -1,33 +1,202 @@
-//! Comandos Tauri para Sistema de Recomendação v2.1
+//! Comandos Tauri para Sistema de Recomendação v3.0
 //!
 //! Faz JOIN com game_details para obter genres, tags categorizadas e series
+//! Utiliza abordagem híbrida: perfil do usuário + collaborative filtering
+//! Permite configuração de filtros (playtime), pesos personalizados, feedback (blacklist)
+//! Retorna razões detalhadas para cada recomendação
 
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::models::Game;
 use crate::services::recommendation::{
-    calculate_user_profile, parse_release_year, rank_games, score_game, GameWithDetails,
+    calculate_user_profile, parse_release_year, rank_games_hybrid, GameWithDetails,
+    RecommendationConfig, RecommendationReason,
 };
-use serde::Serialize;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use tauri::State;
 
-/// Estrutura simplificada de recomendação (game_id + score)
+// === ESTRUTURAS DE DADOS ===
+
+/// Estrutura completa de recomendação para o Frontend
 #[derive(Debug, Serialize)]
 pub struct GameRecommendation {
     pub game_id: String,
     pub score: f32,
+    pub reason: RecommendationReason,
 }
 
+/// Struct auxiliar para input de configuração opcional
+#[derive(Debug, Deserialize)]
+pub struct RecommendationOptions {
+    pub min_playtime: Option<i32>,
+    pub max_playtime: Option<i32>,
+    pub limit: usize,
+    pub ignored_game_ids: Option<Vec<String>>, // Blacklist do feedback
+    pub config: Option<RecommendationConfig>,  // Pesos personalizados
+}
+
+// === COMANDO HÍBRIDO PRINCIPAL ===
+
+/// Comando Híbrido Principal (Usado na Playlist e Home)
+///
+/// Retorna recomendações de jogos baseadas em perfil do usuário + collaborative filtering.
+#[tauri::command]
+pub async fn recommend_hybrid_library(
+    state: State<'_, AppState>,
+    options: RecommendationOptions,
+) -> Result<Vec<GameRecommendation>, AppError> {
+    // 1. Busca todos os jogos
+    let games_with_details = fetch_all_games_with_details(&state)?;
+
+    // 2. Prepara Blacklist
+    let ignored_ids: HashSet<String> = options
+        .ignored_game_ids
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
+
+    // 3. Calcula Perfil (Ignorando jogos da blacklist)
+    let profile = calculate_user_profile(&games_with_details, &ignored_ids);
+
+    // 4. Calcula Collaborative Filtering
+    let (cf_scores, _) = crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
+
+    // 5. Filtra Candidatos (Backlog)
+    let min = options.min_playtime.unwrap_or(0);
+    let max = options.max_playtime.unwrap_or(999999);
+
+    let candidates: Vec<_> = games_with_details
+        .into_iter()
+        .filter(|g| {
+            let pt = g.game.playtime.unwrap_or(0);
+            pt >= min && pt <= max
+        })
+        .collect();
+
+    // 6. Configuração (Usa padrão se não fornecida)
+    let config = options.config.unwrap_or_default();
+
+    // 7. Executa Rankeamento Híbrido com Feedback
+    let ranked = rank_games_hybrid(&profile, &candidates, &cf_scores, &ignored_ids, config);
+
+    // 8. Formata Resposta
+    let result = ranked
+        .into_iter()
+        .take(options.limit)
+        .map(|(g, score, reason)| GameRecommendation {
+            game_id: g.game.id,
+            score,
+            reason,
+        })
+        .collect();
+
+    Ok(result)
+}
+
+// === COMANDOS ESPECÍFICOS ===
+
+/// Recomendação Content-Based Pura
+#[tauri::command]
+pub async fn recommend_from_library(
+    state: State<'_, AppState>,
+    min_playtime: Option<i32>,
+    max_playtime: Option<i32>,
+    limit: usize,
+) -> Result<Vec<GameRecommendation>, AppError> {
+    let games_with_details = fetch_all_games_with_details(&state)?;
+
+    // Nota: Para CB puro ignora a blacklist
+    let ignored_ids = HashSet::new();
+
+    let profile = calculate_user_profile(&games_with_details, &ignored_ids);
+
+    let min = min_playtime.unwrap_or(0);
+    let max = max_playtime.unwrap_or(999999);
+
+    let candidates: Vec<_> = games_with_details
+        .into_iter()
+        .filter(|g| {
+            let pt = g.game.playtime.unwrap_or(0);
+            pt >= min && pt <= max
+        })
+        .collect();
+
+    // Usa config padrão
+    let config = RecommendationConfig::default();
+
+    let ranked =
+        crate::services::recommendation::rank_games_content_based(&profile, &candidates, &config);
+
+    let result = ranked
+        .into_iter()
+        .take(limit)
+        .map(|(g, score, reason)| GameRecommendation {
+            game_id: g.game.id,
+            score,
+            reason,
+        })
+        .collect();
+
+    Ok(result)
+}
+
+/// Recomendação Colaborativa Pura
+#[tauri::command]
+pub async fn recommend_collaborative_library(
+    state: State<'_, AppState>,
+    min_playtime: Option<i32>,
+    max_playtime: Option<i32>,
+    limit: usize,
+) -> Result<Vec<GameRecommendation>, AppError> {
+    let games_with_details = fetch_all_games_with_details(&state)?;
+
+    // CF não depende do profile, apenas dos scores pré-calculados
+    let (cf_scores, stats) =
+        crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
+
+    if stats.games_with_cf_match == 0 {
+        return Ok(vec![]);
+    }
+
+    let min = min_playtime.unwrap_or(0);
+    let max = max_playtime.unwrap_or(999999);
+
+    let candidates: Vec<_> = games_with_details
+        .into_iter()
+        .filter(|g| {
+            let pt = g.game.playtime.unwrap_or(0);
+            pt >= min && pt <= max
+        })
+        .collect();
+
+    let ranked = crate::services::recommendation::rank_games_collaborative(&candidates, &cf_scores);
+
+    let result = ranked
+        .into_iter()
+        .take(limit)
+        .map(|(g, score, reason)| GameRecommendation {
+            game_id: g.game.id,
+            score,
+            reason,
+        })
+        .collect();
+
+    Ok(result)
+}
+
+// === HELPER FUNCTIONS ===
+
 /// Retorna o perfil do usuário formatado para o frontend.
+///
 /// Converte TagKey para formato "category:slug" para facilitar uso no frontend.
 /// Tags são retornadas como Record<string, number> no formato "category:slug"
 #[tauri::command]
 pub fn get_user_profile(state: State<AppState>) -> Result<serde_json::Value, AppError> {
     let games = fetch_all_games_with_details(&state)?;
-    let profile = calculate_user_profile(&games);
+    let ignored_ids = HashSet::new();
+    let profile = calculate_user_profile(&games, &ignored_ids);
 
-    // Converte tags para formato mais amigável: "category:slug"
     let tags_formatted: HashMap<String, f32> = profile
         .tags
         .into_iter()
@@ -53,167 +222,9 @@ pub fn get_user_profile(state: State<AppState>) -> Result<serde_json::Value, App
     }))
 }
 
-/// Ranqueia jogos da biblioteca do usuário baseado em afinidade
-#[tauri::command]
-pub fn recommend_from_library(
-    state: State<AppState>,
-    min_playtime: Option<i32>,
-    max_playtime: Option<i32>,
-    limit: Option<usize>,
-) -> Result<Vec<GameRecommendation>, AppError> {
-    let all_games = fetch_all_games_with_details(&state)?;
-    let profile = calculate_user_profile(&all_games);
-
-    // Filtra jogos candidatos (pouco jogados)
-    let min = min_playtime.unwrap_or(0);
-    let max = max_playtime.unwrap_or(60); // Default 60 min (1h)
-
-    let candidates: Vec<GameWithDetails> = all_games
-        .into_iter()
-        .filter(|g| {
-            let playtime = g.game.playtime.unwrap_or(0);
-            playtime >= min && playtime <= max
-        })
-        .collect();
-
-    if candidates.is_empty() {
-        return Ok(vec![]);
-    }
-
-    let mut ranked = rank_games(&profile, &candidates);
-
-    // Limita quantidade de resultados
-    if let Some(lim) = limit {
-        ranked.truncate(lim);
-    }
-
-    // Converte para formato simplificado
-    let result: Vec<GameRecommendation> = ranked
-        .into_iter()
-        .map(|(game, score)| GameRecommendation {
-            game_id: game.game.id,
-            score,
-        })
-        .collect();
-
-    Ok(result)
-}
-
-/// Retorna jogos da biblioteca do usuário baseados em scores CF calculados a partir do índice.
-#[tauri::command]
-pub async fn recommend_collaborative_library(
-    state: State<'_, AppState>,
-    min_playtime: Option<i32>,
-    max_playtime: Option<i32>,
-    limit: usize,
-) -> Result<Vec<GameRecommendation>, AppError> {
-    // 1. Busca todos os jogos com detalhes
-    let games_with_details = fetch_all_games_with_details(&state)?;
-
-    // 2. Calcula os scores CF baseados no histórico do usuário
-    // (Usa a função existente no cf_aggregator)
-    let (cf_scores, stats) =
-        crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
-
-    // Se não houver matches suficientes, retorna vazio para não mostrar seção "quebrada"
-    if stats.games_with_cf_match == 0 {
-        return Ok(vec![]);
-    }
-
-    // 3. Filtra candidatos (Backlog: jogos pouco jogados)
-    let min = min_playtime.unwrap_or(0);
-    let max = max_playtime.unwrap_or(999999);
-
-    let candidates: Vec<_> = games_with_details
-        .into_iter()
-        .filter(|g| {
-            let pt = g.game.playtime.unwrap_or(0);
-            pt >= min && pt <= max
-        })
-        .collect();
-
-    // 4. Ranqueia usando a NOVA função Pura (CF Only)
-    let ranked = crate::services::recommendation::rank_games_collaborative(&candidates, &cf_scores);
-
-    // 5. Formata retorno
-    let result = ranked
-        .into_iter()
-        .take(limit)
-        .map(|(g, score)| GameRecommendation {
-            game_id: g.game.id,
-            score,
-        })
-        .collect();
-
-    Ok(result)
-}
-
-/// Recomenda jogos usando uma abordagem HÍBRIDA (Content-Based + Collaborative).
-#[tauri::command]
-pub async fn recommend_hybrid_library(
-    state: State<'_, AppState>,
-    min_playtime: Option<i32>,
-    max_playtime: Option<i32>,
-    limit: usize,
-) -> Result<Vec<GameRecommendation>, AppError> {
-    // 1. Busca todos os jogos
-    let games_with_details = fetch_all_games_with_details(&state)?;
-
-    // 2. Calcula o Perfil do Usuário (Content-Based)
-    let profile = calculate_user_profile(&games_with_details);
-
-    // 3. Calcula os scores Sociais (Collaborative Filtering)
-    // Nota: Mesmo que o CF falhe ou retorne vazio, o híbrido funciona (cai para CB puro)
-    let (cf_scores, _) = crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
-
-    // 4. Filtra candidatos (Backlog: jogos pouco jogados)
-    let min = min_playtime.unwrap_or(0);
-    let max = max_playtime.unwrap_or(999999);
-
-    let candidates: Vec<_> = games_with_details
-        .into_iter()
-        .filter(|g| {
-            let pt = g.game.playtime.unwrap_or(0);
-            pt >= min && pt <= max
-        })
-        .collect();
-
-    // 5. Ranqueia usando a função HÍBRIDA que você já criou
-    // Ela usa pesos: 65% CB + 35% CF (conforme recommendation.rs)
-    let ranked =
-        crate::services::recommendation::rank_games_hybrid(&profile, &candidates, &cf_scores);
-
-    // 6. Formata retorno
-    let result = ranked
-        .into_iter()
-        .take(limit)
-        .map(|(g, score)| GameRecommendation {
-            game_id: g.game.id,
-            score,
-        })
-        .collect();
-
-    Ok(result)
-}
-
-/// Calcula o score de afinidade de um jogo específico
-#[tauri::command]
-pub fn get_game_affinity(state: State<AppState>, game_id: String) -> Result<f32, AppError> {
-    let all_games = fetch_all_games_with_details(&state)?;
-    let profile = calculate_user_profile(&all_games);
-
-    let game = all_games
-        .into_iter()
-        .find(|g| g.game.id == game_id)
-        .ok_or_else(|| AppError::NotFound(format!("Jogo {} não encontrado", game_id)))?;
-
-    let score = score_game(&profile, &game);
-    Ok(score)
-}
-
-// === HELPER FUNCTIONS - JOIN COM game_details ===
-
 /// Busca todos os jogos COM detalhes (JOIN com game_details)
+///
+/// Retorna lista de GameWithDetails
 fn fetch_all_games_with_details(state: &State<AppState>) -> Result<Vec<GameWithDetails>, AppError> {
     let conn = state.library_db.lock()?;
 

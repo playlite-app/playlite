@@ -110,9 +110,9 @@ export default function StandardGameCard({
           )}
         </div>
 
-        {/* Badge (Canto Superior Esquerdo) */}
+        {/* Badge (Canto Superior Esquerdo) - z-30 para ficar acima do overlay */}
         {badge && (
-          <div className="absolute top-2 left-2 z-10 rounded-full border border-purple-400/30 bg-purple-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg backdrop-blur-md">
+          <div className="absolute top-2 left-2 z-30 rounded-full border border-purple-400/30 bg-purple-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg backdrop-blur-md">
             {badge}
           </div>
         )}

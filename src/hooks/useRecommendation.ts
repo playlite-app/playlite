@@ -1,19 +1,35 @@
 import { invoke } from '@tauri-apps/api/core';
+import { Store } from '@tauri-apps/plugin-store';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Game, UserPreferenceVector } from '@/types';
+import {
+  RecommendationConfig,
+  RecommendationReason,
+  RecommendedGame,
+} from '@/types/recommendation';
 
+// Nome do arquivo de persistência
+const STORE_FILENAME = 'recommendation.store';
+
+// Estrutura do resultado bruto que vem do Rust
 interface GameRecommendationResult {
   game_id: string;
   score: number;
+  reason: RecommendationReason;
 }
 
 interface UseRecommendationProps {
   profileCache?: UserPreferenceVector | null;
   setProfileCache?: (profile: UserPreferenceVector) => void;
   allGames?: Game[];
-  enableContentBased?: boolean; // Habilita recomendações CB
-  enableCollaborative?: boolean; // Habilita recomendações CF
+
+  // Flags de ativação
+  enableContentBased?: boolean;
+  enableCollaborative?: boolean;
+  enableHybrid?: boolean;
+
+  // Parâmetros de filtro
   contentBasedParams?: {
     minPlaytime?: number;
     maxPlaytime?: number;
@@ -24,12 +40,7 @@ interface UseRecommendationProps {
     maxPlaytime?: number;
     limit?: number;
   };
-  enableHybrid?: boolean; // Habilita recomendações híbridas (CB + CF)
-  hybridParams?: {
-    minPlaytime?: number;
-    maxPlaytime?: number;
-    limit?: number;
-  };
+  hybridParams?: { minPlaytime?: number; maxPlaytime?: number; limit?: number };
 }
 
 export function useRecommendation({
@@ -39,43 +50,67 @@ export function useRecommendation({
   enableContentBased = true,
   enableCollaborative = true,
   enableHybrid = false,
-  contentBasedParams = {
-    minPlaytime: 0,
-    maxPlaytime: 300,
-    limit: 10,
-  },
-  collaborativeParams = {
-    minPlaytime: 0,
-    maxPlaytime: 120,
-    limit: 10,
-  },
-  hybridParams = {
-    minPlaytime: 0,
-    maxPlaytime: 120,
-    limit: 15,
-  },
+  contentBasedParams = { minPlaytime: 0, maxPlaytime: 300, limit: 10 },
+  collaborativeParams = { minPlaytime: 0, maxPlaytime: 120, limit: 10 },
+  hybridParams = { minPlaytime: 0, maxPlaytime: 120, limit: 15 },
 }: UseRecommendationProps = {}) {
+  // Estados de dados
   const [profile, setProfile] = useState<UserPreferenceVector | null>(
     profileCache || null
   );
+  const [recommendations, setRecommendations] = useState<RecommendedGame[]>([]);
+  const [collaborativeRecs, setCollaborativeRecs] = useState<RecommendedGame[]>(
+    []
+  );
+  const [hybridRecs, setHybridRecs] = useState<RecommendedGame[]>([]);
 
-  const [recommendations, setRecommendations] = useState<Game[]>([]);
-  const [collaborativeRecs, setCollaborativeRecs] = useState<Game[]>([]);
-  const [hybridRecs, setHybridRecs] = useState<Game[]>([]);
+  // Estados de controle
+  const [ignoredIds, setIgnoredIds] = useState<string[]>([]);
+  const [config, setConfig] = useState<RecommendationConfig>({
+    content_weight: 0.65,
+    collaborative_weight: 0.35,
+    age_decay: 0.95,
+    favor_series: true,
+  });
+
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
-  const [loading, setLoading] = useState(!profileCache);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(!profileCache);
+  const [storeReady, setStoreReady] = useState(false);
 
-  // 1. Carregar Perfil do Usuário
+  // 1. Inicializar Store (Carregar Blacklist e Configs)
+  useEffect(() => {
+    const initStore = async () => {
+      try {
+        const store = await Store.load(STORE_FILENAME);
+        const savedIgnored = await store.get<string[]>('ignored_ids');
+
+        if (savedIgnored) setIgnoredIds(savedIgnored);
+
+        const savedConfig =
+          await store.get<RecommendationConfig>('user_config');
+
+        if (savedConfig) setConfig(savedConfig);
+      } catch (e) {
+        console.warn('Store de recomendação não encontrada ou erro:', e);
+      } finally {
+        setStoreReady(true);
+      }
+    };
+    initStore();
+  }, []);
+
+  // 2. Carregar Perfil
   useEffect(() => {
     if (profileCache) {
-      setLoading(false);
+      setLoadingProfile(false);
 
       return;
     }
 
+    if (!storeReady) return;
+
     async function loadProfile() {
-      setLoading(true);
+      setLoadingProfile(true);
 
       try {
         const data = await invoke<UserPreferenceVector>('get_user_profile');
@@ -84,25 +119,42 @@ export function useRecommendation({
         if (setProfileCache) setProfileCache(data);
       } catch (error) {
         console.error('Falha ao carregar perfil:', error);
-        setError('Erro ao carregar perfil de recomendações');
       } finally {
-        setLoading(false);
+        setLoadingProfile(false);
       }
     }
     loadProfile();
-  }, [profileCache, setProfileCache]);
+  }, [profileCache, setProfileCache, storeReady]);
 
-  // 2. Buscar Recomendações no Backend
+  // 3. Buscar Recomendações
   const refreshRecommendations = useCallback(async () => {
-    if (allGames.length === 0) return;
+    if (allGames.length === 0 || !storeReady) return;
 
     setLoadingRecommendations(true);
-    setError(null);
+
+    // Helper para transformar dados do Rust em objetos de jogo completos
+    const mapToGame = (
+      results: GameRecommendationResult[]
+    ): RecommendedGame[] => {
+      return results
+        .map(rec => {
+          const game = allGames.find(g => g.id === rec.game_id);
+
+          if (!game) return null;
+
+          return {
+            ...game,
+            matchScore: rec.score,
+            reason: rec.reason,
+          } as RecommendedGame;
+        })
+        .filter((g): g is RecommendedGame => g !== null);
+    };
 
     try {
-      // 1. Recomendação Content-Based (CB) - "Recomendados para você"
+      // A. Content-Based
       if (enableContentBased) {
-        const cbResults = await invoke<GameRecommendationResult[]>(
+        const res = await invoke<GameRecommendationResult[]>(
           'recommend_from_library',
           {
             minPlaytime: contentBasedParams.minPlaytime,
@@ -111,19 +163,15 @@ export function useRecommendation({
           }
         );
 
-        const mappedCb = cbResults
-          .map(rec => allGames.find(g => g.id === rec.game_id))
-          .filter((g): g is Game => !!g);
-
-        setRecommendations(mappedCb);
-      } else {
-        setRecommendations([]);
+        // Filtro Cliente: ignora Blacklist
+        const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));
+        setRecommendations(mapped);
       }
 
-      // 2. Recomendação Collaborative Filtering (CF) - "Jogadores como você gostaram"
+      // B. Collaborative
       if (enableCollaborative) {
         try {
-          const cfResults = await invoke<GameRecommendationResult[]>(
+          const res = await invoke<GameRecommendationResult[]>(
             'recommend_collaborative_library',
             {
               minPlaytime: collaborativeParams.minPlaytime,
@@ -132,80 +180,136 @@ export function useRecommendation({
             }
           );
 
-          const mappedCf = cfResults
-            .map(rec => allGames.find(g => g.id === rec.game_id))
-            .filter((g): g is Game => !!g);
-
-          setCollaborativeRecs(mappedCf);
-        } catch (cfError) {
-          // CF é opcional - se falhar, apenas loga e mantém vazio
-          console.warn('CF não disponível (usando apenas CB):', cfError);
+          // Filtro Cliente: ignora Blacklist
+          const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));
+          setCollaborativeRecs(mapped);
+        } catch (e) {
+          console.warn('CF indisponível:', e);
           setCollaborativeRecs([]);
         }
-      } else {
-        setCollaborativeRecs([]);
       }
 
-      // 3. Recomendação Híbrida
+      // C. Híbrido (Para Playlist - Sidebar)
       if (enableHybrid) {
         try {
-          const hybridResults = await invoke<GameRecommendationResult[]>(
+          const res = await invoke<GameRecommendationResult[]>(
             'recommend_hybrid_library',
             {
-              minPlaytime: hybridParams.minPlaytime,
-              maxPlaytime: hybridParams.maxPlaytime,
-              limit: hybridParams.limit,
+              options: {
+                min_playtime: hybridParams.minPlaytime,
+                max_playtime: hybridParams.maxPlaytime,
+                limit: hybridParams.limit,
+                ignored_game_ids: ignoredIds, // Remove jogos na blacklist
+                config: config,
+              },
             }
           );
-
-          const mappedHybrid = hybridResults
-            .map(rec => allGames.find(g => g.id === rec.game_id))
-            .filter((g): g is Game => !!g);
-
-          setHybridRecs(mappedHybrid);
-        } catch (hError) {
-          console.warn('Híbrido não disponível:', hError);
+          setHybridRecs(mapToGame(res));
+        } catch (e) {
+          console.warn('Híbrido indisponível:', e);
           setHybridRecs([]);
         }
-      } else {
-        setHybridRecs([]);
       }
     } catch (error) {
-      console.error('Erro ao buscar recomendações:', error);
-      setError('Erro ao buscar recomendações');
-      setRecommendations([]);
-      setCollaborativeRecs([]);
-      setHybridRecs([]);
+      console.error('Erro geral na recomendação:', error);
     } finally {
       setLoadingRecommendations(false);
     }
   }, [
     allGames,
+    storeReady,
+    ignoredIds,
+    config,
     enableContentBased,
     enableCollaborative,
     enableHybrid,
-    contentBasedParams.minPlaytime,
-    contentBasedParams.maxPlaytime,
+    // Deps profundas dos params
     contentBasedParams.limit,
-    collaborativeParams.minPlaytime,
-    collaborativeParams.maxPlaytime,
+    contentBasedParams.maxPlaytime,
+    contentBasedParams.minPlaytime,
     collaborativeParams.limit,
-    hybridParams.minPlaytime,
-    hybridParams.maxPlaytime,
+    collaborativeParams.maxPlaytime,
+    collaborativeParams.minPlaytime,
     hybridParams.limit,
+    hybridParams.maxPlaytime,
+    hybridParams.minPlaytime,
   ]);
 
   useEffect(() => {
     refreshRecommendations();
   }, [refreshRecommendations]);
 
+  // === AÇÕES DE FEEDBACK ===
+
+  /**
+   * Marca jogo como "Não Útil" e remove de todas as listas visualmente
+   */
+  const markAsNotUseful = async (gameId: string) => {
+    // 1. Optimistic Update (Remove da UI instantaneamente)
+    setRecommendations(prev => prev.filter(g => g.id !== gameId));
+    setCollaborativeRecs(prev => prev.filter(g => g.id !== gameId));
+    setHybridRecs(prev => prev.filter(g => g.id !== gameId));
+
+    // 2. Atualiza estado e persiste
+    const newIgnored = [...ignoredIds, gameId];
+    setIgnoredIds(newIgnored);
+
+    try {
+      const store = await Store.load(STORE_FILENAME);
+      await store.set('ignored_ids', newIgnored);
+      await store.save();
+    } catch (e) {
+      console.error('Erro ao salvar blacklist:', e);
+    }
+  };
+
+  /**
+   * Reseta todo o feedback negativo (Limpa blacklist)
+   */
+  const resetFeedback = async () => {
+    setIgnoredIds([]); // Limpa estado local
+
+    try {
+      const store = await Store.load(STORE_FILENAME);
+      await store.set('ignored_ids', []);
+      await store.save();
+      refreshRecommendations(); // Força recarga do backend
+    } catch (e) {
+      console.error('Erro ao resetar feedback:', e);
+    }
+  };
+
+  /**
+   * Atualiza configurações de pesos
+   */
+  const updateConfig = async (newConfig: RecommendationConfig) => {
+    setConfig(newConfig);
+
+    try {
+      const store = await Store.load(STORE_FILENAME);
+      await store.set('user_config', newConfig);
+      await store.save();
+    } catch (e) {
+      console.error('Erro ao salvar config:', e);
+    }
+  };
+
   return {
     profile,
-    loading,
-    recommendations,
-    collaborativeRecs,
-    hybridRecs,
+    loading: loadingProfile || !storeReady,
     loadingRecommendations,
-    error,
+
+    // Listas de Jogos
+    recommendations, // Content-Based
+    collaborativeRecs, // Collaborative
+    hybridRecs, // Hybrid
+    ignoredIds, // Blacklist
+
+    // Ações e Config
+    markAsNotUseful,
+    updateConfig,
+    config,
+    resetFeedback,
+    refreshRecommendations,
   };
 }

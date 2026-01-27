@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
+// Importe o tipo correto
 import { trendingService } from '../services/trendingService';
 import { useRecommendation } from './useRecommendation';
 
@@ -23,11 +24,11 @@ export function useHome({
   const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
   const [loadingTrending, setLoadingTrending] = useState(false);
 
-  // Recomendações (Atualizado para retornar CB e CF)
+  // Integração com o Hook de Recomendação
   const {
     profile,
-    recommendations: backlogRecommendations, // CB (Perfil)
-    collaborativeRecs, // CF (Social)
+    recommendations: backlogRecommendations, // Content-Based
+    collaborativeRecs, // Collaborative
     loadingRecommendations,
     loading: profileLoading,
   } = useRecommendation({
@@ -36,13 +37,12 @@ export function useHome({
     allGames: library,
     enableContentBased: true,
     enableCollaborative: true,
-    // Configuração CB: Backlog geral
+    enableHybrid: false, // Home não usa a lista unificada (apenas Playlist)
     contentBasedParams: {
       minPlaytime: 0,
       maxPlaytime: 300,
       limit: 5,
     },
-    // Configuração CF: Sugestões rápidas
     collaborativeParams: {
       minPlaytime: 0,
       maxPlaytime: 120,
@@ -140,8 +140,8 @@ export function useHome({
   return {
     stats,
     continuePlaying,
-    backlogRecommendations, // Content-Based
-    collaborativeRecs, // Collaborative Filtering
+    backlogRecommendations, // Retorna RecommendedGame[]
+    collaborativeRecs, // Retorna RecommendedGame[]
     loadingRecommendations,
     mostPlayed,
     topGenres,

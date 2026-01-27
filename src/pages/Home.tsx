@@ -18,6 +18,7 @@ import { useState } from 'react';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import Hero from '@/components/Hero';
+import { RecommendationTooltip } from '@/components/RecommendationTooltip';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
@@ -39,15 +40,7 @@ interface HomeProps {
   setProfileCache: (profile: UserPreferenceVector) => void;
 }
 
-export default function Home({
-  games,
-  trendingCache,
-  setTrendingCache,
-  profileCache,
-  setProfileCache,
-  onGameClick,
-  onChangeTab,
-}: HomeProps) {
+export default function Home(props: HomeProps) {
   const {
     stats,
     continuePlaying,
@@ -58,32 +51,37 @@ export default function Home({
     profileLoading,
     trending,
     loadingRecommendations,
-  } = useHome({
-    games,
-    trendingCache,
-    setTrendingCache,
-    profileCache,
-    setProfileCache,
-  });
+  } = useHome(props);
 
   const [heroIndex, setHeroIndex] = useState(0);
+
+  // Helper para imagens
+  const getHeroImage = (game: Game | RawgGame) =>
+    ('coverUrl' in game ? game.coverUrl : null) ||
+    ('backgroundImage' in game ? game.backgroundImage : null) ||
+    '';
+
+  // Helper normalizar gêneros
+  const getGenresList = (game: Game | RawgGame): string[] => {
+    if (game.genres && Array.isArray(game.genres)) {
+      return game.genres.map((g: { name: string }) => g.name);
+    }
+
+    if ('genres' in game && typeof game.genres === 'string') {
+      return game.genres.split(',').map((g: string) => g.trim());
+    }
+
+    return [];
+  };
+
+  // Helper isLocalGame
+  const isLocalGame = (game: Game | RawgGame): game is Game =>
+    'playtime' in game;
 
   if (profileLoading) {
     return (
       <div className="animate-in fade-in flex h-full flex-1 flex-col items-center justify-center gap-4 duration-700">
-        <div className="relative flex items-center justify-center">
-          {/* Glow Effect no fundo */}
-          <div className="bg-primary/20 absolute inset-0 h-12 w-12 rounded-full blur-xl" />
-          <Loader2 className="text-primary relative z-10 h-10 w-10 animate-spin" />
-        </div>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <p className="text-foreground text-lg font-semibold tracking-tight">
-            Playlite
-          </p>
-          <p className="text-muted-foreground animate-pulse text-sm">
-            Carregando sua Central...
-          </p>
-        </div>
+        <Loader2 className="text-primary h-10 w-10 animate-spin" />
       </div>
     );
   }
@@ -94,38 +92,14 @@ export default function Home({
     ...(trending || []).slice(0, 2),
     mostPlayed[0],
   ].filter(Boolean);
-
   const currentHero = heroSlides[heroIndex] || mostPlayed[0];
   const nextHero = () => setHeroIndex(prev => (prev + 1) % heroSlides.length);
   const prevHero = () =>
     setHeroIndex(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
 
-  // Helper para normalizar gêneros (Home mistura tipos Game e RawgGame)
-  const getGenresList = (game: Game | RawgGame): string[] => {
-    if (game.genres && Array.isArray(game.genres)) {
-      return game.genres.map((g: { name: string }) => g.name); // RAWG
-    }
-
-    if ('genres' in game && typeof game.genres === 'string') {
-      return game.genres.split(',').map((g: string) => g.trim()); // Local
-    }
-
-    return [];
-  };
-
-  // Helper para imagens e nomes
-  const getHeroImage = (game: Game | RawgGame) =>
-    ('coverUrl' in game ? game.coverUrl : null) ||
-    ('backgroundImage' in game ? game.backgroundImage : null) ||
-    '';
-
-  // Verifica se é um jogo local (possui playtime)
-  const isLocalGame = (game: Game | RawgGame): game is Game =>
-    'playtime' in game;
-
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto pb-10">
-      {/* Hero Section */}
+      {/* Seção: Hero component */}
       {currentHero && (
         <Hero
           title={currentHero.name}
@@ -140,7 +114,6 @@ export default function Home({
           showNavigation={heroSlides.length > 1}
           onNext={nextHero}
           onPrev={prevHero}
-          // Badge Dinâmica da Home
           badges={
             <div className="bg-primary/20 text-primary-foreground border-primary/30 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
               {backlogRecommendations.some(g => g.id === currentHero.id) && (
@@ -160,12 +133,10 @@ export default function Home({
               )}
             </div>
           }
-          // Ação Dinâmica (Local vs Remoto)
           actions={
             isLocalGame(currentHero) ? (
               <Button onClick={() => launchGame(currentHero)}>
-                <Play size={18} />
-                <p className="font-bold">Jogar Agora</p>
+                <Play size={18} /> <p className="font-bold">Jogar Agora</p>
               </Button>
             ) : (
               <Button
@@ -181,11 +152,13 @@ export default function Home({
           }
         />
       )}
+
       <Separator className={'mb-3'} />
-      {/* Conteúdo Principal da Home */}
+
       <div className="relative z-20 mx-auto max-w-7xl space-y-10 p-8">
-        {/* Stats Cards e Conquistas */}
+        {/* Stats Cards e Achievements */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* StatCards */}
           <StatCard
             icon={<Library size={24} />}
             label="Total de Jogos"
@@ -215,18 +188,18 @@ export default function Home({
             bg="bg-yellow-500/10"
           />
         </div>
+        {/* Achievements Component */}
         <Achievements />
 
-        {/* Continue Jogando */}
+        {/* Seção: Continue Jogando */}
         {continuePlaying.length > 0 && (
           <section>
+            {/* Header e Grid de Continue Jogando */}
             <div className="mb-6 flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
-                  <Clock size={24} />
-                </div>
-                <h2 className="text-2xl font-bold">Continue Jogando</h2>
+              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+                <Clock size={24} />
               </div>
+              <h2 className="text-2xl font-bold">Continue Jogando</h2>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {continuePlaying.map(game => (
@@ -235,8 +208,7 @@ export default function Home({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   subtitle={`${formatTime(game.playtime)} jogadas`}
-                  onClick={() => onGameClick(game)}
-                  // Ação de Play no Hover
+                  onClick={() => props.onGameClick(game)}
                   actions={
                     <ActionButton
                       icon={Play}
@@ -251,7 +223,7 @@ export default function Home({
           </section>
         )}
 
-        {/* Recomendados para você - Content-based */}
+        {/* Seção: content-based */}
         <section className="mb-12">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -263,9 +235,9 @@ export default function Home({
               </div>
             </div>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => onChangeTab('libraries')}
+              onClick={() => props.onChangeTab('libraries')}
             >
               Ver Tudo
             </Button>
@@ -283,8 +255,15 @@ export default function Home({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   subtitle={game.genres?.split(',')[0]}
-                  badge="Recomendado"
-                  onClick={() => onGameClick(game)}
+                  onClick={() => props.onGameClick(game)}
+                  badge={
+                    <RecommendationTooltip
+                      reason={game.reason}
+                      score={game.matchScore}
+                    >
+                      <span>Recomendado</span>
+                    </RecommendationTooltip>
+                  }
                   actions={
                     <ActionButton
                       icon={Play}
@@ -305,7 +284,7 @@ export default function Home({
           )}
         </section>
 
-        {/* Jogadores como você - Collaborative Filtering */}
+        {/* Seção: Collaborative Filtering */}
         {collaborativeRecs.length > 0 && (
           <section className="animate-in fade-in slide-in-from-bottom-4 mb-12 duration-700">
             <div className="mb-6 flex items-center gap-2">
@@ -326,8 +305,15 @@ export default function Home({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   subtitle={game.genres?.split(',')[0]}
-                  badge="Community"
-                  onClick={() => onGameClick(game)}
+                  onClick={() => props.onGameClick(game)}
+                  badge={
+                    <RecommendationTooltip
+                      reason={game.reason}
+                      score={game.matchScore}
+                    >
+                      <span>Community</span>
+                    </RecommendationTooltip>
+                  }
                   actions={
                     <ActionButton
                       icon={Play}
@@ -342,7 +328,7 @@ export default function Home({
           </section>
         )}
 
-        {/* Grid Inferior (Mais Jogados + Gêneros) - Estatísticas */}
+        {/* Estatísticas e Gráficos */}
         <div className="mb-6 flex items-center gap-2">
           <div className="rounded-lg bg-yellow-500/10 p-2 text-yellow-400">
             <ChartBar size={24} />
@@ -350,7 +336,7 @@ export default function Home({
           <h2 className="text-2xl font-bold">Estatísticas</h2>
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-8">
-          {/* Mais Jogados */}
+          {/* Mais Jogados Card */}
           <div className="bg-card border-border rounded-xl border p-6 lg:col-span-2">
             <div className="mb-3 flex items-center gap-2">
               <TrendingUp size={20} className="text-primary" />
@@ -395,7 +381,7 @@ export default function Home({
               ))}
             </div>
           </div>
-          {/* Gêneros + Jogados */}
+          {/* Gêneros Card */}
           <div className="bg-card border-border col-span-1 h-full rounded-xl border p-6">
             <div className="mb-3 flex items-center gap-2">
               <Gamepad2 size={20} className="text-primary" />
