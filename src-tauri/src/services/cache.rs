@@ -3,15 +3,13 @@
 //! Gerencia cache persistente em SQLite para respostas de RAWG e Steam,
 //! reduzindo chamadas desnecessárias e melhorando performance.
 
+use crate::constants::{
+    CACHE_RAWG_GAME_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS,
+    CACHE_STEAM_STORE_TTL_DAYS,
+};
 use rusqlite::{params, Connection};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, warn};
-
-// TTL (Time To Live) em dias - GRANULAR por tipo de dado
-const RAWG_GAME_TTL_DAYS: i64 = 30; // Metadados gerais da RAWG
-const STEAM_STORE_TTL_DAYS: i64 = 30; // Dados da loja Steam (mudam pouco)
-const STEAM_REVIEWS_TTL_DAYS: i64 = 7; // Reviews Steam (atualizam frequentemente)
-const STEAM_PLAYTIME_TTL_DAYS: i64 = 15; // Playtime médio (muda moderadamente)
 
 /// Inicializa o banco de cache e cria o schema
 pub fn initialize_cache_db(conn: &Connection) -> Result<(), String> {
@@ -48,14 +46,14 @@ fn current_timestamp() -> i64 {
 
 /// Determina TTL baseado no tipo de dado (granular)
 fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
-    if cache_key.starts_with("search_") {
-        RAWG_GAME_TTL_DAYS * 24 * 60 * 60
+    if cache_key.starts_with("rawg_") {
+        CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("store_") {
-        STEAM_STORE_TTL_DAYS * 24 * 60 * 60
+        CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("reviews_") {
-        STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60
+        CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("playtime_") {
-        STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60
+        CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60
     } else {
         7 * 24 * 60 * 60 // default 7 dias
     }
@@ -124,10 +122,10 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
     let now = current_timestamp();
 
     // Diferentes cutoffs para diferentes tipos
-    let rawg_cutoff = now - (RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
-    let store_cutoff = now - (STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
-    let reviews_cutoff = now - (STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
-    let playtime_cutoff = now - (STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
+    let rawg_cutoff = now - (CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
+    let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
+    let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
+    let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
 
     let deleted = conn
         .execute(
@@ -178,10 +176,10 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
         .unwrap_or(0);
 
     let now = current_timestamp();
-    let rawg_cutoff = now - (RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
-    let store_cutoff = now - (STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
-    let reviews_cutoff = now - (STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
-    let playtime_cutoff = now - (STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
+    let rawg_cutoff = now - (CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
+    let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
+    let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
+    let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
 
     let expired: i32 = conn
         .query_row(

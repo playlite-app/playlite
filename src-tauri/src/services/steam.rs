@@ -3,7 +3,10 @@
 //! Unifica funcionalidades da API de Usuário (autenticada) para importar biblioteca
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
-use crate::constants::{REVIEW_API_URL, STEAMSPY_API_URL, STEAM_STORE_API_URL};
+use crate::constants::{
+    REVIEW_API_URL, STEAMSPY_API_URL, STEAM_REVIEWS_TIMEOUT_SECS, STEAM_STORE_API_URL,
+    STEAM_STORE_TIMEOUT_SECS, USER_AGENT_STEAM,
+};
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -193,7 +196,7 @@ pub async fn get_app_details(app_id: &str) -> Result<Option<SteamStoreData>, Str
 
     let response = HTTP_CLIENT
         .get(&url)
-        .timeout(Duration::from_secs(10)) // ← Adicionar
+        .timeout(Duration::from_secs(STEAM_STORE_TIMEOUT_SECS))
         .send()
         .await
         .map_err(|e| format!("Erro requisição Steam Store: {}", e))?;
@@ -430,8 +433,8 @@ pub async fn get_median_playtime(app_id: &str) -> Result<Option<u32>, String> {
 
     let response = HTTP_CLIENT
         .get(&url)
-        .header("User-Agent", "Valve/Steam HTTP Client 1.0")
-        .timeout(Duration::from_secs(5))
+        .header("User-Agent", USER_AGENT_STEAM)
+        .timeout(Duration::from_secs(STEAM_REVIEWS_TIMEOUT_SECS))
         .send()
         .await
         .map_err(|e| e.to_string())?;

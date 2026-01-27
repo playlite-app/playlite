@@ -3,6 +3,7 @@
 //! Fornece funcionalidades para gerar desafios PKCE e iniciar um servidor temporário
 //! para capturar o código de autorização retornado pelo provedor OAuth2.
 
+use crate::constants::OAUTH_CALLBACK_TIMEOUT_SECS;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use rand::{distr::Alphanumeric, Rng};
 use sha2::{Digest, Sha256};
@@ -45,8 +46,10 @@ pub fn wait_for_auth_code(port: u16) -> Result<String, String> {
     let (tx, rx) = mpsc::channel::<String>();
 
     thread::spawn(move || {
-        // Aguarda requisição (Timeout de 2 minutos)
-        if let Ok(Some(request)) = server.recv_timeout(Duration::from_secs(120)) {
+        // Aguarda requisição (Timeout configurável)
+        if let Ok(Some(request)) =
+            server.recv_timeout(Duration::from_secs(OAUTH_CALLBACK_TIMEOUT_SECS))
+        {
             // Parser da URL de callback
             let url_string = format!("http://localhost{}", request.url());
             if let Ok(url) = Url::parse(&url_string) {
@@ -79,6 +82,6 @@ pub fn wait_for_auth_code(port: u16) -> Result<String, String> {
     });
 
     // Aguarda o canal enviar o código
-    rx.recv_timeout(Duration::from_secs(120))
+    rx.recv_timeout(Duration::from_secs(OAUTH_CALLBACK_TIMEOUT_SECS))
         .map_err(|_| "Tempo limite de login excedido.".to_string())
 }

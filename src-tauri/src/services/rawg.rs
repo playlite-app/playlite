@@ -6,6 +6,7 @@
 //! A RAWG é um banco de dados abrangente de jogos que fornece metadados,
 //! ratings, gêneros e outras informações relevantes.
 
+use crate::constants::{RAWG_SEARCH_PAGE_SIZE, RAWG_TRENDING_PAGE_SIZE, RAWG_UPCOMING_PAGE_SIZE};
 use crate::utils::http_client::HTTP_CLIENT;
 use chrono::Datelike;
 use serde::{Deserialize, Serialize};
@@ -120,9 +121,10 @@ pub struct GameDetails {
 /// Substitui a busca da Steam Store na Wishlist e adição manual.
 pub async fn search_games(api_key: &str, query: &str) -> Result<Vec<RawgGame>, String> {
     let url = format!(
-        "https://api.rawg.io/api/games?key={}&search={}&page_size=10",
+        "https://api.rawg.io/api/games?key={}&search={}&page_size={}",
         api_key,
-        urlencoding::encode(query)
+        urlencoding::encode(query),
+        RAWG_SEARCH_PAGE_SIZE
     );
 
     let res = HTTP_CLIENT
@@ -186,8 +188,8 @@ pub async fn fetch_trending_games(api_key: &str) -> Result<Vec<RawgGame>, String
     let last_year = current_year - 1;
 
     let url = format!(
-        "https://api.rawg.io/api/games?key={}&dates={}-01-01,{}-12-31&ordering=-added&page_size=20",
-        api_key, last_year, current_year
+        "https://api.rawg.io/api/games?key={}&dates={}-01-01,{}-12-31&ordering=-added&page_size={}",
+        api_key, last_year, current_year, RAWG_TRENDING_PAGE_SIZE
     );
 
     let res = HTTP_CLIENT
@@ -215,8 +217,8 @@ pub async fn fetch_upcoming_games(api_key: &str) -> Result<Vec<RawgGame>, String
     let date_end = format!("{}-12-31", next_year);
 
     let url = format!(
-        "https://api.rawg.io/api/games?key={}&dates={},{}&ordering=-added&page_size=10",
-        api_key, date_start, date_end
+        "https://api.rawg.io/api/games?key={}&dates={},{}&ordering=-added&page_size={}",
+        api_key, date_start, date_end, RAWG_UPCOMING_PAGE_SIZE
     );
 
     let res = HTTP_CLIENT

@@ -2,6 +2,7 @@
 //!
 //! Executa sem travar a UI e falha silenciosamente em caso de erro.
 
+use crate::constants::{BACKGROUND_TASK_INTERVAL_SECS, STARTUP_DELAY_SECS};
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::services::{cache, itad, steam};
@@ -32,7 +33,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
     // SPAWN: Isso garante que o Frontend continua fluido imediatamente
     tauri::async_runtime::spawn(async move {
         // Pequeno delay inicial para não competir com o boot do banco de dados
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(STARTUP_DELAY_SECS)).await;
 
         let state: State<AppState> = app_clone.state();
 
@@ -42,7 +43,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
         }
 
         // 2. Atualizar Preços da Wishlist (Se cache > 3 dias)
-        sleep(Duration::from_secs(2)).await;
+        sleep(Duration::from_secs(BACKGROUND_TASK_INTERVAL_SECS)).await;
 
         if let Err(e) = refresh_wishlist_prices_background(&app_clone, &state).await {
             warn!("Falha ao atualizar preços: {}", e);

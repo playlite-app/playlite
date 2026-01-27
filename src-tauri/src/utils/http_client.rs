@@ -2,6 +2,7 @@
 //!
 //! Utiliza `reqwest` para criar um cliente com timeout e headers padrão.
 
+use crate::constants::{HTTP_CONNECT_TIMEOUT_SECS, HTTP_REQUEST_TIMEOUT_SECS, USER_AGENT_DEFAULT};
 use reqwest::Client;
 use std::time::Duration;
 
@@ -11,9 +12,9 @@ lazy_static::lazy_static! {
 
 fn create_client() -> Client {
     Client::builder()
-        .timeout(Duration::from_secs(30))
-        .connect_timeout(Duration::from_secs(10))
-        .user_agent("GameManager/0.1.0")
+        .timeout(Duration::from_secs(HTTP_REQUEST_TIMEOUT_SECS))
+        .connect_timeout(Duration::from_secs(HTTP_CONNECT_TIMEOUT_SECS))
+        .user_agent(USER_AGENT_DEFAULT)
         .build()
         .expect("Failed to create HTTP client")
 }
