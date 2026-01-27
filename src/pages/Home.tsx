@@ -14,7 +14,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import Hero from '@/components/Hero';
