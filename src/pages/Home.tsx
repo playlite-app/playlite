@@ -308,19 +308,14 @@ export default function Home({
         {/* Jogadores como você - Collaborative Filtering */}
         {collaborativeRecs.length > 0 && (
           <section className="animate-in fade-in slide-in-from-bottom-4 mb-12 duration-700">
-            <Separator className="mb-8 opacity-50" />
-
             <div className="mb-6 flex items-center gap-2">
-              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+              <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
                 <Users size={24} />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">
                   Jogadores como você gostaram
                 </h2>
-                <p className="text-muted-foreground text-sm">
-                  Tendências na comunidade Steam para o seu perfil
-                </p>
               </div>
             </div>
 
@@ -330,13 +325,8 @@ export default function Home({
                   key={`cf-${game.id}`}
                   title={game.name}
                   coverUrl={game.coverUrl}
-                  subtitle="Popular na Comunidade"
-                  // Badge Azul
-                  badge={
-                    <span className="flex items-center gap-1 rounded border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-xs font-bold text-blue-400">
-                      <Users size={10} /> Community
-                    </span>
-                  }
+                  subtitle={game.genres?.split(',')[0]}
+                  badge="Community"
                   onClick={() => onGameClick(game)}
                   actions={
                     <ActionButton

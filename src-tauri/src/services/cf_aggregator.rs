@@ -7,11 +7,13 @@
 
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::path::Path;
 
 use once_cell::sync::OnceCell;
 
 use crate::services::recommendation::{calculate_game_weight, GameWithDetails};
+
+// Incluir JSON em compile-time
+const COLLABORATIVE_INDEX_JSON: &str = include_str!("../../data/collaborative_index.json");
 
 // === Estruturas de leitura do JSON ===
 
@@ -42,11 +44,8 @@ static CF_INDEX: OnceCell<CFIndex> = OnceCell::new();
 /// Inicializa o índice CF no startup do app
 ///
 /// Deve ser chamado UMA vez (ex: AppState)
-pub fn init_cf_index<P: AsRef<Path>>(path: P) -> anyhow::Result<()> {
-    let path = path.as_ref();
-
-    let json = std::fs::read_to_string(path)?;
-    let raw: CollaborativeIndexRaw = serde_json::from_str(&json)?;
+pub fn init_cf_index() -> anyhow::Result<()> {
+    let raw: CollaborativeIndexRaw = serde_json::from_str(COLLABORATIVE_INDEX_JSON)?;
 
     let index: CFIndex = raw
         .index

@@ -56,16 +56,14 @@ pub fn run() {
             app.manage(db_state);
 
             // === COLLABORATIVE FILTERING ===
-            let cf_path = app_handle.path().resolve(
-                "data/collaborative_index.json",
-                tauri::path::BaseDirectory::AppData,
-            )?;
 
-            if let Err(e) = services::cf_aggregator::init_cf_index(&cf_path) {
+            if let Err(e) = services::cf_aggregator::init_cf_index() {
                 tracing::warn!("CF desativado (fallback CB ativo): {}", e);
+            } else {
+                tracing::info!("CF index carregado com sucesso");
             }
 
-            // Log único de sucesso
+            // Log de inicialização completa
             tracing::info!("Playlite iniciado com sucesso");
 
             Ok(())
