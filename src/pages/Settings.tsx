@@ -265,61 +265,59 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </div>
         </SettingsRow>
 
-        {/* Toggle: Séries & Reset */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Checkbox Series (Simulado com div e input se não tiver Switch) */}
-          <div className="bg-card flex flex-col justify-between gap-4 rounded-xl border p-6">
-            <div className="space-y-1">
-              <h3 className="font-semibold">Priorizar Séries</h3>
-              <p className="text-muted-foreground text-sm">
-                Dar peso extra para sequências de jogos que você gosta.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={config.favor_series}
-                  onChange={e => toggleSeries(e.target.checked)}
-                />
-                {/* Toggle: Muda de Cinza para Verde (bg-green-500) se ativado */}
-                <div className="peer bg-input h-6 w-11 rounded-full peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-300 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
-                {/* Texto Dinâmico */}
-                <span
-                  className={`ml-3 text-sm font-medium transition-colors ${
-                    config.favor_series
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  {config.favor_series ? 'Ativado' : 'Desativado'}
-                </span>
-              </label>
-            </div>
+        <SettingsRow
+          icon={Sparkles}
+          title="Priorizar Séries"
+          description="Dar peso extra para sequências de jogos que você gosta."
+        >
+          <div className="flex justify-end">
+            <label className="relative inline-flex cursor-pointer items-center gap-3">
+              <span
+                className={`text-sm font-medium transition-colors ${
+                  !config.favor_series
+                    ? 'text-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Desativado
+              </span>
+              <input
+                type="checkbox"
+                className="peer sr-only"
+                checked={config.favor_series}
+                onChange={e => toggleSeries(e.target.checked)}
+              />
+              <div className="peer bg-input relative h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-[22px] peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
+              <span
+                className={`text-sm font-medium transition-colors ${
+                  config.favor_series
+                    ? 'text-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Ativado
+              </span>
+            </label>
           </div>
+        </SettingsRow>
 
-          {/* Reset Feedback */}
-          <div className="bg-card flex flex-col justify-between gap-4 rounded-xl border p-6">
-            <div className="space-y-1">
-              <h3 className="font-semibold text-red-500/80">Limpar Feedback</h3>
-              <p className="text-muted-foreground text-sm">
-                Restaurar {ignoredIds.length} jogos marcados como "Não Útil".
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => {
-                resetFeedback();
-                toast.success('Histórico de feedback limpo!');
-              }}
-              disabled={ignoredIds.length === 0}
-              className="w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
-            </Button>
-          </div>
-        </div>
+        <SettingsRow
+          icon={Trash2}
+          title="Limpar Feedback"
+          description={`Restaurar ${ignoredIds.length} jogos marcados como "Não Útil".`}
+        >
+          <Button
+            variant="outline"
+            onClick={() => {
+              resetFeedback();
+              toast.success('Histórico de feedback limpo!');
+            }}
+            disabled={ignoredIds.length === 0}
+            className="w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
+          </Button>
+        </SettingsRow>
       </section>
 
       {/* SEÇÃO 3: METADADOS (Mantido igual) */}
