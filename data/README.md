@@ -139,11 +139,39 @@ Este projeto utiliza o dataset **Game Recommendations on Steam** fornecido por A
 **Citation:**
 > Kozyriev, A. (2023). *Game Recommendations on Steam* [Data set]. Kaggle. https://doi.org/10.34740/KAGGLE/DS/2871694
 
+## 📊 Fonte de Dados & Créditos
+
+Este projeto utiliza o conjunto de dados **Game Recommendations on Steam** de Anton Kozyriev,
+disponibilizado através do Kaggle sob a licença CC0: Publlic Domain.
+
+### Informações do Conjunto de Dados
+
+- **Título:** Game Recommendations on Steam
+- **Autor:** Anton Kozyriev
+- **Fonte:** [Kaggle](https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam)
+- **Licença:** [CC0: Public Domain](https://creativecommons.org/publicdomain/zero/1.0/)
+- **DOI:** [10.34740/KAGGLE/DS/2871694](https://doi.org/10.34740/KAGGLE/DS/2871694)
+- **Acessado em:** Janeiro de 2026
+
+### Citação
+
+Se você utilizar este projeto em trabalhos acadêmicos, por favor cite o conjunto de dados original:
+
+```bibtex
+@misc{kozyriev2023gamesteam,
+  author = {Kozyriev, Anton},
+  title = {Game Recommendations on Steam},
+  year = {2023},
+  publisher = {Kaggle},
+  doi = {10.34740/KAGGLE/DS/2871694},
+  url = {https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam}
+}
+
+
 ---
 
 ## 📌 Observações
 
-* Os arquivos em `outputs/` são artefatos versionados.
 * Esta pasta pode evoluir conforme novas estratégias forem testadas.
 
 Esta separação garante que o Playlite continue sendo um aplicativo **leve, rápido e previsível**, mesmo oferecendo

@@ -162,33 +162,6 @@ Algoritmo escolhido:
 
 - sincronização
 
-### 8.1 Uso de Ferramentas de IA e Análises Automatizadas
-
-**Decisão:** Utilizar ferramentas de IA (ex.: GitHub Copilot) como suporte para análise de código e identificação de
-melhorias, sem adoção automática das recomendações.
-
-**Motivação:**
-
-- Acelerar a identificação de possíveis problemas de segurança, performance e arquitetura.
-- Expor o projeto a padrões utilizados na indústria.
-- Exercitar análise crítica e tomada de decisão técnica.
-
-**Abordagem adotada:**
-
-As recomendações são classificadas em:
-
-- **Aplicáveis imediatamente**
-- **Relevantes apenas para versões comerciais ou em escala**
-- **Conscientemente ignoradas** por não se adequarem ao contexto do projeto
-
-Decisões de não implementação são consideradas tão importantes quanto as implementadas.
-
-**Consequências:**
-
-- Evita *overengineering* em um projeto de escopo reduzido.
-- Mantém a base de código simples, legível e adequada ao uso real.
-- Demonstra capacidade de avaliar *trade-offs* técnicos, em vez de seguir checklists genéricos.
-
 ---
 
 ## 9. Tradução automática com IA

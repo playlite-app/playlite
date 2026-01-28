@@ -1,6 +1,6 @@
 # Configurações
 
-Na tela **Settings**, você controla o comportamento do app e suas integrações.
+Na tela **Settings**, você controla o comportamento do app e as suas integrações.
 
 ![Configurações](/images/app-settings.png)
 

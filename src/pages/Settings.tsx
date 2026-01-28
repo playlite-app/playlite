@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { SettingsRow, StatusBadge } from '@/components/common';
+import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -419,6 +419,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             </Button>
           </div>
         </SettingsRow>
+      </section>
+
+      {/* SEÇÃO 6: SOBRE O PLAYLITE */}
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">Sobre</h3>
+        <AboutPlaylite />
       </section>
     </div>
   );

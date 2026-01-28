@@ -1,4 +1,5 @@
-import { Gamepad2, Star } from 'lucide-react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { FileSearch, FolderOpen, Gamepad2, Star } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +39,43 @@ export default function AddGameModal({
     isOpen,
     gameToEdit
   );
+
+  const handleSelectFolder = async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Selecionar Pasta de Instalação',
+      });
+
+      if (selected) {
+        handleChange('installPath', selected);
+      }
+    } catch (error) {
+      console.error('Erro ao selecionar pasta:', error);
+    }
+  };
+
+  const handleSelectExecutable = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        title: 'Selecionar Executável',
+        filters: [
+          {
+            name: 'Executável',
+            extensions: ['exe'],
+          },
+        ],
+      });
+
+      if (selected) {
+        handleChange('executablePath', selected);
+      }
+    } catch (error) {
+      console.error('Erro ao selecionar executável:', error);
+    }
+  };
 
   const handleSave = () => {
     if (!isValid()) return;
@@ -114,7 +152,15 @@ export default function AddGameModal({
                 onChange={e => handleChange('installPath', e.target.value)}
                 placeholder="C:\Games\MeuJogo\"
               />
-              {/* Futuro: Botão de selecionar pasta */}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleSelectFolder}
+                title="Selecionar pasta"
+              >
+                <FolderOpen size={18} />
+              </Button>
             </div>
           </div>
 
@@ -127,7 +173,15 @@ export default function AddGameModal({
                 onChange={e => handleChange('executablePath', e.target.value)}
                 placeholder="C:\Games\MeuJogo\jogo.exe"
               />
-              {/* Futuro: Botão de selecionar executável */}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleSelectExecutable}
+                title="Selecionar executável"
+              >
+                <FileSearch size={18} />
+              </Button>
             </div>
           </div>
 
