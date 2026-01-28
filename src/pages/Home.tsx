@@ -22,11 +22,10 @@ import StandardGameCard from '@/components/StandardGameCard';
 import { StatCard } from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
+import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import Achievements from '../components/Achievements';
-import { useHeroCarousel } from '../hooks/useHeroCarousel';
-import { useHome } from '../hooks/useHome';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
 import { openExternalLink } from '../utils/navigation';

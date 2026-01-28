@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { PresetAvatar } from '@/hooks/useUserProfile';
+import { PresetAvatar } from '@/hooks/user';
 
 interface AvatarIconProps {
   className?: string;

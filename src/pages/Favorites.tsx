@@ -4,13 +4,9 @@ import { useMemo } from 'react';
 import { ActionButton } from '@/components/ActionButton.tsx';
 import { GameActionsMenu } from '@/components/GameActionsMenu';
 import StandardGameCard from '@/components/StandardGameCard';
+import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types';
 
-import {
-  useGameCardSubtitle,
-  useLibraryFilter,
-} from '../hooks/useLibraryFilters';
-import { usePlaylist } from '../hooks/usePlaylist';
 import { launchGame } from '../utils/launcher';
 
 interface FavoritesProps extends GameActions {
@@ -68,7 +64,11 @@ export default function Favorites({
         {/* Grid de Jogos */}
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {displayedGames.map(game => {
-            const subtitle = useGameCardSubtitle(game.genres, game.developer);
+            // Lógica inline para subtítulo (não pode ser hook dentro do map)
+            const subtitle =
+              [game.genres?.split(',')[0]?.trim(), game.developer]
+                .filter(Boolean)
+                .join(' • ') || 'Sem dados';
 
             return (
               <div key={game.id} className="group relative">

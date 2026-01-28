@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 
 import { RawgGame, UserPreferenceVector } from '@/types';
-
-import { calculateAffinity, isFavoriteSeries } from '../utils/recommendation';
+import { calculateAffinity, isFavoriteSeries } from '@/utils/recommendation.ts';
 
 /**
  * Hook complementar ao useRecommendation

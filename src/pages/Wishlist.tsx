@@ -22,8 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
-import { useWishlist } from '../hooks/useWishlist';
-import { useWishlistFilter } from '../hooks/useWishlistFilters';
+import { useWishlist, useWishlistFilter } from '../hooks/wishlist';
 import { openExternalLink } from '../utils/navigation';
 
 interface WishlistProps {

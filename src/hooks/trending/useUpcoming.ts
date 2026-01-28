@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { trendingService } from '@/services/trendingService.ts';
 import { RawgGame } from '@/types';
-
-import { trendingService } from '../services/trendingService';
 
 /**
  * Hook para gerenciar jogos de lançamentos futuros (upcoming games).

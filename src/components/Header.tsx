@@ -3,7 +3,7 @@ import { Moon, Plus, Search, Sun } from 'lucide-react';
 import { AdultFilterToggle } from '@/components/AdultFilterToggle'; // Importe o componente
 import { Button } from '@/components/ui/button';
 
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/ui';
 
 interface HeaderProps {
   onAddGame: () => void;

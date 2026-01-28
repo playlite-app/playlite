@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Game, RawgGame } from '@/types';
 
-import { trendingService } from '../services/trendingService';
+import { trendingService } from '../../services/trendingService';
 
 interface UseTrendingProps {
   userGames: Game[];

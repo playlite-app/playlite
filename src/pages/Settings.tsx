@@ -23,8 +23,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
-import { useRecommendation } from '../hooks/useRecommendation';
-import { useRecommendationSliders } from '../hooks/useRecommendationSliders';
+import {
+  useRecommendation,
+  useRecommendationSliders,
+} from '../hooks/recommendation';
 import { useSettings } from '../hooks/useSettings';
 
 interface SettingsProps {

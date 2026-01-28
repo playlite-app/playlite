@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PresetAvatar, useUserProfile } from '@/hooks/useUserProfile';
+import { PresetAvatar, useUserProfile } from '@/hooks/user';
 
 import { avatarComponents, avatarNames } from './AvatarIcons';
 

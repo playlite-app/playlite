@@ -29,17 +29,15 @@ import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Game, Giveaway, RawgGame } from '@/types';
 
 import { ErrorState } from '../components/ErrorState';
+import { useNetworkStatus } from '../hooks/common';
 import {
   calculateGameAffinity,
+  useRecommendation,
   useSortedByAffinity,
-} from '../hooks/useGameAffinity';
-import { useGiveaways } from '../hooks/useGiveaways';
-import { useHeroCarousel } from '../hooks/useHeroCarousel';
-import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { useRecommendation } from '../hooks/useRecommendation';
-import { useTrending } from '../hooks/useTrending';
-import { useUpcoming } from '../hooks/useUpcoming';
-import { useWishlist } from '../hooks/useWishlist';
+} from '../hooks/recommendation';
+import { useGiveaways, useTrending, useUpcoming } from '../hooks/trending';
+import { useHeroCarousel } from '../hooks/ui';
+import { useWishlist } from '../hooks/wishlist';
 import { openExternalLink } from '../utils/navigation';
 
 interface TrendingProps {

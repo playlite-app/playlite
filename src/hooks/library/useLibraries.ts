@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { Game } from '@/types';
 
-import { librariesService } from '../services/librariesService.ts';
+import { librariesService } from '../../services/librariesService';
 
 /**
  * Gerencia a biblioteca de jogos do usuário com operações CRUD.

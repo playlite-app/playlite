@@ -5,11 +5,7 @@ import { GameActionsMenu } from '@/components/GameActionsMenu';
 import { Game, GameActions } from '@/types/game';
 
 import StandardGameCard from '../components/StandardGameCard';
-import {
-  useGameCardSubtitle,
-  useLibraryFilter,
-} from '../hooks/useLibraryFilters';
-import { usePlaylist } from '../hooks/usePlaylist';
+import { useLibraryFilter, usePlaylist } from '../hooks/library';
 import { launchGame } from '../utils/launcher';
 
 interface LibraryProps extends GameActions {
@@ -62,7 +58,11 @@ export default function Libraries({
         {/* Grid de Jogos */}
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {displayedGames.map(game => {
-            const subtitle = useGameCardSubtitle(game.genres, game.developer);
+            // Lógica inline para subtítulo (não pode ser hook dentro do map)
+            const subtitle =
+              [game.genres?.split(',')[0]?.trim(), game.developer]
+                .filter(Boolean)
+                .join(' • ') || 'Sem dados';
 
             return (
               <div key={game.id} className="group relative">

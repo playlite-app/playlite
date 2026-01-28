@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
  *
  * @example
  * const searchQuery = useDebounce(inputValue, 500);
- * // searchQuery só muda 500ms após o usuário parar de digitar
+ * searchQuery só muda 500ms após o usuário parar de digitar
  *
  * @param value - Valor a ser observado
  * @param delay - Tempo de espera em milissegundos antes de atualizar

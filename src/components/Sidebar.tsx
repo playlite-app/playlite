@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 
 import { avatarComponents } from './profile/AvatarIcons.tsx';

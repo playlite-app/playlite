@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import { useDebounce, useGameDetails } from '@/hooks';
 import { Game } from '@/types';
 
 import AddGameModal from './components/AddGameModal';
@@ -15,8 +16,6 @@ import {
   useGameLibrary,
   useUI,
 } from './contexts';
-import { useDebounce } from './hooks/useDebounce';
-import { useGameDetails } from './hooks/useGameDetails';
 import Favorites from './pages/Favorites';
 import Home from './pages/Home';
 import Libraries from './pages/Libraries.tsx';

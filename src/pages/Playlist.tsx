@@ -20,9 +20,9 @@ import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, UserPreferenceVector } from '@/types';
 
 import PlaylistItem from '../components/PlaylistItem';
-import { usePagination } from '../hooks/usePagination';
-import { usePlaylist } from '../hooks/usePlaylist';
-import { useRecommendation } from '../hooks/useRecommendation';
+import { usePlaylist } from '../hooks/library';
+import { useRecommendation } from '../hooks/recommendation';
+import { usePagination } from '../hooks/ui';
 import { launchGame } from '../utils/launcher';
 import { getFavoriteSeries } from '../utils/recommendation.ts';
 

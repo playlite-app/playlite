@@ -4,7 +4,7 @@ import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 // Importe o tipo correto
 import { trendingService } from '../services/trendingService';
-import { useRecommendation } from './useRecommendation';
+import { useRecommendation } from './recommendation';
 
 interface UseHomeProps {
   games: Game[];
