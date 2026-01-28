@@ -1,11 +1,10 @@
 import { Heart, Library } from 'lucide-react';
 
-import { ActionButton } from '@/components/ActionButton.tsx';
-import { GameActionsMenu } from '@/components/GameActionsMenu';
+import { ActionButton, GameActionsMenu } from '@/components/common';
+import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types/game';
 
-import StandardGameCard from '../components/StandardGameCard';
-import { useLibraryFilter, usePlaylist } from '../hooks/library';
+import StandardGameCard from '../components/cards/StandardGameCard';
 import { launchGame } from '../utils/launcher';
 
 interface LibraryProps extends GameActions {

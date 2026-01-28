@@ -10,8 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-
-import { SearchResult, wishlistService } from '../services/wishlistService';
+import { SearchResult, wishlistService } from '@/services/wishlistService.ts';
 
 interface AddWishlistModalProps {
   isOpen: boolean;
@@ -37,7 +36,7 @@ export default function AddWishlistModal({
     try {
       const data = await wishlistService.searchWishlistGame(query);
       setResults(data);
-    } catch (e) {
+    } catch {
       toast.error('Erro ao buscar jogos');
     } finally {
       setLoading(false);
@@ -54,7 +53,7 @@ export default function AddWishlistModal({
       onClose();
       setResults([]);
       setQuery('');
-    } catch (e) {
+    } catch {
       toast.error('Erro ao adicionar jogo');
     } finally {
       setAddingId(null);

@@ -15,17 +15,17 @@ import {
   Users,
 } from 'lucide-react';
 
-import { ActionButton } from '@/components/ActionButton.tsx';
-import Hero from '@/components/Hero';
-import { RecommendationTooltip } from '@/components/RecommendationTooltip';
-import StandardGameCard from '@/components/StandardGameCard';
-import { StatCard } from '@/components/StatCard';
+import Hero from '@/components/cards/Hero';
+import StandardGameCard from '@/components/cards/StandardGameCard';
+import { StatCard } from '@/components/cards/StatCard';
+import { ActionButton } from '@/components/common';
+import { RecommendationTooltip } from '@/components/recommendation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
-import Achievements from '../components/Achievements';
+import Achievements from '../components/common/Achievements';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
 import { openExternalLink } from '../utils/navigation';

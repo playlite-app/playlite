@@ -9,11 +9,11 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { avatarComponents } from '@/components/profile/AvatarIcons.tsx';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 
-import { avatarComponents } from './profile/AvatarIcons.tsx';
-import ProfileModal from './profile/ProfileModal.tsx';
+import ProfileModal from '../profile/ProfileModal';
 
 interface SidebarProps {
   activeSection: string;

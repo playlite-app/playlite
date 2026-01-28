@@ -14,15 +14,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import StandardGameCard from '@/components/StandardGameCard';
+import StandardGameCard from '@/components/cards/StandardGameCard';
 import { Button } from '@/components/ui/button';
+import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, UserPreferenceVector } from '@/types';
 
-import PlaylistItem from '../components/PlaylistItem';
-import { usePlaylist } from '../hooks/library';
-import { useRecommendation } from '../hooks/recommendation';
-import { usePagination } from '../hooks/ui';
+import PlaylistItem from '../components/cards/PlaylistItem';
 import { launchGame } from '../utils/launcher';
 import { getFavoriteSeries } from '../utils/recommendation.ts';
 

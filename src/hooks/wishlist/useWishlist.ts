@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { wishlistService } from '@/services/wishlistService.ts';
 import { WishlistGame } from '@/types';
-
-import { wishlistService } from '../../services/wishlistService';
 
 /**
  * Gerencia lista de desejos (jogos desejados) com preços da Steam.

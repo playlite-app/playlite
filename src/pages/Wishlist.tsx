@@ -15,14 +15,14 @@ import {
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { ActionButton } from '@/components/ActionButton.tsx';
-import AddWishlistModal from '@/components/AddWishlistModal';
-import StandardGameCard from '@/components/StandardGameCard';
+import StandardGameCard from '@/components/cards/StandardGameCard';
+import { ActionButton } from '@/components/common';
+import AddWishlistModal from '@/components/modals/AddWishlistModal';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
-import { useWishlist, useWishlistFilter } from '../hooks/wishlist';
 import { openExternalLink } from '../utils/navigation';
 
 interface WishlistProps {

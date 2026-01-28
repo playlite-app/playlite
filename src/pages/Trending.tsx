@@ -11,10 +11,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ActionButton } from '@/components/ActionButton.tsx';
-import { FreeGameCard } from '@/components/FreeGameCard.tsx';
-import Hero from '@/components/Hero';
-import StandardGameCard from '@/components/StandardGameCard.tsx';
+import { ErrorState } from '@/components';
+import { FreeGameCard } from '@/components/cards';
+import Hero from '@/components/cards/Hero';
+import StandardGameCard from '@/components/cards/StandardGameCard';
+import { ActionButton } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,18 +27,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { Game, Giveaway, RawgGame } from '@/types';
-
-import { ErrorState } from '../components/ErrorState';
-import { useNetworkStatus } from '../hooks/common';
 import {
   calculateGameAffinity,
+  useGiveaways,
+  useHeroCarousel,
+  useNetworkStatus,
   useRecommendation,
   useSortedByAffinity,
-} from '../hooks/recommendation';
-import { useGiveaways, useTrending, useUpcoming } from '../hooks/trending';
-import { useHeroCarousel } from '../hooks/ui';
-import { useWishlist } from '../hooks/wishlist';
+  useTrending,
+  useUpcoming,
+  useWishlist,
+} from '@/hooks';
+import { Game, Giveaway, RawgGame } from '@/types';
+
 import { openExternalLink } from '../utils/navigation';
 
 interface TrendingProps {

@@ -1,9 +1,8 @@
 import { Gamepad, Globe, ImageOff, Monitor, Play } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 
+import { ActionButton } from '@/components';
 import { cn } from '@/lib/utils';
-
-import { ActionButton } from './ActionButton';
 
 interface StandardGameCardProps {
   title: string;

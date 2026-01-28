@@ -17,17 +17,15 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { SettingsRow } from '@/components/SettingsRow';
-import { StatusBadge } from '@/components/StatusBadge';
+import { SettingsRow, StatusBadge } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-
 import {
   useRecommendation,
   useRecommendationSliders,
-} from '../hooks/recommendation';
-import { useSettings } from '../hooks/useSettings';
+  useSettings,
+} from '@/hooks';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;

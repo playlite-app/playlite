@@ -2,13 +2,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import GameDetailsModal from '@/components/game-details/GameDetailsModal.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
 import { Game } from '@/types';
 
-import AddGameModal from './components/AddGameModal';
-import GameDetailsModal from './components/game-details/GameDetailsModal';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
+import Header from './components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+import AddGameModal from './components/modals/AddGameModal';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import {
   GameLibraryProvider,

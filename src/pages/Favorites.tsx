@@ -1,9 +1,8 @@
 import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
 
-import { ActionButton } from '@/components/ActionButton.tsx';
-import { GameActionsMenu } from '@/components/GameActionsMenu';
-import StandardGameCard from '@/components/StandardGameCard';
+import StandardGameCard from '@/components/cards/StandardGameCard';
+import { ActionButton, GameActionsMenu } from '@/components/common';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types';
 

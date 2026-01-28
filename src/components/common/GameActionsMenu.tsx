@@ -1,7 +1,7 @@
 import { Check, Edit, ListPlus, MoreVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ActionButton } from '@/components/ActionButton';
+import { ActionButton } from '@/components/common';
 import {
   DropdownMenu,
   DropdownMenuContent,
