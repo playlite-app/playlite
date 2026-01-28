@@ -42,33 +42,6 @@ export function useLibraryFilter({
 }
 
 /**
- * Hook para gerar estatísticas da biblioteca.
- *
- * @param games - Lista de jogos
- * @returns Estatísticas calculadas
- */
-export function useLibraryStats(games: Game[]) {
-  return useMemo(() => {
-    const totalPlaytime = games.reduce(
-      (acc, game) => acc + (game.playtime ?? 0),
-      0
-    );
-
-    const favoriteGames = games.filter(game => game.favorite);
-    const completedGames = games.filter(game => game.status === 'completed');
-    const playingGames = games.filter(game => game.status === 'playing');
-
-    return {
-      totalGames: games.length,
-      totalPlaytime,
-      totalFavorites: favoriteGames.length,
-      totalCompleted: completedGames.length,
-      totalPlaying: playingGames.length,
-    };
-  }, [games]);
-}
-
-/**
  * Hook para gerar subtítulo de um card de jogo.
  * Combina primeiro gênero e desenvolvedor.
  *

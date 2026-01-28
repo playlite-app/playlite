@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { useLibraryStats } from '@/hooks/library';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
-// Importe o tipo correto
 import { trendingService } from '../services/trendingService';
 import { useRecommendation } from './recommendation';
 
@@ -15,9 +15,14 @@ interface UseHomeProps {
 }
 
 /**
- * Hook para gerenciar os dados e estados da página inicial do aplicativo.
- * Inclui estatísticas da biblioteca, jogos em andamento, recomendações,
- * jogos mais jogados, gêneros principais e jogos em tendência.
+ * Hook orquestrador para a página Home (Refatorado)
+ *
+ * Responsabilidade: Agregar dados de múltiplas fontes:
+ * - Estatísticas da biblioteca (useLibraryStats)
+ * - Recomendações (useRecommendation)
+ * - Jogos em tendência (API RAWG)
+ *
+ * Mantém apenas lógica de orquestração e cache de tendências.
  *
  * @param games - Lista completa de jogos na biblioteca do usuário
  * @param trendingCache - Cache local dos jogos em tendência
@@ -33,10 +38,12 @@ export function useHome({
   profileCache,
   setProfileCache,
 }: UseHomeProps) {
-  const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
-  const [loadingTrending, setLoadingTrending] = useState(false);
+  // === ESTATÍSTICAS DA BIBLIOTECA ===
+  const { stats, continuePlaying, mostPlayed, topGenres } = useLibraryStats({
+    games: library,
+  });
 
-  // Integração com o Hook de Recomendação
+  // === RECOMENDAÇÕES ===
   const {
     profile,
     recommendations: backlogRecommendations, // Content-Based
@@ -62,7 +69,10 @@ export function useHome({
     },
   });
 
-  // Busca Trending
+  // === TRENDING (RAWG API) ===
+  const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
+  const [loadingTrending, setLoadingTrending] = useState(false);
+
   useEffect(() => {
     async function fetchTrendingIfNeeded() {
       if (trendingCache.length > 0) {
@@ -91,75 +101,23 @@ export function useHome({
     fetchTrendingIfNeeded();
   }, [trendingCache, setTrendingCache]);
 
-  // Estatísticas da Biblioteca
-  const stats = useMemo(() => {
-    const totalPlaytime = library.reduce(
-      (acc, g) => acc + (g.playtime ?? 0),
-      0
-    );
-    const totalFavorites = library.filter(g => g.favorite).length;
-
-    return {
-      totalGames: library.length,
-      totalPlaytime,
-      totalFavorites,
-    };
-  }, [library]);
-
-  // Continue Jogando
-  const continuePlaying = useMemo(() => {
-    return library
-      .filter(g => (g.playtime ?? 0) > 0 && (g.playtime ?? 0) < 600)
-      .sort(
-        (a, b) =>
-          (b.lastPlayed ? new Date(b.lastPlayed).getTime() : 0) -
-          (a.lastPlayed ? new Date(a.lastPlayed).getTime() : 0)
-      )
-      .slice(0, 5);
-  }, [library]);
-
-  // Mais Jogados
-  const mostPlayed = useMemo(() => {
-    return [...library]
-      .sort((a, b) => (b.playtime ?? 0) - (a.playtime ?? 0))
-      .slice(0, 3);
-  }, [library]);
-
-  // Top Gêneros
-  const topGenres = useMemo(() => {
-    const genreStats = library.reduce(
-      (acc, game) => {
-        if (game.genres) {
-          game.genres.split(',').forEach((g: string) => {
-            const clean = g.trim();
-
-            if (clean !== 'Desconhecido' && clean !== '') {
-              acc[clean] = (acc[clean] || 0) + 1;
-            }
-          });
-        }
-
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(genreStats)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
-  }, [library]);
-
+  // === RETORNO AGREGADO ===
   return {
+    // Estatísticas da biblioteca
     stats,
     continuePlaying,
-    backlogRecommendations, // Retorna RecommendedGame[]
-    collaborativeRecs, // Retorna RecommendedGame[]
-    loadingRecommendations,
     mostPlayed,
     topGenres,
-    trending,
-    loadingTrending,
+
+    // Recomendações
+    backlogRecommendations,
+    collaborativeRecs,
+    loadingRecommendations,
     profile,
     profileLoading,
+
+    // Trending
+    trending,
+    loadingTrending,
   };
 }
