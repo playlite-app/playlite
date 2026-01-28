@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
 import { avatarComponents } from '@/components/profile/AvatarIcons.tsx';
-import { MENU_ITEMS } from '@/config/navigation';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
+import { MENU_ITEMS } from '@/utils/navigation.ts';
 
 import ProfileModal from '../profile/ProfileModal';
 

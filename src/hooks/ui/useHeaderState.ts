@@ -1,4 +1,4 @@
-import { SEARCHABLE_SECTIONS } from '@/config/navigation';
+import { SEARCHABLE_SECTIONS } from '@/utils/navigation.ts';
 
 /**
  * Hook para gerenciar o estado do Header baseado na seção ativa.
