@@ -232,13 +232,6 @@ export default function Home(props: HomeProps) {
                 <h2 className="text-2xl font-bold">Recomendados para você</h2>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => props.onChangeTab('libraries')}
-            >
-              Ver Tudo
-            </Button>
           </div>
 
           {loadingRecommendations ? (

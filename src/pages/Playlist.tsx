@@ -12,7 +12,6 @@ import {
   Sparkles,
   ThumbsDown,
 } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/StandardGameCard';
@@ -21,6 +20,7 @@ import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, UserPreferenceVector } from '@/types';
 
 import PlaylistItem from '../components/PlaylistItem';
+import { usePagination } from '../hooks/usePagination';
 import { usePlaylist } from '../hooks/usePlaylist';
 import { useRecommendation } from '../hooks/useRecommendation';
 import { launchGame } from '../utils/launcher';
@@ -49,8 +49,8 @@ export default function Playlist({
 
   const { confirm } = useConfirm();
 
-  // Estado para controlar paginação ("Ver Mais")
-  const [recLimit, setRecLimit] = useState(10);
+  // Usa hook de paginação para "Ver Mais"
+  const { limit: recLimit, loadMore } = usePagination(10, 10);
 
   // Usa o hook em modo Híbrido + Feedback
   const { hybridRecs, profile, markAsNotUseful, loadingRecommendations } =
@@ -264,7 +264,7 @@ export default function Playlist({
                 variant="ghost"
                 size="sm"
                 className="h-7 gap-1 text-xs hover:bg-white/5"
-                onClick={() => setRecLimit(prev => prev + 10)}
+                onClick={loadMore}
                 disabled={loadingRecommendations}
               >
                 {loadingRecommendations ? (
@@ -283,11 +283,7 @@ export default function Playlist({
               <p className="text-muted-foreground text-sm">
                 Sem sugestões novas no momento.
               </p>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => setRecLimit(prev => prev + 10)}
-              >
+              <Button variant="link" size="sm" onClick={loadMore}>
                 Tentar carregar mais
               </Button>
             </div>

@@ -12,7 +12,7 @@ import {
   Ticket,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
 import { useWishlist } from '../hooks/useWishlist';
+import { useWishlistFilter } from '../hooks/useWishlistFilters';
 import { openExternalLink } from '../utils/navigation';
 
 interface WishlistProps {
@@ -83,13 +84,8 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
     };
   }, [refreshList]);
 
-  const filteredGames = useMemo(() => {
-    if (!searchTerm) return games;
-
-    const lowerTerm = searchTerm.toLowerCase();
-
-    return games.filter(game => game.name.toLowerCase().includes(lowerTerm));
-  }, [games, searchTerm]);
+  // Usa hook para filtrar jogos
+  const filteredGames = useWishlistFilter(games, searchTerm);
 
   const handleImportJson = async () => {
     let loadingToast: string | number | undefined;
@@ -219,25 +215,30 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
           </div>
         ) : (
           filteredGames.map(game => {
+            // Formata preço (lógica inline sem hooks)
             let priceDisplay = 'Aguardando...';
 
             if (game.currentPrice !== null && game.currentPrice !== undefined) {
-              const currency = game.currency || 'BRL';
               const currencySymbol =
-                currency === 'BRL'
+                game.currency === 'BRL'
                   ? 'R$'
-                  : currency === 'USD'
+                  : game.currency === 'USD'
                     ? 'US$'
-                    : currency;
+                    : game.currency || '';
               priceDisplay = `${currencySymbol} ${game.currentPrice.toFixed(2)}`;
             }
 
-            // Use a URL da loja retornada pela ITAD ou construa URL do ITAD se tiver itadId
+            // Constrói URL de loja (lógica inline sem hooks)
             const targetUrl =
               game.storeUrl ||
               (game.itadId
                 ? `https://isthereanydeal.com/game/${game.itadId}/`
                 : null);
+            const storeLabel = game.storePlatform
+              ? `Abrir em ${game.storePlatform}`
+              : targetUrl
+                ? 'Ver na ITAD'
+                : 'Link indisponível';
 
             return (
               <StandardGameCard
@@ -285,11 +286,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
                       onClick={() => {
                         if (targetUrl) openExternalLink(targetUrl);
                       }}
-                      tooltip={
-                        game.storePlatform
-                          ? `Abrir em ${game.storePlatform}`
-                          : 'Ver na ITAD'
-                      }
+                      tooltip={storeLabel}
                     />
                   </>
                 }

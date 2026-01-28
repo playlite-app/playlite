@@ -1,7 +1,5 @@
 import {
-  AlertCircle,
   BrainCircuit,
-  CheckCircle,
   CloudDownload,
   Database,
   Download,
@@ -17,48 +15,21 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { SettingsRow } from '@/components/SettingsRow';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
 import { useRecommendation } from '../hooks/useRecommendation';
+import { useRecommendationSliders } from '../hooks/useRecommendationSliders';
 import { useSettings } from '../hooks/useSettings';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;
 }
-
-const SettingsRow = ({
-  icon: Icon,
-  title,
-  description,
-  children,
-  className = '',
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-  className?: string;
-}) => (
-  <div
-    className={`bg-card flex flex-col gap-4 rounded-xl border p-6 md:flex-row md:items-center md:justify-between ${className}`}
-  >
-    <div className="flex items-start gap-4">
-      <div className="text-primary mt-1 rounded-lg bg-blue-500/10 p-2">
-        <Icon size={24} />
-      </div>
-      <div className="space-y-1">
-        <h3 className="leading-none font-semibold tracking-tight">{title}</h3>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-    </div>
-    <div className="w-full md:w-auto md:min-w-75">{children}</div>
-  </div>
-);
 
 export default function Settings({ onLibraryUpdate }: SettingsProps) {
   const { keys, setKeys, loading, status, progress, actions } =
@@ -68,52 +39,16 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
   const { config, updateConfig, resetFeedback, ignoredIds } =
     useRecommendation();
 
-  // Estado local para sliders
-  const [localWeights, setLocalWeights] = useState(50); // 0-100 representation
-  const [localDecay, setLocalDecay] = useState(95); // 0-100 representation
-
-  // Sincroniza estado local quando a config carrega
-  useEffect(() => {
-    if (config) {
-      // Converte pesos (0.0-1.0) para slider (0-100)
-      // Usa collaborative_weight como referência para o slider
-      // 0 = 100% CB, 100 = 100% CF
-      const total = config.content_weight + config.collaborative_weight;
-      const collabShare = (config.collaborative_weight / total) * 100;
-      setLocalWeights(Math.round(collabShare));
-
-      // Age decay: 0.90 a 1.00 -> mapeado para 0-100 visualmente
-      // Usa valor multiplicado por 100: 0.95 -> 95
-      setLocalDecay(Math.round(config.age_decay * 100));
-    }
-  }, [config.content_weight, config.collaborative_weight, config.age_decay]);
-
-  // Handler para salvar slider de pesos
-  const handleWeightChange = (val: number) => {
-    setLocalWeights(val);
-    const collab = val / 100;
-    const content = 1.0 - collab;
-
-    updateConfig({
-      ...config,
-      content_weight: Number(content.toFixed(2)),
-      collaborative_weight: Number(collab.toFixed(2)),
-    });
-  };
-
-  // Handler para salvar slider de idade
-  const handleDecayChange = (val: number) => {
-    setLocalDecay(val);
-    updateConfig({
-      ...config,
-      age_decay: val / 100,
-    });
-  };
-
-  // Handler para Toggle de Séries
-  const toggleSeries = (checked: boolean) => {
-    updateConfig({ ...config, favor_series: checked });
-  };
+  // Hook para gerenciar sliders de recomendação
+  const {
+    weights,
+    decay,
+    handleWeightChange,
+    handleDecayChange,
+    handleSeriesToggle,
+    weightsDescription,
+    decayDescription,
+  } = useRecommendationSliders(config, updateConfig);
 
   if (loading.initial) {
     return (
@@ -134,22 +69,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           </p>
         </div>
 
-        {status.type && (
-          <div
-            className={`animate-in fade-in slide-in-from-top-2 flex items-center gap-3 rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${
-              status.type === 'success'
-                ? 'border-green-500/20 bg-green-500/10 text-green-500'
-                : 'border-red-500/20 bg-red-500/10 text-red-500'
-            }`}
-          >
-            {status.type === 'success' ? (
-              <CheckCircle size={16} />
-            ) : (
-              <AlertCircle size={16} />
-            )}
-            {status.message}
-          </div>
-        )}
+        <StatusBadge type={status.type} message={status.message} />
       </div>
 
       <Separator />
@@ -214,24 +134,20 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         >
           <div className="space-y-3 pt-2">
             <div className="text-muted-foreground flex justify-between text-xs font-medium">
-              <span>Meu Perfil ({100 - localWeights}%)</span>
-              <span>Comunidade ({localWeights}%)</span>
+              <span>Meu Perfil ({100 - weights}%)</span>
+              <span>Comunidade ({weights}%)</span>
             </div>
             <input
               type="range"
               min="0"
               max="100"
               step="5"
-              value={localWeights}
+              value={weights}
               onChange={e => handleWeightChange(parseInt(e.target.value))}
               className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
             />
             <p className="text-muted-foreground text-xs">
-              {localWeights < 30
-                ? 'Focado estritamente no que você joga.'
-                : localWeights > 70
-                  ? 'Focado em tendências e descobertas.'
-                  : 'Equilíbrio entre gosto pessoal e tendências.'}
+              {weightsDescription(weights)}
             </p>
           </div>
         </SettingsRow>
@@ -252,15 +168,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               min="90"
               max="100"
               step="1"
-              value={localDecay}
+              value={decay}
               onChange={e => handleDecayChange(parseInt(e.target.value))}
               className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
             />
             <p className="text-muted-foreground text-xs">
-              Valor atual: {localDecay}%.{' '}
-              {localDecay === 100
-                ? 'Mesmo peso de lançamentos.'
-                : 'Jogos antigos perdem relevância.'}
+              Valor atual: {decay}%. {decayDescription(decay)}
             </p>
           </div>
         </SettingsRow>
@@ -285,7 +198,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 type="checkbox"
                 className="peer sr-only"
                 checked={config.favor_series}
-                onChange={e => toggleSeries(e.target.checked)}
+                onChange={e => handleSeriesToggle(e.target.checked)}
               />
               <div className="peer bg-input relative h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5.5 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
               <span
@@ -320,10 +233,9 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: METADADOS (Mantido igual) */}
+      {/* SEÇÃO 3: METADADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
-        {/* ... (Conteúdo Metadados mantido) ... */}
         <SettingsRow
           icon={Search}
           title="RAWG.io"
@@ -382,7 +294,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 4: TRADUÇÃO COM IA (Mantido igual) */}
+      {/* SEÇÃO 4: TRADUÇÃO COM IA */}
       <section className="space-y-4">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
           Tradução com IA
@@ -415,7 +327,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 5: ZONA DE DADOS (Mantido igual) */}
+      {/* SEÇÃO 5: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 

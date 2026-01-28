@@ -6,6 +6,10 @@ import { GameActionsMenu } from '@/components/GameActionsMenu';
 import StandardGameCard from '@/components/StandardGameCard';
 import { Game, GameActions } from '@/types';
 
+import {
+  useGameCardSubtitle,
+  useLibraryFilter,
+} from '../hooks/useLibraryFilters';
 import { usePlaylist } from '../hooks/usePlaylist';
 import { launchGame } from '../utils/launcher';
 
@@ -23,24 +27,13 @@ export default function Favorites({
 }: FavoritesProps) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
-  // Filtra os jogos favoritos com base no termo de busca e filtro adulto
-  const displayedGames = useMemo(() => {
-    const favorites = games.filter(g => g.favorite);
-    const safeFavorites = hideAdult
-      ? favorites.filter(game => !game.isAdult)
-      : favorites;
-
-    if (!searchTerm) return safeFavorites;
-
-    const term = searchTerm.toLowerCase();
-
-    return safeFavorites.filter(
-      game =>
-        game.name.toLowerCase().includes(term) ||
-        (game.genres && game.genres.toLowerCase().includes(term)) ||
-        (game.platform && game.platform.toLowerCase().includes(term))
-    );
-  }, [games, hideAdult, searchTerm]);
+  // Primeiro filtra apenas favoritos, depois aplica o hook de filtro
+  const favoriteGames = useMemo(() => games.filter(g => g.favorite), [games]);
+  const displayedGames = useLibraryFilter({
+    games: favoriteGames,
+    searchTerm,
+    hideAdult,
+  });
 
   // Empty state
   if (displayedGames.length === 0) {
@@ -74,40 +67,40 @@ export default function Favorites({
 
         {/* Grid de Jogos */}
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {displayedGames.map(game => (
-            <div key={game.id} className="group relative">
-              <StandardGameCard
-                title={game.name}
-                coverUrl={game.coverUrl}
-                subtitle={
-                  [game.genres?.split(',')[0], game.developer]
-                    .filter(Boolean)
-                    .join(' • ') || 'Sem dados'
-                }
-                platform={game.platform}
-                rating={game.userRating}
-                onClick={() => actions.onGameClick(game)}
-                onPlay={() => launchGame(game)}
-                actions={
-                  <>
-                    <ActionButton
-                      icon={Heart}
-                      variant={game.favorite ? 'glass-destructive' : 'glass'}
-                      tooltip="Remover dos Favoritos"
-                      onClick={() => actions.onToggleFavorite(game.id)}
-                    />
-                    <GameActionsMenu
-                      game={game}
-                      inPlaylist={isInPlaylist(game.id)}
-                      onAddToPlaylist={addToPlaylist}
-                      onEdit={actions.onEditGame}
-                      onDelete={actions.onDeleteGame}
-                    />
-                  </>
-                }
-              />
-            </div>
-          ))}
+          {displayedGames.map(game => {
+            const subtitle = useGameCardSubtitle(game.genres, game.developer);
+
+            return (
+              <div key={game.id} className="group relative">
+                <StandardGameCard
+                  title={game.name}
+                  coverUrl={game.coverUrl}
+                  subtitle={subtitle}
+                  platform={game.platform}
+                  rating={game.userRating}
+                  onClick={() => actions.onGameClick(game)}
+                  onPlay={() => launchGame(game)}
+                  actions={
+                    <>
+                      <ActionButton
+                        icon={Heart}
+                        variant={game.favorite ? 'glass-destructive' : 'glass'}
+                        tooltip="Remover dos Favoritos"
+                        onClick={() => actions.onToggleFavorite(game.id)}
+                      />
+                      <GameActionsMenu
+                        game={game}
+                        inPlaylist={isInPlaylist(game.id)}
+                        onAddToPlaylist={addToPlaylist}
+                        onEdit={actions.onEditGame}
+                        onDelete={actions.onDeleteGame}
+                      />
+                    </>
+                  }
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
