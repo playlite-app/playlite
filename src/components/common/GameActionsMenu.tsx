@@ -1,5 +1,4 @@
 import { Check, Edit, ListPlus, MoreVertical, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 import { ActionButton } from '@/components/common';
 import {
@@ -28,7 +27,7 @@ interface GameActionsMenuProps {
  * - Excluir jogo (confirmação e remoção permanente)
  *
  * Todos os cliques propagam stopPropagation para não acionar onClick do card pai.
- * Toast de sucesso é exibido automaticamente ao adicionar à playlist.
+ * Notificações (toasts) devem ser gerenciadas pelo componente pai.
  *
  * @param game - Dados completos do jogo para edição/exclusão
  * @param inPlaylist - Se true, opção "Playlist" fica desabilitada com visual de confirmação
@@ -61,7 +60,6 @@ export function GameActionsMenu({
 
             if (!inPlaylist) {
               onAddToPlaylist(game.id);
-              toast.success(`${game.name} adicionado à playlist!`);
             }
           }}
         >

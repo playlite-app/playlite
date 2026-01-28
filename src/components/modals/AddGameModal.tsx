@@ -1,5 +1,4 @@
 import { Gamepad2, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useGameForm } from '@/hooks';
 import { Game } from '@/types';
 
 interface AddGameModalProps {
@@ -28,71 +28,21 @@ interface AddGameModalProps {
   gameToEdit?: Game | null;
 }
 
-const INITIAL_STATE = {
-  name: '',
-  coverUrl: '',
-  platform: 'Manual',
-  status: 'backlog',
-  playtime: '0',
-  rating: 0,
-  installPath: '',
-  executablePath: '',
-  launchArgs: '',
-};
-
 export default function AddGameModal({
   isOpen,
   onClose,
   onSave,
   gameToEdit,
 }: AddGameModalProps) {
-  const [formData, setFormData] = useState(INITIAL_STATE);
-
-  useEffect(() => {
-    if (isOpen) {
-      if (gameToEdit) {
-        setFormData({
-          name: gameToEdit.name,
-          coverUrl: gameToEdit.coverUrl || '',
-          platform: gameToEdit.platform || 'Manual',
-          status: gameToEdit.status || 'backlog',
-          playtime: gameToEdit.playtime?.toString() || '0',
-          rating: gameToEdit.userRating || 0,
-          installPath: gameToEdit.installPath || '',
-          executablePath: gameToEdit.executablePath || '',
-          launchArgs: gameToEdit.launchArgs || '',
-        });
-      } else {
-        setFormData(INITIAL_STATE);
-      }
-    }
-  }, [isOpen, gameToEdit]);
-
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const { formData, handleChange, isValid, buildPayload } = useGameForm(
+    isOpen,
+    gameToEdit
+  );
 
   const handleSave = () => {
-    if (!formData.name.trim()) return;
+    if (!isValid()) return;
 
-    const payload = {
-      // Se estiver editando, mantém o ID. Se for novo, App.tsx gera o UUID
-      id: gameToEdit?.id,
-      name: formData.name,
-      coverUrl: formData.coverUrl || null,
-      platform: formData.platform,
-      status: formData.status,
-      // Converte playtime para número
-      playtime: parseInt(formData.playtime) || 0,
-      // Mapeia rating para userRating
-      userRating: formData.rating > 0 ? formData.rating : null,
-
-      // Campos de execução do
-      installPath: formData.installPath || null,
-      executablePath: formData.executablePath || null,
-      launchArgs: formData.launchArgs || null,
-    };
-
+    const payload = buildPayload();
     onSave(payload);
     onClose();
   };

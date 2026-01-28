@@ -23,7 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
-import { openExternalLink } from '../utils/navigation';
+import { openExternalLink } from '../utils/openLink.ts';
 
 interface WishlistProps {
   searchTerm?: string;

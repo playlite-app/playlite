@@ -2,6 +2,7 @@ import { Calendar, ExternalLink, Gift } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getPlatformColor, getPlatformLabel } from '@/utils/platform';
 
 interface FreeGameCardProps {
   title: string;
@@ -27,27 +28,9 @@ export function FreeGameCard({
     open(url);
   };
 
-  // Lógica para limpar o texto da plataforma
-  const platformLabel = platforms.includes('Epic')
-    ? 'Epic Games'
-    : platforms.includes('Steam')
-      ? 'Steam'
-      : platforms.includes('GOG')
-        ? 'GOG'
-        : platforms.includes('Prime')
-          ? 'Amazon Prime'
-          : platforms.includes('Ubisoft')
-            ? 'Ubisoft'
-            : platforms.replace('PC, ', '');
-
-  // Define cor da badge baseado na plataforma
-  const platformColor = platforms.includes('Epic')
-    ? 'bg-slate-900 text-white'
-    : platforms.includes('Steam')
-      ? 'bg-blue-600 text-white'
-      : platforms.includes('Prime')
-        ? 'bg-cyan-600 text-white'
-        : 'bg-purple-600 text-white';
+  // Usa funções centralizadas
+  const platformLabel = getPlatformLabel(platforms);
+  const platformColor = getPlatformColor(platforms);
 
   const isValidDate =
     endDate && endDate !== 'N/A' && !isNaN(new Date(endDate).getTime());

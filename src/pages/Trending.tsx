@@ -40,7 +40,7 @@ import {
 } from '@/hooks';
 import { Game, Giveaway, RawgGame } from '@/types';
 
-import { openExternalLink } from '../utils/navigation';
+import { openExternalLink } from '../utils/openLink.ts';
 
 interface TrendingProps {
   userGames: Game[];

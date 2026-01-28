@@ -2,7 +2,7 @@ import { Moon, Plus, Search, Sun } from 'lucide-react';
 
 import { AdultFilterToggle } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks';
+import { useHeaderState, useTheme } from '@/hooks';
 
 interface HeaderProps {
   onAddGame: () => void;
@@ -22,10 +22,8 @@ export default function Header({
   onToggleAdultFilter,
 }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
-
-  const isSearchable = ['libraries', 'favorites', 'wishlist'].includes(
-    activeSection
-  );
+  const { isSearchable, searchPlaceholder, searchAriaLabel } =
+    useHeaderState(activeSection);
 
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur md:px-6">
@@ -43,11 +41,8 @@ export default function Header({
           <input
             type="text"
             disabled={!isSearchable}
-            placeholder={
-              isSearchable
-                ? 'Buscar jogos por nome, gênero ou plataforma...'
-                : 'Busca indisponível nesta página'
-            }
+            placeholder={searchPlaceholder}
+            aria-label={searchAriaLabel}
             value={isSearchable ? searchTerm : ''}
             onChange={e => onSearchChange(e.target.value)}
             className={`h-9 w-full rounded-md border py-2 pr-4 pl-9 text-sm transition-all ${

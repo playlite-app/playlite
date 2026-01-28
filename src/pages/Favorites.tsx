@@ -1,5 +1,6 @@
 import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton, GameActionsMenu } from '@/components/common';
@@ -21,6 +22,16 @@ export default function Favorites({
   ...actions
 }: FavoritesProps) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
+
+  // Handler para adicionar à playlist com notificação
+  const handleAddToPlaylist = (gameId: string) => {
+    const game = games.find(g => g.id === gameId);
+    addToPlaylist(gameId);
+
+    if (game) {
+      toast.success(`${game.name} adicionado à playlist!`);
+    }
+  };
 
   // Primeiro filtra apenas favoritos, depois aplica o hook de filtro
   const favoriteGames = useMemo(() => games.filter(g => g.favorite), [games]);
@@ -90,7 +101,7 @@ export default function Favorites({
                       <GameActionsMenu
                         game={game}
                         inPlaylist={isInPlaylist(game.id)}
-                        onAddToPlaylist={addToPlaylist}
+                        onAddToPlaylist={handleAddToPlaylist}
                         onEdit={actions.onEditGame}
                         onDelete={actions.onDeleteGame}
                       />

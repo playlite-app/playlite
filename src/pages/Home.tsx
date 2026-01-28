@@ -28,7 +28,7 @@ import { Game, RawgGame, UserPreferenceVector } from '@/types';
 import Achievements from '../components/common/Achievements';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
-import { openExternalLink } from '../utils/navigation';
+import { openExternalLink } from '../utils/openLink.ts';
 
 interface HomeProps {
   onChangeTab: (tab: string) => void;

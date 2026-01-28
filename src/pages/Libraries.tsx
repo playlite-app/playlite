@@ -1,4 +1,5 @@
 import { Heart, Library } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { ActionButton, GameActionsMenu } from '@/components/common';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
@@ -20,6 +21,16 @@ export default function Libraries({
   ...actions
 }: LibraryProps) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
+
+  // Handler para adicionar à playlist com notificação
+  const handleAddToPlaylist = (gameId: string) => {
+    const game = games.find(g => g.id === gameId);
+    addToPlaylist(gameId);
+
+    if (game) {
+      toast.success(`${game.name} adicionado à playlist!`);
+    }
+  };
 
   // Usa hook para filtrar jogos (busca + filtro adulto)
   const displayedGames = useLibraryFilter({ games, searchTerm, hideAdult });
@@ -88,7 +99,7 @@ export default function Libraries({
                       <GameActionsMenu
                         game={game}
                         inPlaylist={isInPlaylist(game.id)}
-                        onAddToPlaylist={addToPlaylist}
+                        onAddToPlaylist={handleAddToPlaylist}
                         onEdit={actions.onEditGame}
                         onDelete={actions.onDeleteGame}
                       />

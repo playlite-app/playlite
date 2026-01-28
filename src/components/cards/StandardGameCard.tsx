@@ -1,8 +1,9 @@
-import { Gamepad, Globe, ImageOff, Monitor, Play } from 'lucide-react';
+import { ImageOff, Play } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 
 import { ActionButton } from '@/components';
 import { cn } from '@/lib/utils';
+import { getPlatformIcon } from '@/utils/platform';
 
 interface StandardGameCardProps {
   title: string;
@@ -27,17 +28,6 @@ interface StandardGameCardProps {
  * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
  * - Efeito hover: elevação + zoom suave na imagem
  */
-
-// Helper para ícone da plataforma
-const getPlatformIcon = (platform: string) => {
-  const p = platform.toLowerCase();
-
-  if (p.includes('steam')) return <Monitor size={12} />; // Ou ícone específico se tiver
-
-  if (p.includes('gog')) return <Globe size={12} />;
-
-  return <Gamepad size={12} />;
-};
 
 export default function StandardGameCard({
   title,
@@ -85,7 +75,11 @@ export default function StandardGameCard({
         {/* Badge de Plataforma */}
         {platform && (
           <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-md">
-            {getPlatformIcon(platform)}
+            {(() => {
+              const Icon = getPlatformIcon(platform);
+
+              return <Icon size={12} />;
+            })()}
             {platform}
           </div>
         )}

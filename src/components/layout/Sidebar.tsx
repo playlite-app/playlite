@@ -1,15 +1,7 @@
-import {
-  Gamepad2,
-  Heart,
-  Home,
-  Library,
-  Settings,
-  ShoppingCart,
-  TrendingUp,
-} from 'lucide-react';
 import { useState } from 'react';
 
 import { avatarComponents } from '@/components/profile/AvatarIcons.tsx';
+import { MENU_ITEMS } from '@/config/navigation';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 
@@ -20,16 +12,6 @@ interface SidebarProps {
   onSectionChange: (section: string) => void;
   games: Game[];
 }
-
-const menuItems = [
-  { id: 'home', label: 'Início', icon: Home },
-  { id: 'libraries', label: 'Biblioteca', icon: Library },
-  { id: 'favorites', label: 'Favoritos', icon: Heart },
-  { id: 'playlist', label: 'Playlist', icon: Gamepad2 },
-  { id: 'trending', label: 'Em Alta', icon: TrendingUp },
-  { id: 'wishlist', label: 'Lista de Desejos', icon: ShoppingCart },
-  { id: 'settings', label: 'Configurações', icon: Settings },
-];
 
 export default function Sidebar({
   activeSection,
@@ -81,7 +63,7 @@ export default function Sidebar({
 
         {/* Menu Items */}
         <nav className="flex-1 space-y-2 p-2 lg:p-4">
-          {menuItems.map(item => {
+          {MENU_ITEMS.map(item => {
             const Icon = item.icon;
 
             return (
