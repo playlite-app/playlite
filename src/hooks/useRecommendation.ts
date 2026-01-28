@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Store } from '@tauri-apps/plugin-store';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Game, UserPreferenceVector } from '@/types';
 import {
@@ -44,6 +44,15 @@ interface UseRecommendationProps {
 }
 
 /**
+ * Hook principal do sistema de recomendação
+ *
+ * Gerencia recomendações calculadas pelo **backend Rust** usando:
+ * - Content-Based Filtering (baseado em gêneros/tags dos jogos do usuário)
+ * - Collaborative Filtering (baseado em similaridade com outros usuários)
+ * - Hybrid (combinação de ambos)
+ *
+ * **Complementar:** useGameAffinity (calcula afinidade no frontend para jogos RAWG)
+ *
  * Hook para gerenciar o sistema de recomendação de jogos.
  * Suporta abordagens Content-Based, Collaborative Filtering e Híbrida.
  * Inclui persistência local para blacklist de jogos ignorados e configurações do usuário.
@@ -93,6 +102,9 @@ export function useRecommendation({
   const [loadingProfile, setLoadingProfile] = useState(!profileCache);
   const [storeReady, setStoreReady] = useState(false);
 
+  // Ref para prevenir race conditions
+  const isRefreshingRef = useRef(false);
+
   // 1. Inicializar Store (Carregar Blacklist e Configs)
   useEffect(() => {
     const initStore = async () => {
@@ -118,6 +130,7 @@ export function useRecommendation({
   // 2. Carregar Perfil
   useEffect(() => {
     if (profileCache) {
+      setProfile(profileCache);
       setLoadingProfile(false);
 
       return;
@@ -144,8 +157,9 @@ export function useRecommendation({
 
   // 3. Buscar Recomendações
   const refreshRecommendations = useCallback(async () => {
-    if (allGames.length === 0 || !storeReady) return;
+    if (allGames.length === 0 || !storeReady || isRefreshingRef.current) return;
 
+    isRefreshingRef.current = true;
     setLoadingRecommendations(true);
 
     // Helper para transformar dados do Rust em objetos de jogo completos
@@ -230,6 +244,7 @@ export function useRecommendation({
       console.error('Erro geral na recomendação:', error);
     } finally {
       setLoadingRecommendations(false);
+      isRefreshingRef.current = false;
     }
   }, [
     allGames,
@@ -260,29 +275,32 @@ export function useRecommendation({
   /**
    * Marca jogo como "Não Útil" e remove de todas as listas visualmente
    */
-  const markAsNotUseful = async (gameId: string) => {
-    // 1. Optimistic Update (Remove da UI instantaneamente)
-    setRecommendations(prev => prev.filter(g => g.id !== gameId));
-    setCollaborativeRecs(prev => prev.filter(g => g.id !== gameId));
-    setHybridRecs(prev => prev.filter(g => g.id !== gameId));
+  const markAsNotUseful = useCallback(
+    async (gameId: string) => {
+      // 1. Optimistic Update (Remove da UI instantaneamente)
+      setRecommendations(prev => prev.filter(g => g.id !== gameId));
+      setCollaborativeRecs(prev => prev.filter(g => g.id !== gameId));
+      setHybridRecs(prev => prev.filter(g => g.id !== gameId));
 
-    // 2. Atualiza estado e persiste
-    const newIgnored = [...ignoredIds, gameId];
-    setIgnoredIds(newIgnored);
+      // 2. Atualiza estado e persiste
+      const newIgnored = [...ignoredIds, gameId];
+      setIgnoredIds(newIgnored);
 
-    try {
-      const store = await Store.load(STORE_FILENAME);
-      await store.set('ignored_ids', newIgnored);
-      await store.save();
-    } catch (e) {
-      console.error('Erro ao salvar blacklist:', e);
-    }
-  };
+      try {
+        const store = await Store.load(STORE_FILENAME);
+        await store.set('ignored_ids', newIgnored);
+        await store.save();
+      } catch (e) {
+        console.error('Erro ao salvar blacklist:', e);
+      }
+    },
+    [ignoredIds]
+  );
 
   /**
    * Reseta todo o feedback negativo (Limpa blacklist)
    */
-  const resetFeedback = async () => {
+  const resetFeedback = useCallback(async () => {
     setIgnoredIds([]); // Limpa estado local
 
     try {
@@ -293,12 +311,12 @@ export function useRecommendation({
     } catch (e) {
       console.error('Erro ao resetar feedback:', e);
     }
-  };
+  }, [refreshRecommendations]);
 
   /**
    * Atualiza configurações de pesos
    */
-  const updateConfig = async (newConfig: RecommendationConfig) => {
+  const updateConfig = useCallback(async (newConfig: RecommendationConfig) => {
     setConfig(newConfig);
 
     try {
@@ -308,7 +326,7 @@ export function useRecommendation({
     } catch (e) {
       console.error('Erro ao salvar config:', e);
     }
-  };
+  }, []);
 
   return {
     profile,

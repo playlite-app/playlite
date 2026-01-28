@@ -74,7 +74,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </TabsList>
 
           <TabsContent value="name" className="space-y-4">
-            <div className="grid gap-2">
+            <div className="grid gap-2 py-2">
               <Label htmlFor="name">Seu Nome</Label>
               <Input
                 id="name"
@@ -115,9 +115,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </TabsContent>
 
           <TabsContent value="avatar" className="space-y-4">
-            <div className="grid gap-2">
+            <div className="grid gap-2 py-2">
               <Label>Escolha um Avatar</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 pt-2">
                 {presetAvatars.map(avatar => {
                   const AvatarComponent = avatarComponents[avatar];
 
@@ -148,12 +148,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
 
             {/* Opção para usar inicial */}
-            <div className="grid gap-2">
-              <Label>Ou use sua inicial</Label>
+            <div className="grid gap-2 pb-2">
+              <Label className="pb-1">Ou use sua inicial</Label>
               <button
                 type="button"
                 onClick={() => setSelectedAvatar(null)}
-                className={`hover:bg-accent w-full rounded-lg border-2 p-3 transition-all ${
+                className={`hover:bg-accent w-full rounded-lg border-2 p-4 transition-all ${
                   selectedAvatar === null
                     ? 'border-primary bg-primary/5'
                     : 'border-transparent'

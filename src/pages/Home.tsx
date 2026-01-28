@@ -14,17 +14,18 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import React, { useState } from 'react';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
 import Hero from '@/components/Hero';
 import { RecommendationTooltip } from '@/components/RecommendationTooltip';
 import StandardGameCard from '@/components/StandardGameCard';
+import { StatCard } from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import Achievements from '../components/Achievements';
+import { useHeroCarousel } from '../hooks/useHeroCarousel';
 import { useHome } from '../hooks/useHome';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
@@ -53,7 +54,15 @@ export default function Home(props: HomeProps) {
     loadingRecommendations,
   } = useHome(props);
 
-  const [heroIndex, setHeroIndex] = useState(0);
+  // Lógica do Hero usando useHeroCarousel
+  const heroSlides = [
+    backlogRecommendations[0],
+    ...(trending || []).slice(0, 2),
+    mostPlayed[0],
+  ].filter(Boolean);
+
+  const { currentIndex, next, prev } = useHeroCarousel(heroSlides.length);
+  const currentHero = heroSlides[currentIndex] || mostPlayed[0];
 
   // Helper para imagens
   const getHeroImage = (game: Game | RawgGame) =>
@@ -86,17 +95,6 @@ export default function Home(props: HomeProps) {
     );
   }
 
-  // Lógica do Hero
-  const heroSlides = [
-    backlogRecommendations[0],
-    ...(trending || []).slice(0, 2),
-    mostPlayed[0],
-  ].filter(Boolean);
-  const currentHero = heroSlides[heroIndex] || mostPlayed[0];
-  const nextHero = () => setHeroIndex(prev => (prev + 1) % heroSlides.length);
-  const prevHero = () =>
-    setHeroIndex(prev => (prev - 1 + heroSlides.length) % heroSlides.length);
-
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto pb-10">
       {/* Seção: Hero component */}
@@ -112,8 +110,8 @@ export default function Home(props: HomeProps) {
               : undefined
           }
           showNavigation={heroSlides.length > 1}
-          onNext={nextHero}
-          onPrev={prevHero}
+          onNext={next}
+          onPrev={prev}
           badges={
             <div className="bg-primary/20 text-primary-foreground border-primary/30 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
               {backlogRecommendations.some(g => g.id === currentHero.id) && (
@@ -412,27 +410,6 @@ export default function Home(props: HomeProps) {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Subcomponente StatCard
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  color: string;
-  bg: string;
-}
-
-function StatCard({ icon, label, value, color, bg }: StatCardProps) {
-  return (
-    <div className="bg-card border-border hover:border-primary/50 flex items-center gap-4 rounded-xl border p-5 transition-colors">
-      <div className={`rounded-lg p-3 ${bg} ${color}`}>{icon}</div>
-      <div>
-        <p className="text-muted-foreground text-sm">{label}</p>
-        <p className="text-2xl font-bold">{value}</p>
       </div>
     </div>
   );

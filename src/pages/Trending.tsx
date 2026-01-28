@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/core';
 import {
   Clock,
   ExternalLink,
@@ -10,7 +9,6 @@ import {
   Loader2,
   TrendingUp,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ActionButton } from '@/components/ActionButton.tsx';
@@ -28,19 +26,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { Game, Giveaway, RawgGame, UserPreferenceVector } from '@/types';
+import { Game, Giveaway, RawgGame } from '@/types';
 
 import { ErrorState } from '../components/ErrorState';
+import {
+  calculateGameAffinity,
+  useSortedByAffinity,
+} from '../hooks/useGameAffinity';
+import { useGiveaways } from '../hooks/useGiveaways';
+import { useHeroCarousel } from '../hooks/useHeroCarousel';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useRecommendation } from '../hooks/useRecommendation';
 import { useTrending } from '../hooks/useTrending';
+import { useUpcoming } from '../hooks/useUpcoming';
 import { useWishlist } from '../hooks/useWishlist';
-import { trendingService } from '../services/trendingService';
 import { openExternalLink } from '../utils/navigation';
-import {
-  calculateAffinity,
-  isFavoriteSeries,
-} from '../utils/recommendation.ts';
 
 interface TrendingProps {
   userGames: Game[];
@@ -59,46 +59,10 @@ const PLATFORM_OPTIONS = [
   { id: 'IndieGala', label: 'IndieGala' },
 ];
 
-// Chave para localStorage
-const STORAGE_KEY = 'trending_platform_filters';
-
-// Helper para calcular afinidade e badge de um jogo
-function calculateGameAffinity(
-  game: RawgGame,
-  profile: UserPreferenceVector | null
-): {
-  genres: string[];
-  tags: { slug: string }[];
-  affinity: number;
-  isFavSeries: boolean;
-  badge?: string;
-} {
-  const genres = game.genres?.map(g => g.name) || [];
-  const tags = game.tags?.map(t => ({ slug: t.name })) || [];
-  const affinity = calculateAffinity(
-    profile,
-    genres,
-    tags,
-    game.series || null
-  );
-  const isFavSeries = isFavoriteSeries(profile, game.series || null);
-
-  let badge: string | undefined;
-
-  if (isFavSeries) {
-    badge = 'SÉRIE FAVORITA';
-  } else if (affinity > 80) {
-    badge = 'TOP PICK';
-  } else if (affinity > 50) {
-    badge = 'PARA VOCÊ';
-  }
-
-  return { genres, tags, affinity, isFavSeries, badge };
-}
-
 export default function Trending(props: TrendingProps) {
   const isOnline = useNetworkStatus();
 
+  // Hooks customizados para gerenciar diferentes aspectos da página
   const {
     games,
     allGenres,
@@ -108,85 +72,19 @@ export default function Trending(props: TrendingProps) {
     setSelectedGenre,
     addToWishlist,
   } = useTrending(props);
-
   const { profile } = useRecommendation();
   const { games: wishlistGames } = useWishlist();
-  const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>([]);
-  const [heroIndex, setHeroIndex] = useState(0);
-  const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { upcomingGames } = useUpcoming();
+  const { filteredGiveaways, loading, selectedPlatforms, togglePlatform } =
+    useGiveaways();
 
-  // Carrega filtros do localStorage na inicialização
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-
-      return saved
-        ? JSON.parse(saved)
-        : ['Steam', 'Epic Games Store', 'Prime Gaming', 'GOG', 'Ubisoft'];
-    } catch {
-      return ['Steam', 'Epic Games Store', 'Prime Gaming', 'GOG', 'Ubisoft'];
-    }
-  });
-
-  // Persiste filtros no localStorage sempre que mudam
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedPlatforms));
-    } catch (error) {
-      console.error('Erro ao salvar filtros:', error);
-    }
-  }, [selectedPlatforms]);
-
-  // Carrega Jogos Grátis
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await invoke<Giveaway[]>('get_active_giveaways');
-        setGiveaways(data);
-      } catch (error) {
-        console.error('Erro ao buscar jogos grátis:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
-
-  // Lógica de Filtragem (Memoizada)
-  const filteredGiveaways = useMemo(() => {
-    return giveaways.filter(game => {
-      return selectedPlatforms.some(platform =>
-        game.platforms.includes(platform)
-      );
-    });
-  }, [giveaways, selectedPlatforms]);
-
-  // Handler para alternar filtros
-  const togglePlatform = (platformId: string) => {
-    setSelectedPlatforms(prev =>
-      prev.includes(platformId)
-        ? prev.filter(p => p !== platformId)
-        : [...prev, platformId]
-    );
-  };
-
-  // Carrega Upcoming
-  useEffect(() => {
-    const fetchUpcoming = async () => {
-      try {
-        const apiKey = await trendingService.getApiKey();
-
-        if (apiKey) {
-          const upcoming = await trendingService.getUpcoming(apiKey);
-          setUpcomingGames(upcoming);
-        }
-      } catch (e) {
-        console.error('Erro ao buscar lançamentos:', e);
-      }
-    };
-    fetchUpcoming();
-  }, []);
+  // Hero carousel
+  const heroGames = games.slice(0, 5);
+  const {
+    currentIndex: heroIndex,
+    next: nextHero,
+    prev: prevHero,
+  } = useHeroCarousel(heroGames.length);
 
   const handleRetry = () => {
     window.location.reload();
@@ -240,15 +138,11 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
-  // Lógica do Hero
-  const heroGames = games.slice(0, 5);
+  // Hero atual
   const currentHero = heroGames[heroIndex];
   const isHeroInWishlist = wishlistGames.some(
     w => w.id === currentHero?.id.toString()
   );
-  const nextHero = () => setHeroIndex(prev => (prev + 1) % heroGames.length);
-  const prevHero = () =>
-    setHeroIndex(prev => (prev - 1 + heroGames.length) % heroGames.length);
 
   if (!currentHero) {
     return (
@@ -264,31 +158,8 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
-  // Ordenação da Grid usando o Profile
-  let gridGames = games.slice(5, 15);
-
-  if (profile) {
-    gridGames = [...gridGames].sort((a, b) => {
-      const genresA = a.genres?.map(g => g.name) || [];
-      const genresB = b.genres?.map(g => g.name) || [];
-      const tagsA = a.tags?.map(t => ({ slug: t.name })) || [];
-      const tagsB = b.tags?.map(t => ({ slug: t.name })) || [];
-      const scoreA = calculateAffinity(
-        profile,
-        genresA,
-        tagsA,
-        a.series || null
-      );
-      const scoreB = calculateAffinity(
-        profile,
-        genresB,
-        tagsB,
-        b.series || null
-      );
-
-      return scoreB - scoreA;
-    });
-  }
+  // Ordenação da Grid por afinidade
+  const gridGames = useSortedByAffinity(games.slice(5, 15), profile);
 
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto">
@@ -411,7 +282,7 @@ export default function Trending(props: TrendingProps) {
           </DropdownMenu>
         </div>
 
-        {/* Grid de Jogos Grátis - Aumentado para 3 colunas */}
+        {/* Grid de Jogos Grátis */}
         {filteredGiveaways.length === 0 && !loading ? (
           <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
             <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />

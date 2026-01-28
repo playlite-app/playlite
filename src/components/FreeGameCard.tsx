@@ -88,12 +88,16 @@ export function FreeGameCard({
         {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity" />
 
-        {/* Badge "GRÁTIS" - Maior e mais chamativo */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg bg-linear-to-r from-green-500 to-emerald-500 px-3 py-2 shadow-lg">
-          <Gift size={16} className="text-white" />
-          <span className="text-sm font-bold tracking-wide text-white uppercase">
-            Grátis
-          </span>
+        {/* Badge "GRÁTIS" */}
+        <div className="absolute right-3 bottom-3">
+          <Badge
+            className={cn(
+              'flex items-center gap-1.5 bg-green-600 text-xs font-semibold text-white shadow-md'
+            )}
+          >
+            <Gift size={14} className="text-white" />
+            <span>Grátis</span>
+          </Badge>
         </div>
 
         {/* Badge da Plataforma - Canto superior */}
@@ -114,16 +118,16 @@ export function FreeGameCard({
       </div>
 
       {/* Conteúdo */}
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <h3 className="text-foreground line-clamp-2 text-base leading-tight font-semibold transition-colors">
+      <div className="flex flex-1 flex-col gap-2 p-3">
+        <h3 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold transition-colors">
           {title}
         </h3>
 
         {/* Footer com preço e data */}
-        <div className="mt-auto flex items-center justify-between gap-2">
+        <div className="mt-auto flex items-center justify-between gap-1.5">
           {/* Preço original */}
           {worth && worth !== 'N/A' && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span className="text-muted-foreground text-xs line-through">
                 {worth}
               </span>
@@ -133,7 +137,7 @@ export function FreeGameCard({
 
           {/* Data de expiração */}
           {formattedDate && (
-            <div className="flex items-center gap-1.5 rounded-md bg-orange-500/10 px-2 py-1">
+            <div className="flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5">
               <Calendar size={12} className="text-orange-500" />
               <span className="text-xs font-semibold text-orange-500">
                 {daysLeft && daysLeft <= 3 ? `${daysLeft}d` : formattedDate}
