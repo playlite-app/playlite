@@ -6,8 +6,6 @@ de consumo de jogos, sempre respeitando a filosofia **local-first** e **privacy-
 Nenhum dado pessoal do usuário é enviado para servidores externos. Todo o processamento acontece localmente no
 aplicativo ou é pré-computado offline.
 
----
-
 ## Visão Geral da Abordagem
 
 O sistema combina duas estratégias complementares:
@@ -16,8 +14,6 @@ O sistema combina duas estratégias complementares:
 2. **Filtragem Colaborativa Offline (Collaborative Filtering)**
 
 Essas abordagens são combinadas para gerar recomendações relevantes, estáveis e explicáveis.
-
----
 
 ## 1. Filtragem Baseada em Conteúdo
 
@@ -43,8 +39,6 @@ Cada jogo da biblioteca recebe um peso de relevância baseado em heurísticas si
 
 Jogos não jogados ou sem avaliação não distorcem o perfil.
 
----
-
 ## 2. Filtragem Colaborativa Offline
 
 A filtragem colaborativa é baseada em padrões globais de consumo extraídos de datasets públicos de avaliações de jogos.
@@ -61,8 +55,6 @@ O resultado é um conjunto de relações do tipo:
 > "Jogadores que gostaram de X também gostaram de Y"
 
 Esses dados são exportados para um arquivo JSON e distribuídos com o aplicativo.
-
----
 
 ## 3. Combinação das Estratégias (Modelo Híbrido)
 
@@ -81,8 +73,6 @@ score_final =
 
 Onde α e β são pesos ajustáveis.
 
----
-
 ## 4. Regras de Negócio
 
 Após o cálculo matemático, regras adicionais garantem uma melhor experiência:
@@ -90,8 +80,6 @@ Após o cálculo matemático, regras adicionais garantem uma melhor experiência
 * Penalização de jogos excessivamente populares
 * Diversidade de gêneros e estilos
 * Remoção de sugestões repetitivas
-
----
 
 ## 5. Explicabilidade
 
@@ -102,8 +90,6 @@ As recomendações são acompanhadas de explicações determinísticas, baseadas
 * Séries favoritas
 
 Isso garante transparência e elimina a necessidade de LLMs para explicação.
-
----
 
 ## Benefícios da Abordagem
 

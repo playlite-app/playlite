@@ -6,8 +6,6 @@ Artificial foram usadas como apoio durante a criação do projeto.
 O uso de IA teve como objetivo acelerar o desenvolvimento, explorar alternativas de implementação e facilitar o
 aprendizado de novas tecnologias, sem substituir a análise crítica, os testes e as decisões humanas.
 
----
-
 ## Princípios de Uso
 
 As ferramentas de IA foram utilizadas seguindo alguns princípios claros:
@@ -19,8 +17,6 @@ As ferramentas de IA foram utilizadas seguindo alguns princípios claros:
 
 Não foram utilizados logs de prompts ou respostas, pois o uso de IA foi contínuo, iterativo e exploratório ao longo de
 todo o desenvolvimento.
-
----
 
 ## Ferramentas Utilizadas
 
@@ -42,8 +38,6 @@ As principais ferramentas de IA utilizadas no projeto foram:
   Utilizado como ferramenta integrada à IDE para autocomplete, correções pontuais, formatação de código e análise
   estática.
 
----
-
 ## Limites do Uso de IA
 
 As ferramentas de IA **não** foram responsáveis por:
@@ -55,8 +49,6 @@ As ferramentas de IA **não** foram responsáveis por:
 - tomar decisões finais de arquitetura
 
 Essas etapas foram realizadas manualmente.
-
----
 
 ## Aprendizado e Responsabilidade
 

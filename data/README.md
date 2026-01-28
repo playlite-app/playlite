@@ -4,11 +4,11 @@ Esta pasta contém exclusivamente os **artefatos de ciência de dados** usados p
 do Playlite.
 
 Diferente do código da aplicação, que roda no dispositivo do usuário, tudo aqui é executado **offline, em batch**,
-durante o desenvolvimento. O resultado final é um conjunto de arquivos prontos para consumo pelo aplicativo.
+durante o desenvolvimento. O resultado é um conjunto de arquivos prontos para consumo pelo aplicativo.
 
 ---
 
-## 🎯 Papel desta Pasta no Projeto
+## 🎯 Sobre o Projeto e Datasets
 
 O Playlite foi projetado para ser simples, rápido e local-first. Para manter essas características, qualquer
 processamento pesado é **retirado do runtime da aplicação**.
@@ -19,6 +19,10 @@ Esta pasta existe para:
 * Extrair padrões globais de preferência entre jogadores
 * Transformar esses padrões em dados estáticos
 * Alimentar o sistema de recomendação do app sem custo computacional adicional
+
+Neste projeto foi utilizado o dataset Game Recommendations on Steam (Kaggle) que contém interações reais de usuários
+Steam com jogos. Ele inclui se o usuário recomendou ou não o jogo e pode ser utilizado para construir a matriz implícita
+de preferências necessária para a filtragem colaborativa do Playlite.
 
 ---
 
@@ -35,24 +39,16 @@ Tudo aqui é isolado do usuário final.
 
 ---
 
-## 🛠️ Dados Utilizados
-
-Dataset Game Recommendations on Steam (Kaggle): contém interações reais de usuários Steam com jogos. Ele inclui se o
-usuário recomendou ou não o jogo e pode ser utilizado para construir a matriz implícita de preferências necessária para
-a filtragem colaborativa do Playlite.
-
----
-
 ## 📦 Estrutura da Pasta
 
 ```text
 data/
  ├─ README.md          # Visão geral do pipeline de dados
  ├─ scripts/           # Scripts Python para processamento batch
- ├─ notebooks/         # Análises exploratórias e validação
  ├─ raw/               # Datasets brutos (não versionados)
  ├─ processed/         # Dados intermediários gerados pelos scripts
  ├─ outputs/           # Arquivos JSON finais consumidos pelo app
+ └─ reports/           # Análises e estatísticas do processamento
 ```
 
 ---
@@ -126,23 +122,10 @@ A matriz final utilizada para o cálculo de similaridade possui as seguintes car
 
 ---
 
-## Data Source & Credits
-
-Este projeto utiliza o dataset **Game Recommendations on Steam** fornecido por Anton Kozyriev via Kaggle.
-
-- **Autor:** Anton Kozyriev
-- **Fonte:** [Kaggle Dataset](https://www.kaggle.com/ds/2871694)
-- **DOI:** [10.34740/kaggle/ds/2871694](https://doi.org/10.34740/kaggle/ds/2871694)
-- **Licença:** CC0: Public Domain
-- **Acessado em:** January 2026
-
-**Citation:**
-> Kozyriev, A. (2023). *Game Recommendations on Steam* [Data set]. Kaggle. https://doi.org/10.34740/KAGGLE/DS/2871694
-
 ## 📊 Fonte de Dados & Créditos
 
 Este projeto utiliza o conjunto de dados **Game Recommendations on Steam** de Anton Kozyriev,
-disponibilizado através do Kaggle sob a licença CC0: Publlic Domain.
+disponibilizado através do Kaggle sob a licença CC0: Public Domain.
 
 ### Informações do Conjunto de Dados
 
@@ -155,18 +138,22 @@ disponibilizado através do Kaggle sob a licença CC0: Publlic Domain.
 
 ### Citação
 
-Se você utilizar este projeto em trabalhos acadêmicos, por favor cite o conjunto de dados original:
+Se utilizar este projeto em trabalhos acadêmicos, por favor cite o conjunto de dados original:
 
 ```bibtex
-@misc{kozyriev2023gamesteam,
-  author = {Kozyriev, Anton},
-  title = {Game Recommendations on Steam},
-  year = {2023},
-  publisher = {Kaggle},
-  doi = {10.34740/KAGGLE/DS/2871694},
-  url = {https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam}
+@misc{anton_kozyriev_2023,
+	title={Game Recommendations on Steam},
+	url={https://www.kaggle.com/ds/2871694},
+	DOI={10.34740/KAGGLE/DS/2871694},
+	publisher={Kaggle},
+	author={Anton Kozyriev},
+	year={2023}
 }
+```
 
+Ou no formato APA:
+> Kozyriev, A. (2023). *Game Recommendations on Steam* [Data set]. Kaggle.
+> https://doi.org/10.34740/KAGGLE/DS/2871694
 
 ---
 

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { Github } from '@/icons';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '3.0.0';
 
 interface TechLinkProps {
   name: string;
@@ -47,30 +47,27 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
         className="hover:bg-accent/5 flex w-full items-center justify-between p-6 text-left transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-white shadow-lg">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-7 w-7"
-            >
-              <path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5z" />
-              <path d="m9 12 2 2 4-4" />
-              <path d="M8 8h8" />
-              <path d="M8 16h5" />
-            </svg>
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white shadow-lg">
+            <img
+              src="/app-icon.png"
+              alt="Logo"
+              className="shrink-0 object-contain"
+            />
           </div>
           <div>
             <h3 className="text-lg leading-none font-semibold tracking-tight">
               Playlite
             </h3>
             <p className="text-muted-foreground mt-1.5 text-sm">
-              Versão {APP_VERSION}
+              Gerenciador de biblioteca de jogos desktop com foco em uso{' '}
+              <em>local-first</em>, privacidade e recomendações inteligentes.
             </p>
           </div>
+        </div>
+        <div>
+          <p className="text-muted-foreground mt-1.5 text-sm">
+            Versão {APP_VERSION}
+          </p>
         </div>
         <ChevronDown
           size={20}
@@ -90,17 +87,6 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
       >
         <div className="overflow-hidden">
           <div className="space-y-6 px-6 pb-6">
-            {/* Descrição */}
-            <div className="border-l-2 border-blue-500/50 pl-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                O{' '}
-                <span className="text-foreground font-semibold">Playlite</span>{' '}
-                é um gerenciador de biblioteca de jogos desktop com foco em uso
-                local (<em>local-first</em>), privacidade e recomendações
-                inteligentes.
-              </p>
-            </div>
-
             {/* Stack Técnica */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">Stack Técnica</h4>
@@ -108,20 +94,30 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">Framework:</span>
                   <TechLink name="Tauri" url="https://tauri.app" />
-                  <span className="text-muted-foreground">•</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-muted-foreground">Linguagens:</span>
                   <TechLink
                     name="Rust"
                     url="https://www.rust-lang.org"
-                    description="Backend"
+                    description="backend"
                   />
-                </div>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-muted-foreground">Frontend:</span>
-                  <TechLink name="React" url="https://react.dev" />
                   <span className="text-muted-foreground">•</span>
                   <TechLink
                     name="TypeScript"
                     url="https://www.typescriptlang.org"
+                    description="frontend"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-muted-foreground">
+                    Biblioteca principal:
+                  </span>
+                  <TechLink
+                    name="React"
+                    url="https://react.dev"
+                    description="frontend"
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -131,6 +127,10 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
                   <TechLink name="shadcn/ui" url="https://ui.shadcn.com" />
                   <span className="text-muted-foreground">•</span>
                   <TechLink name="Lucide Icons" url="https://lucide.dev" />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-muted-foreground">Banco de dados:</span>
+                  <TechLink name="SQLite" url="https://sqlite.org/index.html" />
                 </div>
               </div>
             </div>
@@ -145,57 +145,65 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
+                  <p>Metadados de jogos:</p>
                   <div className="flex-1">
-                    <TechLink name="RAWG" url="https://rawg.io/apidocs" /> -
-                    Metadados de jogos
+                    <TechLink name="RAWG" url="https://rawg.io/apidocs" />{' '}
+                    <span className="text-muted-foreground mt-0.5 text-xs">
+                      •
+                    </span>{' '}
+                    <TechLink
+                      name="Steam Web API"
+                      url="https://steamcommunity.com/dev"
+                      description="Web + Store"
+                    />
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
+                  <p>Preços e promoções:</p>
                   <div className="flex-1">
                     <TechLink
                       name="IsThereAnyDeal"
                       url="https://isthereanydeal.com"
-                    />{' '}
-                    - Preços e promoções
+                    />
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <div className="flex-1">
-                    <TechLink
-                      name="Steam Web API"
-                      url="https://steamcommunity.com/dev"
-                    />{' '}
-                    - Biblioteca pessoal
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground mt-0.5 text-xs">
-                    •
-                  </span>
+                  <p>Estatísticas públicas:</p>
                   <div className="flex-1">
                     <TechLink
                       name="SteamSpy"
                       url="https://steamspy.com/api.php"
-                    />{' '}
-                    - Estatísticas públicas
+                    />
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
+                  <p>Jogos gratuitos:</p>
                   <div className="flex-1">
                     <TechLink
                       name="GamerPower"
                       url="https://www.gamerpower.com/api-read"
-                    />{' '}
-                    - Jogos gratuitos
+                    />
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5 text-xs">
+                    •
+                  </span>
+                  <p>Tradução de descrição:</p>
+                  <div className="flex-1">
+                    <TechLink
+                      name="Gemini"
+                      url="https://aistudio.google.com/"
+                    />
                   </div>
                 </div>
               </div>
@@ -254,7 +262,7 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
                 </a>
               </div>
               <p className="text-muted-foreground text-xs">
-                Desenvolvido por Alan de O. Gonçalves, 2026.
+                Desenvolvido por Alan de O. Gonçalves, 2025-2026.
               </p>
             </div>
           </div>

@@ -5,8 +5,6 @@ Este documento descreve a estratégia de **Filtragem Colaborativa baseada em ite
 Diferente de sistemas tradicionais que calculam recomendações em tempo real comparando usuários entre si, o Playlite
 utiliza um modelo **pré-computado**, distribuído junto com o aplicativo.
 
----
-
 ## Motivação
 
 A adoção de uma abordagem offline foi motivada por:
@@ -15,8 +13,6 @@ A adoção de uma abordagem offline foi motivada por:
 * Funcionamento sem dependência de internet
 * Simplicidade arquitetural
 * Performance previsível em ambiente desktop
-
----
 
 ## Tipo de Filtragem Colaborativa
 
@@ -28,18 +24,40 @@ O sistema utiliza **Item-based Collaborative Filtering**, onde:
 
 Essa abordagem é mais estável do que user-based CF em datasets grandes e esparsos.
 
----
-
 ## Fonte dos Dados
 
-## Fonte dos Dados
+O sistema de recomendação é alimentado pelo dataset **Game Recommendations on Steam**,
+que contém interações reais de usuários da plataforma Steam, incluindo:
 
-O modelo é treinado com o dataset público **Game Recommendations on Steam**, que agrega interações reais de usuários da
-plataforma Steam.
+- Avaliações e reviews
+- Relacionamentos entre usuários e jogos
 
-* **Dataset:** [Game Recommendations on Steam (Kaggle)](https://www.kaggle.com/ds/2871694)
-* **Autor:** Anton Kozyriev
-* **Licença:** CC0: Public Domain
+### Informações do Dataset
+
+| Propriedade | Valor                                                                                 |
+|-------------|---------------------------------------------------------------------------------------|
+| **Nome**    | Game Recommendations on Steam                                                         |
+| **Autor**   | Anton Kozyriev                                                                        |
+| **Fonte**   | [Kaggle](https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam) |
+| **DOI**     | [10.34740/KAGGLE/DS/2871694](https://doi.org/10.34740/KAGGLE/DS/2871694)              |
+| **Licença** | CC0: Public Domain                                                                    |
+| **Tamanho** | ~2.24 GB                                                                              |
+| **Período** | Dados até 2023                                                                        |
+
+### Estrutura dos Dados
+
+O dataset inclui as seguintes tabelas principais:
+
+- `recommendations.csv` - Reviews de usuários
+- `games.csv` - Metadados dos jogos
+- `users.csv` - Informações dos usuários (anonimizadas)
+
+### Citação Acadêmica
+
+```
+Kozyriev, A. (2023). Game Recommendations on Steam [Data set]. 
+Kaggle. https://doi.org/10.34740/KAGGLE/DS/2871694
+```
 
 ### Pré-processamento e Limpeza
 
@@ -53,8 +71,6 @@ treinamento. São removidos:
 O resultado final é um subconjunto de **~14.000 jogos** de alta relevância, representando cerca de 28% do catálogo
 original, mas mantendo a maioria das interações significativas.
 
----
-
 ## Representação dos Dados
 
 Cada jogo é representado por um vetor binário:
@@ -67,8 +83,6 @@ Onde:
 
 * `1` indica que o usuário avaliou positivamente o jogo
 * `0` indica ausência de avaliação positiva
-
----
 
 ## Métrica de Similaridade
 
@@ -85,8 +99,6 @@ cos(A, B) = (A · B) / (||A|| × ||B||)
 * Reduz viés causado por popularidade extrema
 * Fácil de explicar e auditar
 
----
-
 ## Filtragem e Estabilização
 
 Para garantir qualidade nas recomendações, são aplicadas as seguintes regras:
@@ -97,8 +109,6 @@ Para garantir qualidade nas recomendações, são aplicadas as seguintes regras:
 
 Essas heurísticas evitam recomendações instáveis ou óbvias.
 
----
-
 ## Geração do Arquivo Final
 
 O resultado do processamento é um arquivo JSON contendo:
@@ -108,8 +118,6 @@ O resultado do processamento é um arquivo JSON contendo:
 * Metadados auxiliares (popularidade, categorias)
 
 Este arquivo é consumido diretamente pelo backend em Rust.
-
----
 
 ## Integração com o Modelo Híbrido
 
@@ -122,8 +130,6 @@ Durante a execução do aplicativo:
 * Os scores são combinados com o content-based filtering
 
 Isso garante recomendações personalizadas sem comprometer a privacidade.
-
----
 
 ## Limitações Conhecidas
 

@@ -19,3 +19,70 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+================================================================================
+THIRD-PARTY DATA AND ASSETS
+================================================================================
+
+This software uses third-party datasets and resources, each with their own
+licensing terms as described below:
+
+--------------------------------------------------------------------------------
+Dataset: Game Recommendations on Steam
+--------------------------------------------------------------------------------
+Author:        Anton Kozyriev
+Source:        https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam
+License:       CC0 1.0 Universal (CC0 1.0) Public Domain Dedication
+DOI:           10.34740/KAGGLE/DS/2871694
+Accessed:      January 2026
+License Text:  https://creativecommons.org/publicdomain/zero/1.0/
+
+Purpose:       Powers the collaborative filtering recommendation engine
+
+Citation:      Kozyriev, A. (2023). Game Recommendations on Steam [Data set].
+               Kaggle. https://doi.org/10.34740/KAGGLE/DS/2871694
+
+Note:          This dataset is released under CC0 Public Domain, meaning it can
+               be freely used, modified, and distributed without restrictions.
+               Attribution is provided as a courtesy and best practice.
+
+--------------------------------------------------------------------------------
+External APIs
+--------------------------------------------------------------------------------
+
+This software integrates with the following third-party APIs, each subject to
+their respective terms of service:
+
+1. Steam APIs
+   - Provider: Valve Corporation
+   - Terms: https://steamcommunity.com/dev/apiterms
+   - Purpose: User library synchronization (Steam Web API) and public game
+              metadata (Steam Store API)
+
+2. RAWG.io API
+   - Provider: RAWG
+   - Terms: https://rawg.io/apidocs
+   - Purpose: Game metadata, covers, descriptions, and trending games
+
+3. IsThereAnyDeal API
+   - Provider: IsThereAnyDeal
+   - Terms: https://docs.isthereanydeal.com
+   - Purpose: Price tracking and deals information
+
+4. SteamSpy API
+   - Provider: SteamSpy
+   - Terms: https://steamspy.com/api.php
+   - Purpose: Public statistics on Steam games
+
+5. GamerPower API
+   - Provider: GamerPower
+   - Terms: https://www.gamerpower.com/api-read
+   - Purpose: Free game giveaways and promotions
+
+6. Google Gemini API
+   - Provider: Google
+   - Terms: https://ai.google.dev/gemini-api/terms
+   - Purpose: AI-powered translation of game descriptions to Portuguese
+
+Note: Use of these APIs requires compliance with their respective terms of
+service. API keys must be obtained directly from providers.
