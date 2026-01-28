@@ -20,7 +20,7 @@ Learning clássico.
 ## 💡 Motivação
 
 Tenho uma biblioteca grande de jogos e frequentemente fico em dúvida sobre qual jogar depois.
-Este projeto nasceu para resolver esse problema real, ao mesmo tempo em que serve como um projeto completo de portfólio
+Este projeto nasceu para resolver esse problema real, ao mesmo tempo, em que serve como um projeto completo de portfólio
 para explorar Rust, Tauri, React e sistemas de recomendação.
 
 ## ✨ Funcionalidades
@@ -47,13 +47,23 @@ para explorar Rust, Tauri, React e sistemas de recomendação.
 - Comunicação via Tauri Commands
 - Banco SQLite embarcado
 
-## 📚 Documentação Adicional
+## 🤖 Uso de Inteligência Artificial no Desenvolvimento
 
-- Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
-- Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
-- Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
-- Guia de contribuição: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Roadmap: [`ROADMAP.md`](ROADMAP.md)
+O Playlite foi desenvolvido com apoio extensivo de ferramentas de Inteligência Artificial como parte de um processo de
+*AI-assisted development* (também conhecido como “vibe coding”).
+
+As ferramentas de IA foram utilizadas principalmente para:
+
+- geração inicial de código e protótipos
+- sugestões de arquitetura e refatoração
+- apoio à documentação e análise técnica
+
+Todas as decisões finais de arquitetura, integração entre sistemas, testes, correções de bugs e validação do código
+foram realizadas manualmente. O uso de IA neste projeto teve como objetivo acelerar o desenvolvimento, facilitar o
+aprendizado de Rust e React, e reduzir esforço em tarefas repetitivas, mantendo total entendimento e responsabilidade
+sobre o código final.
+
+📄 Detalhes mais aprofundados sobre o uso de IA estão disponíveis na documentação do projeto.
 
 ## 🤖 Sistema de Recomendação
 
@@ -99,6 +109,13 @@ npm run tauri dev
 ```bash
 npm run tauri build
 ```
+
+## 📚 Documentação Adicional
+
+- Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
+- Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
+- Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
+- Roadmap: [`ROADMAP.md`](ROADMAP.md)
 
 ## 🤝 Contribuição
 

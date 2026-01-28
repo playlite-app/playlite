@@ -15,8 +15,9 @@ export default defineConfig({
           { text: 'Instalação', link: '/guide/installation' },
           { text: 'Primeiros passos', link: '/guide/getting-started' },
           { text: 'Funcionalidades', link: '/guide/features' },
+          { text: 'Ajuda e FAQ', link: '/guide/help' },
+          { text: 'Sobre o Playlite', link: '/guide/about' },
           { text: 'Telas do app', link: '/guide/pages/home' },
-          { text: 'FAQ', link: '/guide/faq' },
         ],
       },
       {
@@ -32,13 +33,17 @@ export default defineConfig({
             text: 'Filtragem Colaborativa Offline',
             link: '/dev/filtering-collaborative',
           },
+          {
+            text: 'Desenvolvimento Assistido por IA',
+            link: '/dev/ai-assisted-development',
+          },
         ],
       },
       {
-        text: 'Sobre o Projeto',
+        text: 'Projeto',
         items: [
           {
-            text: 'Documentação Oficial (GitHub)',
+            text: 'Documentação no GitHub',
             link: '/dev/project-docs',
           },
         ],
@@ -72,8 +77,8 @@ export default defineConfig({
             { text: 'Instalação', link: '/guide/installation' },
             { text: 'Primeiros passos', link: '/guide/getting-started' },
             { text: 'Funcionalidades', link: '/guide/features' },
-            { text: 'Backup e Restore', link: '/guide/backup-restore' },
-            { text: 'FAQ', link: '/guide/faq' },
+            { text: 'Ajuda', link: '/guide/help' },
+            { text: 'Sobre o Playlite', link: '/guide/about' },
           ],
         },
         {
@@ -97,13 +102,21 @@ export default defineConfig({
               text: 'Sistema de Recomendação',
               link: '/dev/recommendation-system',
             },
+            {
+              text: 'Filtragem Colaborativa Offline',
+              link: '/dev/filtering-collaborative',
+            },
+            {
+              text: 'Desenvolvimento Assistido por IA',
+              link: '/dev/ai-assisted-development',
+            },
           ],
         },
         {
-          text: 'Sobre o Projeto',
+          text: 'Projeto',
           items: [
             {
-              text: 'Documentação Adicional (GitHub)',
+              text: 'Documentação no GitHub',
               link: '/dev/project-docs',
             },
           ],

@@ -25,4 +25,4 @@ de máquina.
 - **Exportar:** Gera um arquivo com todos os seus jogos, notas e status.
 - **Importar:** Restaura sua biblioteca a partir de um arquivo salvo.
 
-➡️ [Veja o guia completo de Backup e Restore](/guide/backup-restore)
+➡️ [Veja o guia completo de Backup e Restore](/guide/help#backup-e-restaurao-de-dados)

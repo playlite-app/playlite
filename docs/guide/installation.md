@@ -36,4 +36,4 @@ Quando sair uma nova versão:
 
 Antes de atualizações ou mudanças grandes, use o fluxo:
 
-➡️ [Veja o guia completo de Backup e Restore](/guide/backup-restore)
+➡️ [Veja o guia completo de Backup e Restore](/guide/help#backup-e-restaurao-de-dados)
