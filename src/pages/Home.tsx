@@ -247,10 +247,7 @@ export default function Home(props: HomeProps) {
                   subtitle={game.genres?.split(',')[0]}
                   onClick={() => props.onGameClick(game)}
                   badge={
-                    <RecommendationTooltip
-                      reason={game.reason}
-                      score={game.matchScore}
-                    >
+                    <RecommendationTooltip reason={game.reason}>
                       <span>Recomendado</span>
                     </RecommendationTooltip>
                   }
@@ -297,10 +294,7 @@ export default function Home(props: HomeProps) {
                   subtitle={game.genres?.split(',')[0]}
                   onClick={() => props.onGameClick(game)}
                   badge={
-                    <RecommendationTooltip
-                      reason={game.reason}
-                      score={game.matchScore}
-                    >
+                    <RecommendationTooltip reason={game.reason}>
                       <span>Community</span>
                     </RecommendationTooltip>
                   }

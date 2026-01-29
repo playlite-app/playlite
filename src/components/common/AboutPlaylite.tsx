@@ -64,17 +64,17 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
             </p>
           </div>
         </div>
-        <div>
-          <p className="text-muted-foreground mt-1.5 text-sm">
+        <div className="flex items-center gap-3">
+          <p className="text-muted-foreground text-sm whitespace-nowrap">
             Versão {APP_VERSION}
           </p>
+          <ChevronDown
+            size={20}
+            className={`text-muted-foreground transition-transform duration-300 ${
+              isExpanded ? 'rotate-180' : ''
+            }`}
+          />
         </div>
-        <ChevronDown
-          size={20}
-          className={`text-muted-foreground transition-transform duration-300 ${
-            isExpanded ? 'rotate-180' : ''
-          }`}
-        />
       </button>
 
       {/* Conteúdo expandível */}

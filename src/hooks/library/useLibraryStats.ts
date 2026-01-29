@@ -54,7 +54,7 @@ export function useLibraryStats({ games }: UseLibraryStatsProps) {
       .slice(0, 3);
   }, [games]);
 
-  // Top Gêneros: 5 gêneros mais comuns na biblioteca
+  // Top Gêneros: 6 gêneros mais comuns na biblioteca
   const topGenres = useMemo(() => {
     const genreStats = games.reduce(
       (acc, game) => {
@@ -75,7 +75,7 @@ export function useLibraryStats({ games }: UseLibraryStatsProps) {
 
     return Object.entries(genreStats)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 5);
+      .slice(0, 6);
   }, [games]);
 
   return {

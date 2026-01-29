@@ -12,18 +12,35 @@ import { RecommendationReason } from '@/types';
 interface RecommendationTooltipProps {
   children: ReactNode;
   reason?: RecommendationReason;
-  score?: number;
   className?: string;
 }
 
 export function RecommendationTooltip({
   children,
   reason,
-  score,
 }: RecommendationTooltipProps) {
   if (!reason) {
     return <>{children}</>;
   }
+
+  const getExplanation = (type: string) => {
+    switch (type) {
+      case 'community':
+        return 'Jogadores com gostos parecidos com o seu costumam gostar deste jogo.';
+      case 'series':
+        return 'Você já demonstrou interesse por outros jogos desta série.';
+      case 'genre':
+        return 'Este gênero aparece com frequência nos jogos que você mais joga.';
+      case 'tag':
+        return 'Compartilha características com jogos que você curte.';
+      case 'general':
+        return 'Combina com seu perfil geral de jogador.';
+      case 'hybrid':
+        return 'Combina afinidade do seu perfil com a popularidade na comunidade.';
+      default:
+        return 'Recomendado com base no seu perfil.';
+    }
+  };
 
   const getReasonMeta = (type: string) => {
     switch (type) {
@@ -54,6 +71,13 @@ export function RecommendationTooltip({
           label: 'Tag',
           color: 'text-pink-400',
           bg: 'bg-pink-500/10',
+        };
+      case 'hybrid':
+        return {
+          icon: Sparkles,
+          label: 'Afinidade + Comunidade',
+          color: 'text-indigo-400',
+          bg: 'bg-indigo-500/10',
         };
       case 'general':
         return {
@@ -90,7 +114,7 @@ export function RecommendationTooltip({
         <TooltipContent
           side="top"
           align="center"
-          className="border-border/50 bg-popover/95 animate-in fade-in zoom-in-95 z-50 max-w-xs overflow-hidden p-0 shadow-xl backdrop-blur-md duration-200"
+          className="border-border/50 bg-popover/95 animate-in fade-in zoom-in-95 z-50 w-auto overflow-hidden p-0 shadow-xl backdrop-blur-md duration-200"
         >
           {/* Header Colorido */}
           <div
@@ -102,11 +126,6 @@ export function RecommendationTooltip({
             >
               {meta.label}
             </span>
-            {score !== undefined && (
-              <span className="text-foreground ml-auto font-mono text-xs">
-                {Math.round(score)}% Match
-              </span>
-            )}
           </div>
 
           {/* Corpo do Texto */}
@@ -115,7 +134,7 @@ export function RecommendationTooltip({
               {reason.label}
             </p>
             <p className="text-muted-foreground text-xs leading-relaxed whitespace-nowrap">
-              Baseado na análise da sua biblioteca e preferências.
+              {getExplanation(reason.type_id)}
             </p>
           </div>
         </TooltipContent>

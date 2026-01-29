@@ -10,16 +10,17 @@
 
 use crate::models::Game;
 use crate::utils::tag_utils::{category_multiplier, TagKey};
+use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 // === CONFIGURAÇÃO DE PESOS DO ALGORITMO ===
 
 /// Peso base por hora jogada (limitado a 100h para evitar outliers)
-const WEIGHT_PLAYTIME_HOUR: f32 = 1.5;
+const WEIGHT_PLAYTIME_HOUR: f32 = 1.2;
 
 /// Bônus para jogos marcados como favoritos
-const WEIGHT_FAVORITE: f32 = 40.0;
+const WEIGHT_FAVORITE: f32 = 30.0;
 
 /// Peso por estrela de avaliação do usuário (1-5 estrelas)
 const WEIGHT_USER_RATING: f32 = 8.0;
@@ -28,7 +29,7 @@ const WEIGHT_USER_RATING: f32 = 8.0;
 const WEIGHT_GENRE: f32 = 1.0;
 
 /// Multiplicador para séries (peso moderado - evita viés excessivo)
-const WEIGHT_SERIES: f32 = 1.2;
+const WEIGHT_SERIES: f32 = 0.8;
 
 // === ESTRUTURAS DE CONFIGURAÇÃO E RETORNO ===
 
@@ -57,7 +58,6 @@ impl Default for RecommendationConfig {
 pub struct RecommendationReason {
     pub label: String,   // ex: "Fãs de RPG", "Série Favorita", "Parecido com..."
     pub type_id: String, // "genre", "series", "community", "tag"
-    pub score_contribution: f32,
 }
 
 // === ESTRUTURAS DE DADOS - JOGOS E USUÁRIOS ===
@@ -130,7 +130,7 @@ pub fn calculate_user_profile(
 
         // Fator Rating
         if let Some(rating) = game_wrapper.game.user_rating {
-            weight += (rating as f32) * 8.0;
+            weight += (rating as f32) * WEIGHT_USER_RATING;
         }
 
         // Processamento de gêneros
@@ -194,23 +194,22 @@ fn score_game(
     // 1. Score de Gêneros
     for genre in &game.genres {
         if let Some(&val) = profile.genres.get(genre) {
-            score += val;
+            score += val.min(50.0);
             if val > max_contribution {
                 max_contribution = val;
                 best_reason = Some(RecommendationReason {
                     label: format!("Fãs de {}", genre),
                     type_id: "genre".to_string(),
-                    score_contribution: val,
                 });
             }
         }
     }
 
-    // 2. Score de Séries (Bônus Alto)
+    // 2. Score de Séries (Bônus Moderado)
     if config.favor_series {
         if let Some(series) = &game.series {
             if let Some(&val) = profile.series.get(series) {
-                let series_bonus = val * 1.5;
+                let series_bonus = val.sqrt();
                 score += series_bonus;
 
                 if series_bonus > max_contribution {
@@ -218,7 +217,6 @@ fn score_game(
                     best_reason = Some(RecommendationReason {
                         label: format!("Série {}", series),
                         type_id: "series".to_string(),
-                        score_contribution: series_bonus,
                     });
                 }
             }
@@ -236,7 +234,6 @@ fn score_game(
                 best_reason = Some(RecommendationReason {
                     label: format!("Tag: {}", tag.name),
                     type_id: "tag".to_string(),
-                    score_contribution: val,
                 });
             }
         }
@@ -244,7 +241,7 @@ fn score_game(
 
     // 4. Penalização por Idade (Decaimento)
     if let Some(release_year) = game.release_year {
-        let current_year = 2026; // Atualizado
+        let current_year = chrono::Local::now().year();
         let age = (current_year - release_year).clamp(0, 15);
         if age > 0 {
             let multiplier = config.age_decay.powi(age);
@@ -295,35 +292,80 @@ pub fn rank_games_hybrid(
     // Passo 3: Combinação ponderada e decisão da explicação final
     let mut ranked: Vec<_> = raw_results
         .into_iter()
-        .map(|(g, cb, cf, cb_reason)| {
+        .filter_map(|(g, cb, cf, cb_reason)| {
             let cb_n = normalize_score(cb, max_cb);
             let cf_n = normalize_score(cf, max_cf);
 
             let weighted_cb = cb_n * config.content_weight;
-            let weighted_cf = cf_n * config.collaborative_weight;
+
+            let mut weighted_cf = cf_n * config.collaborative_weight;
+
+            if let Some(series) = &g.series {
+                if profile.series.contains_key(series) {
+                    weighted_cf *= 0.7;
+                }
+            }
+
+            if cb == 0.0 && cf == 0.0 {
+                return None;
+            }
 
             let final_score = weighted_cb + weighted_cf;
 
-            let reason = if weighted_cf > weighted_cb && cf > 0.0 {
-                RecommendationReason {
-                    label: "Popular na Comunidade".to_string(),
+            let reason = match (weighted_cb > 0.0, weighted_cf > 0.0) {
+                (true, true) => RecommendationReason {
+                    label: "Afinidade + Popular na comunidade".to_string(),
+                    type_id: "hybrid".to_string(),
+                },
+                (false, true) => RecommendationReason {
+                    label: "Popular na comunidade".to_string(),
                     type_id: "community".to_string(),
-                    score_contribution: weighted_cf,
-                }
-            } else {
-                cb_reason.unwrap_or(RecommendationReason {
-                    label: "Recomendado para você".to_string(),
+                },
+                _ => cb_reason.unwrap_or(RecommendationReason {
+                    label: "Baseado no seu perfil".to_string(),
                     type_id: "general".to_string(),
-                    score_contribution: weighted_cb,
-                })
+                }),
             };
 
-            (g, final_score, reason)
+            Some((g, final_score, reason))
         })
         .collect();
 
+    // Passo 4: Penalização por múltiplos jogos da mesma série
+    let mut series_count: HashMap<String, usize> = HashMap::new();
+
+    for (g, score, _) in ranked.iter_mut() {
+        if let Some(series) = &g.series {
+            let count = series_count.entry(series.clone()).or_insert(0);
+
+            let penalty = match *count {
+                0 => 1.0,
+                1 => 0.85,
+                2 => 0.65,
+                _ => 0.4,
+            };
+
+            *score *= penalty;
+            *count += 1;
+        }
+    }
+
+    // Passo 5: Penalização por múltiplos jogos do mesmo gênero
+    let mut genre_count: HashMap<String, usize> = HashMap::new();
+
+    for (g, score, _) in ranked.iter_mut() {
+        for genre in &g.genres {
+            let count = genre_count.entry(genre.clone()).or_insert(0);
+            if *count > 2 {
+                *score *= 0.9;
+            }
+            *count += 1;
+        }
+    }
+
     // Ordenação final
     ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
     ranked
 }
 
@@ -342,7 +384,6 @@ pub fn rank_games_content_based(
             let final_reason = reason.unwrap_or(RecommendationReason {
                 label: "Baseado no seu perfil".to_string(),
                 type_id: "general".to_string(),
-                score_contribution: score,
             });
 
             (g.clone(), score, final_reason)
@@ -373,7 +414,6 @@ pub fn rank_games_collaborative(
             let reason = RecommendationReason {
                 label: "Tendência na Comunidade".to_string(),
                 type_id: "community".to_string(),
-                score_contribution: score,
             };
 
             Some((g.clone(), score, reason))
