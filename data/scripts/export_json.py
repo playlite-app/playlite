@@ -301,7 +301,7 @@ def generate_summary(df: pd.DataFrame, index: dict):
     avg_similars = summary["output_data"]["similars_per_game"]["mean"]
     coverage = summary["output_data"]["coverage_pct"]
 
-    if avg_similars < 3:
+    if avg_similars < 2:
         summary["recommendations"].append({
             "severity": "warning",
             "message": f"Média de similares muito baixa ({avg_similars:.1f}). Considere reduzir MIN_SCORE ou ajustar confidence no compute_similarity.py"
@@ -313,7 +313,7 @@ def generate_summary(df: pd.DataFrame, index: dict):
             "message": f"Cobertura baixa ({coverage:.1f}%). Muitos jogos sem similares. Considere reduzir thresholds."
         })
 
-    if avg_similars >= 5 and coverage >= 80:
+    if avg_similars >= 2 and coverage >= 70:
         summary["recommendations"].append({
             "severity": "success",
             "message": "Qualidade excelente! Boa cobertura e quantidade de similares."

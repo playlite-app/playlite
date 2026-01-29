@@ -32,11 +32,11 @@ export function RecommendationTooltip({
       case 'genre':
         return 'Este gênero aparece com frequência nos jogos que você mais joga.';
       case 'tag':
-        return 'Compartilha características com jogos que você curte.';
-      case 'general':
-        return 'Combina com seu perfil geral de jogador.';
+        return 'Elementos específicos deste jogo combinam com seu estilo.';
       case 'hybrid':
         return 'Combina afinidade do seu perfil com a popularidade na comunidade.';
+      case 'general':
+        return 'Combina com seu perfil geral de jogador.';
       default:
         return 'Recomendado com base no seu perfil.';
     }

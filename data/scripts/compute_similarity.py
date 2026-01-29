@@ -24,7 +24,7 @@ REPORTS_DIR = SCRIPT_DIR.parent / "reports"  # data/reports
 
 # Parâmetros do algoritmo
 TOP_K_SIMILAR = 20  # Manter apenas top-K jogos similares por jogo
-MIN_SHARED_USERS = 25  # Mínimo de usuários em comum para considerar similaridade
+MIN_SHARED_USERS = 20  # Mínimo de usuários em comum para considerar similaridade
 MIN_SIMILARITY_SCORE = 0.1  # Score mínimo para salvar
 BATCH_SIZE = 1000  # Processar usuários em batches
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-26T22:02:20.245548",
+  "generated_at": "2026-01-29T11:43:30.102023",
   "parameters": {
     "top_k_similar": 20,
     "min_shared_users": 20,
@@ -20,10 +20,10 @@
       "median": 0.1546
     },
     "final_score": {
-      "min": 0.0042,
+      "min": 0.0063,
       "max": 0.4621,
-      "mean": 0.0565,
-      "median": 0.0291
+      "mean": 0.0647,
+      "median": 0.0437
     },
     "shared_users": {
       "min": 20,
