@@ -51,7 +51,7 @@ fn migrate_schema(conn: &Connection, from: u32, to: u32) -> Result<(), AppError>
 
     while current < to {
         match current {
-            2 => migrate_v3_to_v4(conn)?,
+            2 => migrate_v2_to_v3(conn)?,
             _ => {
                 return Err(AppError::ValidationError(format!(
                     "Migração não implementada: v{} → v{}",
@@ -67,8 +67,13 @@ fn migrate_schema(conn: &Connection, from: u32, to: u32) -> Result<(), AppError>
     Ok(())
 }
 
-/// Migração do schema v3 para v4
-fn migrate_v3_to_v4(_conn: &Connection) -> Result<(), AppError> {
+/// Migração do schema v2 para v3
+///
+/// Principais mudanças:
+/// - Campos HLTB removidos
+/// - URLs legadas removidas (migradas para external_links JSON)
+/// - users_score removido (substituído por steam_review_*)
+fn migrate_v2_to_v3(_conn: &Connection) -> Result<(), AppError> {
     // Remove colunas antigas se existirem
     // SQLite não suporta DROP COLUMN diretamente, então usamos uma abordagem de recriar tabela
 

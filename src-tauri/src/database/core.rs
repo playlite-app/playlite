@@ -362,7 +362,7 @@ pub fn list_supported_keys() -> Vec<&'static str> {
 // === FUNÇÕES AUXILIARES ===
 
 /// Mapeia a versão do schema para a versão do formato de backup
-#[warn(dead_code)]
+#[allow(unused)]
 pub fn backup_version_for_schema(schema_version: u32) -> Result<u32, AppError> {
     match schema_version {
         3 => Ok(2),
@@ -375,7 +375,7 @@ pub fn backup_version_for_schema(schema_version: u32) -> Result<u32, AppError> {
 
 /// Obtém a versão armazenada da aplicação do banco de metadados
 pub fn get_stored_app_version(app: &AppHandle) -> Result<String, AppError> {
-    let state: tauri::State<AppState> = app.state();
+    let state: State<AppState> = app.state();
     let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Cria tabela de configuração se não existir

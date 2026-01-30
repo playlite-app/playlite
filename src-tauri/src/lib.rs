@@ -20,7 +20,7 @@ pub mod utils;
 
 use crate::errors::AppError;
 use crate::utils::logger;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -129,6 +129,8 @@ pub fn run() {
             commands::caches::cleanup_cache,
             commands::caches::clear_all_cache,
             commands::caches::get_detailed_cache_stats,
+            // Comandos de Versionamento
+            commands::version::get_app_version_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -159,9 +161,13 @@ pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
             database::backup::backup_if_major_update(app, &previous_version, &current_version)?
         {
             tracing::info!("Backup automático criado em: {:?}", backup_path);
+
+            // Emite evento para o frontend saber sobre o backup
+            let backup_path_str = backup_path.to_string_lossy().to_string();
+            let _ = app.emit("backup-created", backup_path_str);
         }
 
-        // 2. Migração de schema (já feita em initialize_databases, mas verificamos aqui)
+        // 2. Migração de schema (já feita em initialize_databases, mas verificada aqui)
         let state: tauri::State<database::AppState> = app.state();
         let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
 

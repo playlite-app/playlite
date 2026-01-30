@@ -27,6 +27,27 @@ pub struct BackupData {
     pub wishlist_game: Vec<WishlistGame>,
 }
 
+/// Função auxiliar interna para buscar dados do backup com transação ACID
+///
+/// Retorna tupla com (games, game_details, wishlist_game, schema_version)
+fn fetch_backup_data(
+    state: &State<AppState>,
+) -> Result<(Vec<Game>, Vec<GameDetails>, Vec<WishlistGame>, u32), AppError> {
+    let conn = state.library_db.lock()?;
+
+    // Inicia transação READ para consistência
+    conn.execute("BEGIN TRANSACTION", [])?;
+
+    let games = fetch_games(&conn)?;
+    let game_details = fetch_game_details(&conn)?;
+    let wishlist_game = fetch_wishlist(&conn)?;
+    let schema_version = current_schema_version(&conn)?;
+
+    conn.execute("COMMIT", [])?;
+
+    Ok((games, game_details, wishlist_game, schema_version))
+}
+
 /// Exporta toda a base de dados para um arquivo JSON.
 ///
 /// Cria um snapshot completo e consistente de todos os dados da aplicação,
@@ -37,22 +58,8 @@ pub async fn export_database(
     state: State<'_, AppState>,
     file_path: String,
 ) -> Result<(), AppError> {
-    // Buscar dados num único lock
-    let (games, game_details, wishlist_game, schema_version) = {
-        let conn = state.library_db.lock()?;
-
-        // Inicia transação READ para consistência
-        conn.execute("BEGIN TRANSACTION", [])?;
-
-        let games = fetch_games(&conn)?;
-        let game_details = fetch_game_details(&conn)?;
-        let wishlist_game = fetch_wishlist(&conn)?;
-        let schema_version = current_schema_version(&conn)?;
-
-        conn.execute("COMMIT", [])?;
-
-        (games, game_details, wishlist_game, schema_version)
-    }; // Lock liberado aqui
+    // Buscar dados com transação ACID
+    let (games, game_details, wishlist_game, schema_version) = fetch_backup_data(&state)?;
 
     let backup = BackupData {
         version: schema_version,
@@ -77,7 +84,7 @@ pub fn backup_if_major_update(
     // Parse das versões
     let parse_version = |v: &str| -> (u32, u32, u32) {
         let parts: Vec<&str> = v.split('.').collect();
-        let major = parts.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let major = parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
         let minor = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
         let patch = parts.get(2).and_then(|s| s.parse().ok()).unwrap_or(0);
         (major, minor, patch)
@@ -119,20 +126,9 @@ pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<P
     let backup_filename = format!("auto_backup_v{}_{}.json", previous_version, timestamp);
     let backup_path = backups_dir.join(backup_filename);
 
-    // Usa a função export_database existente
+    // Reutiliza a função auxiliar de fetch
     let state: tauri::State<AppState> = app.state();
-    let (games, game_details, wishlist_game, schema_version) = {
-        let conn = state.library_db.lock()?;
-        conn.execute("BEGIN TRANSACTION", [])?;
-
-        let games = fetch_games(&conn)?;
-        let game_details = fetch_game_details(&conn)?;
-        let wishlist_game = fetch_wishlist(&conn)?;
-        let schema_version = current_schema_version(&conn)?;
-
-        conn.execute("COMMIT", [])?;
-        (games, game_details, wishlist_game, schema_version)
-    };
+    let (games, game_details, wishlist_game, schema_version) = fetch_backup_data(&state)?;
 
     let backup = BackupData {
         version: schema_version,

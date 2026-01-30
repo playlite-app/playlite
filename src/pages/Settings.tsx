@@ -353,37 +353,42 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         <SettingsRow
           icon={FileJson}
           title="Gerenciar Backup"
-          description="Exporte ou restaure sua biblioteca completa (JSON)."
+          description="Exporte ou restaure sua biblioteca completa (JSON). Backups automáticos são criados em atualizações importantes."
         >
-          <div className="flex gap-2">
-            <Button
-              onClick={actions.importDatabase}
-              variant="outline"
-              className="flex-1"
-              disabled={loading.importingBackup}
-            >
-              {loading.importingBackup ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" /> Importar
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={actions.exportDatabase}
-              variant="outline"
-              className="flex-1"
-              disabled={loading.exporting}
-            >
-              {loading.exporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" /> Exportar
-                </>
-              )}
-            </Button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={actions.importDatabase}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.importingBackup}
+              >
+                {loading.importingBackup ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" /> Importar
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={actions.exportDatabase}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.exporting}
+              >
+                {loading.exporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" /> Exportar
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="text-muted-foreground text-xs">
+              Backups automáticos são salvos em <code>app_data/backups/</code>
+            </div>
           </div>
         </SettingsRow>
 

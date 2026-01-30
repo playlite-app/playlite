@@ -33,5 +33,6 @@ export * from './user';
 export * from './common';
 
 // Special hooks (na raiz)
+export * from './useAppUpdate';
 export * from './useHome';
 export * from './useSettings';

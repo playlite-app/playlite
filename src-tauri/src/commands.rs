@@ -12,6 +12,7 @@
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
 //! - `recommendations`: Comandos para sistema de recomendação de jogos.
 //! - `settings`: Comandos para gerenciar configurações e segredos do usuário.
+//! - `version`: Comandos para gerenciar informações de versão da aplicação.
 //! - `wishlist`: Comandos para gerenciar a lista de desejos com 'tracking' de preços.
 
 pub(crate) mod achievements;
@@ -22,4 +23,5 @@ pub mod metadata;
 pub mod plataforms;
 pub mod recommendations;
 pub mod settings;
+pub mod version;
 pub mod wishlist;
