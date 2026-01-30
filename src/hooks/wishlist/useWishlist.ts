@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { wishlistService } from '@/services/wishlistService.ts';
 import { WishlistGame } from '@/types';
@@ -68,4 +68,22 @@ export function useWishlist() {
     refreshPrices,
     refreshList: fetchWishlist,
   };
+}
+
+/**
+ * Hook para filtrar jogos da wishlist por termo de busca.
+ * Busca no nome do jogo (case-insensitive).
+ *
+ * @param games - Lista completa de jogos da wishlist
+ * @param searchTerm - Termo de busca
+ * @returns Jogos filtrados
+ */
+export function useWishlistFilter(games: WishlistGame[], searchTerm: string) {
+  return useMemo(() => {
+    if (!searchTerm) return games;
+
+    const lowerTerm = searchTerm.toLowerCase();
+
+    return games.filter(game => game.name.toLowerCase().includes(lowerTerm));
+  }, [games, searchTerm]);
 }

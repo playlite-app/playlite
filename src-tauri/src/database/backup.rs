@@ -6,19 +6,21 @@
 //! **Nota:**
 //! Todas as operações usam transações ACID para garantir consistência dos dados.
 
-use crate::database::AppState;
+use crate::database::{current_schema_version, AppState, SCHEMA_VERSION};
 use crate::errors::AppError;
 use crate::models::{Game, GameDetails, WishlistGame};
 use rusqlite::params;
 use std::fs;
-use tauri::{AppHandle, State};
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager, State};
 
 /// Estrutura do arquivo de ‘backup’.
 ///
 /// Contém metadados e todos os dados exportados da aplicação.
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct BackupData {
-    pub version: u32,
+    pub version: u32, // schema == backup
+    pub app_version: String,
     pub date: String,
     pub games: Vec<Game>,
     pub game_details: Vec<GameDetails>,
@@ -31,12 +33,12 @@ pub struct BackupData {
 /// incluindo jogos e wishlist, num único arquivo JSON formatado.
 #[tauri::command]
 pub async fn export_database(
-    _app: AppHandle,
+    app: AppHandle,
     state: State<'_, AppState>,
     file_path: String,
 ) -> Result<(), AppError> {
     // Buscar dados num único lock
-    let (games, game_details, wishlist_game) = {
+    let (games, game_details, wishlist_game, schema_version) = {
         let conn = state.library_db.lock()?;
 
         // Inicia transação READ para consistência
@@ -45,14 +47,16 @@ pub async fn export_database(
         let games = fetch_games(&conn)?;
         let game_details = fetch_game_details(&conn)?;
         let wishlist_game = fetch_wishlist(&conn)?;
+        let schema_version = current_schema_version(&conn)?;
 
         conn.execute("COMMIT", [])?;
 
-        (games, game_details, wishlist_game)
+        (games, game_details, wishlist_game, schema_version)
     }; // Lock liberado aqui
 
     let backup = BackupData {
-        version: 2,
+        version: schema_version,
+        app_version: app.package_info().version.to_string(),
         date: chrono::Local::now().to_rfc3339(),
         games,
         game_details,
@@ -65,6 +69,87 @@ pub async fn export_database(
     Ok(())
 }
 
+pub fn backup_if_major_update(
+    app: &AppHandle,
+    previous_version: &str,
+    current_version: &str,
+) -> Result<Option<PathBuf>, AppError> {
+    // Parse das versões
+    let parse_version = |v: &str| -> (u32, u32, u32) {
+        let parts: Vec<&str> = v.split('.').collect();
+        let major = parts.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let minor = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let patch = parts.get(2).and_then(|s| s.parse().ok()).unwrap_or(0);
+        (major, minor, patch)
+    };
+
+    let (prev_major, _, _) = parse_version(previous_version);
+    let (curr_major, _, _) = parse_version(current_version);
+
+    // Se versão major mudou, faz backup
+    if prev_major != curr_major && prev_major > 0 {
+        tracing::info!(
+            "Mudança de versão major detectada: v{} -> v{}",
+            previous_version,
+            current_version
+        );
+        let backup_path = backup_before_update(app, previous_version)?;
+        Ok(Some(backup_path))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Cria backup automático antes de atualização de versão
+///
+/// Chamado automaticamente quando detecta mudança de versão major
+pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<PathBuf, AppError> {
+    tracing::info!("Criando backup automático antes da atualização...");
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| AppError::IoError(format!("Falha ao obter app_data_dir: {}", e)))?;
+
+    let backups_dir = app_data_dir.join("backups");
+    std::fs::create_dir_all(&backups_dir)?;
+
+    // Nome do backup com timestamp e versão anterior
+    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+    let backup_filename = format!("auto_backup_v{}_{}.json", previous_version, timestamp);
+    let backup_path = backups_dir.join(backup_filename);
+
+    // Usa a função export_database existente
+    let state: tauri::State<AppState> = app.state();
+    let (games, game_details, wishlist_game, schema_version) = {
+        let conn = state.library_db.lock()?;
+        conn.execute("BEGIN TRANSACTION", [])?;
+
+        let games = fetch_games(&conn)?;
+        let game_details = fetch_game_details(&conn)?;
+        let wishlist_game = fetch_wishlist(&conn)?;
+        let schema_version = current_schema_version(&conn)?;
+
+        conn.execute("COMMIT", [])?;
+        (games, game_details, wishlist_game, schema_version)
+    };
+
+    let backup = BackupData {
+        version: schema_version,
+        app_version: previous_version.to_string(),
+        date: chrono::Local::now().to_rfc3339(),
+        games,
+        game_details,
+        wishlist_game,
+    };
+
+    let json = serde_json::to_string_pretty(&backup)?;
+    fs::write(&backup_path, json)?;
+
+    tracing::info!("Backup automático criado: {:?}", backup_path);
+    Ok(backup_path)
+}
+
 /// Importa e restaura dados de um arquivo de 'backup'.
 ///
 /// Lê um arquivo JSON de 'backup' restaura todos os dados no banco,
@@ -74,6 +159,7 @@ pub async fn export_database(
 /// Esta operação pode sobrescrever dados existentes. Considere criar um 'backup' antes de importar.
 #[tauri::command]
 pub async fn import_database(
+    _app: AppHandle,
     state: State<'_, AppState>,
     file_path: String,
 ) -> Result<String, AppError> {
@@ -82,10 +168,10 @@ pub async fn import_database(
         .map_err(|_| AppError::ValidationError("Arquivo de backup inválido".to_string()))?;
 
     // Validação de versão
-    if backup.version != 2 {
+    if backup.version != SCHEMA_VERSION {
         return Err(AppError::ValidationError(format!(
-            "Versão de backup incompatível: {}",
-            backup.version
+            "Backup incompatível. Backup v{}, app espera v{}",
+            backup.version, SCHEMA_VERSION
         )));
     }
 

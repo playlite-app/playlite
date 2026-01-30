@@ -18,8 +18,9 @@ mod security;
 pub mod services;
 pub mod utils;
 
+use crate::errors::AppError;
 use crate::utils::logger;
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -29,6 +30,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_machine_uid::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let app_handle = app.handle();
 
@@ -55,6 +57,14 @@ pub fn run() {
 
             app.manage(db_state);
 
+            // === INICIALIZAÇÃO PÓS-UPDATE ===
+
+            // Verifica se houve atualização e faz backup/migração se necessário
+            if let Err(e) = initialize_app(app_handle) {
+                tracing::error!("Erro na inicialização pós-update: {}", e);
+                // Não falha a aplicação, apenas loga o erro
+            }
+
             // === COLLABORATIVE FILTERING ===
 
             if let Err(e) = services::cf_aggregator::init_cf_index() {
@@ -69,6 +79,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // Comando de Inicialização do Banco de Dados
             database::init_db,
+            // Comandos de Backup e Restauração
+            database::backup::export_database,
+            database::backup::import_database,
             // Comandos de Jogos (CRUD)
             commands::games::add_game,
             commands::games::get_games,
@@ -103,9 +116,6 @@ pub fn run() {
             commands::settings::list_secrets,
             commands::settings::get_secrets,
             commands::settings::set_secrets,
-            // Comandos de ‘Backup’ e Restauração
-            commands::backup::export_database,
-            commands::backup::import_database,
             // Comando de Recomendação
             commands::recommendations::get_user_profile,
             commands::recommendations::recommend_hybrid_library,
@@ -122,4 +132,49 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Inicializa a aplicação após uma atualização
+///
+/// Verifica se houve mudança de versão e executa:
+/// 1. Backup automático se versão major mudou
+/// 2. Migração de schema se necessário
+/// 3. Atualiza versão armazenada
+///
+/// Deve ser chamada após o Tauri updater ou na primeira inicialização
+pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
+    let current_version = app.package_info().version.to_string();
+    let previous_version = database::get_stored_app_version(app)?;
+
+    tracing::info!(
+        "Inicializando app - Versão anterior: {}, Atual: {}",
+        previous_version,
+        current_version
+    );
+
+    // Se é primeira execução ou versão mudou
+    if previous_version != current_version {
+        // 1. Backup automático se major version mudou
+        if let Some(backup_path) =
+            database::backup::backup_if_major_update(app, &previous_version, &current_version)?
+        {
+            tracing::info!("Backup automático criado em: {:?}", backup_path);
+        }
+
+        // 2. Migração de schema (já feita em initialize_databases, mas verificamos aqui)
+        let state: tauri::State<database::AppState> = app.state();
+        let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+
+        database::migrations::run_migrations(app, &conn)?;
+        drop(conn); // Libera o lock
+
+        // 3. Atualiza versão armazenada
+        database::store_app_version(app, &current_version)?;
+
+        tracing::info!("App inicializado com sucesso na versão {}", current_version);
+    } else {
+        tracing::info!("Nenhuma atualização detectada");
+    }
+
+    Ok(())
 }

@@ -4,11 +4,19 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { ERROR_MESSAGES, parseBackupError } from '@/errors/errorMessages.ts';
 import { ImportSummary, KeysBatch } from '@/types';
 
+/**
+ * Obtém as chaves de API salvas para usar em serviços externos.
+ */
 export const settingsService = {
   getSecrets: async (): Promise<KeysBatch> => {
     return await invoke<KeysBatch>('get_secrets');
   },
 
+  /**
+   * Configura e salva chaves de API usadas na aplicação para acessar serviços externos.
+   *
+   * @param keys
+   */
   setSecrets: async (keys: {
     steamId: string | null;
     steamApiKey: string | null;
@@ -16,14 +24,6 @@ export const settingsService = {
     geminiApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
-  },
-
-  /**
-   * Inicia o fluxo OAuth com IsThereAnyDeal.
-   * Abre o navegador, aguarda o login e salva o token no banco.
-   */
-  connectToItad: async (): Promise<string> => {
-    return await invoke<string>('start_itad_auth');
   },
 
   /**

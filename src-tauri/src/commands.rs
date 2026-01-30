@@ -6,8 +6,7 @@
 //! **Módulos:**
 //! - `achievements`: Comandos para buscar conquistas recentes de jogos via Steam API.
 //! - `ai_translation`: Comandos para tradução de descrições usando IA.
-//! - `backup`: Comandos relacionados a 'backup' e restauração de dados.
-//! - `cache`: Comandos para gerenciar o cache de metadados.
+//! - `caches`: Comandos para gerenciar o cache de metadados.
 //! - `games`: Comandos CRUD para a biblioteca de jogos.
 //! - `metadata`: Comandos para enriquecimento, atualização e busca de metadados via RAWG/Steam API.
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
@@ -17,7 +16,6 @@
 
 pub(crate) mod achievements;
 pub(crate) mod ai_translation;
-pub mod backup;
 pub mod caches;
 pub mod games;
 pub mod metadata;

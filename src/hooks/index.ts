@@ -2,13 +2,13 @@
  * Hooks organizados por domínio/feature
  *
  * Estrutura:
- * - library/     - Gerenciamento de biblioteca
+ * - library/        - Gerenciamento de biblioteca
  * - recommendation/ - Sistema de recomendação
- * - trending/    - Jogos em alta e lançamentos
- * - wishlist/    - Lista de desejos
- * - ui/          - Componentes de interface
- * - user/        - Perfil e detalhes
- * - common/      - Utilitários genéricos
+ * - trending/       - Jogos em alta e lançamentos
+ * - wishlist/       - Lista de desejos
+ * - ui/             - Componentes de interface
+ * - user/           - Perfil e detalhes
+ * - common/         - Utilitários genéricos
  */
 
 // Library hooks

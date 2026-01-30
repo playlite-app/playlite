@@ -52,7 +52,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
         // Opcional: Avisar frontend que terminou (para debug)
         let _ = app_clone.emit("background_refresh_complete", ());
 
-        // Reseta o flag para permitir futuras execuções (ex: se usuário recarregar o app)
+        // Reseta a flag para permitir futuras execuções (ex: se usuário recarregar o app)
         BACKGROUND_REFRESH_RUNNING.store(false, Ordering::SeqCst);
     });
 

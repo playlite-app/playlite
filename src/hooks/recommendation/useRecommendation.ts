@@ -41,7 +41,7 @@ interface UseRecommendationProps {
 }
 
 /**
- * Hook principal do sistema de recomendação (Refatorado)
+ * Hook principal do sistema de recomendação
  *
  * Gerencia recomendações calculadas pelo **backend Rust** usando:
  * - Content-Based Filtering (baseado em gêneros/tags dos jogos do usuário)
@@ -50,7 +50,7 @@ interface UseRecommendationProps {
  *
  * **Complementar:** useGameAffinity (calcula afinidade no frontend para jogos RAWG)
  *
- * Agora usa hooks menores para melhor organização:
+ * Usa hooks menores para melhor organização:
  * - useRecommendationProfile: Gerencia perfil do usuário
  * - useRecommendationBlacklist: Gerencia jogos ignorados
  * - useRecommendationConfig: Gerencia configurações de peso

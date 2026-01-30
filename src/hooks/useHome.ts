@@ -15,7 +15,7 @@ interface UseHomeProps {
 }
 
 /**
- * Hook orquestrador para a página Home (Refatorado)
+ * Hook orquestrador para a página Home
  *
  * Responsabilidade: Agregar dados de múltiplas fontes:
  * - Estatísticas da biblioteca (useLibraryStats)

@@ -14,9 +14,9 @@ interface UseTrendingProps {
  * Remove automaticamente jogos que o usuário já possui na biblioteca.
  * Usa cache global para evitar requisições desnecessárias.
  *
- * @param props.userGames - Biblioteca local para filtrar duplicatas
- * @param props.cachedGames - Cache de jogos da RAWG
- * @param props.setCachedGames - Atualiza cache global após busca
+ * @param userGames - Biblioteca local para filtrar duplicatas
+ * @param cachedGames - Cache de jogos da RAWG
+ * @param setCachedGames - Atualiza cache global após busca
  *
  * @returns Objeto com:
  *   - games: Jogos filtrados (sem os que o usuário tem)

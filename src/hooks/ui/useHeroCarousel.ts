@@ -11,7 +11,7 @@ import { useState } from 'react';
  *   - prev: Retorna para o item anterior
  *   - goTo: Vai para um índice específico
  */
-export function useHeroCarousel(totalItems: number) {
+export function useHeroCarousel(totalItems: number): object {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const next = () => {
