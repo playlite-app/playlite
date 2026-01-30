@@ -2,6 +2,7 @@
 export { AboutPlaylite } from './AboutPlaylite';
 export { default as Achievements } from './Achievements';
 export { ActionButton } from './ActionButton';
+export { CachedImage } from './CachedImage';
 export { ErrorState } from './ErrorState';
 export { GameActionsMenu } from './GameActionsMenu';
 export { SettingsRow } from './SettingsRow';

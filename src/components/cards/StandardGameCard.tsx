@@ -1,11 +1,12 @@
 import { ImageOff, Play } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 
-import { ActionButton } from '@/components';
+import { ActionButton, CachedImage } from '@/components';
 import { cn } from '@/lib/utils';
 import { getPlatformIcon } from '@/utils/platform';
 
 interface StandardGameCardProps {
+  id: string;
   title: string;
   coverUrl?: string | null;
   subtitle?: string;
@@ -30,6 +31,7 @@ interface StandardGameCardProps {
  */
 
 export default function StandardGameCard({
+  id,
   title,
   coverUrl,
   subtitle,
@@ -56,8 +58,9 @@ export default function StandardGameCard({
       <div className="bg-muted relative aspect-3/4 overflow-hidden">
         {/* Lógica de Imagem com Fallback */}
         {coverUrl && !imageError ? (
-          <img
+          <CachedImage
             src={coverUrl}
+            gameId={id}
             alt={title}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={() => setImageError(true)} // Ativa o fallback se falhar

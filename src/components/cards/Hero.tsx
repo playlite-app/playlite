@@ -1,8 +1,11 @@
 import { ChevronLeft, ChevronRight, ImageOff, Star } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
 
+import { CachedImage } from '@/components';
+
 interface HeroProps {
   // Dados Básicos
+  gameId: string;
   title: string;
   backgroundUrl?: string | null;
   coverUrl?: string | null;
@@ -38,6 +41,7 @@ interface HeroProps {
  * @param onPrev - Callback para seta esquerda (item anterior)
  */
 export default function Hero({
+  gameId,
   title,
   backgroundUrl,
   coverUrl,
@@ -93,8 +97,9 @@ export default function Hero({
         >
           {/* Capa com Fallback */}
           {coverUrl && !imageError ? (
-            <img
+            <CachedImage
               src={coverUrl}
+              gameId={gameId} // <--- Cache ativado! Funciona pra RAWG e Local
               alt={title}
               className="aspect-3/4 w-64 rounded-lg border border-white/10 object-cover shadow-2xl md:w-80"
               onError={() => setImageError(true)}

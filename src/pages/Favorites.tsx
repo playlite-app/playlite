@@ -83,6 +83,7 @@ export default function Favorites({
             return (
               <div key={game.id} className="group relative">
                 <StandardGameCard
+                  id={game.id.toString()}
                   title={game.name}
                   coverUrl={game.coverUrl}
                   subtitle={subtitle}

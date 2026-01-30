@@ -208,6 +208,7 @@ export default function Playlist({
             {suggestions.map(game => (
               <div key={game.id} className="group relative">
                 <StandardGameCard
+                  id={game.id.toString()}
                   title={game.name}
                   coverUrl={game.coverUrl}
                   className="text-xs"

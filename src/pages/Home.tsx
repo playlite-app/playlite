@@ -99,6 +99,7 @@ export default function Home(props: HomeProps) {
       {/* Seção: Hero component */}
       {currentHero && (
         <Hero
+          gameId={currentHero.id.toString()}
           title={currentHero.name}
           backgroundUrl={getHeroImage(currentHero)}
           coverUrl={getHeroImage(currentHero)}
@@ -201,6 +202,7 @@ export default function Home(props: HomeProps) {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {continuePlaying.map(game => (
                 <StandardGameCard
+                  id={game.id.toString()}
                   key={game.id}
                   title={game.name}
                   coverUrl={game.coverUrl}
@@ -241,6 +243,7 @@ export default function Home(props: HomeProps) {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {backlogRecommendations.map(game => (
                 <StandardGameCard
+                  id={game.id.toString()}
                   key={game.id}
                   title={game.name}
                   coverUrl={game.coverUrl}
@@ -288,6 +291,7 @@ export default function Home(props: HomeProps) {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {collaborativeRecs.map(game => (
                 <StandardGameCard
+                  id={game.id.toString()}
                   key={`cf-${game.id}`}
                   title={game.name}
                   coverUrl={game.coverUrl}

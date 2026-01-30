@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -49,6 +50,10 @@ export function useSettings(onLibraryUpdate: () => void) {
     game: string;
   } | null>(null);
 
+  const [saveLocally, setSaveLocally] = useState(
+    localStorage.getItem('config_save_covers') === 'true'
+  );
+
   // Carrega secrets ao iniciar
   useEffect(() => {
     settingsService
@@ -64,21 +69,6 @@ export function useSettings(onLibraryUpdate: () => void) {
       .catch(e => console.error('Erro ao carregar settings', e))
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
-
-  // Define todas as ações
-  const connectToItad = async () => {
-    setLoading(prev => ({ ...prev, authenticating: true }));
-    setStatus({ type: null, message: 'Aguardando login no navegador...' });
-
-    try {
-      const msg = await settingsService.connectToItad();
-      setStatus({ type: 'success', message: msg });
-    } catch (error) {
-      setStatus({ type: 'error', message: String(error) });
-    } finally {
-      setLoading(prev => ({ ...prev, authenticating: false }));
-    }
-  };
 
   const saveKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
@@ -229,6 +219,21 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   };
 
+  const toggleSaveLocally = (checked: boolean) => {
+    setSaveLocally(checked);
+    localStorage.setItem('config_save_covers', String(checked));
+    toast.success(`Modo offline ${checked ? 'ativado' : 'desativado'}`);
+  };
+
+  const handleClearCache = async () => {
+    try {
+      await invoke('clear_cover_cache');
+      toast.success('Espaço liberado! Imagens locais removidas.');
+    } catch {
+      toast.error('Erro ao limpar cache.');
+    }
+  };
+
   // Listeners para eventos de enriquecimento
   useEffect(() => {
     const setupListeners = async () => {
@@ -347,6 +352,9 @@ export function useSettings(onLibraryUpdate: () => void) {
     loading,
     status,
     progress,
+    saveLocally,
+    toggleSaveLocally,
+    handleClearCache,
     actions: {
       saveKeys,
       importLibrary,
@@ -354,7 +362,6 @@ export function useSettings(onLibraryUpdate: () => void) {
       fetchMissingCovers,
       exportDatabase,
       importDatabase,
-      connectToItad,
       cleanupCache,
       clearAllCache,
     },

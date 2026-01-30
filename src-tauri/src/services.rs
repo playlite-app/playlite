@@ -1,9 +1,13 @@
 //! Serviços para interagir com APIs externas e fornecer funcionalidades ao aplicativo.
 //!
 //! **Módulos:**
-//! - `gemini`: Integração com a API Gemini para funcionalidades de IA.
-//! - `itad`: Integração com a API IsThereAnyDeal para 'tracking' de preços e ofertas.
+//!
 //! - `cache`: Cache de metadados para respostas de APIs externas.
+//! - `cf_aggregator`: Agregador de ofertas de jogos de várias fontes.
+//! - `gamerpower`: Integração com a API GamerPower para busca de jogos grátis.
+//! - `gemini`: Integração com a API Gemini para funcionalidades de IA.
+//! - `images`: Serviço de download e cache de imagens de capas de jogos.
+//! - `itad`: Integração com a API IsThereAnyDeal para 'tracking' de preços e ofertas.
 //! - `playtime`: Estimador inteligente de duração de jogos.
 //! - `rawg`: Integração com a API RAWG para busca de jogos e tendências.
 //! - `recommendation`: Sistema de recomendação de jogos baseado em preferências do usuário.
@@ -14,6 +18,7 @@ pub(crate) mod cache;
 pub(crate) mod cf_aggregator;
 pub(crate) mod gamerpower;
 pub(crate) mod gemini;
+pub mod images;
 pub mod itad;
 pub(crate) mod playtime;
 pub mod rawg;

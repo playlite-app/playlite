@@ -11,6 +11,23 @@ use rusqlite::{params, Connection};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, warn};
 
+/// Estrutura de estatísticas do cache
+#[derive(Debug, serde::Serialize)]
+pub struct CacheStats {
+    pub total_entries: i32,
+    pub rawg_entries: i32,
+    pub steam_entries: i32,
+    pub expired_entries: i32,
+}
+
+/// Obtém timestamp atual em segundos
+fn current_timestamp() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64
+}
+
 /// Inicializa o banco de cache e cria o schema
 pub fn initialize_cache_db(conn: &Connection) -> Result<(), String> {
     conn.execute(
@@ -36,16 +53,12 @@ pub fn initialize_cache_db(conn: &Connection) -> Result<(), String> {
     Ok(())
 }
 
-/// Obtém timestamp atual em segundos
-fn current_timestamp() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64
-}
-
 /// Determina TTL baseado no tipo de dado (granular)
 fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
+    // TTL de 1 dia para buscas/listas de jogos Em Alta, Gratuitos, Lançamentos, etc.
+    if cache_key.contains("_list_") {
+        return 24 * 60 * 60;
+    }
     if cache_key.starts_with("rawg_") {
         CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("store_") {
@@ -145,15 +158,21 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
     Ok(deleted)
 }
 
-/// Retorna estatísticas do cache
-#[derive(Debug, serde::Serialize)]
-pub struct CacheStats {
-    pub total_entries: i32,
-    pub rawg_entries: i32,
-    pub steam_entries: i32,
-    pub expired_entries: i32,
+/// Busca dados em cache IGNORANDO a validade (para modo Offline)
+///
+/// Retorna Some(payload) se existir, independente da data.
+pub fn get_stale_api_data(conn: &Connection, source: &str, external_id: &str) -> Option<String> {
+    let result: Result<String, rusqlite::Error> = conn.query_row(
+        "SELECT payload FROM api_cache
+         WHERE source = ?1 AND external_id = ?2",
+        params![source, external_id],
+        |row| row.get(0),
+    );
+
+    result.ok() // Retorna o dado se existir, ou None se nunca foi salvo
 }
 
+/// Retorna estatísticas do cache
 pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
     let total: i32 = conn
         .query_row("SELECT COUNT(*) FROM api_cache", [], |row| row.get(0))

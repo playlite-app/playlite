@@ -165,6 +165,7 @@ export default function Trending(props: TrendingProps) {
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto">
       {/* 1. Hero */}
       <Hero
+        gameId={currentHero.id.toString()}
         title={currentHero.name}
         backgroundUrl={currentHero.backgroundImage}
         coverUrl={currentHero.backgroundImage}
@@ -334,6 +335,7 @@ export default function Trending(props: TrendingProps) {
 
             return (
               <StandardGameCard
+                id={game.id.toString()}
                 key={game.id}
                 title={game.name}
                 coverUrl={game.backgroundImage}
@@ -383,6 +385,7 @@ export default function Trending(props: TrendingProps) {
 
                 return (
                   <StandardGameCard
+                    id={game.id.toString()}
                     key={game.id}
                     title={game.name}
                     coverUrl={game.backgroundImage}

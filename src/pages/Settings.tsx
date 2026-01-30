@@ -6,6 +6,7 @@ import {
   ExternalLink,
   FileJson,
   Gamepad2,
+  HardDrive,
   History,
   Loader2,
   RefreshCcw,
@@ -21,6 +22,7 @@ import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/toggle-switch.tsx';
 import {
   useRecommendation,
   useRecommendationSliders,
@@ -32,8 +34,17 @@ interface SettingsProps {
 }
 
 export default function Settings({ onLibraryUpdate }: SettingsProps) {
-  const { keys, setKeys, loading, status, progress, actions } =
-    useSettings(onLibraryUpdate);
+  const {
+    keys,
+    setKeys,
+    loading,
+    status,
+    progress,
+    actions,
+    saveLocally,
+    toggleSaveLocally,
+    handleClearCache,
+  } = useSettings(onLibraryUpdate);
 
   // Hook de Recomendação para gerenciar configs
   const { config, updateConfig, resetFeedback, ignoredIds } =
@@ -184,33 +195,12 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           description="Dar peso extra para sequências de jogos que você gosta."
         >
           <div className="flex justify-end">
-            <label className="relative inline-flex cursor-pointer items-center gap-3">
-              <span
-                className={`text-sm font-medium transition-colors ${
-                  !config.favor_series
-                    ? 'text-foreground'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                Desativado
-              </span>
-              <input
-                type="checkbox"
-                className="peer sr-only"
-                checked={config.favor_series}
-                onChange={e => handleSeriesToggle(e.target.checked)}
-              />
-              <div className="peer bg-input relative h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5.5 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
-              <span
-                className={`text-sm font-medium transition-colors ${
-                  config.favor_series
-                    ? 'text-foreground'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                Ativado
-              </span>
-            </label>
+            <Switch
+              checked={config.favor_series}
+              onChange={handleSeriesToggle}
+              labelOff="Desativado"
+              labelOn="Ativado"
+            />
           </div>
         </SettingsRow>
 
@@ -422,6 +412,36 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               )}
               Tudo
             </Button>
+          </div>
+        </SettingsRow>
+
+        <SettingsRow
+          icon={HardDrive} // Importe de lucide-react
+          title="Armazenamento de Imagens"
+          description="Salve as capas no seu computador para visualizar offline. Ocupa espaço em disco"
+        >
+          <div className="flex flex-col gap-3 pt-2">
+            {/* Toggle */}
+            <div className="flex items-center justify-end">
+              <Switch
+                checked={saveLocally}
+                onChange={toggleSaveLocally}
+                labelOff="Desativado"
+                labelOn="Ativado"
+              />
+            </div>
+
+            {/* Botão de Limpeza */}
+            <div className="flex items-center justify-between border-t border-white/5 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearCache}
+                className="w-full text-xs text-red-400 hover:bg-red-500/10 hover:text-red-500"
+              >
+                <Trash2 size={12} className="mr-1" /> Excluir Imagens Salvas
+              </Button>
+            </div>
           </div>
         </SettingsRow>
       </section>

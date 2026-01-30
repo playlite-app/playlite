@@ -241,6 +241,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
 
             return (
               <StandardGameCard
+                id={game.id.toString()}
                 key={game.id}
                 title={game.name}
                 coverUrl={game.coverUrl}

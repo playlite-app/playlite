@@ -8,6 +8,17 @@ use crate::errors::AppError;
 use crate::services::cache;
 use tauri::State;
 
+/// Estatísticas detalhadas por tipo de cache
+#[derive(serde::Serialize)]
+pub struct DetailedCacheStats {
+    pub total: i32,
+    pub rawg_searches: i32,
+    pub steam_store: i32,
+    pub steam_reviews: i32,
+    pub steam_playtime: i32,
+    pub expired: i32,
+}
+
 /// Remove entradas expiradas do cache
 #[tauri::command]
 pub fn cleanup_cache(state: State<AppState>) -> Result<String, AppError> {
@@ -26,17 +37,6 @@ pub fn clear_all_cache(state: State<AppState>) -> Result<String, AppError> {
     let deleted = conn.execute("DELETE FROM api_cache", [])?;
 
     Ok(format!("Cache limpo: {} entradas removidas", deleted))
-}
-
-/// Estatísticas detalhadas por tipo de cache
-#[derive(serde::Serialize)]
-pub struct DetailedCacheStats {
-    pub total: i32,
-    pub rawg_searches: i32,
-    pub steam_store: i32,
-    pub steam_reviews: i32,
-    pub steam_playtime: i32,
-    pub expired: i32,
 }
 
 #[tauri::command]

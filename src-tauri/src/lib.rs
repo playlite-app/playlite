@@ -131,6 +131,10 @@ pub fn run() {
             commands::caches::get_detailed_cache_stats,
             // Comandos de Versionamento
             commands::version::get_app_version_info,
+            // Comandos de Imagem
+            services::images::cache_cover_image,
+            services::images::check_local_cover,
+            services::images::clear_cover_cache,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
