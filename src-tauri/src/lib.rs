@@ -21,11 +21,9 @@ mod security;
 pub mod services;
 pub mod utils;
 
-use crate::errors::AppError;
 use crate::initialization::initialize_app;
 use crate::utils::logger;
-use chrono::Utc;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
