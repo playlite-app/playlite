@@ -1,4 +1,7 @@
 //! Serviço para interagir com a API da IsThereAnyDeal (ITAD)
+//!
+//! Fornece funções para buscar IDs de jogos e obter informações de preços.
+//! A ITAD é uma plataforma que agrega ofertas de jogos de várias lojas digitais.
 
 use crate::constants::ITAD_API_URL;
 use crate::security;

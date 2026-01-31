@@ -1,7 +1,7 @@
 //! Módulo para gerenciamento genérico de configurações da aplicação.
+//!
 //! Permite definir e buscar configurações chave-valor na tabela `app_config`.
 //! A tabela é criada automaticamente se não existir.
-//! Fornece funções para definir (`set_config`) e buscar (`get_config`) configurações.
 //! As funções retornam erros apropriados em caso de falhas de banco de dados.
 
 use crate::database::AppState;

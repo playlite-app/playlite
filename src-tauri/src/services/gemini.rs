@@ -1,6 +1,7 @@
 //! Serviço para interagir com a API Gemini da Google para tradução de texto.
 //!
 //! Utiliza o modelo Gemini 2.5 para traduções de descrições de jogos.
+//!
 //! **Função Principal:**
 //! - `translate_text`: Traduz texto para português brasileiro mantendo termos técnicos de jogos em inglês.
 

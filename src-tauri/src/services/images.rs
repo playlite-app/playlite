@@ -1,4 +1,5 @@
 //! Serviço para gerenciar cache de imagens (capas de jogos)
+//!
 //! Fornece comandos Tauri para baixar, armazenar e limpar imagens localmente.
 //! Utiliza o diretório de dados do aplicativo para armazenar as imagens em cache.
 

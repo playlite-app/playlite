@@ -1,17 +1,20 @@
 //! # Playlite - Game Manager Library
 //!
 //! Fornece funcionalidades para:
+//!
 //! - Importar jogos do Steam
 //! - Gerenciar biblioteca pessoal
 //! - Wishlist com tracking de preços
-//! - Armazenamento seguro de API keys
 //! - Busca de jogos em tendência (RAWG API)
+//! - Busca de jogos grátis (GamerPower API)
+//! - Recomendação de jogos
 
 pub mod commands;
 mod constants;
 mod crypto;
 mod database;
 mod errors;
+pub mod initialization;
 pub mod models;
 mod secrets;
 mod security;
@@ -19,6 +22,7 @@ pub mod services;
 pub mod utils;
 
 use crate::errors::AppError;
+use crate::initialization::initialize_app;
 use crate::utils::logger;
 use chrono::Utc;
 use tauri::{AppHandle, Emitter, Manager};
@@ -139,74 +143,4 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-/// Inicializa a aplicação após uma atualização
-///
-/// Verifica se houve mudança de versão e executa:
-/// 1. Backup automático se versão major mudou
-/// 2. Migração de schema se necessário
-/// 3. Atualiza versão armazenada
-///
-/// Deve ser chamada após o Tauri updater ou na primeira inicialização
-pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
-    let current_version = app.package_info().version.to_string();
-    let previous_version = database::configs::get_stored_app_version(app)?;
-
-    // Obtém acesso ao metadata_db para configurações
-    let state: tauri::State<database::AppState> = app.state();
-    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
-
-    // Verifica se é primeira instalação
-    if database::configs::get_config(&metadata_conn, "install_date")?.is_none() {
-        let now = Utc::now().to_rfc3339();
-        database::configs::set_config(&metadata_conn, "install_date", &now)?;
-        tracing::info!("Primeira execução detectada. Data salva: {}", now);
-    }
-
-    drop(metadata_conn); // Libera o lock antes de continuar
-
-    tracing::info!(
-        "Inicializando app - Versão anterior: {}, Atual: {}",
-        previous_version,
-        current_version
-    );
-
-    // Se é primeira execução ou versão mudou
-    if previous_version != current_version {
-        // 1. Backup automático se major version mudou
-        if let Some(backup_path) =
-            database::backup::backup_if_major_update(app, &previous_version, &current_version)?
-        {
-            tracing::info!("Backup automático criado em: {:?}", backup_path);
-
-            // Emite evento para o frontend saber sobre o backup
-            let backup_path_str = backup_path.to_string_lossy().to_string();
-            let _ = app.emit("backup-created", backup_path_str);
-        }
-
-        // 2. Migração de schema (já feita em initialize_databases, mas verificada aqui)
-        let lib_conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
-        database::migrations::run_migrations(app, &lib_conn)?;
-        drop(lib_conn); // Libera o lock
-
-        // 3. Atualiza versão armazenada
-        database::configs::store_app_version(app, &current_version)?;
-
-        // Armazena a versão do schema (major version)
-        let schema_version = app.package_info().version.major as u32;
-        database::configs::store_schema_version(app, schema_version)?;
-
-        // Atualiza timestamp de última atualização
-        let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
-        let now = Utc::now().to_rfc3339();
-        database::configs::set_config(&metadata_conn, "last_updated_at", &now)?;
-        drop(metadata_conn);
-
-        tracing::info!("App inicializado com sucesso na versão {}", current_version);
-    } else {
-        tracing::info!("Nenhuma atualização detectada");
-    }
-
-    Ok(())
 }

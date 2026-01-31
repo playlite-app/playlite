@@ -166,7 +166,7 @@ Algoritmo escolhido:
 
 ## 9. Tradução automática com IA
 
-**Decisão:** Utilizar ferramentas de LLM Gemini para traduzir a descrição do jogo.
+**Decisão:** Utilizar Gemini para traduzir a descrição do jogo.
 
 **Motivação:** melhorar a experiência do usuário no uso da aplicação bem como explorar a integração de LLMs em
 funcionalidades relevantes do aplicativo.
