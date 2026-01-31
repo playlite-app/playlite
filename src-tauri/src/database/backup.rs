@@ -6,9 +6,11 @@
 //! **Nota:**
 //! Todas as operações usam transações ACID para garantir consistência dos dados.
 
+use crate::database;
 use crate::database::{current_schema_version, AppState, SCHEMA_VERSION};
 use crate::errors::AppError;
 use crate::models::{Game, GameDetails, WishlistGame};
+use chrono::Utc;
 use rusqlite::params;
 use std::fs;
 use std::path::PathBuf;
@@ -72,6 +74,11 @@ pub async fn export_database(
 
     let json = serde_json::to_string_pretty(&backup)?;
     fs::write(file_path, json)?;
+
+    // Atualiza timestamp do último backup manual
+    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let now = Utc::now().to_rfc3339();
+    database::configs::set_config(&metadata_conn, "last_backup_at", &now)?;
 
     Ok(())
 }
@@ -141,6 +148,11 @@ pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<P
 
     let json = serde_json::to_string_pretty(&backup)?;
     fs::write(&backup_path, json)?;
+
+    // Atualiza timestamp do último backup automático
+    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let now = Utc::now().to_rfc3339();
+    database::configs::set_config(&metadata_conn, "last_auto_backup_at", &now)?;
 
     tracing::info!("Backup automático criado: {:?}", backup_path);
     Ok(backup_path)

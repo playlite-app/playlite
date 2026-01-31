@@ -28,7 +28,7 @@ export function useGiveaways() {
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Carrega filtros do localStorage na inicialização
+  // Carrega filtros
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -39,7 +39,6 @@ export function useGiveaways() {
     }
   });
 
-  // Persiste filtros no localStorage sempre que mudam
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedPlatforms));
@@ -48,7 +47,7 @@ export function useGiveaways() {
     }
   }, [selectedPlatforms]);
 
-  // Carrega Jogos Grátis
+  // Busca dados (O backend agora retorna Cache se estiver offline)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -63,16 +62,26 @@ export function useGiveaways() {
     loadData();
   }, []);
 
-  // Filtra giveaways pelas plataformas selecionadas
+  // Lógica de Filtragem: Plataforma + Validade (Novo)
   const filteredGiveaways = useMemo(() => {
+    const now = new Date();
+
     return giveaways.filter(game => {
+      // 1. Filtro de Validade (Remove expirados do cache)
+      if (game.end_date) {
+        const endDate = new Date(game.end_date);
+
+        // Se a data de término for menor que agora, o jogo já expirou
+        if (endDate < now) return false;
+      }
+
+      // 2. Filtro de Plataforma
       return selectedPlatforms.some(platform =>
         game.platforms.includes(platform)
       );
     });
   }, [giveaways, selectedPlatforms]);
 
-  // Handler para alternar filtros
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev =>
       prev.includes(platformId)
@@ -83,7 +92,7 @@ export function useGiveaways() {
 
   return {
     giveaways,
-    filteredGiveaways,
+    filteredGiveaways, // Agora retorna apenas jogos VÁLIDOS
     loading,
     selectedPlatforms,
     togglePlatform,

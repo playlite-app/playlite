@@ -25,7 +25,7 @@ pub async fn fetch_game_details(
 #[tauri::command]
 pub async fn get_trending_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, AppError> {
     let api_key = database::get_secret(&app, "rawg_api_key")?;
-    rawg::fetch_trending_games(&api_key)
+    rawg::fetch_trending_games(&app, &api_key)
         .await
         .map_err(AppError::NetworkError)
 }
@@ -34,15 +34,15 @@ pub async fn get_trending_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, A
 #[tauri::command]
 pub async fn get_upcoming_games(app: AppHandle) -> Result<Vec<rawg::RawgGame>, AppError> {
     let api_key = database::get_secret(&app, "rawg_api_key")?;
-    rawg::fetch_upcoming_games(&api_key)
+    rawg::fetch_upcoming_games(&app, &api_key)
         .await
         .map_err(AppError::NetworkError)
 }
 
 /// Busca giveaways ativos na GamerPower
 #[tauri::command]
-pub async fn get_active_giveaways(_app: AppHandle) -> Result<Vec<Giveaway>, AppError> {
-    gamerpower::fetch_giveaways()
+pub async fn get_active_giveaways(app: AppHandle) -> Result<Vec<Giveaway>, AppError> {
+    gamerpower::fetch_giveaways(&app)
         .await
         .map_err(AppError::NetworkError)
 }

@@ -20,6 +20,7 @@ pub mod utils;
 
 use crate::errors::AppError;
 use crate::utils::logger;
+use chrono::Utc;
 use tauri::{AppHandle, Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -150,7 +151,20 @@ pub fn run() {
 /// Deve ser chamada após o Tauri updater ou na primeira inicialização
 pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
     let current_version = app.package_info().version.to_string();
-    let previous_version = database::get_stored_app_version(app)?;
+    let previous_version = database::configs::get_stored_app_version(app)?;
+
+    // Obtém acesso ao metadata_db para configurações
+    let state: tauri::State<database::AppState> = app.state();
+    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+
+    // Verifica se é primeira instalação
+    if database::configs::get_config(&metadata_conn, "install_date")?.is_none() {
+        let now = Utc::now().to_rfc3339();
+        database::configs::set_config(&metadata_conn, "install_date", &now)?;
+        tracing::info!("Primeira execução detectada. Data salva: {}", now);
+    }
+
+    drop(metadata_conn); // Libera o lock antes de continuar
 
     tracing::info!(
         "Inicializando app - Versão anterior: {}, Atual: {}",
@@ -172,14 +186,22 @@ pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
         }
 
         // 2. Migração de schema (já feita em initialize_databases, mas verificada aqui)
-        let state: tauri::State<database::AppState> = app.state();
-        let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
-
-        database::migrations::run_migrations(app, &conn)?;
-        drop(conn); // Libera o lock
+        let lib_conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+        database::migrations::run_migrations(app, &lib_conn)?;
+        drop(lib_conn); // Libera o lock
 
         // 3. Atualiza versão armazenada
-        database::store_app_version(app, &current_version)?;
+        database::configs::store_app_version(app, &current_version)?;
+
+        // Armazena a versão do schema (major version)
+        let schema_version = app.package_info().version.major as u32;
+        database::configs::store_schema_version(app, schema_version)?;
+
+        // Atualiza timestamp de última atualização
+        let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+        let now = Utc::now().to_rfc3339();
+        database::configs::set_config(&metadata_conn, "last_updated_at", &now)?;
+        drop(metadata_conn);
 
         tracing::info!("App inicializado com sucesso na versão {}", current_version);
     } else {

@@ -8,6 +8,7 @@ import {
   Heart,
   Loader2,
   TrendingUp,
+  WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -72,11 +73,32 @@ export default function Trending(props: TrendingProps) {
     setSelectedGenre,
     addToWishlist,
   } = useTrending(props);
+
   const { profile } = useRecommendation();
   const { games: wishlistGames } = useWishlist();
   const { upcomingGames } = useUpcoming();
-  const { filteredGiveaways, loading, selectedPlatforms, togglePlatform } =
-    useGiveaways();
+  const {
+    filteredGiveaways,
+    loading: giveawaysLoading,
+    selectedPlatforms,
+    togglePlatform,
+  } = useGiveaways();
+
+  // Verifica se temos ALGUM dado para mostrar (cache)
+  const hasData =
+    games.length > 0 ||
+    upcomingGames.length > 0 ||
+    filteredGiveaways.length > 0;
+
+  // Lógica de Bloqueio: Só mostra erro se estiver offline E sem dados
+  if (!isOnline && !hasData) {
+    return (
+      <ErrorState
+        type="offline"
+        onAction={() => props.onChangeTab('libraries')}
+      />
+    );
+  }
 
   // Hero carousel
   const heroGames = games.slice(0, 5);
@@ -103,16 +125,7 @@ export default function Trending(props: TrendingProps) {
     }
   };
 
-  if (!isOnline) {
-    return (
-      <ErrorState
-        type="offline"
-        onAction={() => props.onChangeTab('libraries')}
-      />
-    );
-  }
-
-  if (error) {
+  if (error && !hasData) {
     const isConfigError = error.includes('401') || error.includes('Key');
 
     if (isConfigError) {
@@ -127,7 +140,7 @@ export default function Trending(props: TrendingProps) {
     return <ErrorState type="api" message={error} onRetry={handleRetry} />;
   }
 
-  if (gamesLoading) {
+  if (gamesLoading && !hasData) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center space-y-4">
         <Loader2 className="text-primary h-10 w-10 animate-spin" />
@@ -163,6 +176,17 @@ export default function Trending(props: TrendingProps) {
 
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto">
+      {/* Banner de Modo Offline */}
+      {!isOnline && hasData && (
+        <div className="flex items-center justify-center gap-2 border-b border-yellow-500/20 bg-yellow-500/10 px-6 py-2 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+          <WifiOff size={14} />
+          <span>
+            Modo Offline: Exibindo conteúdo salvo em cache. Algumas informações
+            podem estar desatualizadas.
+          </span>
+        </div>
+      )}
+
       {/* 1. Hero */}
       <Hero
         gameId={currentHero.id.toString()}
@@ -284,7 +308,7 @@ export default function Trending(props: TrendingProps) {
         </div>
 
         {/* Grid de Jogos Grátis */}
-        {filteredGiveaways.length === 0 && !loading ? (
+        {filteredGiveaways.length === 0 && !giveawaysLoading ? (
           <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
             <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />
             <p className="text-base font-medium">
@@ -294,7 +318,7 @@ export default function Trending(props: TrendingProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {loading
+            {giveawaysLoading
               ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="space-y-3">
                     <Skeleton className="aspect-video w-full rounded-lg" />

@@ -1,9 +1,8 @@
+import { invoke } from '@tauri-apps/api/core';
 import { ChevronDown, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Github } from '@/icons';
-
-const APP_VERSION = '3.0.0';
 
 interface TechLinkProps {
   name: string;
@@ -36,6 +35,17 @@ interface AboutPlayliteProps {
 
 export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [appVersion, setAppVersion] = useState('3.0.0');
+
+  useEffect(() => {
+    // Busca a versão do app do backend Rust
+    invoke<string>('get_app_version')
+      .then(version => setAppVersion(version))
+      .catch(error => {
+        console.warn('Erro ao obter versão do app:', error);
+        // Mantém o fallback
+      });
+  }, []);
 
   return (
     <div
@@ -66,7 +76,7 @@ export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
         </div>
         <div className="flex items-center gap-3">
           <p className="text-muted-foreground text-sm whitespace-nowrap">
-            Versão {APP_VERSION}
+            Versão {appVersion}
           </p>
           <ChevronDown
             size={20}
