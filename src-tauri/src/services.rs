@@ -10,7 +10,7 @@
 //! - `itad`: Integração com a API IsThereAnyDeal para 'tracking' de preços e ofertas.
 //! - `playtime`: Estimador inteligente de duração de jogos.
 //! - `rawg`: Integração com a API RAWG para busca de jogos e tendências.
-//! - `recommendation`: Sistema de recomendação de jogos baseado em preferências do usuário.
+//! - `recommendation`: Sistema de recomendação de jogos v4.0 (modular e refatorado).
 //! - `steam`: Integração com a API Steam para importar jogos e obter detalhes.
 //! - `tags`: Serviço para classificação e gerenciamento de tags de jogos.
 

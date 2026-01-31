@@ -10,7 +10,7 @@ use crate::errors::AppError;
 use crate::models::Game;
 use crate::services::recommendation::{
     calculate_user_profile, parse_release_year, rank_games_hybrid, GameWithDetails,
-    RecommendationConfig, RecommendationReason,
+    RecommendationConfig, RecommendationReason, UserSettings,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -76,9 +76,17 @@ pub async fn recommend_hybrid_library(
 
     // 6. Configuração (Usa padrão se não fornecida)
     let config = options.config.unwrap_or_default();
+    let user_settings = UserSettings::default();
 
     // 7. Executa Rankeamento Híbrido com Feedback
-    let ranked = rank_games_hybrid(&profile, &candidates, &cf_scores, &ignored_ids, config);
+    let ranked = rank_games_hybrid(
+        &profile,
+        &candidates,
+        &cf_scores,
+        &ignored_ids,
+        config,
+        user_settings,
+    );
 
     // 8. Formata Resposta
     let result = ranked
@@ -124,9 +132,14 @@ pub async fn recommend_from_library(
 
     // Usa config padrão
     let config = RecommendationConfig::default();
+    let user_settings = UserSettings::default();
 
-    let ranked =
-        crate::services::recommendation::rank_games_content_based(&profile, &candidates, &config);
+    let ranked = crate::services::recommendation::rank_games_content_based(
+        &profile,
+        &candidates,
+        &config,
+        &user_settings,
+    );
 
     let result = ranked
         .into_iter()
@@ -170,7 +183,15 @@ pub async fn recommend_collaborative_library(
         })
         .collect();
 
-    let ranked = crate::services::recommendation::rank_games_collaborative(&candidates, &cf_scores);
+    let ignored_ids = HashSet::new();
+    let user_settings = UserSettings::default();
+
+    let ranked = crate::services::recommendation::rank_games_collaborative(
+        &candidates,
+        &cf_scores,
+        &ignored_ids,
+        &user_settings,
+    );
 
     let result = ranked
         .into_iter()

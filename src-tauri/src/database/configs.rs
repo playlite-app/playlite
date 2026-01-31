@@ -58,6 +58,8 @@ pub fn store_app_version(app: &AppHandle, version: &str) -> Result<(), AppError>
     let state: State<AppState> = app.state();
     let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
 
+    ensure_config_table(&conn)?;
+
     conn.execute(
         "INSERT OR REPLACE INTO app_config (key, value) VALUES ('app_version', ?1)",
         params![version],
@@ -70,6 +72,8 @@ pub fn store_app_version(app: &AppHandle, version: &str) -> Result<(), AppError>
 pub fn get_stored_app_version(app: &AppHandle) -> Result<String, AppError> {
     let state: State<AppState> = app.state();
     let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+
+    ensure_config_table(&conn)?;
 
     match conn.query_row(
         "SELECT value FROM app_config WHERE key = 'app_version'",
@@ -89,9 +93,11 @@ pub fn store_schema_version(app: &AppHandle, schema_version: u32) -> Result<(), 
     let state: State<AppState> = app.state();
     let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
 
+    ensure_config_table(&conn)?;
+
     conn.execute(
         "INSERT OR REPLACE INTO app_config (key, value) VALUES ('schema_version', ?1)",
-        params![schema_version.to_string()],
+        params![schema_version],
     )?;
 
     Ok(())
@@ -101,6 +107,8 @@ pub fn store_schema_version(app: &AppHandle, schema_version: u32) -> Result<(), 
 pub fn get_stored_schema_version(app: &AppHandle) -> Result<u32, AppError> {
     let state: State<AppState> = app.state();
     let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+
+    ensure_config_table(&conn)?;
 
     match conn.query_row(
         "SELECT value FROM app_config WHERE key = 'schema_version'",

@@ -1,8 +1,8 @@
-import { Moon, Plus, Search, Sun } from 'lucide-react';
+import { Moon, Plus, Search, Sun, Zap } from 'lucide-react';
 
 import { AdultFilterToggle } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { useHeaderState, useTheme } from '@/hooks';
+import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 
 interface HeaderProps {
   onAddGame: () => void;
@@ -24,6 +24,13 @@ export default function Header({
   const { isDark, toggleTheme } = useTheme();
   const { isSearchable, searchPlaceholder, searchAriaLabel } =
     useHeaderState(activeSection);
+
+  // Hook para gerenciar análises de recomendação
+  const {
+    isGeneratingAnalysis,
+    analysisStatus,
+    generateRecommendationAnalysis,
+  } = useRecommendationAnalysis();
 
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur md:px-6">
@@ -54,8 +61,28 @@ export default function Header({
         </div>
       </div>
 
+      {/* Status de Análise */}
+      {analysisStatus && (
+        <div className="text-muted-foreground animate-pulse text-xs">
+          {analysisStatus}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex items-center gap-2">
+        {/* Botão Temporário: Gerar Análise de Recomendação */}
+        <Button
+          onClick={generateRecommendationAnalysis}
+          disabled={isGeneratingAnalysis}
+          variant="outline"
+          size="sm"
+          className="hidden shrink-0 gap-1 px-2 text-xs sm:inline-flex md:px-3"
+          title="Gerar análise de recomendação (temporário)"
+        >
+          <Zap size={16} />
+          <span className="hidden md:inline">Análise</span>
+        </Button>
+
         <Button
           onClick={onAddGame}
           size="sm"

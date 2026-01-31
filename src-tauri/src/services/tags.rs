@@ -52,8 +52,7 @@ fn load_tag_metadata() -> Result<HashMap<String, TagMetadata>, Box<dyn std::erro
     Ok(map)
 }
 
-/// Normaliza slugs removendo sufixos numéricos (ex: "-2", "-3")
-/// Mantém números sem hífen (2d, 3d, 25d, 4x)
+/// Normaliza slugs removendo sufixos numéricos (ex: "-2", "-3") e mantém números sem hífen (2d, 3d)
 pub fn normalize_tag_slug(slug: &str) -> String {
     NORMALIZE_REGEX.replace(slug, "").to_string()
 }
@@ -73,6 +72,7 @@ pub fn classify_tags(raw_tags: Vec<String>) -> Vec<GameTag> {
                         slug: metadata.slug.clone(),
                         name: metadata.name.clone(),
                         category: metadata.category.clone(),
+                        role: metadata.role.clone(),
                         relevance: metadata.relevance as f32,
                     })
                 } else {

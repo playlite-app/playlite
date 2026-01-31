@@ -3,1939 +3,2216 @@
     "slug": "singleplayer",
     "name": "Singleplayer",
     "category": "mode",
-    "relevance": 10,
-    "visible": true
+    "relevance": 8,
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "multiplayer",
     "name": "Multiplayer",
     "category": "mode",
-    "relevance": 10,
-    "visible": true
+    "relevance": 8,
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "co-op",
     "name": "Co-op",
     "category": "mode",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "cooperative",
     "name": "Cooperative",
     "category": "mode",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "pvp",
     "name": "PvP",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "pve",
     "name": "PvE",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "local-multiplayer",
     "name": "Local Multiplayer",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "online-multiplayer",
     "name": "Online Multiplayer",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "split-screen",
     "name": "Split Screen",
     "category": "mode",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "mmo",
     "name": "MMO",
     "category": "mode",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "massively-multiplayer",
     "name": "Massively Multiplayer",
     "category": "mode",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "battle-royale",
     "name": "Battle Royale",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "4-player-local",
     "name": "4 Player Local",
     "category": "mode",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "local-co-op",
     "name": "Local Co-op",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "online-co-op",
     "name": "Online Co-op",
     "category": "mode",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "online-pvp",
     "name": "Online PvP",
     "category": "mode",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "cross-platform-multiplayer",
     "name": "Cross-Platform Multiplayer",
     "category": "mode",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "lan-co-op",
     "name": "LAN Co-op",
     "category": "mode",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "mmorpg",
     "name": "MMORPG",
     "category": "mode",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "story-rich",
     "name": "Story Rich",
     "category": "narrative",
-    "relevance": 10,
-    "visible": true
+    "relevance": 7,
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "choices-matter",
     "name": "Choices Matter",
     "category": "narrative",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "narrative",
     "name": "Narrative",
     "category": "narrative",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "multiple-endings",
     "name": "Multiple Endings",
     "category": "narrative",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "branching-story",
     "name": "Branching Story",
     "category": "narrative",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "character-driven",
     "name": "Character Driven",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dialogue-heavy",
     "name": "Dialogue Heavy",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "cinematic",
     "name": "Cinematic",
     "category": "narrative",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "lore-rich",
     "name": "Lore-Rich",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "emotional",
     "name": "Emotional",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "choose-your-own-adventure",
     "name": "Choose Your Own Adventure",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dynamic-narration",
     "name": "Dynamic Narration",
     "category": "narrative",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "narration",
     "name": "Narration",
     "category": "narrative",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "comedy",
     "name": "Comedy",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "drama",
     "name": "Drama",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "romance",
     "name": "Romance",
     "category": "narrative",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "mystery",
     "name": "Mystery",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "detective",
     "name": "Detective",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "psychological",
     "name": "Psychological",
     "category": "narrative",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "fantasy",
     "name": "Fantasy",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "sci-fi",
     "name": "Sci-fi",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "cyberpunk",
     "name": "Cyberpunk",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "post-apocalyptic",
     "name": "Post-apocalyptic",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "horror",
     "name": "Horror",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "medieval",
     "name": "Medieval",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "western",
     "name": "Western",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "noir",
     "name": "Noir",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "space",
     "name": "Space",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "supernatural",
     "name": "Supernatural",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "historical",
     "name": "Historical",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dystopian",
     "name": "Dystopian",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "zombies",
     "name": "Zombies",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "military",
     "name": "Military",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "steampunk",
     "name": "Steampunk",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "pirates",
     "name": "Pirates",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "ninjas",
     "name": "Ninjas",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "mythology",
     "name": "Mythology",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dark-fantasy",
     "name": "Dark Fantasy",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "aliens",
     "name": "Aliens",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "apocalypse",
     "name": "Apocalypse",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "cold-war",
     "name": "Cold War",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "world-war-ii",
     "name": "World War II",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "alternate-history",
     "name": "Alternate History",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dinosaurs",
     "name": "Dinosaurs",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dragons",
     "name": "Dragons",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "robots",
     "name": "Robots",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "demons",
     "name": "Demons",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "magic",
     "name": "Magic",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "crime",
     "name": "Crime",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "mafia",
     "name": "Mafia",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "assassin",
     "name": "Assassin",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "ninja",
     "name": "Ninja",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "war",
     "name": "War",
     "category": "theme",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "survival-horror",
     "name": "Survival Horror",
     "category": "theme",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dark",
     "name": "Dark",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dark-humor",
     "name": "Dark Humor",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dark-comedy",
     "name": "Dark Comedy",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "nature",
     "name": "Nature",
     "category": "theme",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "futuristic",
     "name": "Futuristic",
     "category": "theme",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "modern",
     "name": "Modern",
     "category": "theme",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "1980s",
     "name": "1980s",
     "category": "theme",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "1990s",
     "name": "1990s",
     "category": "theme",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "prehistoric",
     "name": "Prehistoric",
     "category": "theme",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "action",
     "name": "Action",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "adventure",
     "name": "Adventure",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "rpg",
     "name": "RPG",
     "category": "gameplay",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "action-rpg",
     "name": "Action RPG",
     "category": "gameplay",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "jrpg",
     "name": "JRPG",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "tactical-rpg",
     "name": "Tactical RPG",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "party-based-rpg",
     "name": "Party-Based RPG",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "action-adventure",
     "name": "Action-Adventure",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "turn-based",
     "name": "Turn-Based",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "turn-based-strategy",
     "name": "Turn-Based Strategy",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "turn-based-combat",
     "name": "Turn-Based Combat",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "turn-based-tactics",
     "name": "Turn-Based Tactics",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "real-time",
     "name": "Real-Time",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "real-time-strategy",
     "name": "Real-Time Strategy",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "real-time-tactics",
     "name": "Real-Time Tactics",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "real-time-with-pause",
     "name": "Real-Time with Pause",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "rts",
     "name": "RTS",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "stealth",
     "name": "Stealth",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "strategy",
     "name": "Strategy",
     "category": "gameplay",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "grand-strategy",
     "name": "Grand Strategy",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "4x",
     "name": "4X",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "puzzle",
     "name": "Puzzle",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "puzzle-platformer",
     "name": "Puzzle Platformer",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "platformer",
     "name": "Platformer",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "2d-platformer",
     "name": "2D Platformer",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "3d-platformer",
     "name": "3D Platformer",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "precision-platformer",
     "name": "Precision Platformer",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "survival",
     "name": "Survival",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "roguelike",
     "name": "Roguelike",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "roguelite",
     "name": "Roguelite",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "action-roguelike",
     "name": "Action Roguelike",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "metroidvania",
     "name": "Metroidvania",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "open-world",
     "name": "Open World",
     "category": "gameplay",
     "relevance": 10,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "sandbox",
     "name": "Sandbox",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "linear",
     "name": "Linear",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "nonlinear",
     "name": "Nonlinear",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "exploration",
     "name": "Exploration",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "crafting",
     "name": "Crafting",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "resource-management",
     "name": "Resource Management",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "simulation",
     "name": "Simulation",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "life-sim",
     "name": "Life Sim",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dating-sim",
     "name": "Dating Sim",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "racing",
     "name": "Racing",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "sports",
     "name": "Sports",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "fps",
     "name": "FPS",
     "category": "gameplay",
-    "relevance": 10,
-    "visible": true
+    "relevance": 7,
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "first-person",
     "name": "First-Person",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "first-person-shooter",
     "name": "First-Person Shooter",
     "category": "gameplay",
     "relevance": 9,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "third-person",
     "name": "Third Person",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "third-person-shooter",
     "name": "Third-Person Shooter",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "shooter",
     "name": "Shooter",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "top-down-shooter",
     "name": "Top-Down Shooter",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "twin-stick-shooter",
     "name": "Twin Stick Shooter",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "shoot-em-up",
     "name": "Shoot 'Em Up",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "bullet-hell",
     "name": "Bullet Hell",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "looter-shooter",
     "name": "Looter Shooter",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "hack-and-slash",
     "name": "Hack and Slash",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "beat-em-up",
     "name": "Beat 'em up",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "fighting",
     "name": "Fighting",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "2d-fighter",
     "name": "2D Fighter",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "tower-defense",
     "name": "Tower Defense",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "card-game",
     "name": "Card Game",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "board-game",
     "name": "Board Game",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "tactical",
     "name": "Tactical",
     "category": "gameplay",
     "relevance": 8,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "base-building",
     "name": "Base Building",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "city-builder",
     "name": "City Builder",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "management",
     "name": "Management",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "time-management",
     "name": "Time Management",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "point-and-click",
     "name": "Point & Click",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "visual-novel",
     "name": "Visual Novel",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "interactive-fiction",
     "name": "Interactive Fiction",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "text-based",
     "name": "Text-Based",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "walking-simulator",
     "name": "Walking Simulator",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "rhythm",
     "name": "Rhythm",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "music",
     "name": "Music",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "difficult",
     "name": "Difficult",
     "category": "gameplay",
-    "relevance": 7,
-    "visible": true
+    "relevance": 6,
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "casual",
     "name": "Casual",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "relaxing",
     "name": "Relaxing",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "fast-paced",
     "name": "Fast-Paced",
     "category": "gameplay",
-    "relevance": 7,
-    "visible": true
+    "relevance": 6,
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "atmospheric",
     "name": "Atmospheric",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "parkour",
     "name": "Parkour",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "dungeon-crawler",
     "name": "Dungeon Crawler",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "loot",
     "name": "Loot",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "procedural-generation",
     "name": "Procedural Generation",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "permadeath",
     "name": "Permadeath",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "character-customization",
     "name": "Character Customization",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "inventory-management",
     "name": "Inventory Management",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "leveling",
     "name": "Leveling",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "class-based",
     "name": "Class-Based",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "2d",
     "name": "2D",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "3d",
     "name": "3D",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "25d",
     "name": "2.5D",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "top-down",
     "name": "Top-Down",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "isometric",
     "name": "Isometric",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "side-scroller",
     "name": "Side Scroller",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "driving",
     "name": "Driving",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "flight",
     "name": "Flight",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "fishing",
     "name": "Fishing",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "cooking",
     "name": "Cooking",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "building",
     "name": "Building",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "automation",
     "name": "Automation",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "physics",
     "name": "Physics",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "hacking",
     "name": "Hacking",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "bullet-time",
     "name": "Bullet Time",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "qte",
     "name": "QTE",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "quick-time-events",
     "name": "Quick Time Events",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "collectathon",
     "name": "Collectathon",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "escape",
     "name": "Escape",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "room-escape",
     "name": "Room Escape",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "mystery-dungeon",
     "name": "Mystery Dungeon",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "swordplay",
     "name": "Swordplay",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "immersive-sim",
     "name": "Immersive Sim",
     "category": "gameplay",
     "relevance": 7,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "wargame",
     "name": "Wargame",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "hex-grid",
     "name": "Hex Grid",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "diplomacy",
     "name": "Diplomacy",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "economy",
     "name": "Economy",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "capitalism",
     "name": "Capitalism",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "minigames",
     "name": "Minigames",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "score-attack",
     "name": "Score Attack",
     "category": "gameplay",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "crowd-combat",
     "name": "Crowd Combat",
     "category": "gameplay",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "affinity"
   },
   {
     "slug": "windows",
     "name": "Windows",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "linux",
     "name": "Linux",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "macos",
     "name": "macOS",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "steam-deck",
     "name": "Steam Deck",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "vr",
     "name": "VR",
     "category": "technical",
-    "relevance": 8,
-    "visible": true
+    "relevance": 0,
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "3d-vision",
     "name": "3D Vision",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "controller",
     "name": "Controller",
     "category": "input",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "keyboard-mouse",
     "name": "Keyboard & Mouse",
     "category": "input",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "controller-support",
     "name": "Controller Support",
     "category": "input",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "full-controller-support",
     "name": "Full Controller Support",
     "category": "input",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "partial-controller-support",
     "name": "Partial Controller Support",
     "category": "input",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "steam-cloud",
     "name": "Steam Cloud",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "steam-achievements",
     "name": "Steam Achievements",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "steam-trading-cards",
     "name": "Steam Trading Cards",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "steam-workshop",
     "name": "Steam Workshop",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "steam-leaderboards",
     "name": "Steam Leaderboards",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "valve-anti-cheat-enabled",
     "name": "Valve Anti-Cheat Enabled",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "captions-available",
     "name": "Captions Available",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "commentary-available",
     "name": "Commentary Available",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "achievements",
     "name": "Achievements",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "stats",
     "name": "Stats",
     "category": "technical",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "filter"
   },
   {
     "slug": "indie",
     "name": "Indie",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "early-access",
     "name": "Early Access",
     "category": "meta",
     "relevance": 3,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "free-to-play",
     "name": "Free to Play",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "moddable",
     "name": "Moddable",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "great-soundtrack",
     "name": "Great Soundtrack",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "pixel-art",
     "name": "Pixel Art",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "pixel-graphics",
     "name": "Pixel Graphics",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "anime",
     "name": "Anime",
     "category": "meta",
     "relevance": 6,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "retro",
     "name": "Retro",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "old-school",
     "name": "Old School",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "classic",
     "name": "Classic",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "cult-classic",
     "name": "Cult Classic",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "remake",
     "name": "Remake",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "colorful",
     "name": "Colorful",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "stylized",
     "name": "Stylized",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "beautiful",
     "name": "Beautiful",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "cute",
     "name": "Cute",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "cartoony",
     "name": "Cartoony",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "cartoon",
     "name": "Cartoon",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "hand-drawn",
     "name": "Hand-drawn",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "comic-book",
     "name": "Comic Book",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "realistic",
     "name": "Realistic",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "low-poly",
     "name": "Low Poly",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "minimalist",
     "name": "Minimalist",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "abstract",
     "name": "Abstract",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "surreal",
     "name": "Surreal",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "psychedelic",
     "name": "Psychedelic",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "gore",
     "name": "Gore",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "blood",
     "name": "Blood",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "violent",
     "name": "Violent",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "mature",
     "name": "Mature",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "nudity",
     "name": "Nudity",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "sexual-content",
     "name": "Sexual Content",
     "category": "meta",
     "relevance": 3,
-    "visible": true
+    "visible": true,
+    "role": "filter"
   },
   {
     "slug": "nsfw",
     "name": "NSFW",
     "category": "meta",
     "relevance": 3,
-    "visible": true
+    "visible": true,
+    "role": "filter"
   },
   {
     "slug": "hentai",
     "name": "Hentai",
     "category": "meta",
     "relevance": 3,
-    "visible": true
+    "visible": true,
+    "role": "filter"
   },
   {
     "slug": "lgbtq",
     "name": "LGBTQ+",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "female-protagonist",
     "name": "Female Protagonist",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "villain-protagonist",
     "name": "Villain Protagonist",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "silent-protagonist",
     "name": "Silent Protagonist",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "family-friendly",
     "name": "Family Friendly",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "short",
     "name": "Short",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "diversity"
   },
   {
     "slug": "episodic",
     "name": "Episodic",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "replay-value",
     "name": "Replay Value",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "addictive",
     "name": "Addictive",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "fun",
     "name": "Fun",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "funny",
     "name": "Funny",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "masterpiece",
     "name": "Masterpiece",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "soundtrack",
     "name": "Soundtrack",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "level-editor",
     "name": "Level Editor",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "includes-level-editor",
     "name": "Includes Level Editor",
     "category": "meta",
     "relevance": 5,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "based-on-a-novel",
     "name": "Based on a Novel",
     "category": "meta",
     "relevance": 4,
-    "visible": true
+    "visible": true,
+    "role": "context"
   },
   {
     "slug": "benchmark",
     "name": "Benchmark",
     "category": "meta",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "in-app-purchases",
     "name": "In-App Purchases",
     "category": "meta",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "remote-play-together",
     "name": "Remote Play Together",
     "category": "meta",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   },
   {
     "slug": "family-sharing",
     "name": "Family Sharing",
     "category": "meta",
     "relevance": 0,
-    "visible": false
+    "visible": false,
+    "role": "context"
   }
 ]

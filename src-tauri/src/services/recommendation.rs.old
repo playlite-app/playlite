@@ -1,0 +1,551 @@
+//! Sistema de Recomendação v4.0 - Content-Based com Role-Based Tag System
+//!
+//! Este módulo implementa um sistema de recomendação híbrido que combina
+//! filtragem baseada em conteúdo (content-based) com filtragem colaborativa (collaborative).
+//!
+//! **Melhorias v4.0:**
+//! - Sistema de roles para tags (Affinity, Context, Filter, Diversity)
+//! - Separação de estágios de recomendação
+//! - Filtros duros antes do ranqueamento
+//! - Penalização de séries/gêneros por seleção estrutural, não score
+//! - CF puro sem penalizações matemáticas
+//! - Cap individual por tag affinity
+//! - Aumento de peso dos gêneros
+
+mod analysis;
+mod core;
+mod filtering;
+mod profile;
+mod ranking;
+mod reports;
+mod scoring;
+
+use crate::models::Game;
+use crate::utils::tag_utils::{
+    category_multiplier, combined_multiplier, role_multiplier, TagKey, TagRole,
+};
+use chrono::Datelike;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
+
+// === CONSTANTES ===
+
+// Públicas para uso em módulos de análise
+pub const MAX_TAG_CONTRIBUTION: f32 = 300.0; // Cap por tag affinity
+pub const WEIGHT_GENRE: f32 = 3.0;
+pub const WEIGHT_PLAYTIME_HOUR: f32 = 1.2;
+
+// Privadas para uso interno
+const WEIGHT_FAVORITE: f32 = 30.0;
+const WEIGHT_USER_RATING: f32 = 8.0;
+const WEIGHT_SERIES: f32 = 1.0;
+
+// === ESTRUTURAS ===
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct RecommendationConfig {
+    pub content_weight: f32,
+    pub collaborative_weight: f32,
+    pub age_decay: f32,
+    pub favor_series: bool,
+}
+
+impl Default for RecommendationConfig {
+    fn default() -> Self {
+        Self {
+            content_weight: 0.65,
+            collaborative_weight: 0.35,
+            age_decay: 0.98,
+            favor_series: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UserSettings {
+    pub filter_adult_content: bool,
+    pub series_limit: SeriesLimit,
+}
+
+impl Default for UserSettings {
+    fn default() -> Self {
+        Self {
+            filter_adult_content: false,
+            series_limit: SeriesLimit::Moderate,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SeriesLimit {
+    None,
+    Moderate,   // Max 2 em 10
+    Aggressive, // Max 1 em 10
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct RecommendationReason {
+    pub label: String,
+    pub type_id: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct GameWithDetails {
+    pub game: Game,
+    pub genres: Vec<String>,
+    pub tags: Vec<crate::models::GameTag>,
+    pub series: Option<String>,
+    pub release_year: Option<i32>,
+    pub steam_app_id: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UserPreferenceVector {
+    pub genres: HashMap<String, f32>,
+    pub tags: HashMap<TagKey, f32>,
+    pub series: HashMap<String, f32>,
+    #[serde(rename = "totalPlaytime")]
+    pub total_playtime: i32,
+    #[serde(rename = "totalGames")]
+    pub total_games: i32,
+}
+
+// === CÁLCULO DE PERFIL ===
+
+pub fn calculate_user_profile(
+    games: &[GameWithDetails],
+    ignored_ids: &HashSet<String>,
+) -> UserPreferenceVector {
+    let mut genres: HashMap<String, f32> = HashMap::new();
+    let mut tags: HashMap<TagKey, f32> = HashMap::new();
+    let mut series: HashMap<String, f32> = HashMap::new();
+    let mut total_playtime = 0;
+    let total_games = games.len() as i32;
+
+    for game_data in games {
+        if ignored_ids.contains(&game_data.game.id) {
+            continue;
+        }
+
+        let game = &game_data.game;
+
+        // Calcular peso do jogo
+        let playtime_hours = (game.playtime.unwrap_or(0) / 60).min(100);
+        let mut weight = 1.0 + (playtime_hours as f32 * WEIGHT_PLAYTIME_HOUR);
+
+        if game.favorite {
+            weight += WEIGHT_FAVORITE;
+        }
+
+        if let Some(rating) = game.user_rating {
+            weight += (rating as f32) * WEIGHT_USER_RATING;
+        }
+
+        total_playtime += game.playtime.unwrap_or(0);
+
+        // Gêneros
+        for genre in &game_data.genres {
+            *genres.entry(genre.clone()).or_insert(0.0) += weight * WEIGHT_GENRE;
+        }
+
+        // Tags (usando role e category multipliers)
+        for tag in &game_data.tags {
+            let key = TagKey::new(tag.category.clone(), tag.slug.clone());
+
+            // Tags de filtro não contribuem para o perfil
+            if tag.role == TagRole::Filter {
+                continue;
+            }
+
+            let tag_weight = weight
+                * tag.relevance
+                * category_multiplier(&tag.category)
+                * role_multiplier(&tag.role);
+
+            *tags.entry(key).or_insert(0.0) += tag_weight;
+        }
+
+        // Séries
+        if let Some(series_name) = &game_data.series {
+            *series.entry(series_name.clone()).or_insert(0.0) += weight * WEIGHT_SERIES;
+        }
+    }
+
+    UserPreferenceVector {
+        genres,
+        tags,
+        series,
+        total_playtime,
+        total_games,
+    }
+}
+
+// === FILTROS ===
+
+fn apply_hard_filters(
+    candidates: &[GameWithDetails],
+    user_settings: &UserSettings,
+) -> Vec<GameWithDetails> {
+    candidates
+        .iter()
+        .filter(|game| {
+            // Filtro de conteúdo adulto
+            if user_settings.filter_adult_content {
+                let has_adult = game.tags.iter().any(|tag| {
+                    tag.role == TagRole::Filter
+                        && ["sexual-content", "nsfw", "hentai"].contains(&tag.slug.as_str())
+                });
+                if has_adult {
+                    return false;
+                }
+            }
+
+            true
+        })
+        .cloned()
+        .collect()
+}
+
+// === CONTENT-BASED COM ROLES ===
+
+fn score_game_cb(
+    profile: &UserPreferenceVector,
+    game: &GameWithDetails,
+    config: &RecommendationConfig,
+) -> (f32, Option<RecommendationReason>) {
+    let mut affinity_score = 0.0;
+    let mut context_score = 0.0;
+    let mut diversity_score = 0.0;
+
+    let mut best_contribution = 0.0;
+    let mut best_reason: Option<RecommendationReason> = None;
+
+    // 1. Gêneros (sempre affinity)
+    for genre in &game.genres {
+        if let Some(&val) = profile.genres.get(genre) {
+            affinity_score += val;
+
+            if val > best_contribution {
+                best_contribution = val;
+                best_reason = Some(RecommendationReason {
+                    label: format!("Fãs de {}", genre),
+                    type_id: "genre".to_string(),
+                });
+            }
+        }
+    }
+
+    // 2. Tags separadas por role
+    for tag in &game.tags {
+        let key = TagKey::new(tag.category.clone(), tag.slug.clone());
+
+        if let Some(&val) = profile.tags.get(&key) {
+            let mult = combined_multiplier(&tag.category, &tag.role);
+            let contribution = (val * mult).min(MAX_TAG_CONTRIBUTION);
+
+            match tag.role {
+                TagRole::Affinity => {
+                    affinity_score += contribution;
+                    if contribution > best_contribution {
+                        best_contribution = contribution;
+                        best_reason = Some(RecommendationReason {
+                            label: format!("Tag: {}", tag.name),
+                            type_id: "tag".to_string(),
+                        });
+                    }
+                }
+                TagRole::Context => {
+                    context_score += contribution;
+                }
+                TagRole::Diversity => {
+                    diversity_score += contribution;
+                }
+                TagRole::Filter => {}
+            }
+        }
+    }
+
+    // 3. Séries
+    if config.favor_series {
+        if let Some(series) = &game.series {
+            if let Some(&val) = profile.series.get(series) {
+                affinity_score += val.sqrt();
+            }
+        }
+    }
+
+    // 4. Penalização por idade
+    if let Some(release_year) = game.release_year {
+        let current_year = chrono::Local::now().year();
+        let age = (current_year - release_year).clamp(0, 15);
+        if age > 0 {
+            let multiplier = config.age_decay.powi(age);
+            affinity_score *= multiplier;
+            context_score *= multiplier;
+        }
+    }
+
+    let total_cb = affinity_score + context_score + diversity_score;
+
+    (total_cb, best_reason)
+}
+
+// === SELEÇÃO FINAL COM REGRAS ESTRUTURAIS ===
+
+fn apply_diversity_rules(
+    scored: Vec<(GameWithDetails, f32, RecommendationReason)>,
+    settings: &UserSettings,
+) -> Vec<(GameWithDetails, f32, RecommendationReason)> {
+    let mut result = Vec::new();
+    let mut series_count: HashMap<String, usize> = HashMap::new();
+    let mut genre_count: HashMap<String, usize> = HashMap::new();
+
+    let series_max = match settings.series_limit {
+        SeriesLimit::None => usize::MAX,
+        SeriesLimit::Moderate => 2,
+        SeriesLimit::Aggressive => 1,
+    };
+
+    for (game, score, reason) in scored {
+        let mut should_include = true;
+
+        // Regra 1: Limite de séries
+        if let Some(series) = &game.series {
+            let count = series_count.get(series).unwrap_or(&0);
+            if *count >= series_max && result.len() < 10 {
+                should_include = false;
+            }
+        }
+
+        // Regra 2: Máximo 4 do mesmo gênero principal em top 10
+        if should_include && !game.genres.is_empty() && result.len() < 10 {
+            let main_genre = &game.genres[0];
+            let count = genre_count.get(main_genre).unwrap_or(&0);
+            if *count >= 4 {
+                should_include = false;
+            }
+        }
+
+        if should_include {
+            if let Some(series) = &game.series {
+                *series_count.entry(series.clone()).or_insert(0) += 1;
+            }
+            if !game.genres.is_empty() {
+                *genre_count.entry(game.genres[0].clone()).or_insert(0) += 1;
+            }
+            result.push((game, score, reason));
+        }
+    }
+
+    result
+}
+
+// === RANQUEAMENTO HÍBRIDO (CB + CF) ===
+
+pub fn rank_games_hybrid(
+    profile: &UserPreferenceVector,
+    candidates: &[GameWithDetails],
+    cf_scores: &HashMap<u32, f32>,
+    ignored_ids: &HashSet<String>,
+    config: RecommendationConfig,
+    user_settings: UserSettings,
+) -> Vec<(GameWithDetails, f32, RecommendationReason)> {
+    // Estágio 1: Filtros duros
+    let filtered = apply_hard_filters(candidates, &user_settings);
+
+    // Calcular scores CB e CF
+    let raw_results: Vec<_> = filtered
+        .iter()
+        .filter(|g| !ignored_ids.contains(&g.game.id))
+        .map(|g| {
+            let (cb_score, cb_reason) = score_game_cb(profile, g, &config);
+
+            let cf_score = g
+                .steam_app_id
+                .and_then(|id| cf_scores.get(&id))
+                .cloned()
+                .unwrap_or(0.0);
+
+            (g.clone(), cb_score, cf_score, cb_reason)
+        })
+        .collect();
+
+    // Normalização
+    let max_cb = raw_results
+        .iter()
+        .map(|(_, c, _, _)| *c)
+        .fold(0.0, f32::max);
+    let max_cf = raw_results
+        .iter()
+        .map(|(_, _, c, _)| *c)
+        .fold(0.0, f32::max);
+
+    // Combinação ponderada
+    let mut ranked: Vec<_> = raw_results
+        .into_iter()
+        .filter_map(|(g, cb, cf, cb_reason)| {
+            if cb == 0.0 && cf == 0.0 {
+                return None;
+            }
+
+            let cb_n = normalize_score(cb, max_cb);
+            let cf_n = normalize_score(cf, max_cf);
+
+            let weighted_cb = cb_n * config.content_weight;
+            let weighted_cf = cf_n * config.collaborative_weight;
+
+            let final_score = weighted_cb + weighted_cf;
+
+            // Razão final
+            let reason = match (weighted_cb > 0.0, weighted_cf > 0.0) {
+                (true, true) => RecommendationReason {
+                    label: "Afinidade + Popular na comunidade".to_string(),
+                    type_id: "hybrid".to_string(),
+                },
+                (false, true) => RecommendationReason {
+                    label: "Popular na comunidade".to_string(),
+                    type_id: "community".to_string(),
+                },
+                _ => cb_reason.unwrap_or(RecommendationReason {
+                    label: "Baseado no seu perfil".to_string(),
+                    type_id: "general".to_string(),
+                }),
+            };
+
+            Some((g, final_score, reason))
+        })
+        .collect();
+
+    // Ordenar
+    ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    // Estágio 6: Aplicar regras de diversidade
+    let final_list = apply_diversity_rules(ranked, &user_settings);
+
+    final_list
+}
+
+// === RANQUEAMENTO CONTENT-BASED PURO ===
+
+pub fn rank_games_content_based(
+    profile: &UserPreferenceVector,
+    candidates: &[GameWithDetails],
+    config: &RecommendationConfig,
+    user_settings: &UserSettings,
+) -> Vec<(GameWithDetails, f32, RecommendationReason)> {
+    // Estágio 1: Filtros
+    let filtered = apply_hard_filters(candidates, user_settings);
+
+    // Estágios 2-3: CB score
+    let mut ranked: Vec<_> = filtered
+        .iter()
+        .map(|g| {
+            let (score, reason) = score_game_cb(profile, g, config);
+
+            let final_reason = reason.unwrap_or(RecommendationReason {
+                label: "Baseado no seu perfil".to_string(),
+                type_id: "general".to_string(),
+            });
+
+            (g.clone(), score, final_reason)
+        })
+        .filter(|(_, score, _)| *score > 0.0)
+        .collect();
+
+    // Ordenar
+    ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    // Estágio 6: Diversidade
+    let final_list = apply_diversity_rules(ranked, user_settings);
+
+    final_list
+}
+
+// === RANQUEAMENTO COLLABORATIVE PURO ===
+
+pub fn rank_games_collaborative(
+    candidates: &[GameWithDetails],
+    cf_scores: &HashMap<u32, f32>,
+    ignored_ids: &HashSet<String>,
+    user_settings: &UserSettings,
+) -> Vec<(GameWithDetails, f32, RecommendationReason)> {
+    // Estágio 1: Filtros
+    let filtered = apply_hard_filters(candidates, user_settings);
+
+    // CF score cru (sem penalizações)
+    let mut scored: Vec<_> = filtered
+        .iter()
+        .filter(|g| !ignored_ids.contains(&g.game.id))
+        .filter_map(|g| {
+            let steam_id = g.steam_app_id?;
+            let score = cf_scores.get(&steam_id).cloned()?;
+
+            if score <= 0.0 {
+                return None;
+            }
+
+            Some((g.clone(), score))
+        })
+        .collect();
+
+    // Ordenar
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    // Converter para formato com razão
+    let with_reason: Vec<_> = scored
+        .into_iter()
+        .map(|(g, score)| {
+            (
+                g,
+                score,
+                RecommendationReason {
+                    label: "Tendência na Comunidade".to_string(),
+                    type_id: "community".to_string(),
+                },
+            )
+        })
+        .collect();
+
+    // Estágio 6: Diversidade
+    let final_list = apply_diversity_rules(with_reason, user_settings);
+
+    final_list
+}
+
+// === UTILITÁRIOS ===
+
+pub fn parse_release_year(date_str: &str) -> Option<i32> {
+    date_str.split('-').next()?.parse().ok()
+}
+
+pub(crate) fn normalize_score(score: f32, max: f32) -> f32 {
+    if max > 0.0 {
+        score / max
+    } else {
+        0.0
+    }
+}
+
+/// Função pública para aplicar filtros (usada em outros módulos)
+pub(crate) fn apply_hard_filters_pub(
+    candidates: &[GameWithDetails],
+    user_settings: &UserSettings,
+) -> Vec<GameWithDetails> {
+    apply_hard_filters(candidates, user_settings)
+}
+
+/// Calcula o peso de um jogo baseado no tempo jogado, favoritos e avaliação do usuário.
+pub fn calculate_game_weight(game: &Game) -> f32 {
+    let playtime_hours = (game.playtime.unwrap_or(0) / 60).min(100);
+    let mut weight = 1.0 + (playtime_hours as f32 * WEIGHT_PLAYTIME_HOUR);
+
+    if game.favorite {
+        weight += WEIGHT_FAVORITE;
+    }
+
+    if let Some(rating) = game.user_rating {
+        weight += (rating as f32) * WEIGHT_USER_RATING;
+    }
+
+    weight
+}

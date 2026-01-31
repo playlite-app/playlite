@@ -71,19 +71,42 @@ export function calculateAffinity(
     }
   });
 
-  // 2. Tags - Usa categoria e multiplicadores
+  // 2. Tags - Busca em todas as possíveis chaves
   tags.forEach(tag => {
-    // Formato da chave: "category:slug" (igual ao backend)
-    const category = tag.category?.toLowerCase() || 'unknown';
-    const tagKey = `${category}:${tag.slug}`;
+    // O backend agora usa o formato "CategoryEnum:slug" (ex: "Gameplay:rpg")
+    // Mas o RawgGame pode não ter category, então tentamos vários formatos
 
-    // Busca no perfil
-    if (profile.tags[tagKey]) {
-      // Aplica multiplicador da categoria
-      const multiplier =
-        CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS] ||
-        0.5;
-      score += profile.tags[tagKey] * multiplier;
+    const slug = tag.slug.toLowerCase();
+    let found = false;
+
+    // Tenta encontrar a tag no perfil
+    // O perfil tem chaves no formato "Gameplay:rpg", "Narrative:story", etc.
+    Object.keys(profile.tags).forEach(profileKey => {
+      // profileKey está no formato "Gameplay:rpg"
+      const [profileCategory, profileSlug] = profileKey.split(':');
+
+      if (profileSlug && profileSlug.toLowerCase() === slug) {
+        // Encontrou! Usa o multiplicador da categoria do perfil
+        const category = profileCategory.toLowerCase();
+        const multiplier =
+          CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS] ||
+          0.5;
+        score += profile.tags[profileKey] * multiplier;
+        found = true;
+      }
+    });
+
+    // Se não encontrou e tem categoria no tag, tenta o formato direto
+    if (!found && tag.category) {
+      const category = tag.category.toLowerCase();
+      const tagKey = `${category}:${slug}`;
+
+      if (profile.tags[tagKey]) {
+        const multiplier =
+          CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS] ||
+          0.5;
+        score += profile.tags[tagKey] * multiplier;
+      }
     }
   });
 

@@ -2,6 +2,7 @@
  * Hooks organizados por domínio/feature
  *
  * Estrutura:
+ * - analysis/       - Análise e relatórios
  * - library/        - Gerenciamento de biblioteca
  * - recommendation/ - Sistema de recomendação
  * - trending/       - Jogos em alta e lançamentos

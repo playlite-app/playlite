@@ -73,6 +73,13 @@ export function calculateGameAffinity(
     badge = 'PARA VOCÊ';
   }
 
+  // Debug temporário
+  if (badge) {
+    console.log(
+      `[DEBUG] Game: ${game.name}, Affinity: ${affinity}, Badge: ${badge}`
+    );
+  }
+
   return { genres, tags, affinity, isFavSeries, badge };
 }
 

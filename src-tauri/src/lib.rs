@@ -119,12 +119,13 @@ pub fn run() {
             commands::settings::list_secrets,
             commands::settings::get_secrets,
             commands::settings::set_secrets,
-            // Comando de Recomendação
-            commands::recommendations::get_user_profile,
-            commands::recommendations::recommend_hybrid_library,
-            commands::recommendations::recommend_collaborative_library,
-            commands::recommendations::recommend_from_library,
-            // Comando de Tradução de Descrição
+            // Comandos de Recomendação
+            commands::recommendation::get_user_profile,
+            commands::recommendation::recommend_hybrid_library,
+            commands::recommendation::recommend_collaborative_library,
+            commands::recommendation::recommend_from_library,
+            commands::recommendation::generate_recommendation_analysis,
+            // Comandos de Tradução de Descrição
             commands::ai_translation::translate_description,
             // Comandos de Conquistas de Jogos
             commands::achievements::get_recent_achievements,
@@ -132,6 +133,12 @@ pub fn run() {
             commands::caches::cleanup_cache,
             commands::caches::clear_all_cache,
             commands::caches::get_detailed_cache_stats,
+            // Comandos de Sistema
+            commands::system::open_folder,
+            commands::system::open_file,
+            // Comandos de Preferências do Usuário
+            commands::user_preferences::get_user_preferences,
+            commands::user_preferences::save_user_preferences,
             // Comandos de Versionamento
             commands::version::get_app_version_info,
             // Comandos de Imagem

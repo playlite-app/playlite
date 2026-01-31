@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   Save,
   Search,
+  ShieldAlert,
   Sparkles,
   Trash2,
   Upload,
@@ -27,6 +28,7 @@ import {
   useRecommendation,
   useRecommendationSliders,
   useSettings,
+  useUserPreferences,
 } from '@/hooks';
 
 interface SettingsProps {
@@ -60,6 +62,10 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
     weightsDescription,
     decayDescription,
   } = useRecommendationSliders(config, updateConfig);
+
+  // Hook para gerenciar preferências do usuário
+  const { preferences, toggleAdultFilter, setSeriesLimit } =
+    useUserPreferences();
 
   if (loading.initial) {
     return (
@@ -202,6 +208,61 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               labelOn="Ativado"
             />
           </div>
+        </SettingsRow>
+
+        <SettingsRow
+          icon={ShieldAlert}
+          title="Filtrar Conteúdo Adulto"
+          description="Ocultar jogos com conteúdo adulto das recomendações."
+        >
+          <div className="flex justify-end">
+            <Switch
+              checked={preferences.filter_adult_content}
+              onChange={async () => {
+                const success = await toggleAdultFilter();
+
+                if (success) {
+                  toast.success(
+                    preferences.filter_adult_content
+                      ? 'Filtro de conteúdo adulto desativado'
+                      : 'Filtro de conteúdo adulto ativado'
+                  );
+                } else {
+                  toast.error('Erro ao atualizar filtro');
+                }
+              }}
+              labelOff="Desativado"
+              labelOn="Ativado"
+            />
+          </div>
+        </SettingsRow>
+
+        <SettingsRow
+          icon={Sparkles}
+          title="Diversidade de Séries"
+          description="Controla quantos jogos da mesma série podem aparecer nas recomendações."
+        >
+          <select
+            value={preferences.series_limit}
+            onChange={async e => {
+              const value = e.target.value as
+                | 'none'
+                | 'moderate'
+                | 'aggressive';
+              const success = await setSeriesLimit(value);
+
+              if (success) {
+                toast.success('Limite de séries atualizado!');
+              } else {
+                toast.error('Erro ao atualizar limite');
+              }
+            }}
+            className="bg-secondary text-secondary-foreground focus:ring-primary rounded-md border-none px-3 py-2 text-sm font-medium outline-none focus:ring-1"
+          >
+            <option value="none">Sem limite</option>
+            <option value="moderate">Moderado (2 por série)</option>
+            <option value="aggressive">Agressivo (1 por série)</option>
+          </select>
         </SettingsRow>
 
         <SettingsRow

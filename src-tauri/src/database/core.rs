@@ -253,7 +253,7 @@ pub fn serialize_tags(tags: &[crate::models::GameTag]) -> Result<String, String>
 
 /// Deserializa tags do banco (com fallback para formato antigo)
 pub fn deserialize_tags(tags_json: &str) -> Vec<crate::models::GameTag> {
-    use crate::utils::tag_utils::TagCategory;
+    use crate::utils::tag_utils::{TagCategory, TagRole};
 
     // Tenta deserializar como novo formato
     if let Ok(tags) = serde_json::from_str::<Vec<crate::models::GameTag>>(tags_json) {
@@ -269,6 +269,7 @@ pub fn deserialize_tags(tags_json: &str) -> Vec<crate::models::GameTag> {
             slug: slug.to_string(),
             name: slug.to_string(),
             category: TagCategory::Meta,
+            role: TagRole::Context,
             relevance: 5.0,
         })
         .collect()

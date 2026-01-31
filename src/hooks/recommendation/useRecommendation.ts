@@ -139,14 +139,22 @@ export function useRecommendation({
     try {
       // A. Content-Based
       if (enableContentBased) {
+        const options = {
+          min_playtime: contentBasedParams.minPlaytime,
+          max_playtime: contentBasedParams.maxPlaytime,
+          limit: contentBasedParams.limit,
+          ignored_game_ids: ignoredIds,
+          config: config,
+        };
+
+        console.log('[DEBUG] recommend_from_library options:', options);
+
         const res = await invoke<GameRecommendationResult[]>(
           'recommend_from_library',
-          {
-            minPlaytime: contentBasedParams.minPlaytime,
-            maxPlaytime: contentBasedParams.maxPlaytime,
-            limit: contentBasedParams.limit,
-          }
+          { options }
         );
+
+        console.log('[DEBUG] recommend_from_library result:', res);
 
         // Filtro Cliente: ignora Blacklist
         const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));
@@ -156,14 +164,25 @@ export function useRecommendation({
       // B. Collaborative
       if (enableCollaborative) {
         try {
+          const options = {
+            min_playtime: collaborativeParams.minPlaytime,
+            max_playtime: collaborativeParams.maxPlaytime,
+            limit: collaborativeParams.limit,
+            ignored_game_ids: ignoredIds,
+            config: null,
+          };
+
+          console.log(
+            '[DEBUG] recommend_collaborative_library options:',
+            options
+          );
+
           const res = await invoke<GameRecommendationResult[]>(
             'recommend_collaborative_library',
-            {
-              minPlaytime: collaborativeParams.minPlaytime,
-              maxPlaytime: collaborativeParams.maxPlaytime,
-              limit: collaborativeParams.limit,
-            }
+            { options }
           );
+
+          console.log('[DEBUG] recommend_collaborative_library result:', res);
 
           // Filtro Cliente: ignora Blacklist
           const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));
