@@ -14,11 +14,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { RecommendationTooltip } from '@/components';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
-import { Game, UserPreferenceVector } from '@/types';
+import { Game, traduzirType, UserPreferenceVector } from '@/types';
 
 import PlaylistItem from '../components/cards/PlaylistItem';
 import { launchGame } from '../utils/launcher';
@@ -212,6 +213,11 @@ export default function Playlist({
                   title={game.name}
                   coverUrl={game.coverUrl}
                   className="text-xs"
+                  badge={
+                    <RecommendationTooltip reason={game.reason}>
+                      <span>{traduzirType(game.reason?.type_id)}</span>
+                    </RecommendationTooltip>
+                  }
                   // Ações: Adicionar e Feedback Negativo
                   actions={
                     <div className="flex w-full gap-2">

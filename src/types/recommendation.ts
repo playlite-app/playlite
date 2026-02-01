@@ -3,7 +3,23 @@ import { Game } from '@/types/game.ts';
 export interface RecommendationReason {
   label: string; // Ex: "Fãs de RPG", "Série Favorita"
   type_id: string; // "genre", "series", "community", "tag"
-  score_contribution: number;
+}
+
+// Mapeamento de tradução
+export const typeMap: Record<string, string> = {
+  community: 'Comunidade',
+  genre: 'Gênero',
+  series: 'Série',
+  tag: 'Tag',
+  hybrid: 'Híbrido',
+  general: 'Perfil',
+};
+
+// Função utilitária para traduzir
+export function traduzirType(type_id: string | undefined): string {
+  if (!type_id) return 'Desconhecido'; // Caso type_id seja undefined
+
+  return typeMap[type_id] ?? type_id;
 }
 
 export interface RecommendationConfig {

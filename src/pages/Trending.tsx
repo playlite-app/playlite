@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import {
   calculateGameAffinity,
+  GiveawayWithAffinity,
   useGiveaways,
   useHeroCarousel,
   useNetworkStatus,
@@ -39,7 +40,7 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import { Game, Giveaway, RawgGame } from '@/types';
+import { Game, RawgGame } from '@/types';
 
 import { openExternalLink } from '../utils/openLink.ts';
 
@@ -82,7 +83,7 @@ export default function Trending(props: TrendingProps) {
     loading: giveawaysLoading,
     selectedPlatforms,
     togglePlatform,
-  } = useGiveaways();
+  } = useGiveaways(profile);
 
   // Verifica se temos ALGUM dado para mostrar (cache)
   const hasData =
@@ -326,15 +327,12 @@ export default function Trending(props: TrendingProps) {
                     <Skeleton className="h-4 w-1/2" />
                   </div>
                 ))
-              : filteredGiveaways.map((game: Giveaway) => (
+              : filteredGiveaways.map((game: GiveawayWithAffinity) => (
                   <FreeGameCard
                     key={game.id}
-                    title={game.title}
-                    image={game.image}
-                    worth={game.worth}
-                    platforms={game.platforms}
-                    url={game.open_giveaway_url}
-                    endDate={game.end_date}
+                    {...game}
+                    badge={game.affinityData.badge}
+                    isFavSeries={game.affinityData.isFavSeries}
                   />
                 ))}
           </div>

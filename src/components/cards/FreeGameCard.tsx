@@ -1,27 +1,25 @@
-import { Calendar, ExternalLink, Gift } from 'lucide-react';
+import { Calendar, ExternalLink } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Giveaway } from '@/types';
 import { getPlatformColor, getPlatformLabel } from '@/utils/platform';
 
-interface FreeGameCardProps {
-  title: string;
-  image: string;
-  worth: string;
-  platforms: string;
-  url: string;
-  endDate?: string | null;
+interface FreeGameCardProps extends Giveaway {
+  badge?: string;
+  isFavSeries?: boolean;
   className?: string;
 }
 
 export function FreeGameCard({
   title,
+  badge,
+  className,
   image,
   worth,
   platforms,
-  url,
-  endDate,
-  className,
+  end_date: endDate,
+  open_giveaway_url: url,
 }: FreeGameCardProps) {
   const openLink = async () => {
     const { open } = await import('@tauri-apps/plugin-shell');
@@ -71,20 +69,17 @@ export function FreeGameCard({
         {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity" />
 
-        {/* Badge "GRÁTIS" */}
-        <div className="absolute right-3 bottom-3">
-          <Badge
-            className={cn(
-              'flex items-center gap-1.5 bg-green-600 text-xs font-semibold text-white shadow-md'
-            )}
-          >
-            <Gift size={14} className="text-white" />
-            <span>Grátis</span>
-          </Badge>
-        </div>
+        {/* Badge Recomendação */}
+        {badge && (
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-purple-600 font-bold text-white">
+              {badge}
+            </Badge>
+          </div>
+        )}
 
-        {/* Badge da Plataforma - Canto superior */}
-        <div className="absolute top-3 left-3">
+        {/* Badge da Plataforma - Canto direito inferior */}
+        <div className="absolute right-3 bottom-3">
           <Badge
             className={cn('text-xs font-semibold shadow-md', platformColor)}
           >

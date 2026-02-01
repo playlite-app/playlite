@@ -77,7 +77,7 @@ export default function Header({
           variant="outline"
           size="sm"
           className="hidden shrink-0 gap-1 px-2 text-xs sm:inline-flex md:px-3"
-          title="Gerar análise de recomendação (temporário)"
+          title="Gerar análise de recomendação"
         >
           <Zap size={16} />
           <span className="hidden md:inline">Análise</span>

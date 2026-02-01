@@ -8,13 +8,20 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'src-tauri/**', 'node_modules/**', '*.config.js'],
+    ignores: [
+      'dist/**',
+      'src-tauri/**',
+      'node_modules/**',
+      '.venv/**',
+      'docs/.vitepress/**',
+      '*.config.js',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
   {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    files: ['src/**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

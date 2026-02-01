@@ -198,16 +198,40 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
 
         <SettingsRow
           icon={Sparkles}
-          title="Priorizar Séries"
-          description="Dar peso extra para sequências de jogos que você gosta."
+          title="Configurações de Séries"
+          description="Personalize como o algoritmo lida com sequências e franquias de jogos."
         >
-          <div className="flex justify-end">
-            <Switch
-              checked={config.favor_series}
-              onChange={handleSeriesToggle}
-              labelOff="Desativado"
-              labelOn="Ativado"
-            />
+          <div className="flex flex-col gap-4 pt-2">
+            {/* Toggle Priorizar Séries */}
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground text-sm">Priorizar</span>
+              <Switch
+                checked={config.favor_series}
+                onChange={handleSeriesToggle}
+                labelOff="Desativado"
+                labelOn="Ativado"
+              />
+            </div>
+            {/* Select Diversidade de Séries */}
+            <div className="flex items-center justify-between border-t border-white/5 pt-4">
+              <span className="text-muted-foreground text-sm">Limite</span>
+              <select
+                value={config.series_limit}
+                onChange={async e => {
+                  const value = e.target.value as
+                    | 'none'
+                    | 'moderate'
+                    | 'aggressive';
+                  await setSeriesLimit(value);
+                  toast.success('Limite de séries atualizado!');
+                }}
+                className="bg-secondary text-secondary-foreground focus:ring-primary rounded-md border-none px-3 py-2 text-sm font-medium outline-none focus:ring-1"
+              >
+                <option value="none">Sem limite</option>
+                <option value="moderate">Moderado (2 por série)</option>
+                <option value="aggressive">Agressivo (1 por série)</option>
+              </select>
+            </div>
           </div>
         </SettingsRow>
 
@@ -231,29 +255,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
               labelOn="Ativado"
             />
           </div>
-        </SettingsRow>
-
-        <SettingsRow
-          icon={Sparkles}
-          title="Diversidade de Séries"
-          description="Controla quantos jogos da mesma série podem aparecer nas recomendações."
-        >
-          <select
-            value={config.series_limit}
-            onChange={async e => {
-              const value = e.target.value as
-                | 'none'
-                | 'moderate'
-                | 'aggressive';
-              await setSeriesLimit(value);
-              toast.success('Limite de séries atualizado!');
-            }}
-            className="bg-secondary text-secondary-foreground focus:ring-primary rounded-md border-none px-3 py-2 text-sm font-medium outline-none focus:ring-1"
-          >
-            <option value="none">Sem limite</option>
-            <option value="moderate">Moderado (2 por série)</option>
-            <option value="aggressive">Agressivo (1 por série)</option>
-          </select>
         </SettingsRow>
 
         <SettingsRow

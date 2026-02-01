@@ -31,8 +31,7 @@ pub fn score_game_cb(
     game: &GameWithDetails,
     config: &RecommendationConfig,
 ) -> (f32, Option<RecommendationReason>) {
-    let (total_cb, reason, components) = score_game_cb_detailed(profile, game, config);
-    static mut COUNT: usize = 0;
+    let (total_cb, reason, _components) = score_game_cb_detailed(profile, game, config);
 
     (total_cb, reason)
 }

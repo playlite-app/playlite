@@ -11,7 +11,7 @@ const STORE_FILENAME = 'recommendation.store';
 const DEFAULT_CONFIG: RecommendationConfig = {
   content_weight: 0.65,
   collaborative_weight: 0.35,
-  age_decay: 0.95,
+  age_decay: 0.98,
   favor_series: true,
   filter_adult_content: false,
   series_limit: 'moderate',

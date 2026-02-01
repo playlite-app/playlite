@@ -2,6 +2,49 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [3.0.0] - 2026-02-01
+
+### Adicionado
+
+- **Sistema de Recomendação Híbrido (v4.0)**: O algoritmo agora cruza seu perfil local (Content-Based) com dados obtidos
+  de usuários na Steam (Collaborative Filtering) para sugerir jogos.
+- **Transparência (XAI)**: Adicionados *Tooltips Inteligentes* nas recomendações que explicam o motivo da sugestão (
+  ex: "Série Favorita", "Tendência na Comunidade", "Alta Afinidade de Tags").
+- **Ciclo de Feedback**: Botão "Não Útil" (Dislike) nas recomendações, permitindo que o usuário treine o algoritmo
+  ignorando jogos específicos.
+- **Sistema de Atualização Automática**: Integração completa com Tauri Updater. O app agora verifica, baixa e instala
+  atualizações, criando **Backups Automáticos** do banco de dados antes de mudanças críticas (Major Updates).
+- **Modo Offline Resiliente**: As páginas "Em Alta", "Lançamentos" e "Jogos Grátis" agora funcionam sem internet,
+  utilizando um cache inteligente ("Stale-while-revalidate") e exibindo um banner informativo.
+- **Configurações de Algoritmo**: Nova seção em Configurações permitindo ajustar pesos (Perfil vs Comunidade),
+  penalidade de tempo (Nostalgia) e priorização de séries.
+- **Cache de Imagens Híbrido**: Opção para salvar capas localmente para visualização offline ou economizar espaço usando
+  apenas URLs remotas.
+- **Giveaways**: Integração com GamerPower para descoberta de jogos grátis.
+- **Tradução Automática com IA**: Tradução da descrição dos jogos usando a API do Gemini.
+
+### Modificado
+
+- **Refatoração GameDetailModal**: Componente reestruturado em arquivos menores, com melhorias de performance e UX.
+- **Refatoração de Hooks**: `useTrending`, `useUpcoming` e `useGiveaways` reescritos para suportar falhas de rede e
+  servir dados do cache local (`api_cache`) transparentemente.
+- **Refatoração de metadata.rs**: Separação do arquivo em módulos menores, com melhorias na manipulação de erros
+  e logging detalhado.
+- **Lista de Desejos Avançada**: A Wishlist agora tem opção de importar listas da Steam e IsThereAnyDeal, além de
+  monitorar preços e cupons de desconto.
+- **Arquitetura de Banco de Dados**: Introdução da tabela `app_config` para configurações genéricas de sistema (Data de
+  instalação, Versão do Schema).
+- **Interface de Configurações**: Substituição de checkboxes padrão pelo componente visual `ToggleSwitch` para melhor
+  UX.
+- **Tratamento de Cache**: Otimização do TTL (Time-To-Live) diferenciado para listas (24h) vs detalhes de jogos (30
+  dias).
+
+### Corrigido
+
+- Correção na persistência de configurações onde certos pesos do algoritmo não eram salvos corretamente.
+- Resolvido problema onde a página "Em Alta" mostrava tela de erro fatal ao perder conexão; agora degrada graciosamente
+  para o cache.
+
 ## [2.0.0] - 2026-01-12
 
 ### Adicionado

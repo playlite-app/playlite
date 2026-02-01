@@ -1,7 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Giveaway } from '@/types';
+import { calculateGiveawayAffinity } from '@/hooks';
+import { Giveaway, UserPreferenceVector } from '@/types';
+
+export interface GiveawayWithAffinity extends Giveaway {
+  affinityData: ReturnType<typeof calculateGiveawayAffinity>;
+}
 
 const STORAGE_KEY = 'trending_platform_filters';
 
@@ -24,7 +29,7 @@ const DEFAULT_PLATFORMS = [
  *   - selectedPlatforms: Plataformas atualmente selecionadas
  *   - togglePlatform: Função para alternar seleção de plataforma
  */
-export function useGiveaways() {
+export function useGiveaways(profile: UserPreferenceVector | null) {
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +52,7 @@ export function useGiveaways() {
     }
   }, [selectedPlatforms]);
 
-  // Busca dados (O backend agora retorna Cache se estiver offline)
+  // Busca dados (O backend retorna Cache se estiver offline)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -63,24 +68,30 @@ export function useGiveaways() {
   }, []);
 
   // Lógica de Filtragem: Plataforma + Validade (Novo)
-  const filteredGiveaways = useMemo(() => {
+  const filteredGiveaways = useMemo<GiveawayWithAffinity[]>(() => {
     const now = new Date();
 
-    return giveaways.filter(game => {
-      // 1. Filtro de Validade (Remove expirados do cache)
-      if (game.end_date) {
-        const endDate = new Date(game.end_date);
+    return giveaways
+      .filter(game => {
+        // 1. Filtro de Validade (Remove expirados do cache)
+        if (game.end_date) {
+          const endDate = new Date(game.end_date);
 
-        // Se a data de término for menor que agora, o jogo já expirou
-        if (endDate < now) return false;
-      }
+          // Se a data de término for menor que agora, o jogo já expirou
+          if (endDate < now) return false;
+        }
 
-      // 2. Filtro de Plataforma
-      return selectedPlatforms.some(platform =>
-        game.platforms.includes(platform)
-      );
-    });
-  }, [giveaways, selectedPlatforms]);
+        // 2. Filtro de Plataforma
+        return selectedPlatforms.some(platform =>
+          game.platforms.includes(platform)
+        );
+      })
+      .map(game => ({
+        ...game,
+        affinityData: calculateGiveawayAffinity(game, profile),
+      }))
+      .sort((a, b) => b.affinityData.affinity - a.affinityData.affinity); // Ordena por afinidade
+  }, [giveaways, selectedPlatforms, profile]);
 
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev =>
@@ -92,7 +103,7 @@ export function useGiveaways() {
 
   return {
     giveaways,
-    filteredGiveaways, // Agora retorna apenas jogos VÁLIDOS
+    filteredGiveaways,
     loading,
     selectedPlatforms,
     togglePlatform,

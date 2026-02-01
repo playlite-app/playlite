@@ -1,5 +1,4 @@
 import { listen } from '@tauri-apps/api/event';
-import { relaunch } from '@tauri-apps/plugin-process';
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -92,16 +91,13 @@ export function UpdateManager() {
         duration: Infinity,
       });
 
-      // Monitora progresso do download
       await update.downloadAndInstall(progress => {
         if (progress.event === 'Started') {
           setDownloadProgress(0);
         } else if (progress.event === 'Progress') {
-          // O progresso é reportado como chunkLength, precisamos acumular
           const chunkLength = progress.data.chunkLength;
           setDownloadProgress(prev => prev + chunkLength);
 
-          // Para mostrar porcentagem aproximada, podemos usar uma abordagem simples
           toast.loading('Baixando atualização...', {
             id: toastId,
             duration: Infinity,
@@ -115,11 +111,6 @@ export function UpdateManager() {
         id: toastId,
         duration: 2000,
       });
-
-      // Aguarda 2 segundos antes de reiniciar
-      setTimeout(async () => {
-        await relaunch();
-      }, 2000);
     } catch (error) {
       console.error('Erro ao instalar atualização:', error);
       toast.error('Falha ao instalar atualização. Tente novamente mais tarde.');

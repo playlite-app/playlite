@@ -3,9 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "context": "local",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "core:window:default",
@@ -15,6 +13,9 @@
     "core:window:allow-show",
     "core:window:allow-close",
     "core:path:default",
+    "core:event:default",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
     "opener:default",
     "store:default",
     "store:allow-get",
@@ -26,6 +27,11 @@
     "dialog:allow-save",
     "dialog:default",
     "machine-uid:default",
-    "machine-uid:allow-get-machine-uid"
+    "machine-uid:allow-get-machine-uid",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-download-and-install",
+    "updater:allow-install"
   ]
 }
