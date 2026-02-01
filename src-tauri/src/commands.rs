@@ -25,6 +25,5 @@ pub mod plataforms;
 pub mod recommendation;
 pub mod settings;
 pub mod system;
-pub mod user_preferences;
 pub mod version;
 pub mod wishlist;

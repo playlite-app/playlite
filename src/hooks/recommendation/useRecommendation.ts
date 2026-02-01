@@ -94,6 +94,8 @@ export function useRecommendation({
     config,
     ready: configReady,
     updateConfig,
+    toggleAdultFilter,
+    setSeriesLimit,
   } = useRecommendationConfig();
 
   // === ESTADOS LOCAIS ===
@@ -286,5 +288,7 @@ export function useRecommendation({
     config,
     resetFeedback,
     refreshRecommendations,
+    toggleAdultFilter,
+    setSeriesLimit,
   };
 }

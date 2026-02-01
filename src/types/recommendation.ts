@@ -11,6 +11,8 @@ export interface RecommendationConfig {
   collaborative_weight: number; // Default: 0.35
   age_decay: number; // Default: 0.95
   favor_series: boolean; // Default: true
+  filter_adult_content: boolean; // Default: false
+  series_limit: 'none' | 'moderate' | 'aggressive'; // Default: 'moderate'
 }
 
 // Interface estendida para jogos recomendados na UI

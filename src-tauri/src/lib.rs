@@ -136,9 +136,6 @@ pub fn run() {
             // Comandos de Sistema
             commands::system::open_folder,
             commands::system::open_file,
-            // Comandos de Preferências do Usuário
-            commands::user_preferences::get_user_preferences,
-            commands::user_preferences::save_user_preferences,
             // Comandos de Versionamento
             commands::version::get_app_version_info,
             // Comandos de Imagem

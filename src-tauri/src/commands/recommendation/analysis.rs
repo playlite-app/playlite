@@ -188,7 +188,18 @@ fn fetch_games_with_details(
             let genres_json: Option<String> = row.get(10)?;
             let genres: Vec<String> = genres_json
                 .as_ref()
-                .and_then(|s| serde_json::from_str(s).ok())
+                .map(|s| {
+                    // Tentar parsear como JSON primeiro
+                    if let Ok(vec) = serde_json::from_str::<Vec<String>>(s) {
+                        vec
+                    } else {
+                        // Fallback: parsear como comma-separated string
+                        s.split(',')
+                            .map(|g| g.trim().to_string())
+                            .filter(|g| !g.is_empty())
+                            .collect()
+                    }
+                })
                 .unwrap_or_default();
 
             let steam_app_id_str: Option<String> = row.get(11)?;
