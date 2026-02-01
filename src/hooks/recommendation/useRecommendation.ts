@@ -149,14 +149,10 @@ export function useRecommendation({
           config: config,
         };
 
-        console.log('[DEBUG] recommend_from_library options:', options);
-
         const res = await invoke<GameRecommendationResult[]>(
           'recommend_from_library',
           { options }
         );
-
-        console.log('[DEBUG] recommend_from_library result:', res);
 
         // Filtro Cliente: ignora Blacklist
         const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));
@@ -174,17 +170,10 @@ export function useRecommendation({
             config: null,
           };
 
-          console.log(
-            '[DEBUG] recommend_collaborative_library options:',
-            options
-          );
-
           const res = await invoke<GameRecommendationResult[]>(
             'recommend_collaborative_library',
             { options }
           );
-
-          console.log('[DEBUG] recommend_collaborative_library result:', res);
 
           // Filtro Cliente: ignora Blacklist
           const mapped = mapToGame(res).filter(g => !ignoredIds.includes(g.id));

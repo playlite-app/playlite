@@ -86,23 +86,8 @@ pub fn rank_games_content_based(
     config: &RecommendationConfig,
     user_settings: &UserSettings,
 ) -> Vec<(GameWithDetails, f32, RecommendationReason)> {
-    tracing::info!(
-        "[DEBUG rank_games_content_based] Candidates: {}",
-        candidates.len()
-    );
-    tracing::info!(
-        "[DEBUG rank_games_content_based] Profile - genres: {}, tags: {}, series: {}",
-        profile.genres.len(),
-        profile.tags.len(),
-        profile.series.len()
-    );
-
     // Estágio 1: Filtros
     let filtered = apply_hard_filters(candidates, user_settings);
-    tracing::info!(
-        "[DEBUG rank_games_content_based] After hard filters: {}",
-        filtered.len()
-    );
 
     // Estágios 2-3: CB score
     let mut ranked: Vec<_> = filtered
@@ -120,20 +105,11 @@ pub fn rank_games_content_based(
         .filter(|(_, score, _)| *score > 0.0)
         .collect();
 
-    tracing::info!(
-        "[DEBUG rank_games_content_based] After scoring and filtering score > 0: {}",
-        ranked.len()
-    );
-
     // Ordenar
     ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     // Estágio 6: Diversidade
     let result = apply_diversity_rules(ranked, user_settings);
-    tracing::info!(
-        "[DEBUG rank_games_content_based] After diversity rules: {}",
-        result.len()
-    );
 
     result
 }

@@ -32,16 +32,7 @@ pub fn score_game_cb(
     config: &RecommendationConfig,
 ) -> (f32, Option<RecommendationReason>) {
     let (total_cb, reason, components) = score_game_cb_detailed(profile, game, config);
-
-    // Log apenas os primeiros 5 jogos para não poluir
     static mut COUNT: usize = 0;
-    unsafe {
-        if COUNT < 5 {
-            tracing::info!("[DEBUG score_game_cb] Game: {}, Score: {}, Components: affinity={}, context={}, diversity={}",
-                game.game.name, total_cb, components.affinity_score, components.context_score, components.diversity_score);
-            COUNT += 1;
-        }
-    }
 
     (total_cb, reason)
 }

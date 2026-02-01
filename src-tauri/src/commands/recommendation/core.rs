@@ -75,39 +75,13 @@ pub async fn recommend_from_library(
     state: State<'_, AppState>,
     options: RecommendationOptions,
 ) -> Result<Vec<GameRecommendation>, AppError> {
-    tracing::info!(
-        "[DEBUG] recommend_from_library called with options: {:?}",
-        options
-    );
-
     let games_with_details = fetch_all_games_with_details(&state)?;
-    tracing::info!(
-        "[DEBUG] Loaded {} games with details",
-        games_with_details.len()
-    );
-
     let ignored_ids = create_ignored_set(options.ignored_game_ids.clone());
-    tracing::info!("[DEBUG] Ignored IDs count: {}", ignored_ids.len());
-
     let profile = calculate_user_profile(&games_with_details, &ignored_ids);
-    tracing::info!(
-        "[DEBUG] Profile calculated - genres: {}, tags: {}, series: {}",
-        profile.genres.len(),
-        profile.tags.len(),
-        profile.series.len()
-    );
-
     let candidates = filter_candidates_by_playtime(games_with_details, &options);
-    tracing::info!(
-        "[DEBUG] Candidates after playtime filter: {}",
-        candidates.len()
-    );
-
     let config = options.config.unwrap_or_default();
     let user_settings = load_user_settings(&app);
-
     let ranked = rank_games_content_based(&profile, &candidates, &config, &user_settings);
-    tracing::info!("[DEBUG] Ranked games: {}", ranked.len());
 
     Ok(format_recommendations(ranked, options.limit))
 }
@@ -124,7 +98,6 @@ pub async fn recommend_collaborative_library(
     let (cf_scores, _) = crate::services::cf_aggregator::build_cf_candidates(&games_with_details);
     let candidates = filter_candidates_by_playtime(games_with_details, &options);
     let user_settings = load_user_settings(&app);
-
     let ranked = rank_games_collaborative(&candidates, &cf_scores, &ignored_ids, &user_settings);
 
     Ok(format_recommendations(ranked, options.limit))
