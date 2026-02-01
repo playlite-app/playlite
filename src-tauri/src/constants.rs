@@ -43,6 +43,7 @@ pub const BACKGROUND_TASK_INTERVAL_SECS: u64 = 2;
 
 // === TTL DE CACHE (Time To Live em dias) ===
 pub const CACHE_RAWG_GAME_TTL_DAYS: i64 = 30;
+pub const CACHE_RAWG_LIST_TTL_DAYS: i64 = 1; // Trending/Upcoming/Giveaways
 pub const CACHE_STEAM_STORE_TTL_DAYS: i64 = 30;
 pub const CACHE_STEAM_REVIEWS_TTL_DAYS: i64 = 7;
 pub const CACHE_STEAM_PLAYTIME_TTL_DAYS: i64 = 15;

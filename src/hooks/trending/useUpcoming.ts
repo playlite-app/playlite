@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 
+import { useNetworkStatus } from '@/hooks/common';
 import { trendingService } from '@/services/trendingService.ts';
 import { RawgGame } from '@/types';
+
+const UPCOMING_TTL_MS = 30 * 60 * 1000;
+
+interface UseUpcomingOptions {
+  cachedGames: RawgGame[];
+  setCachedGames: (games: RawgGame[]) => void;
+  cachedFetchedAt: number | null;
+  setCachedFetchedAt: (value: number | null) => void;
+}
 
 /**
  * Hook para gerenciar jogos de lançamentos futuros (upcoming games).
@@ -12,22 +22,53 @@ import { RawgGame } from '@/types';
  *   - loading: Estado de carregamento
  *   - error: Mensagem de erro, se houver
  */
-export function useUpcoming() {
-  const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>([]);
+export function useUpcoming(options?: UseUpcomingOptions) {
+  const [upcomingGames, setUpcomingGames] = useState<RawgGame[]>(
+    options?.cachedGames ?? []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isOnline = useNetworkStatus();
+
+  useEffect(() => {
+    if (options?.cachedGames?.length) {
+      setUpcomingGames(options.cachedGames);
+    }
+  }, [options?.cachedGames]);
+
   useEffect(() => {
     const fetchUpcoming = async () => {
+      const now = Date.now();
+      const cacheFresh =
+        options?.cachedFetchedAt &&
+        now - options.cachedFetchedAt < UPCOMING_TTL_MS;
+
+      if (!isOnline && (options?.cachedGames?.length ?? 0) > 0) {
+        setLoading(false);
+
+        return;
+      }
+
+      if (cacheFresh) {
+        setLoading(false);
+
+        return;
+      }
+
       try {
         const apiKey = await trendingService.getApiKey();
 
         if (!apiKey || apiKey.trim() === '') {
-          throw new Error('API Key da RAWG não configurada.');
+          setError('API Key inválida ou ausente. Verifique as configurações.');
+
+          return;
         }
 
         const upcoming = await trendingService.getUpcoming(apiKey);
         setUpcomingGames(upcoming);
+        options?.setCachedGames(upcoming);
+        options?.setCachedFetchedAt(Date.now());
       } catch (e) {
         console.error('Erro ao buscar lançamentos:', e);
         setError(e instanceof Error ? e.message : 'Erro desconhecido');
@@ -37,7 +78,13 @@ export function useUpcoming() {
     };
 
     fetchUpcoming();
-  }, []);
+  }, [
+    isOnline,
+    options?.cachedFetchedAt,
+    options?.cachedGames?.length,
+    options?.setCachedGames,
+    options?.setCachedFetchedAt,
+  ]);
 
   return {
     upcomingGames,

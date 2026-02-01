@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { useNetworkStatus } from '@/hooks/common';
 import { trendingService } from '@/services/trendingService.ts';
 import { Game, RawgGame } from '@/types';
+
+const TRENDING_TTL_MS = 10 * 60 * 1000;
 
 interface UseTrendingProps {
   userGames: Game[];
   cachedGames: RawgGame[];
   setCachedGames: (games: RawgGame[]) => void;
+  cachedFetchedAt: number | null;
+  setCachedFetchedAt: (value: number | null) => void;
 }
 
 /**
@@ -17,6 +22,8 @@ interface UseTrendingProps {
  * @param userGames - Biblioteca local para filtrar duplicatas
  * @param cachedGames - Cache de jogos da RAWG
  * @param setCachedGames - Atualiza cache global após busca
+ * @param cachedFetchedAt - Timestamp do último fetch do cache
+ * @param setCachedFetchedAt - Atualiza timestamp do último fetch
  *
  * @returns Objeto com:
  *   - games: Jogos filtrados (sem os que o usuário tem)
@@ -31,16 +38,27 @@ export function useTrending({
   userGames,
   cachedGames,
   setCachedGames,
+  cachedFetchedAt,
+  setCachedFetchedAt,
 }: UseTrendingProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
 
-  const fetchTrending = async () => {
-    // Se já tem cache e não tem erro, usa o cache
-    if (cachedGames.length > 0 && !error) {
-      console.log('Usando cache para Trending.');
+  const isOnline = useNetworkStatus();
 
+  const fetchTrending = async () => {
+    const now = Date.now();
+    const cacheFresh =
+      cachedFetchedAt && now - cachedFetchedAt < TRENDING_TTL_MS;
+
+    // Se estiver offline e já tiver jogos em cache, não faz nada
+    if (!isOnline && cachedGames.length > 0) {
+      return;
+    }
+
+    // Se o cache é recente, usa o cache
+    if (cacheFresh) {
       return;
     }
 
@@ -51,15 +69,18 @@ export function useTrending({
       const apiKey = await trendingService.getApiKey();
 
       if (!apiKey || apiKey.trim() === '') {
-        throw new Error('API Key da RAWG não configurada.');
+        setError('API Key inválida ou ausente. Verifique as configurações.');
+
+        return;
       }
 
       console.log('Buscando jogos na RAWG...');
       const result = await trendingService.getTrending(apiKey);
       setCachedGames(result); // Atualiza o cache no App.tsx via prop
-    } catch (err: any) {
+      setCachedFetchedAt(Date.now());
+    } catch (err) {
       console.error('Erro no hook useTrending:', err);
-      const msg = String(err);
+      const msg = err instanceof Error ? err.message : String(err);
 
       if (msg.includes('não configurada') || msg.includes('401')) {
         setError('API Key inválida ou ausente. Verifique as configurações.');
@@ -71,10 +92,10 @@ export function useTrending({
     }
   };
 
-  // Carrega apenas na montagem inicial se não houver cache
+  // Reexecuta a busca se a conexão voltar ou se o cache for limpo
   useEffect(() => {
     fetchTrending();
-  }, []);
+  }, [isOnline, cachedFetchedAt, cachedGames.length]);
 
   // Lógica de Filtragem (Memoized para performance)
   const { filteredGames, allGenres } = useMemo(() => {

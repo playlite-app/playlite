@@ -4,8 +4,8 @@
 //! reduzindo chamadas desnecessárias e melhorando performance.
 
 use crate::constants::{
-    CACHE_RAWG_GAME_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS,
-    CACHE_STEAM_STORE_TTL_DAYS,
+    CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS,
+    CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
 };
 use rusqlite::{params, Connection};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -57,7 +57,7 @@ pub fn initialize_cache_db(conn: &Connection) -> Result<(), String> {
 fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
     // TTL de 1 dia para buscas/listas de jogos Em Alta, Gratuitos, Lançamentos, etc.
     if cache_key.contains("_list_") {
-        return 24 * 60 * 60;
+        return CACHE_RAWG_LIST_TTL_DAYS * 24 * 60 * 60;
     }
     if cache_key.starts_with("rawg_") {
         CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60

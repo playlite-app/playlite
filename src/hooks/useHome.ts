@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 
+import { useNetworkStatus } from '@/hooks/common';
 import { useLibraryStats } from '@/hooks/library';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import { trendingService } from '../services/trendingService';
 import { useRecommendation } from './recommendation';
+
+const HOME_TRENDING_TTL_MS = 10 * 60 * 1000;
 
 interface UseHomeProps {
   games: Game[];
@@ -12,6 +15,8 @@ interface UseHomeProps {
   setTrendingCache: (games: RawgGame[]) => void;
   profileCache: UserPreferenceVector | null;
   setProfileCache: (profile: UserPreferenceVector) => void;
+  trendingFetchedAt: number | null;
+  setTrendingFetchedAt: (value: number | null) => void;
 }
 
 /**
@@ -37,6 +42,8 @@ export function useHome({
   setTrendingCache,
   profileCache,
   setProfileCache,
+  trendingFetchedAt,
+  setTrendingFetchedAt,
 }: UseHomeProps) {
   // === ESTATÍSTICAS DA BIBLIOTECA ===
   const { stats, continuePlaying, mostPlayed, topGenres } = useLibraryStats({
@@ -69,6 +76,8 @@ export function useHome({
     },
   });
 
+  const isOnline = useNetworkStatus();
+
   // === TRENDING (RAWG API) ===
   const [trending, setTrending] = useState<RawgGame[]>(trendingCache);
   const [loadingTrending, setLoadingTrending] = useState(false);
@@ -77,6 +86,19 @@ export function useHome({
     async function fetchTrendingIfNeeded() {
       if (trendingCache.length > 0) {
         setTrending(trendingCache);
+      }
+
+      const now = Date.now();
+      const cacheFresh =
+        trendingFetchedAt && now - trendingFetchedAt < HOME_TRENDING_TTL_MS;
+
+      if (!isOnline && trendingCache.length > 0) {
+        setLoadingTrending(false);
+
+        return;
+      }
+
+      if (cacheFresh) {
         setLoadingTrending(false);
 
         return;
@@ -91,6 +113,7 @@ export function useHome({
           const result = await trendingService.getTrending(apiKey);
           setTrending(result);
           setTrendingCache(result);
+          setTrendingFetchedAt(Date.now());
         }
       } catch (error) {
         console.error('Erro ao carregar trending:', error);
@@ -99,7 +122,13 @@ export function useHome({
       }
     }
     fetchTrendingIfNeeded();
-  }, [trendingCache, setTrendingCache]);
+  }, [
+    trendingCache,
+    setTrendingCache,
+    trendingFetchedAt,
+    setTrendingFetchedAt,
+    isOnline,
+  ]);
 
   // === RETORNO AGREGADO ===
   return {

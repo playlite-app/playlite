@@ -48,6 +48,16 @@ function AppContent() {
     setTrendingKey,
     profileCache,
     setProfileCache,
+    trendingFetchedAt,
+    setTrendingFetchedAt,
+    upcomingCache,
+    setUpcomingCache,
+    upcomingFetchedAt,
+    setUpcomingFetchedAt,
+    giveawaysCache,
+    setGiveawaysCache,
+    giveawaysFetchedAt,
+    setGiveawaysFetchedAt,
     openAddModal,
     openEditModal,
     closeAddModal,
@@ -62,6 +72,26 @@ function AppContent() {
       console.error('Erro ao iniciar atualização em background:', err);
     });
   }, []);
+
+  // Updater manual: sob demanda apenas
+  const handleCheckUpdates = async () => {
+    try {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const update = await check();
+
+      if (update?.available) {
+        toast.info(`Nova versão disponível: ${update.version}`, {
+          description: 'Clique para atualizar agora',
+          duration: 10000,
+        });
+      } else {
+        toast.success('Você já está na versão mais recente!');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar atualizações:', error);
+      toast.error('Não foi possível verificar atualizações');
+    }
+  };
 
   // Selected game memo
   const selectedGame = useMemo(
@@ -141,6 +171,8 @@ function AppContent() {
             setTrendingCache={setTrendingCache}
             profileCache={profileCache}
             setProfileCache={setProfileCache}
+            trendingFetchedAt={trendingFetchedAt}
+            setTrendingFetchedAt={setTrendingFetchedAt}
             onGameClick={handleGameClick}
           />
         );
@@ -178,6 +210,16 @@ function AppContent() {
             onChangeTab={setActiveSection}
             cachedGames={trendingCache}
             setCachedGames={setTrendingCache}
+            cachedFetchedAt={trendingFetchedAt}
+            setCachedFetchedAt={setTrendingFetchedAt}
+            upcomingCache={upcomingCache}
+            setUpcomingCache={setUpcomingCache}
+            upcomingFetchedAt={upcomingFetchedAt}
+            setUpcomingFetchedAt={setUpcomingFetchedAt}
+            giveawaysCache={giveawaysCache}
+            setGiveawaysCache={setGiveawaysCache}
+            giveawaysFetchedAt={giveawaysFetchedAt}
+            setGiveawaysFetchedAt={setGiveawaysFetchedAt}
           />
         );
       case 'wishlist':
@@ -204,6 +246,7 @@ function AppContent() {
           activeSection={activeSection}
           hideAdult={hideAdult}
           onToggleAdultFilter={toggleAdultFilter}
+          onCheckUpdates={handleCheckUpdates}
         />
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>

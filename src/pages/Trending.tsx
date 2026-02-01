@@ -40,7 +40,7 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import { Game, RawgGame } from '@/types';
+import { Game, Giveaway, RawgGame } from '@/types';
 
 import { openExternalLink } from '../utils/openLink.ts';
 
@@ -49,6 +49,16 @@ interface TrendingProps {
   onChangeTab: (tab: string) => void;
   cachedGames: RawgGame[];
   setCachedGames: (games: RawgGame[]) => void;
+  cachedFetchedAt: number | null;
+  setCachedFetchedAt: (value: number | null) => void;
+  upcomingCache: RawgGame[];
+  setUpcomingCache: (games: RawgGame[]) => void;
+  upcomingFetchedAt: number | null;
+  setUpcomingFetchedAt: (value: number | null) => void;
+  giveawaysCache: Giveaway[];
+  setGiveawaysCache: (games: Giveaway[]) => void;
+  giveawaysFetchedAt: number | null;
+  setGiveawaysFetchedAt: (value: number | null) => void;
 }
 
 const PLATFORM_OPTIONS = [
@@ -77,13 +87,23 @@ export default function Trending(props: TrendingProps) {
 
   const { profile } = useRecommendation();
   const { games: wishlistGames } = useWishlist();
-  const { upcomingGames } = useUpcoming();
+  const { upcomingGames } = useUpcoming({
+    cachedGames: props.upcomingCache,
+    setCachedGames: props.setUpcomingCache,
+    cachedFetchedAt: props.upcomingFetchedAt,
+    setCachedFetchedAt: props.setUpcomingFetchedAt,
+  });
   const {
     filteredGiveaways,
     loading: giveawaysLoading,
     selectedPlatforms,
     togglePlatform,
-  } = useGiveaways(profile);
+  } = useGiveaways(profile, {
+    cachedGiveaways: props.giveawaysCache,
+    setCachedGiveaways: props.setGiveawaysCache,
+    cachedFetchedAt: props.giveawaysFetchedAt,
+    setCachedFetchedAt: props.setGiveawaysFetchedAt,
+  });
 
   // Verifica se temos ALGUM dado para mostrar (cache)
   const hasData =

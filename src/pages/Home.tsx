@@ -38,6 +38,8 @@ interface HomeProps {
   onGameClick: (game: Game) => void;
   profileCache: UserPreferenceVector | null;
   setProfileCache: (profile: UserPreferenceVector) => void;
+  trendingFetchedAt: number | null;
+  setTrendingFetchedAt: (value: number | null) => void;
 }
 
 export default function Home(props: HomeProps) {

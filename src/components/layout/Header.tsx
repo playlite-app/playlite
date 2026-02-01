@@ -1,6 +1,8 @@
-import { Moon, Plus, Search, Sun, Zap } from 'lucide-react';
+import { Moon, Plus, Search, Settings, Sun } from 'lucide-react';
+import { useState } from 'react';
 
 import { AdultFilterToggle } from '@/components/layout';
+import { QuickSettingsModal } from '@/components/modals/QuickSettingsModal';
 import { Button } from '@/components/ui/button';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 
@@ -11,6 +13,7 @@ interface HeaderProps {
   activeSection: string;
   hideAdult: boolean;
   onToggleAdultFilter: () => void;
+  onCheckUpdates: () => void;
 }
 
 export default function Header({
@@ -20,17 +23,17 @@ export default function Header({
   activeSection,
   hideAdult,
   onToggleAdultFilter,
+  onCheckUpdates,
 }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
   const { isSearchable, searchPlaceholder, searchAriaLabel } =
     useHeaderState(activeSection);
 
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+
   // Hook para gerenciar análises de recomendação
-  const {
-    isGeneratingAnalysis,
-    analysisStatus,
-    generateRecommendationAnalysis,
-  } = useRecommendationAnalysis();
+  const { analysisStatus, generateRecommendationAnalysis } =
+    useRecommendationAnalysis();
 
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur md:px-6">
@@ -70,19 +73,7 @@ export default function Header({
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {/* Botão Temporário: Gerar Análise de Recomendação */}
-        <Button
-          onClick={generateRecommendationAnalysis}
-          disabled={isGeneratingAnalysis}
-          variant="outline"
-          size="sm"
-          className="hidden shrink-0 gap-1 px-2 text-xs sm:inline-flex md:px-3"
-          title="Gerar análise de recomendação"
-        >
-          <Zap size={16} />
-          <span className="hidden md:inline">Análise</span>
-        </Button>
-
+        {/* Botão de Adicionar Jogo */}
         <Button
           onClick={onAddGame}
           size="sm"
@@ -101,6 +92,18 @@ export default function Header({
           />
         )}
 
+        {/* Quick Settings */}
+        <Button
+          onClick={() => setIsQuickSettingsOpen(true)}
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground shrink-0"
+          title="Configurações Rápidas"
+        >
+          <Settings size={18} />
+        </Button>
+
+        {/* Theme Toggle */}
         <Button
           onClick={toggleTheme}
           variant="ghost"
@@ -111,6 +114,13 @@ export default function Header({
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
       </div>
+
+      <QuickSettingsModal
+        open={isQuickSettingsOpen}
+        onClose={() => setIsQuickSettingsOpen(false)}
+        onGenerateReport={generateRecommendationAnalysis}
+        onCheckUpdates={onCheckUpdates}
+      />
     </header>
   );
 }

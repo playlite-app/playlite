@@ -9,11 +9,10 @@ pub async fn open_folder(app: tauri::AppHandle, path: String) -> Result<(), AppE
     // Validar que o caminho existe e é uma pasta
     let path_obj = std::path::Path::new(&path);
 
+    // Cria o diretório se não existir (útil para pastas como analysis)
     if !path_obj.exists() {
-        return Err(AppError::NotFound(format!(
-            "Pasta não encontrada: {}",
-            path
-        )));
+        std::fs::create_dir_all(path_obj)
+            .map_err(|e| AppError::IoError(format!("Erro ao criar pasta: {}", e)))?;
     }
 
     if !path_obj.is_dir() {

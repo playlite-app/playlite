@@ -1,2 +1,2 @@
 export * from './GameLibraryContext';
-export * from './UIContext.tsx';
+export * from './UIContext';

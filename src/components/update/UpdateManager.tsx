@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { MajorUpdateModal } from '@/components/modals/MajorUpdateModal';
+import { useUI } from '@/contexts';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { getAppVersionInfo } from '@/services/updaterService';
 
@@ -13,12 +14,9 @@ import { getAppVersionInfo } from '@/services/updaterService';
  */
 export function UpdateManager() {
   const { isMajorOpen, closeMajorModal } = useAppUpdate();
+  const { enableUpdaterChecks } = useUI();
 
   const [isChecking, setIsChecking] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [updateAvailable, setUpdateAvailable] = useState<Update | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentVersion, setCurrentVersion] = useState('');
   const [previousVersion, setPreviousVersion] = useState('');
 
@@ -52,13 +50,20 @@ export function UpdateManager() {
 
   // Verifica updates ao montar o componente
   useEffect(() => {
-    checkForUpdates();
+    if (!enableUpdaterChecks) return;
+
+    const timeoutId = setTimeout(() => {
+      checkForUpdates();
+    }, 8000);
 
     // Verifica periodicamente (a cada 1 hora)
     const interval = setInterval(checkForUpdates, 1000 * 60 * 60);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, [enableUpdaterChecks]);
 
   const checkForUpdates = async () => {
     if (isChecking) return;
@@ -68,7 +73,6 @@ export function UpdateManager() {
       const update = await check();
 
       if (update?.available) {
-        setUpdateAvailable(update);
         toast.info(`Nova versão disponível: ${update.version}`, {
           action: {
             label: 'Atualizar',
@@ -93,17 +97,14 @@ export function UpdateManager() {
 
       await update.downloadAndInstall(progress => {
         if (progress.event === 'Started') {
-          setDownloadProgress(0);
+          // Download iniciado
         } else if (progress.event === 'Progress') {
-          const chunkLength = progress.data.chunkLength;
-          setDownloadProgress(prev => prev + chunkLength);
-
           toast.loading('Baixando atualização...', {
             id: toastId,
             duration: Infinity,
           });
         } else if (progress.event === 'Finished') {
-          setDownloadProgress(100);
+          // Download concluído
         }
       });
 

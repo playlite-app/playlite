@@ -1,6 +1,12 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 
-import { Game, RawgGame, UserPreferenceVector } from '@/types';
+import { Game, Giveaway, RawgGame, UserPreferenceVector } from '@/types';
 
 interface UIContextType {
   // Navegação
@@ -32,6 +38,22 @@ interface UIContextType {
   setTrendingKey: (key: number | ((prev: number) => number)) => void;
   profileCache: UserPreferenceVector | null;
   setProfileCache: (profile: UserPreferenceVector | null) => void;
+
+  // Cache de sessao (offline-first no backend)
+  trendingFetchedAt: number | null;
+  setTrendingFetchedAt: (value: number | null) => void;
+  upcomingCache: RawgGame[];
+  setUpcomingCache: (games: RawgGame[]) => void;
+  upcomingFetchedAt: number | null;
+  setUpcomingFetchedAt: (value: number | null) => void;
+  giveawaysCache: Giveaway[];
+  setGiveawaysCache: (games: Giveaway[]) => void;
+  giveawaysFetchedAt: number | null;
+  setGiveawaysFetchedAt: (value: number | null) => void;
+
+  // Updater
+  enableUpdaterChecks: boolean;
+  setEnableUpdaterChecks: (value: boolean) => void;
 
   // Helpers
   openAddModal: () => void;
@@ -66,6 +88,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [profileCache, setProfileCache] = useState<UserPreferenceVector | null>(
     null
   );
+
+  const [trendingFetchedAt, setTrendingFetchedAt] = useState<number | null>(
+    null
+  );
+  const [upcomingCache, setUpcomingCache] = useState<RawgGame[]>([]);
+  const [upcomingFetchedAt, setUpcomingFetchedAt] = useState<number | null>(
+    null
+  );
+  const [giveawaysCache, setGiveawaysCache] = useState<Giveaway[]>([]);
+  const [giveawaysFetchedAt, setGiveawaysFetchedAt] = useState<number | null>(
+    null
+  );
+
+  const [enableUpdaterChecks, setEnableUpdaterChecks] = useState(true);
 
   const toggleAdultFilter = () => {
     const newValue = !hideAdult;
@@ -108,6 +144,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
       setTrendingKey,
       profileCache,
       setProfileCache,
+      trendingFetchedAt,
+      setTrendingFetchedAt,
+      upcomingCache,
+      setUpcomingCache,
+      upcomingFetchedAt,
+      setUpcomingFetchedAt,
+      giveawaysCache,
+      setGiveawaysCache,
+      giveawaysFetchedAt,
+      setGiveawaysFetchedAt,
+      enableUpdaterChecks,
+      setEnableUpdaterChecks,
       openAddModal,
       openEditModal,
       closeAddModal,
@@ -122,6 +170,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
       trendingCache,
       trendingKey,
       profileCache,
+      trendingFetchedAt,
+      upcomingCache,
+      upcomingFetchedAt,
+      giveawaysCache,
+      giveawaysFetchedAt,
+      enableUpdaterChecks,
     ]
   );
 
