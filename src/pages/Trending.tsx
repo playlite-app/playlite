@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ErrorState } from '@/components';
+import { AffinityTooltip, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
 import Hero from '@/components/cards/Hero';
 import StandardGameCard from '@/components/cards/StandardGameCard';
@@ -383,7 +383,17 @@ export default function Trending(props: TrendingProps) {
                 coverUrl={game.backgroundImage}
                 rating={game.rating}
                 subtitle={genres.slice(0, 2).join(', ')}
-                badge={badge}
+                badge={
+                  badge ? (
+                    <AffinityTooltip
+                      badge={
+                        badge as 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ'
+                      }
+                    >
+                      <span>{badge}</span>
+                    </AffinityTooltip>
+                  ) : null
+                }
                 actions={
                   <>
                     <ActionButton
@@ -436,7 +446,17 @@ export default function Trending(props: TrendingProps) {
                         ? `Lança: ${new Date(game.released).toLocaleDateString()}`
                         : 'Em breve'
                     }
-                    badge={badge}
+                    badge={
+                      badge ? (
+                        <AffinityTooltip
+                          badge={
+                            badge as 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ'
+                          }
+                        >
+                          <span>{badge}</span>
+                        </AffinityTooltip>
+                      ) : null
+                    }
                     actions={
                       <>
                         <ActionButton

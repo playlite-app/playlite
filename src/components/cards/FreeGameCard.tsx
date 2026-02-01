@@ -1,12 +1,13 @@
 import { Calendar, ExternalLink } from 'lucide-react';
 
+import { AffinityTooltip } from '@/components';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Giveaway } from '@/types';
 import { getPlatformColor, getPlatformLabel } from '@/utils/platform';
 
 interface FreeGameCardProps extends Giveaway {
-  badge?: string;
+  badge?: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ';
   isFavSeries?: boolean;
   className?: string;
 }
@@ -69,12 +70,14 @@ export function FreeGameCard({
         {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 transition-opacity" />
 
-        {/* Badge Recomendação */}
+        {/* Badge Recomendação com Tooltip */}
         {badge && (
           <div className="absolute top-3 left-3">
-            <Badge className="bg-purple-600 font-bold text-white">
-              {badge}
-            </Badge>
+            <AffinityTooltip badge={badge}>
+              <Badge className="bg-purple-600 font-bold text-white">
+                {badge}
+              </Badge>
+            </AffinityTooltip>
           </div>
         )}
 
