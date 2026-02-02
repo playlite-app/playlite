@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["detect_adult_content","get_app_details","get_app_reviews","get_median_playtime","get_player_achievements","get_recently_played_games","list_steam_games"],"struct":["Category","ContentDescriptors","Genre","SteamAchievement","SteamGame","SteamReviewSummary","SteamStoreData"]};

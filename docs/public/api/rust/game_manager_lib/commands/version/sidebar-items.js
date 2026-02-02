@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_app_version","get_app_version_info"],"struct":["AppSystemInfo"]};

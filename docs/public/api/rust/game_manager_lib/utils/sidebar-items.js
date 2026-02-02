@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["http_client","logger","oauth","series","status_logic","tag_utils"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["cleanup_expired_cache","get_cache_stats","get_cached_api_data","get_stale_api_data","initialize_cache_db","save_cached_api_data"],"struct":["CacheStats"]};

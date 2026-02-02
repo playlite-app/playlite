@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["generate_analysis_report"],"struct":["AnalysisStats","DetailedScoreBreakdown","GenreInfluence","ProfileStats","RecommendationAnalysisReport","TagInfluence","UserSettingsReport"]};

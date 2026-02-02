@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["normalize_score","score_game_cb","score_game_cb_detailed"],"struct":["DetailedScoreComponents"]};

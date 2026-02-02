@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_config","get_stored_app_version","get_stored_schema_version","set_config","store_app_version","store_schema_version"]};

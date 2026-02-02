@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_user_profile","recommend_collaborative_library","recommend_from_library","recommend_hybrid_library"],"struct":["GameRecommendation","RecommendationOptions"]};

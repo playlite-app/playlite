@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["backup_before_update","backup_if_major_update","export_database","import_database"],"struct":["BackupData"]};
