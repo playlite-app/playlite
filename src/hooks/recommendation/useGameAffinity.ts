@@ -2,8 +2,11 @@ import { useMemo } from 'react';
 
 import tagMetadata from '@/data/tag_metadata.json';
 import { Giveaway, RawgGame, UserPreferenceVector } from '@/types';
-import { calculateAffinity, isFavoriteSeries } from '@/utils/recommendation.ts';
+import { calculateAffinity } from '@/utils/recommendation.ts';
 
+/**
+ * Pré-processa os dados de tags para criar regexes de correspondência.
+ */
 const TAG_MATCHERS = tagMetadata
   .filter(tag => tag.visible)
   .map(tag => {
@@ -24,6 +27,11 @@ const TAG_MATCHERS = tagMetadata
     };
   });
 
+/** Constrói uma expressão regular para corresponder a uma tag ou termo.
+ *
+ * @param value - Tag ou termo para o qual construir a regex
+ * @returns Expressão regular que corresponde ao termo, ou null se inválido
+ */
 function buildTagRegex(value: string): RegExp | null {
   const tokens = value
     .toLowerCase()
@@ -53,22 +61,18 @@ export function calculateGiveawayAffinity(
     return {
       affinity: 0,
       badge: undefined,
-      isFavSeries: false,
     } as {
       affinity: number;
-      badge?: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ';
-      isFavSeries: boolean;
+      badge?: 'TOP PICK' | 'PARA VOCÊ';
     };
 
   const textToScan = `${giveaway.title} ${giveaway.description}`.toLowerCase();
   let score = 0;
-  let isFavSeries = false;
 
   // 1. Checagem de Séries (Baseado em profile.rs)
   for (const [seriesName, weight] of Object.entries(profile.series)) {
     if (giveaway.title.toLowerCase().includes(seriesName.toLowerCase())) {
       score += weight;
-      isFavSeries = true;
     }
   }
 
@@ -82,17 +86,15 @@ export function calculateGiveawayAffinity(
   score += calculateAffinity(profile, [], matchedTags, null);
 
   // 3. Definição da Badge
-  let badge: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ' | undefined;
+  let badge: 'TOP PICK' | 'PARA VOCÊ' | undefined;
 
-  if (isFavSeries) {
-    badge = 'SÉRIE FAVORITA';
-  } else if (score > 150) {
+  if (score > 150) {
     badge = 'TOP PICK';
-  } else if (score > 50) {
+  } else if (score > 100) {
     badge = 'PARA VOCÊ';
   }
 
-  return { affinity: score, badge, isFavSeries };
+  return { affinity: score, badge };
 }
 
 /**
@@ -109,8 +111,7 @@ export function calculateGameAffinity(
   genres: string[];
   tags: { slug: string }[];
   affinity: number;
-  isFavSeries: boolean;
-  badge?: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ';
+  badge?: 'TOP PICK' | 'PARA VOCÊ';
 } {
   const genres = game.genres?.map(g => g.name) || [];
   const tags = game.tags?.map(t => ({ slug: t.name })) || [];
@@ -120,19 +121,16 @@ export function calculateGameAffinity(
     tags,
     game.series || null
   );
-  const isFavSeries = isFavoriteSeries(profile, game.series || null);
 
-  let badge: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ' | undefined;
+  let badge: 'TOP PICK' | 'PARA VOCÊ' | undefined;
 
-  if (isFavSeries) {
-    badge = 'SÉRIE FAVORITA';
-  } else if (affinity > 80) {
+  if (affinity > 150) {
     badge = 'TOP PICK';
-  } else if (affinity > 50) {
+  } else if (affinity > 100) {
     badge = 'PARA VOCÊ';
   }
 
-  return { genres, tags, affinity, isFavSeries, badge };
+  return { genres, tags, affinity, badge };
 }
 
 /**
