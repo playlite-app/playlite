@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_and_refresh_background"]};

@@ -1,4 +1,4 @@
-//! Seriços para interagir com o banco de dados do aplicativo.
+//! Serviços para interagir com o banco de dados do aplicativo.
 //!
 //! **Módulos:**
 //! - `backup`: Funcionalidades de backup e restauração do banco de dados.
@@ -8,7 +8,7 @@
 
 pub mod backup;
 pub mod configs;
-pub(crate) mod core;
+pub mod core;
 pub(crate) mod migrations;
 
 // Reexporta o módulo core para fácil acesso

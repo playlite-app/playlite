@@ -11,6 +11,6 @@
 pub mod http_client;
 pub mod logger;
 pub mod oauth;
-pub(crate) mod series;
+pub mod series;
 pub mod status_logic;
-pub(crate) mod tag_utils;
+pub mod tag_utils;

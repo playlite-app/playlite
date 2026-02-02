@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["apply_diversity_rules","apply_hard_filters"]};

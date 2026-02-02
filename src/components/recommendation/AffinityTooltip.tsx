@@ -84,7 +84,7 @@ export function AffinityTooltip({ children, badge }: AffinityTooltipProps) {
           >
             <Icon size={16} className={meta.color} />
             <span
-              className={`text-xs font-extrabold tracking-wider uppercase ${meta.color}`}
+              className={`text-xs font-bold tracking-wider uppercase ${meta.color}`}
             >
               {meta.label}
             </span>

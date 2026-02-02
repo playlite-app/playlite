@@ -12,7 +12,7 @@
 pub mod commands;
 mod constants;
 mod crypto;
-mod database;
+pub mod database;
 mod errors;
 pub mod initialization;
 pub mod models;

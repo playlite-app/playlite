@@ -352,7 +352,6 @@ export default function Trending(props: TrendingProps) {
                     key={game.id}
                     {...game}
                     badge={game.affinityData.badge}
-                    isFavSeries={game.affinityData.isFavSeries}
                   />
                 ))}
           </div>

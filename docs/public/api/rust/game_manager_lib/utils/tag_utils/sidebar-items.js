@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TagCategory","TagRole"],"fn":["category_multiplier","combined_multiplier","role_multiplier"],"struct":["GameTag","TagKey","TagMetadata"]};

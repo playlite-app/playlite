@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["cleanup_cache","clear_all_cache","get_detailed_cache_stats"],"struct":["DetailedCacheStats"]};

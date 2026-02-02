@@ -1,15 +1,15 @@
 # Sua Biblioteca
 
-A página **Biblioteca** é o coração do Playlite. Aqui vivem todos os seus jogos, sejam eles importados da Steam ou
-adicionados manualmente.
+A página **Biblioteca** é o coração do Playlite. Aqui vivem todos os seus jogos, sejam eles importados de plataformas
+como a Steam ou adicionados manualmente.
 
 ## Gerenciando sua Coleção
 
-Você pode filtrar, buscar e organizar seus jogos.
+Você pode filtrar, buscar e organizar os seus jogos.
 
 ### Adicionar Jogo Manualmente
 
-Se o jogo não veio da Steam (ex: Epic, GOG, Emuladores), adicione-o facilmente:
+Se o jogo não for de uma plataforma (Steam, Epic, Gog, etc), adicione-o facilmente:
 
 1. Clique no botão **+ Adicionar**.
 2. Digite o nome do jogo.
@@ -26,7 +26,7 @@ Quer mudar a capa ou corrigir o gênero?
 
 ### Favoritos
 
-Para destacar seus jogos preferidos:
+Para destacar os seus jogos preferidos:
 
 - Dentro dos detalhes do jogo, clique no ícone de **Coração**.
 - O jogo aparecerá na página **Favoritos**.

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["add_to_wishlist","check_wishlist_status","fetch_wishlist_covers","get_wishlist","import_wishlist","refresh_prices","remove_from_wishlist","search_wishlist_game"],"struct":["SearchResult"]};

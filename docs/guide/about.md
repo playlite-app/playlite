@@ -48,8 +48,8 @@ desenvolvimento do software.
 Esse uso de IA ocorreu **apenas durante a criação do projeto**, como ferramenta de apoio para escrita de código,
 documentação e exploração de ideias. Nenhuma IA é executada dentro do aplicativo.
 
-- o funcionamento do Playlite é local e offline
-- não existe coleta ou envio de informações pessoais
+- O funcionamento do Playlite é local e offline
+- Não tem coleta ou envio de informações pessoais
 
 O uso de IA no desenvolvimento teve como objetivo acelerar a criação do projeto, facilitar o aprendizado de novas
 tecnologias e melhorar a qualidade geral do software, sempre com validação humana das decisões finais.

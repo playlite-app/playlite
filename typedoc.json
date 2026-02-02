@@ -1,0 +1,11 @@
+{
+  "entryPointStrategy": "expand",
+  "entryPoints": ["src/hooks", "src/services"],
+  "out": "docs/public/api/frontend",
+  "skipErrorChecking": true,
+  "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
+  "readme": "docs/API_README.md",
+  "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "defaultCategory": "Other"
+}

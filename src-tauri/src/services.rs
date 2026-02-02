@@ -14,14 +14,14 @@
 //! - `steam`: Integração com a API Steam para importar jogos e obter detalhes.
 //! - `tags`: Serviço para classificação e gerenciamento de tags de jogos.
 
-pub(crate) mod cache;
-pub(crate) mod cf_aggregator;
-pub(crate) mod gamerpower;
-pub(crate) mod gemini;
+pub mod cache;
+pub mod cf_aggregator;
+pub mod gamerpower;
+pub mod gemini;
 pub mod images;
 pub mod itad;
-pub(crate) mod playtime;
+pub mod playtime;
 pub mod rawg;
 pub mod recommendation;
 pub mod steam;
-pub(crate) mod tags;
+pub mod tags;

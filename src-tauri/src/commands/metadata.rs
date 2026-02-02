@@ -14,4 +14,4 @@ pub mod covers;
 pub mod enrichment;
 pub mod refresh;
 pub mod search;
-mod shared;
+pub mod shared;

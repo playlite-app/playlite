@@ -12,13 +12,15 @@ A tela é dividida em blocos inteligentes:
 
 - **Resumo da Biblioteca:** Contadores rápidos de quantos jogos, favoritos e terminados você tem.
 - **Continue Jogando:** Acesso rápido aos jogos que você já estava jogando.
-- **Recomendados**: Jogos sugeridos com base no seu perfil e histórico.
-- **Estatísticas**: Mostra seus títulos mais jogados e gêneros preferidos.
+- **Recomendados para você:** Jogos sugeridos com base no seu perfil e histórico.
+- **Jogadores como você gostaram**: Jogos populares que você talvez pode gostar.
+- **Estatísticas**: Mostra os seus títulos mais jogados e gêneros preferidos.
 
 ### Em Alta (Trending)
 
 O que dá pra fazer:
 
+- Ver jogos grátis no momento
 - Explorar jogos em alta
 - Ver os próximos lançamentos mais aguardados
 - Abrir detalhes e avaliar se faz sentido adicionar na sua wishlist
@@ -26,4 +28,4 @@ O que dá pra fazer:
 ## Dicas
 
 - Use **Wishlist** para guardar descobertas que você ainda não quer adicionar na biblioteca.
-- Combine com **Libraries** para manter sua coleção organizada.
+- Combine com **Libraries** para manter a sua coleção organizada.

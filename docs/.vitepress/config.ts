@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitepress';
+import { defineConfig } from 'vitepress'; // https://vitepress.dev/reference/site-config
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -31,7 +31,7 @@ export default defineConfig({
           },
           {
             text: 'Filtragem Colaborativa Offline',
-            link: '/dev/filtering-collaborative',
+            link: '/dev/collaborative-filtering',
           },
           {
             text: 'Desenvolvimento Assistido por IA',
@@ -86,6 +86,7 @@ export default defineConfig({
           items: [
             { text: 'Home e Trending', link: '/guide/pages/home' },
             { text: 'Sua Biblioteca', link: '/guide/pages/libraries' },
+            { text: 'Detalhes do Jogo', link: '/guide/pages/details' },
             { text: 'Listas (Playlist/Wishlist)', link: '/guide/pages/lists' },
             { text: 'Configurações', link: '/guide/pages/settings' },
           ],
@@ -104,7 +105,7 @@ export default defineConfig({
             },
             {
               text: 'Filtragem Colaborativa Offline',
-              link: '/dev/filtering-collaborative',
+              link: '/dev/collaborative-filtering',
             },
             {
               text: 'Desenvolvimento Assistido por IA',

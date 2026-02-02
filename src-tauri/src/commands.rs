@@ -16,8 +16,8 @@
 //! - `version`: Comandos para gerenciar informações de versão da aplicação.
 //! - `wishlist`: Comandos para gerenciar a lista de desejos com 'tracking' de preços.
 
-pub(crate) mod achievements;
-pub(crate) mod ai_translation;
+pub mod achievements;
+pub mod ai_translation;
 pub mod caches;
 pub mod games;
 pub mod metadata;
