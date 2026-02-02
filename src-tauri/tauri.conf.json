@@ -47,7 +47,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/Alan-oliveir/game_manager/releases/latest/download/latest.json"
+        "https://github.com/Alan-oliveir/game_manager/releases/download/v3.0.0/latest.json"
       ],
       "dialog": true,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ3MkZDMUI0MUMzRjUxNEIKUldSTFVUOGN0TUV2UjJKWUYvMEVuQnptbjE3bFpkYnA1ZnRnZkRJS1RkdVF2cHlOUC9jOEc3MFQK"
