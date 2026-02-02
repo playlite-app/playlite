@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["find_game_id","get_prices"],"struct":["ItadGameOverview","ItadLookupResult","ItadPrice","ItadShop"]};

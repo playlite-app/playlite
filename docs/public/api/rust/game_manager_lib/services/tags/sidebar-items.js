@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["classify_and_sort_tags","classify_tags","generate_analysis_report","get_tag_stats","normalize_tag_slug"],"struct":["TagStats"]};

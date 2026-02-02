@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_cf_candidates","init_cf_index"],"struct":["CFStats","Similar"],"type":["CFIndex"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_TAG_CONTRIBUTION","WEIGHT_FAVORITE","WEIGHT_GENRE","WEIGHT_PLAYTIME_HOUR","WEIGHT_SERIES","WEIGHT_USER_RATING"],"enum":["SeriesLimit"],"fn":["calculate_game_weight","parse_release_year"],"struct":["GameWithDetails","RecommendationConfig","RecommendationReason","UserPreferenceVector","UserSettings"]};

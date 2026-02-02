@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["fetch_game_details","fetch_trending_games","fetch_upcoming_games","search_games"],"struct":["EsrbRating","GameDetails","RawgDeveloper","RawgGame","RawgGenre","RawgPublisher","RawgTag","StoreInfo","StoreWrapper"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["rank_games_collaborative","rank_games_content_based","rank_games_hybrid"]};

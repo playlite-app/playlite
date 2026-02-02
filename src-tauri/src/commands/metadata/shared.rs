@@ -1,7 +1,6 @@
 //! Módulo compartilhado para enriquecimento de metadados
 //!
 //! Contém estruturas e funções reutilizadas por enrichment e covers.
-//! Utiliza pub(super) para limitar visibilidade ao módulo metadata.
 
 use crate::services::{cache, rawg};
 
@@ -9,7 +8,7 @@ use crate::services::{cache, rawg};
 
 /// Progresso de enriquecimento de metadados
 #[derive(serde::Serialize, Clone)]
-pub(super) struct EnrichProgress {
+pub struct EnrichProgress {
     pub current: i32,
     pub total_found: i32,
     pub last_game: String,
@@ -22,7 +21,7 @@ pub(super) struct EnrichProgress {
 ///
 /// Esta função é compartilhada entre enrichment e covers
 /// para buscar informações de jogos na API RAWG com suporte a cache SQLite.
-pub(super) async fn fetch_rawg_metadata(
+pub async fn fetch_rawg_metadata(
     api_key: &str,
     name: &str,
     cache_conn: &rusqlite::Connection,

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["export_games_csv","export_report_json","export_report_txt"]};
