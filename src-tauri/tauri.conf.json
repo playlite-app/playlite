@@ -25,13 +25,14 @@
     ],
     "security": {
       "capabilities": ["default"],
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.cloudflare.steamstatic.com https://media.rawg.io; connect-src 'self' https://api.steampowered.com https://store.steampowered.com https://api.rawg.io"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.cloudflare.steamstatic.com https://media.rawg.io; connect-src 'self' https://api.steampowered.com https://store.steampowered.com https://steamspy.com/api.php https://api.rawg.io https://api.isthereanydeal.com https://www.gamerpower.com https://generativelanguage.googleapis.com"
     }
   },
   "bundle": {
     "active": true,
     "copyright": "Copyright © 2026 Alan Goncalves",
     "targets": "msi",
+    "installerName": "Playlite_{{version}}_x64",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -50,7 +51,7 @@
         "https://github.com/Alan-oliveir/game_manager/releases/latest/download/latest.json"
       ],
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhGQkQ3OUVGMTA5REJBRTUKUldSdmJGTldTMHRrV0hGVFZtNURNMEZ6Tm1ReFIwbDNUMWR6VFZaUE5EZEpRbTB5ZGxGb1dUQT0K"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ3MkZDMUI0MUMzRjUxNEIKUldSTFVUOGN0TUV2UjJKWUYvMEVuQnptbjE3bFpkYnA1ZnRnZkRJS1RkdVF2cHlOUC9jOEc3MFQK"
     }
   }
 }
