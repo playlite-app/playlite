@@ -220,7 +220,7 @@ export default function Trending(props: TrendingProps) {
         onNext={nextHero}
         onPrev={prevHero}
         badges={
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
+          <div className="bg-gold-500/20 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
             <Flame size={16} /> EM ALTA
           </div>
         }
@@ -282,7 +282,7 @@ export default function Trending(props: TrendingProps) {
         {/* Header da Seção + Filtro de Loja */}
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-green-500/10 bg-linear-to-br to-emerald-600 p-2.5 text-white shadow-lg">
+            <div className="rounded-lg bg-purple-500/10 bg-linear-to-br to-purple-600 p-2.5 text-white shadow-lg">
               <Gift size={20} />
             </div>
             <div>
@@ -362,7 +362,7 @@ export default function Trending(props: TrendingProps) {
 
         {/* 4. Mais Sugestões (Trending Grid) */}
         <div className="mb-6 flex items-center gap-2 pt-8">
-          <div className="rounded-lg bg-yellow-500/10 p-2 text-yellow-400">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <TrendingUp size={20} />
           </div>
           <h2 className="text-2xl font-bold">Mais Sugestões</h2>
@@ -422,7 +422,7 @@ export default function Trending(props: TrendingProps) {
         {upcomingGames.length > 0 && (
           <>
             <div className="mb-6 flex items-center gap-2 pt-12">
-              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+              <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
                 <Clock size={20} />
               </div>
               <h2 className="text-2xl font-bold">Lançamentos Aguardados</h2>

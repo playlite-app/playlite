@@ -48,50 +48,50 @@ export function RecommendationTooltip({
         return {
           icon: Users,
           label: 'Comunidade',
-          color: 'text-blue-400',
-          bg: 'bg-blue-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       case 'series':
         return {
           icon: Trophy,
           label: 'Série Favorita',
-          color: 'text-yellow-400',
-          bg: 'bg-yellow-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       case 'genre':
         return {
           icon: Gamepad2,
           label: 'Gênero',
-          color: 'text-green-400',
-          bg: 'bg-green-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       case 'tag':
         return {
           icon: Tag,
           label: 'Tag',
-          color: 'text-pink-400',
-          bg: 'bg-pink-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       case 'hybrid':
         return {
           icon: Sparkles,
           label: 'Afinidade + Comunidade',
-          color: 'text-indigo-400',
-          bg: 'bg-indigo-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       case 'general':
         return {
           icon: Dna,
           label: 'Perfil',
-          color: 'text-purple-400',
-          bg: 'bg-purple-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
         };
       default:
         return {
           icon: Sparkles,
           label: 'Recomendação',
           color: 'text-primary',
-          bg: 'bg-primary/10',
+          bg: 'bg-purple-600/10',
         };
     }
   };

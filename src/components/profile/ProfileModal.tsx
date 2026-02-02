@@ -58,7 +58,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Personalizar Perfil</DialogTitle>
+          <DialogTitle>Perfil</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="name" className="w-full">
@@ -74,8 +74,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </TabsList>
 
           <TabsContent value="name" className="space-y-4">
-            <div className="grid gap-2 py-2">
-              <Label htmlFor="name">Seu Nome</Label>
+            <div className="grid gap-2 py-2 pt-4">
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
                 type="text"
@@ -90,10 +90,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
 
             {/* Preview */}
+            <p className="mb-3 text-sm font-medium">Preview</p>
             <div className="bg-muted/50 rounded-lg border p-4">
-              <p className="text-muted-foreground mb-3 text-sm font-medium">
-                Preview:
-              </p>
               <div className="flex items-center gap-3">
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br font-bold text-white shadow-sm ${
@@ -115,7 +113,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </TabsContent>
 
           <TabsContent value="avatar" className="space-y-4">
-            <div className="grid gap-2 py-2">
+            <div className="grid gap-2 pt-4">
               <Label>Escolha um Avatar</Label>
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {presetAvatars.map(avatar => {
@@ -148,7 +146,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
 
             {/* Opção para usar inicial */}
-            <div className="grid gap-2 pb-2">
+            <div className="grid gap-2 py-2">
               <Label className="pb-1">Ou use sua inicial</Label>
               <button
                 type="button"
@@ -195,7 +193,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
+        <DialogFooter className="mt-2">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

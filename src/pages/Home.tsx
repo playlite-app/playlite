@@ -115,7 +115,7 @@ export default function Home(props: HomeProps) {
           onNext={next}
           onPrev={prev}
           badges={
-            <div className="bg-primary/20 text-primary-foreground border-primary/30 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
               {backlogRecommendations.some(g => g.id === currentHero.id) && (
                 <>
                   <Sparkles size={14} /> SUGESTÃO
@@ -196,7 +196,7 @@ export default function Home(props: HomeProps) {
           <section>
             {/* Header e Grid de Continue Jogando */}
             <div className="mb-6 flex items-center gap-2">
-              <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+              <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
                 <Clock size={24} />
               </div>
               <h2 className="text-2xl font-bold">Continue Jogando</h2>
@@ -280,7 +280,7 @@ export default function Home(props: HomeProps) {
         {collaborativeRecs.length > 0 && (
           <section className="animate-in fade-in slide-in-from-bottom-4 mb-12 duration-700">
             <div className="mb-6 flex items-center gap-2">
-              <div className="rounded-lg bg-green-500/10 p-2 text-green-400">
+              <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
                 <Users size={24} />
               </div>
               <div>
@@ -320,7 +320,7 @@ export default function Home(props: HomeProps) {
 
         {/* Estatísticas e Gráficos */}
         <div className="mb-6 flex items-center gap-2">
-          <div className="rounded-lg bg-yellow-500/10 p-2 text-yellow-400">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <ChartBar size={24} />
           </div>
           <h2 className="text-2xl font-bold">Estatísticas</h2>

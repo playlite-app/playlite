@@ -162,7 +162,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
       {/* HEADER DA PÁGINA */}
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-red-500/10 p-2 text-red-500">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <ShoppingCart size={24} />
           </div>
           <div>

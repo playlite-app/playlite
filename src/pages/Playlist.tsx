@@ -96,8 +96,8 @@ export default function Playlist({
       <div className="border-border/50 bg-background/50 flex min-w-0 flex-1 flex-col overflow-hidden border-r">
         <div className="border-border/40 shrink-0 border-b px-5 pt-5 pb-3 lg:px-8 lg:pt-6 lg:pb-4">
           <div className="mb-2 flex items-center gap-2.5 lg:gap-3">
-            <div className="bg-primary/10 text-primary rounded-lg p-2">
-              <Gamepad2 size={22} className="lg:h-6 lg:w-6" />
+            <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
+              <Gamepad2 size={24} className="lg:h-6 lg:w-6" />
             </div>
             <div>
               <h1 className="text-xl font-bold lg:text-2xl">Sua Playlist</h1>
@@ -170,11 +170,11 @@ export default function Playlist({
       {/* Coluna direita: Sugestões de jogos */}
       <div className="bg-muted/10 border-border flex w-72 shrink-0 flex-col overflow-hidden border-l backdrop-blur-sm md:w-80 lg:w-80 xl:w-96 2xl:w-120">
         <div className="border-border/40 bg-muted/20 shrink-0 border-b p-5 lg:p-6">
-          <div className="mb-1 flex items-center gap-2 text-purple-500">
+          <div className="text-primary mb-1 flex items-center gap-2">
             <div className="flex">
               <Sparkles
-                size={19}
-                className="fill-purple-500/20 lg:h-5 lg:w-5"
+                size={20}
+                className="fill-purple-500/20 text-purple-500 lg:h-5 lg:w-5"
               />
             </div>
             <h2 className="text-lg font-bold">Sugestões Inteligentes</h2>
@@ -188,14 +188,14 @@ export default function Playlist({
           {/* Séries favoritas */}
           {favoriteSeries.length > 0 && (
             <div className="mb-4 rounded-lg bg-purple-500/10 p-3">
-              <h3 className="mb-2 text-xs font-bold text-purple-400">
+              <h3 className="text-primary mb-2 text-xs font-bold">
                 Suas Séries Favoritas
               </h3>
               <div className="flex flex-wrap gap-1.5">
                 {favoriteSeries.map(name => (
                   <span
                     key={name}
-                    className="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300"
+                    className="text-primary rounded bg-purple-500/20 px-2 py-0.5 text-xs"
                   >
                     {name}
                   </span>

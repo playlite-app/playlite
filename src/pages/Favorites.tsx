@@ -58,7 +58,7 @@ export default function Favorites({
       <div className="space-y-6">
         {/* Header dos Favoritos */}
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-pink-500/10 p-2 text-pink-500">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <Heart size={24} />
           </div>
           <div>

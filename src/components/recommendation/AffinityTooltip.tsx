@@ -21,8 +21,8 @@ export function AffinityTooltip({ children, badge }: AffinityTooltipProps) {
         return {
           icon: Trophy,
           label: 'Série Favorita',
-          color: 'text-yellow-400',
-          bg: 'bg-yellow-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
           explanation:
             'Você já demonstrou interesse por outros jogos desta série.',
           description: 'Baseado no seu histórico de jogos da mesma franquia',
@@ -31,8 +31,8 @@ export function AffinityTooltip({ children, badge }: AffinityTooltipProps) {
         return {
           icon: Zap,
           label: 'Top Pick',
-          color: 'text-purple-400',
-          bg: 'bg-purple-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
           explanation: 'Este jogo combina perfeitamente com suas preferências.',
           description:
             'Alta afinidade com gêneros, tags e estilo que você mais joga',
@@ -41,8 +41,8 @@ export function AffinityTooltip({ children, badge }: AffinityTooltipProps) {
         return {
           icon: Sparkles,
           label: 'Para Você',
-          color: 'text-blue-400',
-          bg: 'bg-blue-500/10',
+          color: 'text-primary',
+          bg: 'bg-purple-600/10',
           explanation: 'Este jogo tem boa compatibilidade com seu perfil.',
           description: 'Elementos do jogo combinam com seu estilo de jogar',
         };
@@ -51,7 +51,7 @@ export function AffinityTooltip({ children, badge }: AffinityTooltipProps) {
           icon: Sparkles,
           label: 'Recomendado',
           color: 'text-primary',
-          bg: 'bg-primary/10',
+          bg: 'bg-purple-600/10',
           explanation: 'Recomendado com base no seu perfil.',
           description: 'Selecionado para você',
         };

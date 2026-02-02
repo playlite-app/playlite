@@ -52,7 +52,7 @@ export default function Libraries({
       <div className="space-y-6">
         {/* Header da Biblioteca */}
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-blue-500/10 p-2 text-blue-500">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <Library size={24} />
           </div>
           <div>

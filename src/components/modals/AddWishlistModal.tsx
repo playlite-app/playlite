@@ -74,7 +74,11 @@ export default function AddWishlistModal({
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch} disabled={loading}>
+          <Button
+            className="bg-muted-foreground"
+            onClick={handleSearch}
+            disabled={loading}
+          >
             {loading ? (
               <Loader2 className="animate-spin" />
             ) : (
@@ -108,6 +112,7 @@ export default function AddWishlistModal({
               </div>
               <Button
                 size="sm"
+                className="bg-muted-foreground"
                 disabled={addingId === game.id}
                 onClick={() => handleAdd(game)}
               >
