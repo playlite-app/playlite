@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["fetch_game_metadata","fetch_price","list_steam_games","search_steam_app_id","search_store"],"struct":["ProcessedGameData","SteamGame","SteamPrice","StoreAppResponse","StoreGameDetails","StoreGenre","StorePriceOverview","StoreReleaseDate","StoreSearchItem"]};

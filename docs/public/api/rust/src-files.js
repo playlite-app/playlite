@@ -1,2 +1,0 @@
-createSrcSidebar('[["Playlite",["",[],["main.rs"]]],["game_manager_lib",["",[["commands",[],["backup.rs","games.rs","integrations.rs","recommendations.rs","settings.rs","wishlist.rs"]],["services",[],["rawg.rs","recommendation.rs","steam.rs"]],["utils",[],["http_client.rs","logger.rs"]]],["commands.rs","constants.rs","database.rs","lib.rs","models.rs","security.rs","services.rs","utils.rs"]]]]');
-//{"start":19,"fragment_lengths":[32,344]}
