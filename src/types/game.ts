@@ -84,7 +84,7 @@ export interface GameDetails {
 
   // Scores & Reviews
   criticScore?: number; // Metacritic
-  steamReviewLabel?: string; // "Very Positive"
+  steamReviewLabel?: SteamReviewSummary; // "Very Positive"
   steamReviewCount?: number;
   steamReviewScore?: number; // % (0-100)
   steamReviewUpdatedAt?: string;
