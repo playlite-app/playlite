@@ -5,9 +5,6 @@ import { RecommendationConfig } from '@/types/recommendation';
 
 const STORE_FILENAME = 'recommendation.store';
 
-/**
- * Configuração padrão do sistema de recomendação
- */
 const DEFAULT_CONFIG: RecommendationConfig = {
   content_weight: 0.65,
   collaborative_weight: 0.35,

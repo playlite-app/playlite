@@ -30,7 +30,6 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       const localData = await invoke<GameDetails>('get_library_game_details', {
         gameId: selectedGame.id,
       });
-
       // Se encontrou, define os detalhes; senão, define como null
       setDetails(localData || null);
     } catch (err) {
@@ -58,7 +57,6 @@ export function useGameDetails(selectedGame: Game | null, allGames: Game[]) {
       )
       .map(g => ({ id: g.id, platform: g.platform || 'Outra' }));
     setSiblings(related);
-
     // 2. Busca detalhes do banco de dados local
     loadData();
   }, [selectedGame, allGames]);

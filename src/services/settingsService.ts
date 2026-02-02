@@ -4,10 +4,10 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { ERROR_MESSAGES, parseBackupError } from '@/errors/errorMessages.ts';
 import { ImportSummary, KeysBatch } from '@/types';
 
-/**
- * Obtém as chaves de API salvas para usar em serviços externos.
- */
 export const settingsService = {
+  /**
+   * Obtém as chaves de API salvas para usar em serviços externos.
+   */
   getSecrets: async (): Promise<KeysBatch> => {
     return await invoke<KeysBatch>('get_secrets');
   },

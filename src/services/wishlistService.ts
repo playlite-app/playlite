@@ -17,6 +17,11 @@ export const wishlistService = {
     return await invoke<WishlistGame[]>('get_wishlist');
   },
 
+  /**
+   * Remove jogo da wishlist pelo ID.
+   *
+   * @param id - ID do jogo a ser removido
+   */
   removeFromWishlist: async (id: string): Promise<void> => {
     await invoke('remove_from_wishlist', { id });
   },

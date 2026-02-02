@@ -12,21 +12,10 @@ import { SEARCHABLE_SECTIONS } from '@/utils/navigation.ts';
  * @returns Estado e configurações do header
  */
 export function useHeaderState(activeSection: string) {
-  /**
-   * Verifica se a seção atual suporta busca
-   */
   const isSearchable = SEARCHABLE_SECTIONS.includes(activeSection);
-
-  /**
-   * Placeholder apropriado baseado no estado
-   */
   const searchPlaceholder = isSearchable
     ? 'Buscar jogos por nome, gênero ou plataforma...'
     : 'Busca indisponível nesta página';
-
-  /**
-   * Label de acessibilidade para o input
-   */
   const searchAriaLabel = isSearchable
     ? 'Campo de busca de jogos'
     : 'Busca não disponível nesta seção';

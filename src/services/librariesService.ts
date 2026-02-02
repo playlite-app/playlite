@@ -3,10 +3,12 @@ import { invoke } from '@tauri-apps/api/core';
 import { Game } from '@/types/game';
 
 export const librariesService = {
+  /** Inicializa o banco de dados local (SQLite) se ainda não existir */
   initDb: async (): Promise<void> => {
     await invoke('init_db');
   },
 
+  /** Busca todos os jogos da biblioteca local (SQLite) */
   getGames: async (): Promise<Game[]> => {
     return await invoke<Game[]>('get_games');
   },
@@ -49,10 +51,12 @@ export const librariesService = {
     await invoke('update_game', { game });
   },
 
+  /** Remove jogo da biblioteca local pelo ID */
   deleteGame: async (id: string): Promise<void> => {
     await invoke('delete_game', { id });
   },
 
+  /** Alterna o status de favorito de um jogo na biblioteca local */
   toggleFavorite: async (id: string): Promise<void> => {
     await invoke('toggle_favorite', { id });
   },

@@ -3,6 +3,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { RawgGame } from '@/types';
 
 export const trendingService = {
+  /**
+   * Obtém a chave de API RAWG salva para acessar os serviços da RAWG.
+   *
+   * @returns RAWG API key
+   */
   getApiKey: async (): Promise<string> => {
     return await invoke<string>('get_secret', { keyName: 'rawg_api_key' });
   },

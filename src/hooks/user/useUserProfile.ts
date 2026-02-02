@@ -17,6 +17,13 @@ const DEFAULT_PROFILE: UserProfile = {
 
 const STORAGE_KEY = 'playlite_user_profile';
 
+/**
+ * Hook para gerenciar o perfil do usuário, incluindo nome e avatar.
+ * O perfil é persistido no localStorage.
+ *
+ * @returns Objeto contendo o perfil do usuário, função para atualizar o perfil,
+ * função para obter a inicial do nome e função para obter cor baseada no nome.
+ */
 export const useUserProfile = () => {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 

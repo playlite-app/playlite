@@ -301,7 +301,7 @@ export default function Home(props: HomeProps) {
                   onClick={() => props.onGameClick(game)}
                   badge={
                     <RecommendationTooltip reason={game.reason}>
-                      <span>Community</span>
+                      <span>Comunidade</span>
                     </RecommendationTooltip>
                   }
                   actions={

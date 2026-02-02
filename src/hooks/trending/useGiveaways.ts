@@ -19,7 +19,7 @@ const DEFAULT_PLATFORMS = [
   'Ubisoft',
 ];
 
-const GIVEAWAYS_TTL_MS = 30 * 60 * 1000;
+const GIVEAWAYS_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 interface UseGiveawaysOptions {
   cachedGiveaways: Giveaway[];

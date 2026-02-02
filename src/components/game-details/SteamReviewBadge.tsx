@@ -1,7 +1,9 @@
 import { Minus, ThumbsDown, ThumbsUp } from 'lucide-react';
 
+import { SteamReviewSummary, traduzirSteamReview } from '@/types';
+
 interface SteamReviewBadgeProps {
-  label?: string;
+  label?: SteamReviewSummary;
   count?: number;
   score?: number;
 }
@@ -41,12 +43,12 @@ export function SteamReviewBadge({
       <div className="flex items-center gap-2">
         <Icon size={18} />
         <span className="text-base font-bold tracking-wide uppercase">
-          {label}
+          {traduzirSteamReview(label)}
         </span>
       </div>
       {count && (
         <div className="flex justify-between font-mono text-sm opacity-80">
-          <span>{count.toLocaleString()} reviews</span>
+          <span>{count.toLocaleString()} análises</span>
           {score && <span>{Math.round(score)}%</span>}
         </div>
       )}

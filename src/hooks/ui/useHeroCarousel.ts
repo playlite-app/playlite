@@ -20,19 +20,16 @@ interface HeroCarouselReturn {
  */
 export function useHeroCarousel(totalItems: number): HeroCarouselReturn {
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const next = () => {
     if (totalItems === 0) return;
 
     setCurrentIndex(prev => (prev + 1) % totalItems);
   };
-
   const prev = () => {
     if (totalItems === 0) return;
 
     setCurrentIndex(prev => (prev - 1 + totalItems) % totalItems);
   };
-
   const goTo = (index: number) => {
     if (totalItems === 0) return;
 

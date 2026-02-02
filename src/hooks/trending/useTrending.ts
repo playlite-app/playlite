@@ -4,7 +4,7 @@ import { useNetworkStatus } from '@/hooks/common';
 import { trendingService } from '@/services/trendingService.ts';
 import { Game, RawgGame } from '@/types';
 
-const TRENDING_TTL_MS = 10 * 60 * 1000;
+const TRENDING_TTL_MS = 10 * 60 * 1000; // 10 minutos
 
 interface UseTrendingProps {
   userGames: Game[];

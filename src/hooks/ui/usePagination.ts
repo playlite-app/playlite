@@ -13,11 +13,9 @@ export function usePagination(
   increment: number = 10
 ) {
   const [limit, setLimit] = useState(initialLimit);
-
   const loadMore = useCallback(() => {
     setLimit(prev => prev + increment);
   }, [increment]);
-
   const reset = useCallback(() => {
     setLimit(initialLimit);
   }, [initialLimit]);
@@ -44,7 +42,6 @@ export function usePaginatedList<T>(
   initialLimit: number = 10
 ) {
   const { limit, loadMore, reset } = usePagination(initialLimit);
-
   const filteredItems = items.filter(filterFn);
   const paginatedItems = filteredItems.slice(0, limit);
   const hasMore = filteredItems.length > limit;

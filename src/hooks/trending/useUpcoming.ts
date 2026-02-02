@@ -4,7 +4,7 @@ import { useNetworkStatus } from '@/hooks/common';
 import { trendingService } from '@/services/trendingService.ts';
 import { RawgGame } from '@/types';
 
-const UPCOMING_TTL_MS = 30 * 60 * 1000;
+const UPCOMING_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 interface UseUpcomingOptions {
   cachedGames: RawgGame[];

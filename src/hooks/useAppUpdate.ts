@@ -5,7 +5,12 @@ import { getAppVersionInfo } from '../services/updaterService.ts';
 
 export type UpdateType = 'none' | 'patch' | 'minor' | 'major';
 
-// Helper para parsear versão semântica
+/**
+ * Parse a version string into its components.
+ *
+ * @param version
+ * @returns An object with major, minor, and patch numbers.
+ */
 function parseVersion(version: string): {
   major: number;
   minor: number;
@@ -20,6 +25,14 @@ function parseVersion(version: string): {
   };
 }
 
+/**
+ * Custom hook to check for app updates and manage update state.
+ *
+ * @returns An object with:
+ *   - updateType: Type of update ('none', 'patch', 'minor', 'major')
+ *   - isMajorOpen: Boolean indicating if major update modal is open
+ *   - closeMajorModal: Function to close the major update modal
+ */
 export function useAppUpdate() {
   const [updateType, setUpdateType] = useState<UpdateType>('none');
   const [isMajorOpen, setIsMajorOpen] = useState(false);

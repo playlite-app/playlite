@@ -40,22 +40,3 @@ export function useLibraryFilter({
     );
   }, [games, hideAdult, searchTerm]);
 }
-
-/**
- * Hook para gerar subtítulo de um card de jogo.
- * Combina primeiro gênero e desenvolvedor.
- *
- * @param genres - String de gêneros separados por vírgula
- * @param developer - Nome do desenvolvedor
- * @returns Subtítulo formatado
- */
-export function useGameCardSubtitle(
-  genres?: string,
-  developer?: string
-): string {
-  return useMemo(() => {
-    const parts = [genres?.split(',')[0]?.trim(), developer].filter(Boolean);
-
-    return parts.length > 0 ? parts.join(' • ') : 'Sem dados';
-  }, [genres, developer]);
-}

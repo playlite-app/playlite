@@ -1,44 +1,9 @@
-import { useMemo } from 'react';
-
 import { CATEGORY_MULTIPLIERS, UserPreferenceVector } from '@/types';
 
 // Interface auxiliar para aceitar GameTag (local) ou RawgTag (API)
 interface TagWithSlug {
   slug: string;
   category?: string;
-}
-
-/**
- * Hook otimizado para calcular afinidade com cache *
- * Usa as tags categorizadas com multiplicadores por categoria.
- */
-export function useCalculateAffinity(profile: UserPreferenceVector | null) {
-  return useMemo(() => {
-    const cache = new Map<string, number>();
-
-    return (
-      genres: string[],
-      tags: TagWithSlug[] = [],
-      series: string | null = null
-    ) => {
-      // Gera chave de cache incluindo categoria das tags
-      const tagKey = tags
-        .map(t => `${t.category || 'unknown'}:${t.slug}`)
-        .sort()
-        .join(',');
-
-      const key = `${genres.slice().sort().join(',')}|${tagKey}|${series}`;
-
-      if (cache.has(key)) {
-        return cache.get(key)!;
-      }
-
-      const score = calculateAffinity(profile, genres, tags, series);
-      cache.set(key, score);
-
-      return score;
-    };
-  }, [profile]);
 }
 
 /**
@@ -131,17 +96,4 @@ export function getFavoriteSeries(
     .sort(([, a], [, b]) => b - a)
     .slice(0, limit)
     .map(([name]) => name);
-}
-
-/**
- * Verifica se uma série específica é favorita
- */
-export function isFavoriteSeries(
-  profile: UserPreferenceVector | null,
-  seriesName: string | null
-): boolean {
-  if (!profile || !seriesName || !profile.series) return false;
-
-  // Considera favorita se tiver um score relevante (ex: > 10)
-  return (profile.series[seriesName] || 0) > 10;
 }

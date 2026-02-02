@@ -5,11 +5,6 @@ export interface GameTag {
   relevance: number;
 }
 
-export interface TagKey {
-  category: TagCategory;
-  slug: string;
-}
-
 export type TagCategory =
   | 'mode'
   | 'narrative'
@@ -103,6 +98,37 @@ export interface GameDetails {
   externalLinks?: Record<string, string>; // { "steam": "url", "website": "url" }
   medianPlaytime?: number; // Horas (SteamSpy)
   estimatedPlaytime?: number; // Tempo estimado em horas (float)
+}
+
+export type SteamReviewSummary =
+  | 'Overwhelmingly Positive'
+  | 'Very Positive'
+  | 'Positive'
+  | 'Mostly Positive'
+  | 'Mixed'
+  | 'Mostly Negative'
+  | 'Negative'
+  | 'Very Negative'
+  | 'Overwhelmingly Negative'
+  | 'No user reviews';
+
+export const steamReviewMap: Record<SteamReviewSummary, string> = {
+  'Overwhelmingly Positive': 'Extremamente positivas',
+  'Very Positive': 'Muito positivas',
+  Positive: 'Positivas',
+  'Mostly Positive': 'Ligeiramente positivas',
+  Mixed: 'Mistas',
+  'Mostly Negative': 'Ligeiramente negativas',
+  Negative: 'Negativas',
+  'Very Negative': 'Muito negativas',
+  'Overwhelmingly Negative': 'Extremamente negativas',
+  'No user reviews': 'Sem análises de usuários',
+};
+
+export function traduzirSteamReview(label?: SteamReviewSummary): string {
+  if (!label) return 'Sem classificação';
+
+  return steamReviewMap[label];
 }
 
 export interface GamePlatformLink {
