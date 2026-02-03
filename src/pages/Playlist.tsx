@@ -21,7 +21,7 @@ import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
 
-import PlaylistItem from '../components/cards/PlaylistItem';
+import PlaylistCard from '../components/cards/PlaylistCard.tsx';
 import { launchGame } from '../utils/launcher';
 import { getFavoriteSeries } from '../utils/recommendation.ts';
 
@@ -136,7 +136,7 @@ export default function Playlist({
                               zIndex: snapshot.isDragging ? 50 : 'auto',
                             }}
                           >
-                            <PlaylistItem
+                            <PlaylistCard
                               game={game}
                               index={index}
                               total={playlistGames.length}

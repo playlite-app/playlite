@@ -45,7 +45,7 @@ interface PlaylistItemProps {
  * @param onPlay - Callback do overlay da capa (lança o jogo)
  * @param onClick - Callback ao clicar no card (abre detalhes)
  */
-export default function PlaylistItem({
+export default function PlaylistCard({
   game,
   index,
   total,

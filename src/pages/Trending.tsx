@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 import { AffinityTooltip, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
-import Hero from '@/components/cards/Hero';
+import Hero from '@/components/common/Hero.tsx';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
 import { Button } from '@/components/ui/button';

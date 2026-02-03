@@ -15,10 +15,10 @@ import {
   Users,
 } from 'lucide-react';
 
-import Hero from '@/components/cards/Hero';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
+import Hero from '@/components/common/Hero.tsx';
 import { RecommendationTooltip } from '@/components/recommendation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
