@@ -71,23 +71,17 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
     }
   }, [isOpen, gameToEdit]);
 
-  /**
-   * Atualiza um campo do formulário
-   */
+  // Atualiza um campo do formulário
   const handleChange = (field: keyof GameFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  /**
-   * Valida se o formulário está pronto para salvar
-   */
+  // Valida se o formulário está pronto para salvar
   const isValid = () => {
     return formData.name.trim().length > 0;
   };
 
-  /**
-   * Transforma dados do formulário para o formato do Game
-   */
+  // Transforma dados do formulário para o formato do Game
   const buildPayload = () => {
     return {
       // Mantém ID se estiver editando
@@ -104,9 +98,7 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
     };
   };
 
-  /**
-   * Reseta formulário para estado inicial
-   */
+  // Reseta formulário para estado inicial
   const reset = () => {
     setFormData(INITIAL_STATE);
   };

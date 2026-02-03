@@ -99,7 +99,7 @@ export default function Hero({
           {coverUrl && !imageError ? (
             <CachedImage
               src={coverUrl}
-              gameId={gameId} // <--- Cache ativado! Funciona pra RAWG e Local
+              gameId={gameId} // Cache (Funciona pra RAWG e Local)
               alt={title}
               className="aspect-3/4 w-64 rounded-lg border border-white/10 object-cover shadow-2xl md:w-80"
               onError={() => setImageError(true)}
