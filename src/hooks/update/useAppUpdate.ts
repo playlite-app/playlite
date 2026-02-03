@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getAppVersionInfo } from '../services/updaterService.ts';
+import { getAppVersionInfo } from '../../services/updaterService.ts';
 
 export type UpdateType = 'none' | 'patch' | 'minor' | 'major';
 

@@ -3,7 +3,6 @@ import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
 import AddGame from '@/components/dialogs/AddGame.tsx';
-import { UpdateManager } from '@/components/update/UpdateManager.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
 import { UpdateProvider } from '@/providers/UpdateProvider.tsx';
 import { Game } from '@/types';
@@ -269,21 +268,20 @@ function AppContent() {
         />
       </ErrorBoundary>
       <Toaster />
-      <UpdateManager />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <UpdateProvider>
-      <ConfirmProvider>
-        <GameLibraryProvider>
-          <UIProvider>
+    <ConfirmProvider>
+      <GameLibraryProvider>
+        <UIProvider>
+          <UpdateProvider>
             <AppContent />
-          </UIProvider>
-        </GameLibraryProvider>
-      </ConfirmProvider>
-    </UpdateProvider>
+          </UpdateProvider>
+        </UIProvider>
+      </GameLibraryProvider>
+    </ConfirmProvider>
   );
 }
