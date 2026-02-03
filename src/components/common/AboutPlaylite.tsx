@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Github } from '@/icons';
+import { Github } from '@/components/icons';
 
 interface TechLinkProps {
   name: string;

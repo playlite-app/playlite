@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import Profile from '@/components/dialogs/Profile.tsx';
-import { avatarComponents } from '@/components/profile/AvatarIcons.tsx';
+import { avatarComponents } from '@/components/icons/avatars';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 import { MENU_ITEMS } from '@/utils/navigation.ts';

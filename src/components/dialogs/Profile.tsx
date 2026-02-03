@@ -1,25 +1,20 @@
 import { Sparkles, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-import { Button } from '@/components/ui/button.tsx';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import { Label } from '@/components/ui/label.tsx';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs.tsx';
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PresetAvatar, useUserProfile } from '@/hooks/user';
 
-import { avatarComponents, avatarNames } from '../profile/AvatarIcons.tsx';
+import { avatarComponents, avatarNames } from '../icons/avatars';
 
 interface ProfileModalProps {
   isOpen: boolean;
