@@ -18,7 +18,7 @@ interface AddWishlistModalProps {
   onSuccess: () => void;
 }
 
-export default function AddWishlistModal({
+export default function AddWishlist({
   isOpen,
   onClose,
   onSuccess,

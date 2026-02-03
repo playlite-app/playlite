@@ -19,7 +19,7 @@ interface QuickSettingsModalProps {
   onCheckUpdates: () => void;
 }
 
-export function QuickSettingsModal({
+export function QuickSettings({
   open,
   onClose,
   onGenerateReport,

@@ -7,7 +7,7 @@ interface Props {
   previousVersion?: string;
 }
 
-export function MajorUpdateModal({
+export function MajorUpdate({
   open,
   onClose,
   currentVersion = '',

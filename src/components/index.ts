@@ -4,7 +4,7 @@
  * Structure:
  * - layout/         - Header, Sidebar, Navigation
  * - cards/          - Game cards, stat cards
- * - modals/         - Dialogs and forms
+ * - dialogs/         - Dialogs and forms
  * - common/         - Reusable utilities
  * - tooltips/ - Recommendation related
  * - ui/             - Base UI components (shadcn/ui)
@@ -20,7 +20,7 @@ export * from './layout';
 export * from './cards';
 
 // Modals
-export * from './modals';
+export * from './dialogs';
 
 // Common
 export * from './common';

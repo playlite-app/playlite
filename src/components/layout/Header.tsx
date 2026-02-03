@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from 'lucide-react';
 import { useState } from 'react';
 
-import { QuickSettingsModal } from '@/components/modals/QuickSettingsModal';
+import { QuickSettings } from '@/components/dialogs/QuickSettings.tsx';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -150,7 +150,7 @@ export default function Header({
         </Button>
       </div>
 
-      <QuickSettingsModal
+      <QuickSettings
         open={isQuickSettingsOpen}
         onClose={() => setIsQuickSettingsOpen(false)}
         onGenerateReport={generateRecommendationAnalysis}

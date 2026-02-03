@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import AddGame from '@/components/dialogs/AddGame.tsx';
 import { UpdateManager } from '@/components/update/UpdateManager.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
 import { UpdateProvider } from '@/providers/UpdateProvider.tsx';
@@ -10,7 +11,6 @@ import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import AddGameModal from './components/modals/AddGameModal';
 import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import {
   GameLibraryProvider,
@@ -251,7 +251,7 @@ function AppContent() {
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>
       <ErrorBoundary>
-        <AddGameModal
+        <AddGame
           isOpen={isAddModalOpen}
           onClose={closeAddModal}
           onSave={handleSaveGameWrapper}

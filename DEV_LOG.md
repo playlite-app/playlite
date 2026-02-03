@@ -142,7 +142,7 @@ imagens e polir a responsividade do Grid.
 
   - Implementado comandos Rust `update_game` e `delete_game`.
   - Criado fluxo de exclusão com confirmação.
-  - Implementado fluxo de edição reaproveitando o `AddGameModal` com preenchimento automático de dados.
+  - Implementado fluxo de edição reaproveitando o `AddGame` com preenchimento automático de dados.
 
 - **Interface (UI):**
 
@@ -178,7 +178,7 @@ imagens e polir a responsividade do Grid.
 
 #### 💡 Decisões Técnicas
 
-- **Reutilização de Modal:** Decidi usar o mesmo componente `AddGameModal` para criação e edição. Isso evitou duplicar
+- **Reutilização de Modal:** Decidi usar o mesmo componente `AddGame` para criação e edição. Isso evitou duplicar
   código de formulário. O controle é feito passando a prop opcional `gameToEdit`.
 - **Grid Manual vs Auto-fit:** Optei por definir colunas explicitamente (`grid-cols-1` até `grid-cols-5`) em vez de usar
   `minmax` automático do CSS, para ter controle total sobre quantos cards aparecem em cada resolução específica.

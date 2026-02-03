@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { GameEditForm } from '@/components/modals';
+import { GameEditForm } from '@/components/dialogs';
 import { Dialog, DialogContent } from '@/components/ui/dialog.tsx';
 import { Game, GameDetails, GamePlatformLink } from '@/types/game.ts';
 

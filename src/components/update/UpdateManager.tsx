@@ -3,7 +3,7 @@ import { check, Update } from '@tauri-apps/plugin-updater';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { MajorUpdateModal } from '@/components/modals/MajorUpdateModal';
+import { MajorUpdate } from '@/components/dialogs/MajorUpdate.tsx';
 import { useUI } from '@/contexts';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { getAppVersionInfo } from '@/services/updaterService';
@@ -119,7 +119,7 @@ export function UpdateManager() {
   };
 
   return (
-    <MajorUpdateModal
+    <MajorUpdate
       open={isMajorOpen}
       onClose={closeMajorModal}
       currentVersion={currentVersion}

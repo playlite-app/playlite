@@ -29,7 +29,7 @@ interface AddGameModalProps {
   gameToEdit?: Game | null;
 }
 
-export default function AddGameModal({
+export default function AddGame({
   isOpen,
   onClose,
   onSave,

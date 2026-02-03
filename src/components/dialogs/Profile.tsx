@@ -26,7 +26,7 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+export default function Profile({ isOpen, onClose }: ProfileModalProps) {
   const { profile, updateProfile } = useUserProfile();
   const [localName, setLocalName] = useState(profile.name);
   const [selectedAvatar, setSelectedAvatar] = useState<PresetAvatar | null>(

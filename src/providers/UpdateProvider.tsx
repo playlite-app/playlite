@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 
-import { MajorUpdateModal } from '@/components/modals/MajorUpdateModal.tsx';
+import { MajorUpdate } from '@/components/dialogs/MajorUpdate.tsx';
 import { useAppUpdate } from '@/hooks/useAppUpdate.ts';
 
 export function UpdateProvider({ children }: PropsWithChildren) {
@@ -9,7 +9,7 @@ export function UpdateProvider({ children }: PropsWithChildren) {
   return (
     <>
       {children}
-      <MajorUpdateModal open={isMajorOpen} onClose={closeMajorModal} />
+      <MajorUpdate open={isMajorOpen} onClose={closeMajorModal} />
     </>
   );
 }
