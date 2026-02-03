@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import { GameEditForm } from '@/components/modals';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Game, GameDetails, GamePlatformLink } from '@/types/game';
+import { Dialog, DialogContent } from '@/components/ui/dialog.tsx';
+import { Game, GameDetails, GamePlatformLink } from '@/types/game.ts';
 
-import { GameDescription } from './GameDescription';
-import { GameHeader } from './GameHeader';
-import { GameSidebar } from './GameSidebar';
+import { GameDescription } from './GameDescription.tsx';
+import { GameHeader } from './GameHeader.tsx';
+import { GameSidebar } from './GameSidebar.tsx';
 
 interface GameDetailsModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ interface GameDetailsModalProps {
   onRefresh?: () => void;
 }
 
-export default function GameDetailsModal({
+export default function GameWindow({
   game,
   details: initialDetails,
   siblings,

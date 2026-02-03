@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import GameDetailsModal from '@/components/game-details/GameDetailsModal.tsx';
+import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
 import { UpdateManager } from '@/components/update/UpdateManager.tsx';
 import { UpdateProvider } from '@/components/update/UpdateProvider.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
@@ -257,7 +257,7 @@ function AppContent() {
           onSave={handleSaveGameWrapper}
           gameToEdit={gameToEdit}
         />
-        <GameDetailsModal
+        <GameWindow
           isOpen={!!selectedGameId}
           onClose={closeDetails}
           game={selectedGame}

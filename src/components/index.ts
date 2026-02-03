@@ -9,7 +9,7 @@
  * - recommendation/ - Recommendation related
  * - ui/             - Base UI components (shadcn/ui)
  * - wrappers/       - HOCs and wrappers
- * - game-details/   - Game details components
+ * - GameWindow/   - Game details components
  * - profile/        - Profile components
  */
 
@@ -31,5 +31,5 @@ export * from './recommendation';
 // Special folders (keep existing structure)
 // - ui/            (shadcn/ui components)
 // - wrappers/      (ErrorBoundary, etc)
-// - game-details/  (GameDetails subcomponents)
+// - GameWindow/  (GameDetails subcomponents)
 // - profile/       (Profile subcomponents)
