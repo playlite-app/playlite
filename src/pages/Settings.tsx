@@ -23,6 +23,7 @@ import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/toggle-switch.tsx';
 import {
   useRecommendation,
@@ -150,24 +151,16 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           title="Foco da Recomendação"
           description="Ajuste o peso entre seu gosto pessoal (tags/gêneros) e o que é popular na comunidade."
         >
-          <div className="space-y-3 pt-2">
-            <div className="text-muted-foreground flex justify-between text-xs font-medium">
-              <span>Meu Perfil ({100 - weights}%)</span>
-              <span>Comunidade ({weights}%)</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={weights}
-              onChange={e => handleWeightChange(parseInt(e.target.value))}
-              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
-            />
-            <p className="text-muted-foreground text-xs">
-              {weightsDescription(weights)}
-            </p>
-          </div>
+          <Slider
+            min={0}
+            max={100}
+            step={5}
+            value={weights}
+            onChange={handleWeightChange}
+            leftLabel={value => `Meu Perfil (${100 - value}%)`}
+            rightLabel={value => `Comunidade (${value}%)`}
+            description={weightsDescription}
+          />
         </SettingsRow>
 
         {/* Slider: Age Decay */}
@@ -176,24 +169,18 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           title="Fator Nostalgia"
           description="Define o quanto jogos antigos são penalizados nas recomendações."
         >
-          <div className="space-y-3 pt-2">
-            <div className="text-muted-foreground flex justify-between text-xs font-medium">
-              <span>Novidades (90%)</span>
-              <span>Clássicos (100%)</span>
-            </div>
-            <input
-              type="range"
-              min="90"
-              max="100"
-              step="1"
-              value={decay}
-              onChange={e => handleDecayChange(parseInt(e.target.value))}
-              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
-            />
-            <p className="text-muted-foreground text-xs">
-              Valor atual: {decay}%. {decayDescription(decay)}
-            </p>
-          </div>
+          <Slider
+            min={90}
+            max={100}
+            step={1}
+            value={decay}
+            onChange={handleDecayChange}
+            leftLabel={() => 'Novidades (90%)'}
+            rightLabel={() => 'Clássicos (100%)'}
+            description={value =>
+              `Valor atual: ${value}%. ${decayDescription(value)}`
+            }
+          />
         </SettingsRow>
 
         <SettingsRow
