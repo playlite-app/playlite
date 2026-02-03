@@ -19,7 +19,7 @@ import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero.tsx';
-import { RecommendationTooltip } from '@/components/recommendation';
+import { Recommendation } from '@/components/tooltips';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator.tsx';
 import { useHeroCarousel, useHome } from '@/hooks';
@@ -252,9 +252,9 @@ export default function Home(props: HomeProps) {
                   subtitle={game.genres?.split(',')[0]}
                   onClick={() => props.onGameClick(game)}
                   badge={
-                    <RecommendationTooltip reason={game.reason}>
+                    <Recommendation reason={game.reason}>
                       <span>Recomendado</span>
-                    </RecommendationTooltip>
+                    </Recommendation>
                   }
                   actions={
                     <ActionButton
@@ -300,9 +300,9 @@ export default function Home(props: HomeProps) {
                   subtitle={game.genres?.split(',')[0]}
                   onClick={() => props.onGameClick(game)}
                   badge={
-                    <RecommendationTooltip reason={game.reason}>
+                    <Recommendation reason={game.reason}>
                       <span>Comunidade</span>
-                    </RecommendationTooltip>
+                    </Recommendation>
                   }
                   actions={
                     <ActionButton

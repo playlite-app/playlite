@@ -2,11 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
 import { UpdateManager } from '@/components/update/UpdateManager.tsx';
-import { UpdateProvider } from '@/components/update/UpdateProvider.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
+import { UpdateProvider } from '@/providers/UpdateProvider.tsx';
 import { Game } from '@/types';
+import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';

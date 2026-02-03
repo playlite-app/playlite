@@ -1,4 +1,4 @@
-import { Dna, Gamepad2, Sparkles, Tag, Trophy, Users } from 'lucide-react';
+import { Sparkles, Trophy, Zap } from 'lucide-react';
 import { ReactNode } from 'react';
 
 import {
@@ -7,96 +7,58 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { RecommendationReason } from '@/types';
 
-interface RecommendationTooltipProps {
+interface AffinityTooltipProps {
   children: ReactNode;
-  reason?: RecommendationReason;
+  badge: 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ';
   className?: string;
 }
 
-export function RecommendationTooltip({
-  children,
-  reason,
-}: RecommendationTooltipProps) {
-  if (!reason) {
-    return <>{children}</>;
-  }
-
-  const getExplanation = (type: string) => {
-    switch (type) {
-      case 'community':
-        return 'Jogadores com gostos parecidos com o seu costumam gostar deste jogo.';
-      case 'series':
-        return 'Você já demonstrou interesse por outros jogos desta série.';
-      case 'genre':
-        return 'Este gênero aparece com frequência nos jogos que você mais joga.';
-      case 'tag':
-        return 'Elementos específicos deste jogo combinam com seu estilo.';
-      case 'hybrid':
-        return 'Combina afinidade do seu perfil com a popularidade na comunidade.';
-      case 'general':
-        return 'Combina com seu perfil geral de jogador.';
-      default:
-        return 'Recomendado com base no seu perfil.';
-    }
-  };
-
-  const getReasonMeta = (type: string) => {
-    switch (type) {
-      case 'community':
-        return {
-          icon: Users,
-          label: 'Comunidade',
-          color: 'text-primary',
-          bg: 'bg-purple-600/10',
-        };
-      case 'series':
+export function Affinity({ children, badge }: AffinityTooltipProps) {
+  const getBadgeMeta = (badgeType: string) => {
+    switch (badgeType) {
+      case 'SÉRIE FAVORITA':
         return {
           icon: Trophy,
           label: 'Série Favorita',
           color: 'text-primary',
           bg: 'bg-purple-600/10',
+          explanation:
+            'Você já demonstrou interesse por outros jogos desta série.',
+          description: 'Baseado no seu histórico de jogos da mesma franquia',
         };
-      case 'genre':
+      case 'TOP PICK':
         return {
-          icon: Gamepad2,
-          label: 'Gênero',
+          icon: Zap,
+          label: 'Top Pick',
           color: 'text-primary',
           bg: 'bg-purple-600/10',
+          explanation: 'Este jogo combina perfeitamente com suas preferências.',
+          description:
+            'Alta afinidade com gêneros, tags e estilo que você mais joga',
         };
-      case 'tag':
-        return {
-          icon: Tag,
-          label: 'Tag',
-          color: 'text-primary',
-          bg: 'bg-purple-600/10',
-        };
-      case 'hybrid':
+      case 'PARA VOCÊ':
         return {
           icon: Sparkles,
-          label: 'Afinidade + Comunidade',
+          label: 'Para Você',
           color: 'text-primary',
           bg: 'bg-purple-600/10',
-        };
-      case 'general':
-        return {
-          icon: Dna,
-          label: 'Perfil',
-          color: 'text-primary',
-          bg: 'bg-purple-600/10',
+          explanation: 'Este jogo tem boa compatibilidade com seu perfil.',
+          description: 'Elementos do jogo combinam com seu estilo de jogar',
         };
       default:
         return {
           icon: Sparkles,
-          label: 'Recomendação',
+          label: 'Recomendado',
           color: 'text-primary',
           bg: 'bg-purple-600/10',
+          explanation: 'Recomendado com base no seu perfil.',
+          description: 'Selecionado para você',
         };
     }
   };
 
-  const meta = getReasonMeta(reason.type_id);
+  const meta = getBadgeMeta(badge);
   const Icon = meta.icon;
 
   return (
@@ -131,10 +93,10 @@ export function RecommendationTooltip({
           {/* Corpo do Texto */}
           <div className="p-3">
             <p className="text-foreground mb-1 text-sm leading-snug font-semibold">
-              {reason.label}
+              {meta.explanation}
             </p>
             <p className="text-muted-foreground text-xs leading-relaxed whitespace-nowrap">
-              {getExplanation(reason.type_id)}
+              {meta.description}
             </p>
           </div>
         </TooltipContent>

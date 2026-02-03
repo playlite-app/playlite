@@ -12,11 +12,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { AffinityTooltip, ErrorState } from '@/components';
+import { Affinity, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
-import Hero from '@/components/common/Hero.tsx';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
+import Hero from '@/components/common/Hero.tsx';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -384,13 +384,13 @@ export default function Trending(props: TrendingProps) {
                 subtitle={genres.slice(0, 2).join(', ')}
                 badge={
                   badge ? (
-                    <AffinityTooltip
+                    <Affinity
                       badge={
                         badge as 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ'
                       }
                     >
                       <span>{badge}</span>
-                    </AffinityTooltip>
+                    </Affinity>
                   ) : null
                 }
                 actions={
@@ -447,13 +447,13 @@ export default function Trending(props: TrendingProps) {
                     }
                     badge={
                       badge ? (
-                        <AffinityTooltip
+                        <Affinity
                           badge={
                             badge as 'SÉRIE FAVORITA' | 'TOP PICK' | 'PARA VOCÊ'
                           }
                         >
                           <span>{badge}</span>
-                        </AffinityTooltip>
+                        </Affinity>
                       ) : null
                     }
                     actions={

@@ -201,7 +201,7 @@ def generate_summary(interactions, unique_users, unique_games):
             "mean": "represented in interaction_value",
             "note": "Original hours were normalized to [0,1] range"
         },
-        "note": "This interaction matrix represents Steam dataset only. User favorites and ratings from Playlite will be applied as weights during recommendation aggregation."
+        "note": "This interaction matrix represents Steam dataset only. User favorites and ratings from Playlite will be applied as weights during tooltips aggregation."
     }
 
     # Salvar

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { RecommendationTooltip } from '@/components';
+import { Recommendation } from '@/components';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { Button } from '@/components/ui/button';
 import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
@@ -214,9 +214,9 @@ export default function Playlist({
                   coverUrl={game.coverUrl}
                   className="text-xs"
                   badge={
-                    <RecommendationTooltip reason={game.reason}>
+                    <Recommendation reason={game.reason}>
                       <span>{traduzirType(game.reason?.type_id)}</span>
-                    </RecommendationTooltip>
+                    </Recommendation>
                   }
                   // Ações: Adicionar e Feedback Negativo
                   actions={

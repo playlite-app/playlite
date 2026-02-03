@@ -6,7 +6,7 @@
  * - cards/          - Game cards, stat cards
  * - modals/         - Dialogs and forms
  * - common/         - Reusable utilities
- * - recommendation/ - Recommendation related
+ * - tooltips/ - Recommendation related
  * - ui/             - Base UI components (shadcn/ui)
  * - wrappers/       - HOCs and wrappers
  * - GameWindow/   - Game details components
@@ -26,7 +26,7 @@ export * from './modals';
 export * from './common';
 
 // Recommendation
-export * from './recommendation';
+export * from './tooltips';
 
 // Special folders (keep existing structure)
 // - ui/            (shadcn/ui components)

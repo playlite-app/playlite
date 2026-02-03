@@ -4,7 +4,7 @@
  * Estrutura:
  * - analysis/       - Análise e relatórios
  * - library/        - Gerenciamento de biblioteca
- * - recommendation/ - Sistema de recomendação
+ * - tooltips/ - Sistema de recomendação
  * - trending/       - Jogos em alta e lançamentos
  * - wishlist/       - Lista de desejos
  * - ui/             - Componentes de interface

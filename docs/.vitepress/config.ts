@@ -27,7 +27,7 @@ export default defineConfig({
           { text: 'Arquitetura', link: '/dev/architecture' },
           {
             text: 'Sistema de Recomendação',
-            link: '/dev/recommendation-system',
+            link: '/dev/tooltips-system',
           },
           {
             text: 'Filtragem Colaborativa Offline',
@@ -101,7 +101,7 @@ export default defineConfig({
             { text: 'Arquitetura', link: '/dev/architecture' },
             {
               text: 'Sistema de Recomendação',
-              link: '/dev/recommendation-system',
+              link: '/dev/tooltips-system',
             },
             {
               text: 'Filtragem Colaborativa Offline',
