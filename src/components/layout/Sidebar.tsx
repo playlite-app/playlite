@@ -5,7 +5,7 @@ import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 import { MENU_ITEMS } from '@/utils/navigation.ts';
 
-import ProfileModal from '../profile/ProfileModal';
+import ProfileModal from '../modals/ProfileModal.tsx';
 
 interface SidebarProps {
   activeSection: string;

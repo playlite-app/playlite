@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       originalMessage.includes('Rendered fewer hooks') ||
       originalMessage.includes('Rendered more hooks')
     ) {
-      return 'Erro de renderização detectado. A ordem dos hooks React está inconsistente. Recarregue a página para corrigir.';
+      return ERROR_MESSAGES.RENDER_HOOKS_ERROR;
     }
 
     if (originalMessage.includes('is not a function')) {
