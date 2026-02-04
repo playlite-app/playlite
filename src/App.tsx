@@ -2,21 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import { ErrorBoundary } from '@/components';
 import AddGame from '@/dialogs/AddGame.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
 import { UpdateProvider } from '@/providers/UpdateProvider.tsx';
 import { Game } from '@/types';
-import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
-
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
-import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
-import {
-  GameLibraryProvider,
-  UIProvider,
-  useGameLibrary,
-  useUI,
-} from './contexts';
 import Favorites from '@/views/Favorites';
 import Home from '@/views/Home';
 import Libraries from '@/views/Libraries.tsx';
@@ -24,6 +14,16 @@ import Playlist from '@/views/Playlist';
 import Settings from '@/views/Settings';
 import Trending from '@/views/Trending';
 import Wishlist from '@/views/Wishlist';
+import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
+
+import Header from './components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+import {
+  GameLibraryProvider,
+  UIProvider,
+  useGameLibrary,
+  useUI,
+} from './contexts';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
 
 function AppContent() {
