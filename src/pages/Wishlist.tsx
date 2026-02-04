@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
-import AddWishlist from '@/components/dialogs/AddWishlist.tsx';
+import AddWishlist from '@/dialogs/AddWishlist.tsx';
 import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Button } from '@/ui/button';

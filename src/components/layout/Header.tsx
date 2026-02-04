@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from 'lucide-react';
 import { useState } from 'react';
 
-import { QuickSettings } from '@/components/dialogs/QuickSettings.tsx';
+import { QuickSettings } from '@/dialogs/QuickSettings.tsx';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';

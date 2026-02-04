@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 
-import { MajorUpdate } from '@/components/dialogs/MajorUpdate';
+import { MajorUpdate } from '@/dialogs/MajorUpdate';
 import { useUpdateChecker } from '@/hooks/update';
 import { useAppUpdate } from '@/hooks/update/useAppUpdate.ts';
 

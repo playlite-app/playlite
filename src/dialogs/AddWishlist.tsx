@@ -3,9 +3,14 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { SearchResult, wishlistService } from '@/services/wishlistService.ts';
-import { Button } from '@/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
-import { Input } from '@/ui/input';
+import { Button } from '@/ui/button.tsx';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/ui/dialog.tsx';
+import { Input } from '@/ui/input.tsx';
 
 interface AddWishlistModalProps {
   isOpen: boolean;
