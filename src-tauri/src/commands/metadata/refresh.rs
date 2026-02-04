@@ -65,7 +65,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
     let steam_games: Vec<(u32, String)> = {
         let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
 
-        conn.prepare("SELECT platform_id, name FROM games WHERE platform = 'Steam'")
+        conn.prepare("SELECT platform_game_id, name FROM games WHERE platform = 'Steam'")
             .and_then(|mut stmt| {
                 stmt.query_map([], |row| {
                     let id_str: String = row.get(0)?;
@@ -132,7 +132,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
 
                         if let Ok(conn) = state.library_db.lock() {
                             let _ = conn.execute(
-                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_id = ?2",
+                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_game_id = ?2",
                                 params![percent_positive, app_id_str],
                             );
                         }

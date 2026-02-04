@@ -153,7 +153,7 @@ async fn enrich_game_metadata(
     game_id: &str,
     name: &str,
     platform: &str,
-    platform_id: Option<String>,
+    platform_game_id: Option<String>,
     cache_conn: &rusqlite::Connection,
 ) -> (ProcessedGameDetails, Vec<String>) {
     let series_name = series::infer_series(name);
@@ -187,7 +187,7 @@ async fn enrich_game_metadata(
 
     // 1. Estratégia de Steam ID
     let mut target_steam_id = if platform.to_lowercase() == "steam" {
-        platform_id
+        platform_game_id
     } else {
         None
     };
@@ -377,7 +377,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 };
                 let mut stmt = conn
                     .prepare(
-                        "SELECT g.id, g.name, g.platform, g.platform_id
+                        "SELECT g.id, g.name, g.platform, g.platform_game_id
                          FROM games g
                          LEFT JOIN game_details gd ON g.id = gd.game_id
                          WHERE gd.game_id IS NULL
@@ -400,7 +400,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
             let total_in_batch = games_to_update.len();
 
             // 2. Processa batch
-            for (index, (game_id, name, platform, platform_id)) in
+            for (index, (game_id, name, platform, platform_game_id)) in
                 games_to_update.into_iter().enumerate()
             {
                 let _ = app_handle.emit(
@@ -429,7 +429,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                                 &game_id,
                                 &name,
                                 &platform,
-                                platform_id.clone(),
+                                platform_game_id.clone(),
                                 &cache_conn,
                             )
                             .await

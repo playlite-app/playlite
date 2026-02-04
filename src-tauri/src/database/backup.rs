@@ -9,7 +9,7 @@
 use crate::database;
 use crate::database::{current_schema_version, AppState, SCHEMA_VERSION};
 use crate::errors::AppError;
-use crate::models::{Game, GameDetails, WishlistGame};
+use crate::models::{Game, GameDetails, Platform, WishlistGame};
 use chrono::Utc;
 use rusqlite::params;
 use std::fs;
@@ -190,8 +190,8 @@ pub async fn import_database(
 
     // Usa prepared statements para melhor desempenho
     let mut game_stmt = conn.prepare(
-        "INSERT OR REPLACE INTO games (id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)"
+        "INSERT OR REPLACE INTO games (id, name, cover_url, platform, platform_game_id, installed, import_confidence, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)"
     )?;
 
     // Prepared Statement para Details (ATUALIZADO COM NOVOS CAMPOS)
@@ -215,8 +215,10 @@ pub async fn import_database(
             game.id,
             game.name,
             game.cover_url,
-            game.platform,
-            game.platform_id,
+            game.platform.to_string(),
+            game.platform_game_id,
+            game.installed,
+            game.import_confidence.as_ref().map(|ic| ic.to_string()),
             game.install_path,
             game.executable_path,
             game.launch_args,
@@ -300,7 +302,7 @@ pub async fn import_database(
 /// Retorna um vetor de `Game` ou um erro AppError.
 fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, AppError> {
     let mut stmt = conn.prepare(
-        "SELECT id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at FROM games"
+        "SELECT id, name, cover_url, platform, platform_game_id, installed, import_confidence, install_path, executable_path, launch_args, user_rating, favorite, status, playtime, last_played, added_at FROM games"
     )?;
 
     let game_iter = stmt.query_map([], |row| {
@@ -310,17 +312,21 @@ fn fetch_games(conn: &rusqlite::Connection) -> Result<Vec<Game>, AppError> {
             cover_url: row.get(2)?,
             genres: None,
             developer: None,
-            platform: row.get(3)?,
-            platform_id: row.get(4)?,
-            install_path: row.get(5)?,
-            executable_path: row.get(6)?,
-            launch_args: row.get(7)?,
-            user_rating: row.get(8)?,
-            favorite: row.get(9)?,
-            status: row.get(10)?,
-            playtime: row.get(11)?,
-            last_played: row.get(12)?,
-            added_at: row.get(13)?,
+            platform: row.get::<_, String>(3)?.parse().unwrap_or(Platform::Outra),
+            platform_game_id: row.get(4)?,
+            installed: row.get(5)?,
+            import_confidence: row
+                .get::<_, Option<String>>(6)?
+                .and_then(|s| s.parse().ok()),
+            install_path: row.get(7)?,
+            executable_path: row.get(8)?,
+            launch_args: row.get(9)?,
+            user_rating: row.get(10)?,
+            favorite: row.get(11)?,
+            status: row.get(12)?,
+            playtime: row.get(13)?,
+            last_played: row.get(14)?,
+            added_at: row.get(15)?,
             is_adult: false,
         })
     })?;

@@ -106,6 +106,16 @@ export default function AddGame({
             />
           </div>
 
+          <div className="grid gap-2">
+            <Label htmlFor="cover">Capa (URL)</Label>
+            <Input
+              id="cover"
+              value={formData.coverUrl}
+              onChange={e => handleChange('coverUrl', e.target.value)}
+              placeholder="https://..."
+            />
+          </div>
+
           <div className="grid grid-cols-3 gap-2">
             <div className="grid gap-2">
               <Label>Plataforma</Label>
@@ -113,7 +123,7 @@ export default function AddGame({
                 value={formData.platform}
                 onValueChange={val => handleChange('platform', val)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,20 +135,46 @@ export default function AddGame({
               </Select>
             </div>
 
-            <div className="col-span-2 grid gap-2">
-              <Label htmlFor="cover">Capa (URL)</Label>
-              <Input
-                id="cover"
-                value={formData.coverUrl}
-                onChange={e => handleChange('coverUrl', e.target.value)}
-                placeholder="https://..."
-              />
+            <div className="grid gap-2">
+              <Label>Instalado</Label>
+              <div className="border-input bg-background flex w-full items-center gap-2 rounded-md border px-3 py-2">
+                <input
+                  type="checkbox"
+                  id="installed"
+                  checked={formData.installed}
+                  onChange={e => handleChange('installed', e.target.checked)}
+                  className="h-4 w-4 cursor-pointer"
+                />
+                <label htmlFor="installed" className="cursor-pointer text-sm">
+                  {formData.installed ? 'Sim' : 'Não'}
+                </label>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Confiança da Importação</Label>
+              <Select
+                value={formData.importConfidence || 'none'}
+                onValueChange={val =>
+                  handleChange('importConfidence', val === 'none' ? '' : val)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Nenhuma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  <SelectItem value="High">Alta</SelectItem>
+                  <SelectItem value="Medium">Média</SelectItem>
+                  <SelectItem value="Low">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <Separator className="my-2" />
 
-          {/* === EXECUÇÃO (V2.0) === */}
+          {/* === EXECUÇÃO === */}
           <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
             <Gamepad2 size={16} /> Configuração de Lançamento
           </h3>
@@ -198,8 +234,8 @@ export default function AddGame({
           <Separator className="my-2" />
 
           {/* === AVALIAÇÃO === */}
-          <div className="grid grid-cols-[1fr_auto_auto] items-end gap-4">
-            <div className="grid gap-1">
+          <div className="grid grid-cols-3 items-end gap-4">
+            <div className="grid gap-2">
               <Label htmlFor="playtime">Tempo Jogado (Horas)</Label>
               <Input
                 id="playtime"
@@ -227,7 +263,7 @@ export default function AddGame({
                 value={formData.status}
                 onValueChange={val => handleChange('status', val)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>

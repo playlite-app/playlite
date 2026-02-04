@@ -58,7 +58,7 @@ pub async fn import_steam_library(
     for game in steam_games {
         let exists: bool = conn
             .query_row(
-                "SELECT EXISTS(SELECT 1 FROM games WHERE platform = 'Steam' AND platform_id = ?1)",
+                "SELECT EXISTS(SELECT 1 FROM games WHERE platform = 'Steam' AND platform_game_id = ?1)",
                 params![game.appid],
                 |row| row.get(0),
             )
@@ -88,7 +88,7 @@ pub async fn import_steam_library(
 
             conn.execute(
                 "INSERT INTO games (
-                    id, name, cover_url, platform, platform_id,
+                    id, name, cover_url, platform, platform_game_id,
                     status, playtime, last_played, added_at, favorite, user_rating
                 ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, ?8, 0, NULL)",
                 params![
@@ -110,7 +110,7 @@ pub async fn import_steam_library(
                     playtime = ?1,
                     status = ?2,
                     last_played = COALESCE(?3, last_played)
-                 WHERE platform = 'Steam' AND platform_id = ?4",
+                 WHERE platform = 'Steam' AND platform_game_id = ?4",
                 params![game.playtime_forever, status, last_played_iso, game.appid],
             )
             .ok();

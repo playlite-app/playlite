@@ -11,7 +11,6 @@ pub(crate) const GEMINI_API_URL: &str =
 
 // === VALORES PADRÕES E LIMITES ===
 pub const MAX_NAME_LENGTH: usize = 200;
-pub const MAX_PLATFORM_LENGTH: usize = 100;
 pub const MAX_URL_LENGTH: usize = 500;
 pub const MAX_PLAYTIME: i32 = 1_000_000;
 pub const MIN_RATING: i32 = 1;

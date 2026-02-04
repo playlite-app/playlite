@@ -57,7 +57,10 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
       id: ensureId,
       name: data.name ?? 'Untitled',
       platform: data.platform ?? 'Manual',
+      platformGameId: data.platformGameId ?? '',
       coverUrl: data.coverUrl ?? null,
+      installed: data.installed ?? false,
+      importConfidence: data.importConfidence ?? null,
       playtime: data.playtime ?? 0,
       userRating: data.userRating ?? null,
       status:
@@ -70,6 +73,9 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
       installPath: data.installPath ?? null,
       executablePath: data.executablePath ?? null,
       launchArgs: data.launchArgs ?? null,
+      favorite: data.favorite ?? false,
+      isAdult: data.isAdult ?? false,
+      addedAt: data.addedAt ?? new Date().toISOString(),
     };
   };
 

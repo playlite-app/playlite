@@ -36,7 +36,7 @@ export function useLibraryFilter({
       game =>
         game.name.toLowerCase().includes(term) ||
         (game.genres && game.genres.toLowerCase().includes(term)) ||
-        (game.platform && game.platform.toLowerCase().includes(term))
+        (game.platform && game.platform.includes(term))
     );
   }, [games, hideAdult, searchTerm]);
 }

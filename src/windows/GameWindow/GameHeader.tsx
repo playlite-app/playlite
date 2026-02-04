@@ -80,6 +80,12 @@ export function GameHeader({
               {game.platform || 'PC'}
             </Badge>
 
+            {game.installed && (
+              <Badge className="border-green-500/30 bg-green-500/20 px-3 py-1 text-sm font-semibold text-green-300 backdrop-blur-md">
+                ✓ Instalado
+              </Badge>
+            )}
+
             {game.userRating && (
               <div className="flex items-center gap-1.5 rounded-full border border-yellow-500/30 bg-black/50 px-3 py-1 text-sm font-bold text-yellow-400 backdrop-blur-md">
                 <Star size={12} className="fill-yellow-400 text-yellow-400" />
