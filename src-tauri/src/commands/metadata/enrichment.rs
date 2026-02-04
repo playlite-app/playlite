@@ -14,7 +14,8 @@ use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::{cache, playtime, steam};
+use crate::services::integration::{steam_api, steamspy};
+use crate::services::{cache, playtime};
 use crate::utils::series;
 use rusqlite::params;
 use std::collections::{HashMap, HashSet};
@@ -81,16 +82,16 @@ fn extract_steam_id_from_url(url: &str) -> Option<String> {
 async fn fetch_steam_store_data(
     steam_id: &str,
     cache_conn: &rusqlite::Connection,
-) -> Option<steam::SteamStoreData> {
+) -> Option<steam_api::SteamStoreData> {
     let cache_key = format!("store_{}", steam_id);
 
     if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(data) = serde_json::from_str::<steam::SteamStoreData>(&cached) {
+        if let Ok(data) = serde_json::from_str::<steam_api::SteamStoreData>(&cached) {
             return Some(data);
         }
     }
 
-    match steam::get_app_details(steam_id).await {
+    match steam_api::get_app_details(steam_id).await {
         Ok(Some(data)) => {
             if let Ok(json) = serde_json::to_string(&data) {
                 let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
@@ -105,16 +106,16 @@ async fn fetch_steam_store_data(
 async fn fetch_steam_reviews(
     steam_id: &str,
     cache_conn: &rusqlite::Connection,
-) -> Option<steam::SteamReviewSummary> {
+) -> Option<steam_api::SteamReviewSummary> {
     let cache_key = format!("reviews_{}", steam_id);
 
     if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(reviews) = serde_json::from_str::<steam::SteamReviewSummary>(&cached) {
+        if let Ok(reviews) = serde_json::from_str::<steam_api::SteamReviewSummary>(&cached) {
             return Some(reviews);
         }
     }
 
-    match steam::get_app_reviews(steam_id).await {
+    match steam_api::get_app_reviews(steam_id).await {
         Ok(Some(reviews)) => {
             if let Ok(json) = serde_json::to_string(&reviews) {
                 let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
@@ -135,7 +136,7 @@ async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection)
         }
     }
 
-    match steam::get_median_playtime(steam_id).await {
+    match steamspy::get_median_playtime(steam_id).await {
         Ok(Some(hours)) => {
             let _ =
                 cache::save_cached_api_data(cache_conn, "steam", &cache_key, &hours.to_string());
@@ -253,7 +254,7 @@ async fn enrich_game_metadata(
 
         // A. Store data
         if let Some(store_data) = fetch_steam_store_data(steam_id, cache_conn).await {
-            let (detected_adult, flags) = steam::detect_adult_content(&store_data);
+            let (detected_adult, flags) = steam_api::detect_adult_content(&store_data);
             details.is_adult = detected_adult;
             if !flags.is_empty() {
                 details.adult_tags = serde_json::to_string(&flags).ok();

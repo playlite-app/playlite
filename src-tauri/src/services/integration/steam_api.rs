@@ -1,12 +1,9 @@
 //! Módulo de integração com as APIs Steam.
 //!
-//! Unifica funcionalidades da API de Usuário (autenticada) para importar biblioteca
+//! Unifica funcionalidades da API de Usuário (autenticada) para obter conquistas
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
-use crate::constants::{
-    REVIEW_API_URL, STEAMSPY_API_URL, STEAM_REVIEWS_TIMEOUT_SECS, STEAM_STORE_API_URL,
-    STEAM_STORE_TIMEOUT_SECS, USER_AGENT_STEAM,
-};
+use crate::constants::{REVIEW_API_URL, STEAM_STORE_API_URL, STEAM_STORE_TIMEOUT_SECS};
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -66,7 +63,15 @@ struct RecentGamesData {
     games: Option<Vec<SteamGame>>,
 }
 
-/// Lista todos os jogos da biblioteca de um usuário Steam.
+/// Lista todos os jogos da biblioteca de um usuário Steam via API.
+///
+/// Obtém os jogos do usuário na Steam, com informações de tempo jogado e último horário de jogo.
+///
+/// **Parâmetros:**
+/// - `api_key`: Chave da API Steam (pública)
+/// - `steam_id`: ID do usuário Steam
+///
+/// **Retorno:** Vetor de SteamGame ou erro de rede
 pub async fn list_steam_games(api_key: &str, steam_id: &str) -> Result<Vec<SteamGame>, String> {
     let url = format!(
         "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&steamid={}&format=json&include_appinfo=true&include_played_free_games=true",
@@ -418,43 +423,4 @@ pub fn detect_adult_content(data: &SteamStoreData) -> (bool, Vec<String>) {
     flags.dedup();
 
     (is_explicit, flags)
-}
-
-// === STEAMSPY (API não oficial) - ESTATÍSTICAS DE JOGO (Pública) ===
-
-#[derive(Debug, Deserialize)]
-struct SteamSpyResponse {
-    median_forever: u32,
-}
-
-/// Busca tempo médio de jogo no SteamSpy (em minutos)
-pub async fn get_median_playtime(app_id: &str) -> Result<Option<u32>, String> {
-    let url = format!("{}?request=appdetails&appid={}", STEAMSPY_API_URL, app_id);
-
-    let response = HTTP_CLIENT
-        .get(&url)
-        .header("User-Agent", USER_AGENT_STEAM)
-        .timeout(Duration::from_secs(STEAM_REVIEWS_TIMEOUT_SECS))
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if !response.status().is_success() {
-        return Ok(None);
-    }
-
-    // Tenta parsear. Se falhar (ex: jogo não trackeado), retorna None sem erro crítico
-    match response.json::<SteamSpyResponse>().await {
-        Ok(data) => {
-            // SteamSpy retorna em minutos, converter para horas
-            let median_hours = data.median_forever / 60;
-            // Filtra zeros (jogos sem dados ou nunca jogados)
-            if median_hours > 0 {
-                Ok(Some(median_hours))
-            } else {
-                Ok(None)
-            }
-        }
-        Err(_) => Ok(None),
-    }
 }

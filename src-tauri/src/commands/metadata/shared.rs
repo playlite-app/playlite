@@ -2,7 +2,8 @@
 //!
 //! Contém estruturas e funções reutilizadas por enrichment e covers.
 
-use crate::services::{cache, rawg};
+use crate::services::cache;
+use crate::services::integration::rawg;
 
 // === ESTRUTURAS COMPARTILHADAS ===
 

@@ -19,6 +19,7 @@ pub mod models;
 mod secrets;
 mod security;
 pub mod services;
+pub mod sources;
 pub mod utils;
 
 use crate::initialization::initialize_app;

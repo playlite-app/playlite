@@ -5,7 +5,8 @@
 use crate::constants::{BACKGROUND_TASK_INTERVAL_SECS, STARTUP_DELAY_SECS};
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::{cache, itad, steam};
+use crate::services::cache;
+use crate::services::integration::{itad, steam_api};
 use rusqlite::params;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -102,7 +103,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
         if should_update {
             let app_id_str = app_id.to_string();
             // C. Busca na API (Só se expirou)
-            match steam::get_app_reviews(&app_id_str).await {
+            match steam_api::get_app_reviews(&app_id_str).await {
                 Ok(Some(summary)) => {
                     // D. Sucesso? Atualiza Library DB e Metadata Cache
                     {

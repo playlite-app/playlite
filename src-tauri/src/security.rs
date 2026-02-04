@@ -1,7 +1,7 @@
 //! Módulo de segurança centralizado.
 //!
 //! Integra as funcionalidades de:
-//! - Derivação de chave mestre (secrets.rs)
+//! - Derivação de chave mestra (secrets.rs)
 //! - Criptografia/descriptografia (crypto.rs)
 //!
 //! Fornece uma API simplificada para o resto da aplicação.
@@ -13,22 +13,22 @@ use tauri::AppHandle;
 
 /// Inicializa o sistema de segurança.
 ///
-/// Deve ser chamado durante o setup da aplicação para garantir que a chave mestre
+/// Deve ser chamado durante o setup da aplicação para garantir que a chave mestra
 /// seja derivada e armazenada na memória.
 ///
 /// **Erros:**
 /// - Se falhar ao obter o Machine UID
-/// - Se falhar ao derivar a chave mestre
+/// - Se falhar ao derivar a chave mestra
 pub fn init_security(app: &AppHandle) -> Result<(), String> {
     secrets::master_key(app)?;
-    // tracing::info!("Chave mestre derivada e armazenada com sucesso");
+    // tracing::info!("Chave mestra derivada e armazenada com sucesso");
     Ok(())
 }
 
-/// Encripta um valor de texto usando a chave mestre derivada.
+/// Encripta um valor de texto usando a chave mestra derivada.
 ///
 /// **Parâmetros:**
-/// - `app`: Handle da aplicação para acessar a chave mestre
+/// - `app`: Handle da aplicação para acessar a chave mestra
 /// - `plaintext`: String em texto claro a ser encriptada
 ///
 /// **Retorna:**
@@ -40,10 +40,10 @@ pub fn encrypt(app: &AppHandle, plaintext: &str) -> Result<String, AppError> {
     Ok(general_purpose::STANDARD.encode(&encrypted_bytes))
 }
 
-/// Descriptografa um valor encriptado usando a chave mestre derivada.
+/// Descriptografa um valor encriptado usando a chave mestra derivada.
 ///
 /// **Parâmetros:**
-/// - `app`: Handle da aplicação para acessar a chave mestre
+/// - `app`: Handle da aplicação para acessar a chave mestra
 /// - `encrypted`: String em Base64 do payload encriptado
 ///
 /// **Retorna:**

@@ -4,7 +4,7 @@
 
 use crate::database;
 use crate::errors::AppError;
-use crate::services::steam;
+use crate::services::integration::steam_api;
 use serde::Serialize;
 use tauri::AppHandle;
 
@@ -31,14 +31,14 @@ pub async fn get_recent_achievements(
     }
 
     // 2. Busca jogos recentes (últimas 2 semanas)
-    let recent_games = steam::get_recently_played_games(&api_key, &steam_id).await?;
+    let recent_games = steam_api::get_recently_played_games(&api_key, &steam_id).await?;
 
     let mut all_achievements = Vec::new();
 
     // 3. Para cada jogo recente, busca as conquistas
     for game in recent_games {
         if let Ok(achievements) =
-            steam::get_player_achievements(&api_key, &steam_id, game.appid).await
+            steam_api::get_player_achievements(&api_key, &steam_id, game.appid).await
         {
             for ach in achievements {
                 // Filtra apenas as desbloqueadas (achieved == 1)
