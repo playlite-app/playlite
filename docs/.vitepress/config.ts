@@ -17,7 +17,7 @@ export default defineConfig({
           { text: 'Funcionalidades', link: '/guide/features' },
           { text: 'Ajuda e FAQ', link: '/guide/help' },
           { text: 'Sobre o Playlite', link: '/guide/about' },
-          { text: 'Telas do app', link: '/guide/pages/home' },
+          { text: 'Telas do app', link: '/guide/views/home' },
         ],
       },
       {
@@ -84,11 +84,11 @@ export default defineConfig({
         {
           text: 'Interface do App',
           items: [
-            { text: 'Home e Trending', link: '/guide/pages/home' },
-            { text: 'Sua Biblioteca', link: '/guide/pages/libraries' },
-            { text: 'Detalhes do Jogo', link: '/guide/pages/details' },
-            { text: 'Listas (Playlist/Wishlist)', link: '/guide/pages/lists' },
-            { text: 'Configurações', link: '/guide/pages/settings' },
+            { text: 'Home e Trending', link: '/guide/views/home' },
+            { text: 'Sua Biblioteca', link: '/guide/views/libraries' },
+            { text: 'Detalhes do Jogo', link: '/guide/views/details' },
+            { text: 'Listas (Playlist/Wishlist)', link: '/guide/views/lists' },
+            { text: 'Configurações', link: '/guide/views/settings' },
           ],
         },
       ],

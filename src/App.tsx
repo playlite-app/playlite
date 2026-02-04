@@ -17,13 +17,13 @@ import {
   useGameLibrary,
   useUI,
 } from './contexts';
-import Favorites from './pages/Favorites';
-import Home from './pages/Home';
-import Libraries from './pages/Libraries.tsx';
-import Playlist from './pages/Playlist';
-import Settings from './pages/Settings';
-import Trending from './pages/Trending';
-import Wishlist from './pages/Wishlist';
+import Favorites from '@/views/Favorites';
+import Home from '@/views/Home';
+import Libraries from '@/views/Libraries.tsx';
+import Playlist from '@/views/Playlist';
+import Settings from '@/views/Settings';
+import Trending from '@/views/Trending';
+import Wishlist from '@/views/Wishlist';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
 
 function AppContent() {
