@@ -5,5 +5,6 @@ export { ActionButton } from './ActionButton';
 export { CachedImage } from './CachedImage';
 export { ErrorState } from './ErrorState';
 export { GameActionsMenu } from './GameActionsMenu';
+export { default as Hero } from './Hero';
 export { SettingsRow } from './SettingsRow';
 export { StatusBadge } from './StatusBadge';

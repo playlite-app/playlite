@@ -20,10 +20,10 @@ import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero.tsx';
 import { Recommendation } from '@/components/tooltips';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator.tsx';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
+import { Button } from '@/ui/button';
+import { Separator } from '@/ui/separator.tsx';
 
 import Achievements from '../components/common/Achievements';
 import { formatTime } from '../utils/formatTime';

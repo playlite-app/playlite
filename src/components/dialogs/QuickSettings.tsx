@@ -2,15 +2,15 @@ import { Bug, FileText, FolderOpen, RefreshCw, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+} from '@/ui/dialog';
+import { Separator } from '@/ui/separator';
 
 interface QuickSettingsModalProps {
   open: boolean;

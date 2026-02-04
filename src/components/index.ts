@@ -4,13 +4,11 @@
  * Structure:
  * - layout/         - Header, Sidebar, Navigation
  * - cards/          - Game cards, stat cards
- * - dialogs/         - Dialogs and forms
+ * - dialogs/        - Dialogs and forms
  * - common/         - Reusable utilities
- * - tooltips/ - Recommendation related
- * - ui/             - Base UI components (shadcn/ui)
+ * - icons/          - SVG icons
+ * - tooltips/       - Recommendation related
  * - wrappers/       - HOCs and wrappers
- * - GameWindow/   - Game details components
- * - profile/        - Profile components
  */
 
 // Layout
@@ -28,8 +26,5 @@ export * from './common';
 // Recommendation
 export * from './tooltips';
 
-// Special folders (keep existing structure)
-// - ui/            (shadcn/ui components)
-// - wrappers/      (ErrorBoundary, etc)
-// - GameWindow/  (GameDetails subcomponents)
-// - profile/       (Profile subcomponents)
+// Icons
+export * from './icons';

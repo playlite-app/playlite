@@ -7,8 +7,8 @@ import {
   Trash2,
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { Game } from '@/types';
+import { Button } from '@/ui/button';
 import { launchGame } from '@/utils/launcher.ts';
 
 interface PlaylistItemProps {

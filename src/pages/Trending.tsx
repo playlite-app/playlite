@@ -17,17 +17,6 @@ import { FreeGameCard } from '@/components/cards';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero.tsx';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton.tsx';
 import {
   calculateGameAffinity,
   GiveawayWithAffinity,
@@ -41,6 +30,17 @@ import {
   useWishlist,
 } from '@/hooks';
 import { Game, Giveaway, RawgGame } from '@/types';
+import { Button } from '@/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/ui/dropdown-menu';
+import { Separator } from '@/ui/separator';
+import { Skeleton } from '@/ui/skeleton.tsx';
 
 import { openExternalLink } from '../utils/openLink.ts';
 

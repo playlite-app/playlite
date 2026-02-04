@@ -3,11 +3,11 @@ import { Languages, Loader2, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { cn } from '@/lib/utils.ts';
 import { GameDetails } from '@/types/game.ts';
+import { Button } from '@/ui/button.tsx';
+import { ScrollArea } from '@/ui/scroll-area.tsx';
+import { Skeleton } from '@/ui/skeleton.tsx';
 
 interface GameDescriptionProps {
   gameId: string;

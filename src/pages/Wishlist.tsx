@@ -18,10 +18,10 @@ import { toast } from 'sonner';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
 import AddWishlist from '@/components/dialogs/AddWishlist.tsx';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
+import { Button } from '@/ui/button';
+import { Separator } from '@/ui/separator';
 
 import { openExternalLink } from '../utils/openLink.ts';
 

@@ -1,9 +1,9 @@
 import { Calendar, ExternalLink } from 'lucide-react';
 
 import { Affinity } from '@/components';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Giveaway } from '@/types';
+import { Badge } from '@/ui/badge';
 import { getPlatformColor, getPlatformLabel } from '@/utils/platform';
 
 interface FreeGameCardProps extends Giveaway {

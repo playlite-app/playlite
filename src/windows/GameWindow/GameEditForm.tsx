@@ -3,11 +3,11 @@ import { Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import { Label } from '@/components/ui/label.tsx';
-import { Textarea } from '@/components/ui/textarea.tsx';
 import { GameDetails } from '@/types';
+import { Button } from '@/ui/button.tsx';
+import { Input } from '@/ui/input.tsx';
+import { Label } from '@/ui/label.tsx';
+import { Textarea } from '@/ui/textarea.tsx';
 import { handleBackendError } from '@/utils/errorHandler.ts';
 
 interface GameEditFormProps {

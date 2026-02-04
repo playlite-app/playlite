@@ -2,13 +2,9 @@ import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from 'lucide-react';
 import { useState } from 'react';
 
 import { QuickSettings } from '@/components/dialogs/QuickSettings.tsx';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
+import { Button } from '@/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;

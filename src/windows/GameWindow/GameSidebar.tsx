@@ -13,9 +13,9 @@ import {
   Users,
 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
 import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game.ts';
+import { Badge } from '@/ui/badge.tsx';
+import { Button } from '@/ui/button.tsx';
 import { formatTime } from '@/utils/formatTime.ts';
 import { getPlaytimeCategory } from '@/utils/playtime.ts';
 

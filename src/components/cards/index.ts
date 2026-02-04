@@ -1,4 +1,4 @@
-// Card components - Game cards, stat cards, hero cards
+// Card components - Game cards, stat cards, playlist items, etc.
 export { default as Hero } from '../common/Hero.tsx';
 export { FreeGameCard } from './FreeGameCard';
 export { default as PlaylistItem } from './PlaylistCard.tsx';

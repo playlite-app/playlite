@@ -16,10 +16,10 @@ import { toast } from 'sonner';
 
 import { Recommendation } from '@/components';
 import StandardGameCard from '@/components/cards/StandardGameCard';
-import { Button } from '@/components/ui/button';
 import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
+import { Button } from '@/ui/button';
 
 import PlaylistCard from '../components/cards/PlaylistCard.tsx';
 import { launchGame } from '../utils/launcher';

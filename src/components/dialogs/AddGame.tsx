@@ -1,26 +1,26 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { FileSearch, FolderOpen, Gamepad2, Star } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { useGameForm } from '@/hooks';
+import { Game } from '@/types';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@/ui/dialog';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { useGameForm } from '@/hooks';
-import { Game } from '@/types';
+} from '@/ui/select';
+import { Separator } from '@/ui/separator';
 
 interface AddGameModalProps {
   isOpen: boolean;

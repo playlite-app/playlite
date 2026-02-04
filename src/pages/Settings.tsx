@@ -20,16 +20,16 @@ import {
 import { toast } from 'sonner';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/toggle-switch.tsx';
 import {
   useRecommendation,
   useRecommendationSliders,
   useSettings,
 } from '@/hooks';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { Separator } from '@/ui/separator';
+import { Slider } from '@/ui/slider';
+import { Switch } from '@/ui/toggle-switch.tsx';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;

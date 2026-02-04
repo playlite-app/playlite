@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/ui/tooltip';
 
 interface AffinityTooltipProps {
   children: ReactNode;

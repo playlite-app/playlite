@@ -1,13 +1,13 @@
 import { Check, Edit, ListPlus, MoreVertical, Trash2 } from 'lucide-react';
 
 import { ActionButton } from '@/components/common';
+import { Game } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Game } from '@/types';
+} from '@/ui/dropdown-menu';
 
 interface GameActionsMenuProps {
   game: Game;

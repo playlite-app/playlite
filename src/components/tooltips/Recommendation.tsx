@@ -1,13 +1,13 @@
 import { Dna, Gamepad2, Sparkles, Tag, Trophy, Users } from 'lucide-react';
 import { ReactNode } from 'react';
 
+import { RecommendationReason } from '@/types';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { RecommendationReason } from '@/types';
+} from '@/ui/tooltip';
 
 interface RecommendationTooltipProps {
   children: ReactNode;
