@@ -24,7 +24,6 @@ pub struct GameData {
     pub import_confidence: String,
     pub playtime_forever: i32,
     pub rtime_last_played: i64,
-    pub cover_url: Option<String>,
 }
 
 // === FUNÇÃO PRINCIPAL ===
@@ -199,7 +198,6 @@ fn parse_appmanifest(manifest_path: &Path, library_root: &Path) -> Result<GameDa
         import_confidence: "High".to_string(),
         playtime_forever: 0,
         rtime_last_played: 0,
-        cover_url: None,
     })
 }
 
@@ -295,7 +293,6 @@ async fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
         import_confidence: "Medium".to_string(),
         playtime_forever: 0,
         rtime_last_played: 0,
-        cover_url: None,
     }])
 }
 
@@ -355,7 +352,6 @@ async fn fetch_steam_api(api_key: &str, steam_id: &str) -> Result<Vec<GameData>,
             import_confidence: "Low".to_string(),
             playtime_forever: game.playtime_forever,
             rtime_last_played: game.rtime_last_played,
-            cover_url: None,
         })
         .collect())
 }
@@ -446,7 +442,6 @@ fn enrich(primary: &GameData, secondary: &GameData) -> GameData {
         } else {
             primary.rtime_last_played
         },
-        cover_url: None,
     }
 }
 
@@ -473,6 +468,12 @@ fn completeness_score(game: &GameData) -> i32 {
     }
     if game.installed {
         score += 2;
+    }
+    if game.playtime_forever > 0 {
+        score += 2;
+    }
+    if game.rtime_last_played > 0 {
+        score += 1;
     }
     score
 }

@@ -122,7 +122,7 @@ pub async fn import_steam_library(
                 "INSERT INTO games (
                     id, name, cover_url, platform, platform_game_id,
                     installed, status, playtime, last_played, added_at, favorite, user_rating
-                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, 8?, 0, NULL)",
+                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, ?8, ?9, 0, NULL)",
                 params![
                     new_id,
                     game.name,
@@ -141,9 +141,17 @@ pub async fn import_steam_library(
             conn.execute(
                 "UPDATE games SET
                     installed = ?1,
-                    status = ?2
-                 WHERE platform = 'Steam' AND platform_game_id = ?3",
-                params![game.installed, status, game.platform_game_id],
+                    status = ?2,
+                    playtime = ?3,
+                    last_played = ?4
+                 WHERE platform = 'Steam' AND platform_game_id = ?5",
+                params![
+                    game.installed,
+                    status,
+                    game.playtime_forever,
+                    last_played_iso,
+                    game.platform_game_id
+                ],
             )
             .ok();
             updated += 1;
