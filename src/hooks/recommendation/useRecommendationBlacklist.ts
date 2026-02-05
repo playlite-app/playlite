@@ -1,7 +1,7 @@
 import { Store } from '@tauri-apps/plugin-store';
 import { useCallback, useEffect, useState } from 'react';
 
-const STORE_FILENAME = 'tooltips.store';
+const STORE_FILENAME = 'recommendations.store';
 
 /**
  * Hook para gerenciar a blacklist de jogos ignorados (feedback negativo).

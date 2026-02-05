@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { RecommendationConfig } from '@/types/recommendation';
 
-const STORE_FILENAME = 'tooltips.store';
+const STORE_FILENAME = 'recommendations.store';
 
 const DEFAULT_CONFIG: RecommendationConfig = {
   content_weight: 0.65,
