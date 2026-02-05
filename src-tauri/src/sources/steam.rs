@@ -10,8 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-// === ESTRUTURAS ===
+use tracing::{info, warn};
 
 /// Estrutura interna para representar um jogo
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -39,32 +38,32 @@ pub async fn get_complete_library(
     // 1. Jogos instalados (maior prioridade)
     match scan_installed_games(steam_root) {
         Ok(games) => {
-            println!("Encontrados {} jogos instalados", games.len());
+            info!("Encontrados {} jogos instalados", games.len());
             sources.push(games);
         }
-        Err(e) => eprintln!("Aviso ao buscar instalados: {}", e),
+        Err(e) => warn!("Aviso ao buscar instalados: {}", e),
     }
 
     // 2. Library cache (prioridade média)
     match scan_library_cache(steam_root).await {
         Ok(games) => {
-            println!("Encontrados {} jogos no cache", games.len());
+            info!("Encontrados {} jogos no cache", games.len());
             sources.push(games);
         }
-        Err(e) => eprintln!("Aviso ao buscar cache: {}", e),
+        Err(e) => warn!("Aviso ao buscar cache: {}", e),
     }
 
     // 3. API Steam (fallback)
     match fetch_steam_api(api_key, steam_id).await {
         Ok(games) => {
-            println!("Encontrados {} jogos via API", games.len());
+            info!("Encontrados {} jogos via API", games.len());
             sources.push(games);
         }
-        Err(e) => eprintln!("Buscar na API: {}", e),
+        Err(e) => warn!("Buscar na API: {}", e),
     }
 
     let merged = merge_games(sources);
-    println!("Total: {} jogos após merge", merged.len());
+    info!("Total: {} jogos após merge", merged.len());
 
     Ok(merged)
 }
@@ -360,50 +359,47 @@ async fn fetch_steam_api(api_key: &str, steam_id: &str) -> Result<Vec<GameData>,
 
 /// Faz merge de múltiplas fontes de jogos
 pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
-    let mut map: HashMap<String, GameData> = HashMap::new();
+    let mut map: HashMap<String, Vec<GameData>> = HashMap::new();
 
+    // Coleta todas as entradas para cada jogo
     for list in sources {
         for game in list {
             let key = format!("{}::{}", game.platform, game.platform_game_id);
-
-            match map.get(&key) {
-                None => {
-                    map.insert(key, game);
-                }
-                Some(existing) => {
-                    let merged = merge_two(existing, &game);
-                    map.insert(key, merged);
-                }
-            }
+            map.entry(key).or_insert_with(Vec::new).push(game);
         }
     }
 
-    let mut result: Vec<GameData> = map.into_values().collect();
+    // Faz merge de todas as entradas para cada jogo
+    let mut result: Vec<GameData> = map
+        .into_iter()
+        .map(|(_, games)| merge_multiple(games))
+        .collect();
+
     result.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     result
 }
 
-/// Faz merge de dois registros do mesmo jogo
-fn merge_two(a: &GameData, b: &GameData) -> GameData {
-    // Instalado sempre vence
-    if a.installed && !b.installed {
-        return enrich(a, b);
+/// Faz merge de múltiplos registros do mesmo jogo
+fn merge_multiple(mut games: Vec<GameData>) -> GameData {
+    if games.is_empty() {
+        panic!("Lista vazia");
     }
-    if b.installed && !a.installed {
-        return enrich(b, a);
+    if games.len() == 1 {
+        return games.into_iter().next().unwrap();
     }
 
-    // Usa confidence como critério
-    let a_conf = confidence_score(&a.import_confidence);
-    let b_conf = confidence_score(&b.import_confidence);
+    // Ordena por confiança decrescente (High primeiro)
+    games.sort_by(|a, b| {
+        let a_score = confidence_score(&a.import_confidence);
+        let b_score = confidence_score(&b.import_confidence);
+        b_score.cmp(&a_score) // Decrescente
+    });
 
-    if a_conf > b_conf {
-        enrich(a, b)
-    } else if b_conf > a_conf {
-        enrich(b, a)
-    } else {
-        choose_more_complete(a, b)
-    }
+    // Fold com enrich, usando o de maior confiança como base
+    games
+        .into_iter()
+        .reduce(|acc, next| enrich(&acc, &next))
+        .unwrap()
 }
 
 /// Score de confiança
@@ -432,48 +428,7 @@ fn enrich(primary: &GameData, secondary: &GameData) -> GameData {
             .or_else(|| secondary.install_path.clone()),
         installed: primary.installed || secondary.installed,
         import_confidence: primary.import_confidence.clone(),
-        playtime_forever: if secondary.playtime_forever > 0 {
-            secondary.playtime_forever
-        } else {
-            primary.playtime_forever
-        },
-        rtime_last_played: if secondary.rtime_last_played > 0 {
-            secondary.rtime_last_played
-        } else {
-            primary.rtime_last_played
-        },
+        playtime_forever: primary.playtime_forever.max(secondary.playtime_forever),
+        rtime_last_played: primary.rtime_last_played.max(secondary.rtime_last_played),
     }
-}
-
-/// Escolhe o mais completo entre dois
-fn choose_more_complete(a: &GameData, b: &GameData) -> GameData {
-    let score_a = completeness_score(a);
-    let score_b = completeness_score(b);
-
-    if score_a >= score_b {
-        enrich(a, b)
-    } else {
-        enrich(b, a)
-    }
-}
-
-/// Score de completude
-fn completeness_score(game: &GameData) -> i32 {
-    let mut score = 0;
-    if !game.name.is_empty() {
-        score += 1;
-    }
-    if game.install_path.is_some() {
-        score += 1;
-    }
-    if game.installed {
-        score += 2;
-    }
-    if game.playtime_forever > 0 {
-        score += 2;
-    }
-    if game.rtime_last_played > 0 {
-        score += 1;
-    }
-    score
 }
