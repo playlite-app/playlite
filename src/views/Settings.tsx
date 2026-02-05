@@ -5,6 +5,7 @@ import {
   Download,
   ExternalLink,
   FileJson,
+  FolderOpen,
   Gamepad2,
   HardDrive,
   History,
@@ -39,6 +40,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
   const {
     keys,
     setKeys,
+    steamRoot,
     loading,
     status,
     progress,
@@ -123,19 +125,36 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           title="Sincronizar Jogos"
           description="Importa jogos comprados na sua conta Steam."
         >
-          <Button
-            onClick={actions.importLibrary}
-            variant="outline"
-            className="w-full"
-            disabled={loading.importing}
-          >
-            {loading.importing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CloudDownload className="mr-2 h-4 w-4" />
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={actions.chooseSteamDirectory}
+                variant="outline"
+                className="flex-1"
+              >
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Local da Steam
+              </Button>
+              <Button
+                onClick={actions.importLibrary}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.importing}
+              >
+                {loading.importing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CloudDownload className="mr-2 h-4 w-4" />
+                )}
+                Importar
+              </Button>
+            </div>
+            {steamRoot && (
+              <div className="text-muted-foreground text-xs">
+                Diretório selecionado: <code>{steamRoot}</code>
+              </div>
             )}
-            Iniciar Importação
-          </Button>
+          </div>
         </SettingsRow>
       </section>
 
@@ -310,7 +329,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 {loading.fetchingCovers ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Baixar Capas'
+                  'Buscar Capas'
                 )}
               </Button>
             </div>

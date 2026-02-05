@@ -18,63 +18,25 @@ use uuid::Uuid;
 
 /// Importa a biblioteca completa de jogos Steam do usuário.
 ///
-/// Obtém jogos de múltiplas fontes:
-/// 1. Jogos instalados (via arquivos VDF locais do Steam)
-/// 2. Jogos não-instalados (via librarycache do Steam)
-/// 3. API Steam (como fallback para jogos não encontrados localmente)
-///
-/// Em seguida, faz merge de todas as fontes resolvendo conflitos por:
-/// - Prioridade 1: Jogos instalados
-/// - Prioridade 2: Nível de confiança da importação
-/// - Prioridade 3: Completude dos dados
-///
-/// **Processo:**
-/// 1. Busca biblioteca completa via `sources::steam::get_complete_library`
-/// 2. Filtra para apenas jogos Steam
-/// 3. Converte playtime de minutos para horas
-/// 4. Insere em lote usando transação SQL
-///
-/// **Nota:**
-/// - Biblioteca privada retorna erro de autenticação
-/// - Tempo de jogo é arredondado para horas inteiras
-/// - Operação é mais lenta que apenas API (lê arquivos locais)
+/// Obtém jogos de múltiplas fontes: instalados via arquivos VDF locais do Steam, não instalados
+/// via librarycache do Steam e usa como fallback a API para jogos não encontrados localmente.
 #[tauri::command]
 pub async fn import_steam_library(
     state: State<'_, AppState>,
     api_key: String,
     steam_id: String,
+    steam_root: String,
 ) -> Result<String, AppError> {
-    let steam_root = if cfg!(windows) {
-        // Tenta encontrar Steam em localizações comuns no Windows
-        let possible_paths = vec![
-            "C:\\Program Files (x86)\\Steam",
-            "C:\\Program Files\\Steam",
-            "D:\\Steam",
-            "E:\\Steam",
-        ];
+    let steam_root_path = std::path::Path::new(&steam_root);
 
-        let mut found_path = None;
-        for path_str in possible_paths {
-            let path = std::path::Path::new(path_str);
-            if path.exists() {
-                found_path = Some(path.to_path_buf());
-                break;
-            }
-        }
-
-        found_path.ok_or_else(|| {
-            AppError::ValidationError(
-                "Não foi possível encontrar a pasta de instalação do Steam.".to_string(),
-            )
-        })?
-    } else {
+    if !steam_root_path.exists() {
         return Err(AppError::ValidationError(
-            "Suporte a Steam em plataformas não-Windows ainda não foi implementado.".to_string(),
+            "O diretório de instalação do Steam especificado não existe.".to_string(),
         ));
-    };
+    }
 
     // Busca biblioteca completa (arquivos locais + API Steam)
-    let complete_library = steam::get_complete_library(&steam_root, &api_key, &steam_id)
+    let complete_library = steam::get_complete_library(&steam_root_path, &api_key, &steam_id)
         .await
         .map_err(AppError::NetworkError)?;
 
