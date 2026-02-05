@@ -47,7 +47,7 @@ pub async fn get_complete_library(
     }
 
     // 2. Library cache (prioridade média)
-    match scan_library_cache(steam_root) {
+    match scan_library_cache(steam_root).await {
         Ok(games) => {
             println!("Encontrados {} jogos no cache", games.len());
             sources.push(games);
@@ -224,7 +224,7 @@ fn extract_vdf_value(line: &str) -> Option<String> {
 // === SCAN DO LIBRARY CACHE ===
 
 /// Escaneia jogos não-instalados via library cache
-pub fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
+pub async fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
     let mut games = Vec::new();
     let userdata = steam_root.join("userdata");
 
@@ -232,7 +232,7 @@ pub fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
         return Ok(games);
     }
 
-    let user_dirs = fs::read_dir(&userdata).map_err(|e| format!("Erro ao ler userdata: {}", e))?;
+    let user_dirs = fs::read_dir(&userdata).map_err(|e| format!("Erro: {}", e))?;
 
     for user_entry in user_dirs.flatten() {
         if !user_entry.path().is_dir() {
@@ -242,11 +242,10 @@ pub fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
         let cache_dir = user_entry.path().join("config").join("librarycache");
 
         if cache_dir.exists() {
-            scan_librarycache_dir(&cache_dir, &mut games)?;
+            scan_librarycache_dir(&cache_dir, &mut games).await?; // ← async
         }
     }
 
-    // Remove duplicatas por AppID
     let mut seen = std::collections::HashSet::new();
     games.retain(|g| seen.insert(g.platform_game_id.clone()));
 
@@ -254,8 +253,8 @@ pub fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
 }
 
 /// Escaneia um diretório librarycache
-fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), String> {
-    let entries = fs::read_dir(dir).map_err(|e| format!("Erro ao ler cache: {}", e))?;
+async fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), String> {
+    let entries = fs::read_dir(dir).map_err(|e| format!("Erro: {}", e))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
@@ -270,7 +269,8 @@ fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), St
             }
         }
 
-        if let Ok(cache_games) = parse_librarycache_file(&path) {
+        if let Ok(cache_games) = parse_librarycache_file(&path).await {
+            // ← async
             games.extend(cache_games);
         }
     }
@@ -279,10 +279,12 @@ fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), St
 }
 
 /// Parseia um arquivo JSON do library cache
-fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
+async fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
     let appid = extract_appid_from_filename(path)?;
 
-    let game_name = fetch_steam_game_name(&appid).unwrap_or_else(|| format!("Steam App {}", appid));
+    let game_name = fetch_steam_game_name(&appid)
+        .await // ← async
+        .unwrap_or_else(|| format!("Game {}", appid));
 
     Ok(vec![GameData {
         name: game_name,
@@ -297,6 +299,30 @@ fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
     }])
 }
 
+/// Busca nome do jogo via Steam Store API - VERSÃO ASYNC
+pub async fn fetch_steam_game_name(app_id: &str) -> Option<String> {
+    use crate::utils::http_client::HTTP_CLIENT; // Usa o cliente async existente
+
+    let url = format!(
+        "https://store.steampowered.com/api/appdetails?appids={}",
+        app_id
+    );
+
+    let resp = HTTP_CLIENT.get(&url).send().await.ok()?; // ← async
+    let json: serde_json::Value = resp.json().await.ok()?; // ← async
+
+    let app_data = json.get(app_id)?;
+    if !app_data.get("success")?.as_bool()? {
+        return None;
+    }
+
+    app_data
+        .get("data")?
+        .get("name")?
+        .as_str()
+        .map(|s| s.to_string())
+}
+
 /// Extrai o AppID do nome do arquivo
 fn extract_appid_from_filename(path: &Path) -> Result<String, String> {
     let filename = path
@@ -309,28 +335,6 @@ fn extract_appid_from_filename(path: &Path) -> Result<String, String> {
     } else {
         Err(format!("Não é um AppID válido: {}", filename))
     }
-}
-
-/// Busca nome do jogo via Steam Store API com cache
-pub fn fetch_steam_game_name(app_id: &str) -> Option<String> {
-    let url = format!(
-        "https://store.steampowered.com/api/appdetails?appids={}",
-        app_id
-    );
-
-    let resp = reqwest::blocking::get(url).ok()?;
-    let json: serde_json::Value = resp.json().ok()?;
-
-    let app_data = json.get(app_id)?;
-    if !app_data.get("success")?.as_bool()? {
-        return None;
-    }
-
-    app_data
-        .get("data")?
-        .get("name")?
-        .as_str()
-        .map(|s| s.to_string())
 }
 
 // === API STEAM ===
