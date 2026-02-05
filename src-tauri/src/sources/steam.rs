@@ -6,8 +6,6 @@
 //! - Buscar via API Steam como fallback
 //! - Fazer merge de múltiplas fontes
 
-use crate::services::cache;
-use crate::services::integration::steam_api;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -15,19 +13,8 @@ use std::path::{Path, PathBuf};
 
 // === ESTRUTURAS ===
 
-/// Jogo Steam da API
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct SteamGame {
-    pub appid: u32,
-    pub name: String,
-    pub playtime_forever: i32,
-    pub img_icon_url: Option<String>,
-    #[serde(default)]
-    pub rtime_last_played: i64,
-}
-
 /// Estrutura interna para representar um jogo
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameData {
     pub name: String,
     pub platform: String,
@@ -35,6 +22,9 @@ pub struct GameData {
     pub install_path: Option<String>,
     pub installed: bool,
     pub import_confidence: String,
+    pub playtime_forever: i32,
+    pub rtime_last_played: i64,
+    pub cover_url: Option<String>,
 }
 
 // === FUNÇÃO PRINCIPAL ===
@@ -44,7 +34,6 @@ pub async fn get_complete_library(
     steam_root: &Path,
     api_key: &str,
     steam_id: &str,
-    cache_conn: &rusqlite::Connection,
 ) -> Result<Vec<GameData>, String> {
     let mut sources = Vec::new();
 
@@ -58,7 +47,7 @@ pub async fn get_complete_library(
     }
 
     // 2. Library cache (prioridade média)
-    match scan_library_cache(steam_root, &cache_conn).await {
+    match scan_library_cache(steam_root) {
         Ok(games) => {
             println!("Encontrados {} jogos no cache", games.len());
             sources.push(games);
@@ -208,6 +197,9 @@ fn parse_appmanifest(manifest_path: &Path, library_root: &Path) -> Result<GameDa
         install_path,
         installed: true,
         import_confidence: "High".to_string(),
+        playtime_forever: 0,
+        rtime_last_played: 0,
+        cover_url: None,
     })
 }
 
@@ -232,10 +224,7 @@ fn extract_vdf_value(line: &str) -> Option<String> {
 // === SCAN DO LIBRARY CACHE ===
 
 /// Escaneia jogos não-instalados via library cache
-pub async fn scan_library_cache(
-    steam_root: &Path,
-    cache_conn: &rusqlite::Connection,
-) -> Result<Vec<GameData>, String> {
+pub fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, String> {
     let mut games = Vec::new();
     let userdata = steam_root.join("userdata");
 
@@ -253,7 +242,7 @@ pub async fn scan_library_cache(
         let cache_dir = user_entry.path().join("config").join("librarycache");
 
         if cache_dir.exists() {
-            scan_librarycache_dir(&cache_dir, cache_conn, &mut games).await?;
+            scan_librarycache_dir(&cache_dir, &mut games)?;
         }
     }
 
@@ -265,11 +254,7 @@ pub async fn scan_library_cache(
 }
 
 /// Escaneia um diretório librarycache
-async fn scan_librarycache_dir(
-    dir: &Path,
-    cache_conn: &rusqlite::Connection,
-    games: &mut Vec<GameData>,
-) -> Result<(), String> {
+fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), String> {
     let entries = fs::read_dir(dir).map_err(|e| format!("Erro ao ler cache: {}", e))?;
 
     for entry in entries.flatten() {
@@ -279,14 +264,13 @@ async fn scan_librarycache_dir(
             continue;
         }
 
-        // Ignora arquivos especiais
         if let Some(filename) = path.file_stem().and_then(|s| s.to_str()) {
             if !filename.chars().all(|c| c.is_ascii_digit()) {
                 continue;
             }
         }
 
-        if let Ok(cache_games) = parse_librarycache_file(&path, cache_conn).await {
+        if let Ok(cache_games) = parse_librarycache_file(&path) {
             games.extend(cache_games);
         }
     }
@@ -295,15 +279,10 @@ async fn scan_librarycache_dir(
 }
 
 /// Parseia um arquivo JSON do library cache
-async fn parse_librarycache_file(
-    path: &Path,
-    cache_conn: &rusqlite::Connection,
-) -> Result<Vec<GameData>, String> {
+fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
     let appid = extract_appid_from_filename(path)?;
 
-    let game_name = fetch_steam_game_name(&appid, cache_conn)
-        .await
-        .unwrap_or_else(|| format!("Steam App {}", appid));
+    let game_name = fetch_steam_game_name(&appid).unwrap_or_else(|| format!("Steam App {}", appid));
 
     Ok(vec![GameData {
         name: game_name,
@@ -312,6 +291,9 @@ async fn parse_librarycache_file(
         install_path: None,
         installed: false,
         import_confidence: "Medium".to_string(),
+        playtime_forever: 0,
+        rtime_last_played: 0,
+        cover_url: None,
     }])
 }
 
@@ -330,23 +312,25 @@ fn extract_appid_from_filename(path: &Path) -> Result<String, String> {
 }
 
 /// Busca nome do jogo via Steam Store API com cache
-pub async fn fetch_steam_game_name(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<String> {
-    let cache_key = format!("store_name_{}", steam_id);
+pub fn fetch_steam_game_name(app_id: &str) -> Option<String> {
+    let url = format!(
+        "https://store.steampowered.com/api/appdetails?appids={}",
+        app_id
+    );
 
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        return Some(cached);
+    let resp = reqwest::blocking::get(url).ok()?;
+    let json: serde_json::Value = resp.json().ok()?;
+
+    let app_data = json.get(app_id)?;
+    if !app_data.get("success")?.as_bool()? {
+        return None;
     }
 
-    if let Ok(Some(data)) = steam_api::get_app_details(steam_id).await {
-        let name = data.name;
-        let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &name);
-        return Some(name);
-    }
-
-    None
+    app_data
+        .get("data")?
+        .get("name")?
+        .as_str()
+        .map(|s| s.to_string())
 }
 
 // === API STEAM ===
@@ -365,6 +349,9 @@ async fn fetch_steam_api(api_key: &str, steam_id: &str) -> Result<Vec<GameData>,
             install_path: None,
             installed: false,
             import_confidence: "Low".to_string(),
+            playtime_forever: game.playtime_forever,
+            rtime_last_played: game.rtime_last_played,
+            cover_url: None,
         })
         .collect())
 }
@@ -445,6 +432,17 @@ fn enrich(primary: &GameData, secondary: &GameData) -> GameData {
             .or_else(|| secondary.install_path.clone()),
         installed: primary.installed || secondary.installed,
         import_confidence: primary.import_confidence.clone(),
+        playtime_forever: if secondary.playtime_forever > 0 {
+            secondary.playtime_forever
+        } else {
+            primary.playtime_forever
+        },
+        rtime_last_played: if secondary.rtime_last_played > 0 {
+            secondary.rtime_last_played
+        } else {
+            primary.rtime_last_played
+        },
+        cover_url: None,
     }
 }
 
@@ -509,6 +507,9 @@ mod tests {
             install_path: Some("/path".to_string()),
             installed: true,
             import_confidence: "High".to_string(),
+            playtime_forever: 0,
+            rtime_last_played: 0,
+            cover_url: None,
         };
 
         let not_installed = GameData {
@@ -518,6 +519,9 @@ mod tests {
             install_path: None,
             installed: false,
             import_confidence: "Low".to_string(),
+            playtime_forever: 0,
+            rtime_last_played: 0,
+            cover_url: None,
         };
 
         let merged = merge_two(&installed, &not_installed);

@@ -9,9 +9,10 @@ use crate::constants;
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::sources::steam;
-use chrono::Utc;
+use crate::utils::status_logic;
+use chrono::{TimeZone, Utc};
 use rusqlite::params;
-use tauri::{AppHandle, Manager, State};
+use tauri::State;
 use tracing::info;
 use uuid::Uuid;
 
@@ -39,13 +40,10 @@ use uuid::Uuid;
 /// - Operação é mais lenta que apenas API (lê arquivos locais)
 #[tauri::command]
 pub async fn import_steam_library(
-    _state: State<'_, AppState>,
-    app: AppHandle,
+    state: State<'_, AppState>,
     api_key: String,
     steam_id: String,
 ) -> Result<String, AppError> {
-    let state: State<AppState> = app.state();
-    let cache_conn = state.metadata_db.lock()?;
     let steam_root = if cfg!(windows) {
         // Tenta encontrar Steam em localizações comuns no Windows
         let possible_paths = vec![
@@ -76,10 +74,9 @@ pub async fn import_steam_library(
     };
 
     // Busca biblioteca completa (arquivos locais + API Steam)
-    let complete_library =
-        steam::get_complete_library(&steam_root, &api_key, &steam_id, &cache_conn)
-            .await
-            .map_err(AppError::NetworkError)?;
+    let complete_library = steam::get_complete_library(&steam_root, &api_key, &steam_id)
+        .await
+        .map_err(AppError::NetworkError)?;
 
     if complete_library.is_empty() {
         return Ok("Nenhum jogo encontrado.".to_string());
@@ -100,10 +97,17 @@ pub async fn import_steam_library(
             )
             .unwrap_or(false);
 
-        let status = if game.installed {
-            "playing".to_string()
+        let status = status_logic::calculate_status(game.playtime_forever);
+
+        // Converte Unix Timestamp (Steam) para ISO 8601 (Banco)
+        let last_played_iso = if game.rtime_last_played > 0 {
+            Some(
+                Utc.timestamp_opt(game.rtime_last_played, 0)
+                    .unwrap()
+                    .to_rfc3339(),
+            )
         } else {
-            "backlog".to_string()
+            None
         };
 
         if !exists {
@@ -117,8 +121,8 @@ pub async fn import_steam_library(
             conn.execute(
                 "INSERT INTO games (
                     id, name, cover_url, platform, platform_game_id,
-                    installed, status, added_at, favorite, user_rating
-                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, 0, NULL)",
+                    installed, status, playtime, last_played, added_at, favorite, user_rating
+                ) VALUES (?1, ?2, ?3, 'Steam', ?4, ?5, ?6, ?7, 8?, 0, NULL)",
                 params![
                     new_id,
                     game.name,
@@ -126,6 +130,8 @@ pub async fn import_steam_library(
                     game.platform_game_id,
                     game.installed,
                     status,
+                    game.playtime_forever,
+                    last_played_iso,
                     now
                 ],
             )
