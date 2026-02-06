@@ -2,19 +2,31 @@
 //!
 //! Fornece comandos para importar jogos em lote de serviços como Steam,
 //! conectando-se aos arquivos locais e APIs públicas para obter a lista completa.
-//!
-//! **Nota:** Atualmente, apenas Steam é suportado.
 
 use crate::constants;
 use crate::database::AppState;
 use crate::errors::AppError;
+use crate::sources::games_scanner::{scan_folder, GameDiscovery};
 use crate::sources::steam;
 use crate::utils::status_logic;
 use chrono::{TimeZone, Utc};
 use rusqlite::params;
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 use tauri::State;
 use tracing::info;
 use uuid::Uuid;
+
+// === Estruturas de Dados ===
+
+#[derive(Serialize, Deserialize)]
+pub struct ScanResult {
+    pub success: bool,
+    pub message: String,
+    pub discoveries: Vec<GameDiscovery>,
+}
+
+// === Steam ===
 
 /// Importa a biblioteca completa de jogos Steam do usuário.
 ///
@@ -124,4 +136,53 @@ pub async fn import_steam_library(
     info!("{}", message);
 
     Ok(message)
+}
+
+// === SCAN FOLDERS ===
+
+/// Escaneia uma pasta local em busca de possíveis jogos.
+///
+/// Retorna uma lista de descobertas encontradas.
+#[tauri::command]
+pub async fn scan_games_folder(folder_path: String) -> Result<ScanResult, String> {
+    let path = Path::new(&folder_path);
+
+    if !path.exists() || !path.is_dir() {
+        return Ok(ScanResult {
+            success: false,
+            message: "Pasta inválida".into(),
+            discoveries: vec![],
+        });
+    }
+
+    let discoveries = scan_folder(path)?;
+
+    Ok(ScanResult {
+        success: true,
+        message: format!("Encontrados {} possíveis jogos", discoveries.len()),
+        discoveries,
+    })
+}
+
+/// Adiciona um jogo descoberto pelo scan ao banco de dados.
+#[tauri::command]
+pub async fn add_game_from_scan(
+    state: State<'_, AppState>,
+    name: String,
+    executable_path: String,
+    base_path: String,
+) -> Result<(), String> {
+    let conn = state.library_db.lock().map_err(|e| e.to_string())?;
+
+    let id = Uuid::new_v4().to_string();
+    let added_at = Utc::now().to_rfc3339();
+
+    conn.execute(
+        "INSERT INTO games (id, name, executable_path, install_path, platform, added_at, installed, status, playtime, favorite, user_rating)
+         VALUES (?1, ?2, ?3, ?4, 'Outra', ?5, 1, 'Backlog', 0, 0, NULL)",
+        params![id, name, executable_path, base_path, added_at],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
 }

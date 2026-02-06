@@ -1,7 +1,17 @@
-import { Eye, EyeOff, Moon, Plus, Search, Settings, Sun } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Moon,
+  Plus,
+  Scan,
+  Search,
+  Settings,
+  Sun,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { QuickSettings } from '@/dialogs/QuickSettings.tsx';
+import { ScanFolderModal } from '@/dialogs/ScanFolder';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
@@ -62,6 +72,8 @@ export default function Header({
 
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
 
+  const [isScanFolderOpen, setIsScanFolderOpen] = useState(false);
+
   // Hook para gerenciar análises de recomendação
   const { analysisStatus, generateRecommendationAnalysis } =
     useRecommendationAnalysis();
@@ -115,6 +127,17 @@ export default function Header({
           <span className="ml-1 hidden md:inline">Adicionar</span>
         </Button>
 
+        {/* Botão de Escanear Pasta */}
+        <Button
+          onClick={() => setIsScanFolderOpen(true)}
+          size="sm"
+          className="shrink-0 px-3 md:px-4"
+          title="Escanear Pasta"
+        >
+          <Scan size={18} />
+          <span className="ml-1 hidden md:inline">Escanear</span>
+        </Button>
+
         {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
         {isSearchable && (
           <AdultFilterToggle
@@ -151,6 +174,11 @@ export default function Header({
         onClose={() => setIsQuickSettingsOpen(false)}
         onGenerateReport={generateRecommendationAnalysis}
         onCheckUpdates={onCheckUpdates}
+      />
+
+      <ScanFolderModal
+        open={isScanFolderOpen}
+        onClose={() => setIsScanFolderOpen(false)}
       />
     </header>
   );

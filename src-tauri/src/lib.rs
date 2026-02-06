@@ -104,6 +104,7 @@ pub fn run() {
             commands::wishlist::import_wishlist,
             commands::wishlist::fetch_wishlist_covers,
             // Comandos de Importação de Plataformas
+            commands::plataforms::scan_games_folder,
             commands::plataforms::import_steam_library,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
@@ -142,7 +143,7 @@ pub fn run() {
             // Comandos de Imagem
             services::images::cache_cover_image,
             services::images::check_local_cover,
-            services::images::clear_cover_cache,
+            services::images::clear_cover_cache
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

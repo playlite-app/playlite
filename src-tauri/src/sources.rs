@@ -6,6 +6,8 @@
 //!
 //! **Módulos:**
 //!
+//! - `games_scanner`: Escaneia pastas em busca de jogos instalados localmente.
 //! - `steam`: Impporta jogos da Steam.
 
+pub mod games_scanner;
 pub mod steam;
