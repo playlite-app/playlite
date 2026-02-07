@@ -19,7 +19,7 @@ interface GameDetailsModalProps {
   onRefresh?: () => void;
 }
 
-export default function GameWindow({
+export default function GameDetail({
   game,
   details: initialDetails,
   siblings,

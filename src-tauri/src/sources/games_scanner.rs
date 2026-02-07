@@ -15,11 +15,12 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+use serde::{Deserialize, Serialize};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-
 // === STRUCTS INTERNAS (NÃO REFLETEM O BANCO DE DADOS) ===
 
+/// Representa uma sessão de escaneamento de pastas
 #[derive(Debug, Clone)]
 pub struct ScanSession {
     pub id: String,
@@ -27,16 +28,18 @@ pub struct ScanSession {
     pub started_at: SystemTime,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// Representa um possível jogo descoberto durante o scan
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameDiscovery {
     pub id: String,
     pub base_path: String,
     pub suggested_name: String,
-    pub confidence: i32, // frontend usa number
+    pub confidence: i32,
     pub executables: Vec<ExecutableCandidate>,
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+/// Representa um executável candidato a ser o launcher do jogo
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExecutableCandidate {
     pub path: String,
     pub filename: String,
@@ -45,8 +48,8 @@ pub struct ExecutableCandidate {
     pub executable_type: ExecutableType,
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// Tipo de executável detectado
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ExecutableType {
     WindowsExe,
     LinuxElf,
@@ -148,7 +151,7 @@ fn scan_executables_recursive(
     depth: usize,
 ) -> Result<(), String> {
     // Limita profundidade para evitar scans infinitos ou muito lentos
-    const MAX_DEPTH: usize = 4;
+    const MAX_DEPTH: usize = 5;
     if depth > MAX_DEPTH {
         return Ok(());
     }

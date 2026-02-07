@@ -11,10 +11,10 @@ import {
 import { useState } from 'react';
 
 import { QuickSettings } from '@/dialogs/QuickSettings.tsx';
-import { ScanFolderModal } from '@/dialogs/ScanFolder';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
+import { ScanFolder } from '@/windows/ScanFolder';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;
@@ -176,7 +176,7 @@ export default function Header({
         onCheckUpdates={onCheckUpdates}
       />
 
-      <ScanFolderModal
+      <ScanFolder
         open={isScanFolderOpen}
         onClose={() => setIsScanFolderOpen(false)}
       />

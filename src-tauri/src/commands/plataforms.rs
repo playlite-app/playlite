@@ -13,13 +13,13 @@ use chrono::{TimeZone, Utc};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 use tracing::info;
 use uuid::Uuid;
 
 // === Estruturas de Dados ===
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ScanResult {
     pub success: bool,
     pub message: String,
@@ -147,19 +147,35 @@ pub async fn import_steam_library(
 pub async fn scan_games_folder(folder_path: String) -> Result<ScanResult, String> {
     let path = Path::new(&folder_path);
 
-    if !path.exists() || !path.is_dir() {
+    // Validações básicas
+    if !path.exists() {
         return Ok(ScanResult {
             success: false,
-            message: "Pasta inválida".into(),
+            message: "Pasta não encontrada".to_string(),
             discoveries: vec![],
         });
     }
 
+    if !path.is_dir() {
+        return Ok(ScanResult {
+            success: false,
+            message: "Caminho não é uma pasta".to_string(),
+            discoveries: vec![],
+        });
+    }
+
+    // Executar scan
     let discoveries = scan_folder(path)?;
+
+    let message = if discoveries.is_empty() {
+        "Nenhum jogo encontrado nesta pasta".to_string()
+    } else {
+        format!("Encontrados {} possíveis jogos", discoveries.len())
+    };
 
     Ok(ScanResult {
         success: true,
-        message: format!("Encontrados {} possíveis jogos", discoveries.len()),
+        message,
         discoveries,
     })
 }
@@ -167,22 +183,50 @@ pub async fn scan_games_folder(folder_path: String) -> Result<ScanResult, String
 /// Adiciona um jogo descoberto pelo scan ao banco de dados.
 #[tauri::command]
 pub async fn add_game_from_scan(
+    app: AppHandle,
     state: State<'_, AppState>,
     name: String,
     executable_path: String,
     base_path: String,
-) -> Result<(), String> {
+) -> Result<String, String> {
     let conn = state.library_db.lock().map_err(|e| e.to_string())?;
 
+    // Verifica se já existe um jogo com mesmo executável
+    let exists: bool = conn
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM games WHERE executable_path = ?1)",
+            params![&executable_path],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("Erro ao verificar jogo existente: {}", e))?;
+
+    if exists {
+        return Err("Este jogo já foi adicionado anteriormente".to_string());
+    }
+
     let id = Uuid::new_v4().to_string();
+    let platform_game_id = format!("scan-{}", Uuid::new_v4());
     let added_at = Utc::now().to_rfc3339();
 
     conn.execute(
-        "INSERT INTO games (id, name, executable_path, install_path, platform, added_at, installed, status, playtime, favorite, user_rating)
-         VALUES (?1, ?2, ?3, ?4, 'Outra', ?5, 1, 'Backlog', 0, 0, NULL)",
-        params![id, name, executable_path, base_path, added_at],
+        "INSERT INTO games (
+            id, name, executable_path, install_path, platform, platform_game_id,
+            added_at, installed, status, playtime, favorite, user_rating
+        ) VALUES (?1, ?2, ?3, ?4, 'Outra', ?5, ?6, 1, 'Backlog', 0, 0, NULL)",
+        params![
+            id,
+            name,
+            executable_path,
+            base_path,
+            platform_game_id,
+            added_at
+        ],
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| format!("Erro ao adicionar jogo: {}", e))?;
 
-    Ok(())
+    info!("Jogo adicionado via scan: {} ({})", name, id);
+
+    let _ = app.emit("library_updated", ());
+
+    Ok(id)
 }

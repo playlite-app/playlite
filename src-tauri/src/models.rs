@@ -56,7 +56,8 @@ pub enum Platform {
     #[serde(rename = "Battle.net")]
     BattleNet,
     Amazon,
-    Outra,
+    Indie, // Para jogos sem plataforma específica ou de desenvolvedores independentes
+    Outra, // Para jogos de plataformas não listadas ou desconhecidas
 }
 
 impl FromStr for Platform {
@@ -86,6 +87,7 @@ impl std::fmt::Display for Platform {
             Platform::Ubisoft => "Ubisoft",
             Platform::BattleNet => "Battle.net",
             Platform::Amazon => "Amazon",
+            Platform::Indie => "Indie",
             Platform::Outra => "Outra",
         };
         write!(f, "{}", s)

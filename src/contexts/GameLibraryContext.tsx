@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event';
 import {
   createContext,
   ReactNode,
@@ -30,6 +31,17 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
   // Carrega jogos na montagem
   useEffect(() => {
     refreshGames();
+  }, []);
+
+  // Escuta por atualizações na biblioteca
+  useEffect(() => {
+    const unlisten = listen('library_updated', () => {
+      refreshGames();
+    });
+
+    return () => {
+      unlisten.then(f => f());
+    };
   }, []);
 
   const refreshGames = async () => {

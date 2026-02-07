@@ -127,14 +127,18 @@ export default function AddGame({
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Manual">Outro / Manual</SelectItem>
                   <SelectItem value="Steam">Steam</SelectItem>
                   <SelectItem value="Epic">Epic Games</SelectItem>
                   <SelectItem value="GOG">GOG Galaxy</SelectItem>
+                  <SelectItem value="EA">EA</SelectItem>
+                  <SelectItem value="Ubisoft">Ubisoft</SelectItem>
+                  <SelectItem value="Battle.net">Battle.net</SelectItem>
+                  <SelectItem value="Amazon">Amazon Games</SelectItem>
+                  <SelectItem value="Indie">Indie</SelectItem>
+                  <SelectItem value="Outra">Outra</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid gap-2">
               <Label>Instalado</Label>
               <div className="border-input bg-background flex w-full items-center gap-2 rounded-md border px-3 py-2">
@@ -150,7 +154,6 @@ export default function AddGame({
                 </label>
               </div>
             </div>
-
             <div className="grid gap-2">
               <Label>Confiança da Importação</Label>
               <Select

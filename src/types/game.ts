@@ -34,8 +34,8 @@ export type Platform =
   | 'Ubisoft'
   | 'Battle.net'
   | 'Amazon'
-  | 'Outra'
-  | 'Manual';
+  | 'Indie'
+  | 'Outra';
 
 /// Nível de confiança da importação
 export type ImportConfidence = 'High' | 'Medium' | 'Low';

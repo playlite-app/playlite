@@ -14,7 +14,7 @@ import Playlist from '@/views/Playlist';
 import Settings from '@/views/Settings';
 import Trending from '@/views/Trending';
 import Wishlist from '@/views/Wishlist';
-import GameWindow from '@/windows/GameWindow/GameWindow.tsx';
+import GameDetail from '@/windows/GameDetail/GameDetail.tsx';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -256,7 +256,7 @@ function AppContent() {
           onSave={handleSaveGameWrapper}
           gameToEdit={gameToEdit}
         />
-        <GameWindow
+        <GameDetail
           isOpen={!!selectedGameId}
           onClose={closeDetails}
           game={selectedGame}
