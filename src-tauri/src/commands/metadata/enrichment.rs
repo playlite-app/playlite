@@ -226,7 +226,7 @@ async fn enrich_game_metadata(
         }
         links_map.insert(
             "rawg".to_string(),
-            format!("https://rawg.io/api/games/{}", rawg_det.id),
+            format!("https://rawg.io/games/{}", rawg_det.id),
         );
 
         // Descobre Steam ID via RAWG
