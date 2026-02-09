@@ -108,8 +108,6 @@ pub struct Game {
     pub cover_url: Option<String>,
     pub genres: Option<String>,
     pub developer: Option<String>,
-
-    // Identificação
     pub platform: Platform,
     #[serde(rename = "platformGameId")]
     pub platform_game_id: String,

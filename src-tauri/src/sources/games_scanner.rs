@@ -18,6 +18,7 @@ use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+
 // === STRUCTS INTERNAS (NÃO REFLETEM O BANCO DE DADOS) ===
 
 /// Representa uma sessão de escaneamento de pastas
@@ -151,7 +152,7 @@ fn scan_executables_recursive(
     depth: usize,
 ) -> Result<(), String> {
     // Limita profundidade para evitar scans infinitos ou muito lentos
-    const MAX_DEPTH: usize = 5;
+    const MAX_DEPTH: usize = 4;
     if depth > MAX_DEPTH {
         return Ok(());
     }
@@ -194,14 +195,6 @@ fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, String> {
     let metadata = fs::metadata(path)
         .map_err(|e| format!("Erro ao obter metadata de '{}': {}", path.display(), e))?;
 
-    // Tamanho mínimo: 5MB
-    // Heurística: jogos indie simples geralmente têm pelo menos 5MB
-    // Isso elimina launchers pequenos, crash reporters, etc.
-    const MIN_SIZE_BYTES: u64 = 5 * 1024 * 1024;
-    if metadata.len() < MIN_SIZE_BYTES {
-        return Ok(None);
-    }
-
     let filename = path
         .file_name()
         .ok_or_else(|| "Nome de arquivo inválido".to_string())?
@@ -218,7 +211,7 @@ fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, String> {
     let size_mb = metadata.len() / (1024 * 1024);
 
     // Calcula score de ranking para ordenação
-    let rank_score = calculate_rank(&filename, size_mb, path);
+    let rank_score = calculate_rank(&filename, path);
 
     Ok(Some(ExecutableCandidate {
         path: path.to_string_lossy().to_string(),
@@ -290,7 +283,7 @@ fn detect_executable_type(path: &Path) -> Result<ExecutableType, String> {
 ///
 /// **Contexto:**
 /// Esta heurística é otimizada para jogos indie/antigos/locais.
-fn calculate_rank(filename: &str, size_mb: u64, path: &Path) -> i32 {
+fn calculate_rank(filename: &str, path: &Path) -> i32 {
     let mut score = 0;
 
     let name_lower = filename.to_lowercase();
@@ -313,6 +306,8 @@ fn calculate_rank(filename: &str, size_mb: u64, path: &Path) -> i32 {
         "patcher",
         "config",
         "settings",
+        "handler",
+        "helper",
     ];
 
     for keyword in &bad_keywords {
@@ -332,15 +327,6 @@ fn calculate_rank(filename: &str, size_mb: u64, path: &Path) -> i32 {
             score += 2;
             break;
         }
-    }
-
-    // Tamanho do arquivo (jogos geralmente são maiores)
-    if size_mb > 100 {
-        score += 2;
-    }
-
-    if size_mb > 500 {
-        score += 3;
     }
 
     // Bônus se o nome do arquivo é similar ao nome da pasta
