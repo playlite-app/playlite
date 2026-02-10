@@ -82,7 +82,7 @@ export function GameHeader({
 
             {game.installed && (
               <Badge className="border-green-500/30 bg-green-500/20 px-3 py-1 text-sm font-semibold text-green-300 backdrop-blur-md">
-                ✓ Instalado
+                Instalado
               </Badge>
             )}
 

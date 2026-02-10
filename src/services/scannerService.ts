@@ -11,6 +11,17 @@ export async function scanGamesFolder(folderPath: string): Promise<ScanResult> {
   return await invoke<ScanResult>('scan_games_folder', { folderPath });
 }
 
+/**
+ * Adiciona múltiplos jogos descobertos pelo scan ao banco de dados.
+ *
+ * @param games - Lista de jogos a adicionar
+ */
+export async function addGamesFromScan(
+  games: { name: string; executable_path: string; base_path: string }[]
+): Promise<string> {
+  return await invoke<string>('add_games_from_scan', { games });
+}
+
 /** Retorna o executável com a maior pontuação de ranking dentre os candidatos.
  *
  * @param discovery - Descoberta de jogo com candidatos a executáveis

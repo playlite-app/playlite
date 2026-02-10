@@ -423,19 +423,19 @@ pub fn update_game_details(
     let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Verifica o estado atual do jogo no banco
-    let current_state: Option<Option<String>> = conn
+    let current_state: Option<(Option<String>, Option<String>)> = conn
         .query_row(
-            "SELECT description_ptbr FROM game_details WHERE game_id = ?1",
+            "SELECT description_ptbr, description_raw FROM game_details WHERE game_id = ?1",
             params![payload.id],
-            |row| row.get(0),
+            |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()?; // O '?' converte erro de SQL para AppError
 
     match current_state {
         // CASO 1: Registro existe
-        Some(description_ptbr_atual) => {
-            // VALIDAÇÃO: Se a descrição PT-BR for nula, impede a edição
-            if description_ptbr_atual.is_none() {
+        Some((description_ptbr, description_raw)) => {
+            // VALIDAÇÃO: Se a descrição PT-BR for nula e description_raw não for nula, impede a edição
+            if description_ptbr.is_none() && description_raw.is_some() {
                 return Err(AppError::ValidationError(
                     "A descrição precisa ser traduzida (ou gerada) antes de ser editada manualmente.".to_string()
                 ));

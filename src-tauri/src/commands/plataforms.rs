@@ -26,6 +26,13 @@ pub struct ScanResult {
     pub discoveries: Vec<GameDiscovery>,
 }
 
+#[derive(Deserialize)]
+pub struct ScanGameInput {
+    pub name: String,
+    pub executable_path: String,
+    pub base_path: String,
+}
+
 // === Steam ===
 
 /// Importa a biblioteca completa de jogos Steam do usuário.
@@ -229,4 +236,62 @@ pub async fn add_game_from_scan(
     let _ = app.emit("library_updated", ());
 
     Ok(id)
+}
+
+/// Adiciona múltiplos jogos descobertos pelo scan ao banco de dados.
+#[tauri::command]
+pub async fn add_games_from_scan(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    games: Vec<ScanGameInput>,
+) -> Result<String, String> {
+    let conn = state.library_db.lock().map_err(|e| e.to_string())?;
+
+    let mut added = 0;
+    let mut skipped = 0;
+
+    for game in games {
+        // Verifica se já existe um jogo com mesmo executável
+        let exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM games WHERE executable_path = ?1)",
+                params![&game.executable_path],
+                |row| row.get(0),
+            )
+            .map_err(|e| format!("Erro ao verificar jogo existente: {}", e))?;
+
+        if exists {
+            skipped += 1;
+            continue;
+        }
+
+        let id = Uuid::new_v4().to_string();
+        let platform_game_id = format!("scan-{}", Uuid::new_v4());
+        let added_at = Utc::now().to_rfc3339();
+
+        conn.execute(
+            "INSERT INTO games (
+                id, name, executable_path, install_path, platform, platform_game_id,
+                added_at, installed, status, playtime, favorite, user_rating
+            ) VALUES (?1, ?2, ?3, ?4, 'Outra', ?5, ?6, 1, 'Backlog', 0, 0, NULL)",
+            params![
+                id,
+                game.name,
+                game.executable_path,
+                game.base_path,
+                platform_game_id,
+                added_at
+            ],
+        )
+        .map_err(|e| format!("Erro ao adicionar jogo: {}", e))?;
+
+        added += 1;
+    }
+
+    let _ = app.emit("library_updated", ());
+
+    Ok(format!(
+        "{} adicionados, {} pulados (já existem)",
+        added, skipped
+    ))
 }

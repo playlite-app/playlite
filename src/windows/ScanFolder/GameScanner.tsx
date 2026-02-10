@@ -7,8 +7,14 @@ import { Button } from '@/ui/button.tsx';
 import { DiscoveriesList } from './DiscoveriesList';
 
 export function GameScanner() {
-  const { scanning, result, selectedFolder, handleSelectFolder, handleScan } =
-    useScanner();
+  const {
+    scanning,
+    result,
+    selectedFolder,
+    handleSelectFolder,
+    handleScan,
+    handleAddAll,
+  } = useScanner();
 
   return (
     <div className="space-y-6">
@@ -53,26 +59,37 @@ export function GameScanner() {
       {/* Área de Resultados */}
       {result && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div
-            className={cn(
-              'mb-6 flex items-center gap-3 rounded-lg border p-4 text-sm',
-              result.success
-                ? 'border-green-500/20 bg-green-500/5 text-green-400'
-                : 'border-red-500/20 bg-red-500/5 text-red-400'
-            )}
-          >
+          <div>
             <div
               className={cn(
-                'h-2 w-2 rounded-full',
-                result.success ? 'bg-green-500' : 'bg-red-500'
+                'mb-6 flex items-center justify-between rounded-lg border p-4 text-sm',
+                result.success
+                  ? 'border-green-500/20 bg-green-500/5 text-green-400'
+                  : 'border-red-500/20 bg-red-500/5 text-red-400'
               )}
-            />
-            {result.message}
-          </div>
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    result.success ? 'bg-green-500' : 'bg-red-500'
+                  )}
+                />
+                {result.message}
+              </div>
+              {result.success && result.discoveries.length > 0 && (
+                <Button onClick={handleAddAll} disabled={scanning} size="sm">
+                  Adicionar
+                </Button>
+              )}
+            </div>
 
-          {result.success && result.discoveries.length > 0 && (
-            <DiscoveriesList discoveries={result.discoveries} />
-          )}
+            {result.success && result.discoveries.length > 0 && (
+              <>
+                <DiscoveriesList discoveries={result.discoveries} />
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

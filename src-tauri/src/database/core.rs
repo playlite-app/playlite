@@ -218,7 +218,7 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
 
 /// Inicializa o banco de dados e verifica a versão do schema.
 ///
-/// Se o banco estiver desatualizado (< v3), retorna erro com instruções para o usuário.
+/// Se o banco estiver desatualizado, retorna erro com instruções para o usuário.
 #[tauri::command]
 pub fn init_db(app: AppHandle, state: State<AppState>) -> Result<String, String> {
     let conn = state

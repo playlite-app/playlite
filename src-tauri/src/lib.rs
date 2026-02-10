@@ -106,6 +106,7 @@ pub fn run() {
             // Comandos de Importação de Plataformas
             commands::plataforms::scan_games_folder,
             commands::plataforms::add_game_from_scan,
+            commands::plataforms::add_games_from_scan,
             commands::plataforms::import_steam_library,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,

@@ -276,8 +276,6 @@ fn detect_executable_type(path: &Path) -> Result<ExecutableType, String> {
 /// **Sistema de pontos:**
 /// * -5: Nomes suspeitos (launcher, crash, uninstall, setup, redist)
 /// * +2: Nomes positivos (game, play, start)
-/// * +2: Arquivo > 100MB
-/// * +3: Arquivo > 500MB
 /// * +3: Nome similar ao nome da pasta pai
 /// * +2: Executável na raiz da pasta do jogo
 ///
