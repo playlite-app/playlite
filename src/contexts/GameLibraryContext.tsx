@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event';
 import {
   createContext,
   ReactNode,
@@ -32,6 +33,17 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
     refreshGames();
   }, []);
 
+  // Escuta por atualizações na biblioteca
+  useEffect(() => {
+    const unlisten = listen('library_updated', () => {
+      refreshGames();
+    });
+
+    return () => {
+      unlisten.then(f => f());
+    };
+  }, []);
+
   const refreshGames = async () => {
     try {
       setIsLoading(true);
@@ -57,7 +69,10 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
       id: ensureId,
       name: data.name ?? 'Untitled',
       platform: data.platform ?? 'Manual',
+      platformGameId: data.platformGameId ?? '',
       coverUrl: data.coverUrl ?? null,
+      installed: data.installed ?? false,
+      importConfidence: data.importConfidence ?? null,
       playtime: data.playtime ?? 0,
       userRating: data.userRating ?? null,
       status:
@@ -70,6 +85,9 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
       installPath: data.installPath ?? null,
       executablePath: data.executablePath ?? null,
       launchArgs: data.launchArgs ?? null,
+      favorite: data.favorite ?? false,
+      isAdult: data.isAdult ?? false,
+      addedAt: data.addedAt ?? new Date().toISOString(),
     };
   };
 

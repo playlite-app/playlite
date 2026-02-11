@@ -8,6 +8,7 @@ import { RecommendationConfig } from '@/types/recommendation';
  *
  * @param config - Configuração atual de recomendação
  * @param updateConfig - Função para atualizar a configuração
+ *
  * @returns Objeto com valores dos sliders e handlers
  */
 export function useRecommendationSliders(

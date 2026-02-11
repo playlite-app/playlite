@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 
 import { Game } from '@/types';
 
-/**
- * Dados do formulário de jogo
- */
 export interface GameFormData {
   name: string;
   coverUrl: string;
   platform: string;
+  platformGameId: string;
+  installed: boolean;
+  importConfidence: string;
   status: string;
   playtime: string;
   rating: number;
@@ -17,13 +17,13 @@ export interface GameFormData {
   launchArgs: string;
 }
 
-/**
- * Estado inicial do formulário
- */
 const INITIAL_STATE: GameFormData = {
   name: '',
   coverUrl: '',
   platform: 'Manual',
+  platformGameId: '',
+  installed: false,
+  importConfidence: '',
   status: 'backlog',
   playtime: '0',
   rating: 0,
@@ -57,6 +57,9 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
           name: gameToEdit.name,
           coverUrl: gameToEdit.coverUrl || '',
           platform: gameToEdit.platform || 'Manual',
+          platformGameId: gameToEdit.platformGameId || '',
+          installed: gameToEdit.installed || false,
+          importConfidence: gameToEdit.importConfidence || '',
           status: gameToEdit.status || 'backlog',
           playtime: gameToEdit.playtime?.toString() || '0',
           rating: gameToEdit.userRating || 0,
@@ -71,23 +74,17 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
     }
   }, [isOpen, gameToEdit]);
 
-  /**
-   * Atualiza um campo do formulário
-   */
+  // Atualiza um campo do formulário
   const handleChange = (field: keyof GameFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  /**
-   * Valida se o formulário está pronto para salvar
-   */
+  // Valida se o formulário está pronto para salvar
   const isValid = () => {
     return formData.name.trim().length > 0;
   };
 
-  /**
-   * Transforma dados do formulário para o formato do Game
-   */
+  // Transforma dados do formulário para o formato do Game
   const buildPayload = () => {
     return {
       // Mantém ID se estiver editando
@@ -95,6 +92,9 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
       name: formData.name,
       coverUrl: formData.coverUrl || null,
       platform: formData.platform,
+      platformGameId: formData.platformGameId || '',
+      installed: formData.installed,
+      importConfidence: formData.importConfidence || null,
       status: formData.status,
       playtime: parseInt(formData.playtime) || 0,
       userRating: formData.rating > 0 ? formData.rating : null,
@@ -104,9 +104,7 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
     };
   };
 
-  /**
-   * Reseta formulário para estado inicial
-   */
+  // Reseta formulário para estado inicial
   const reset = () => {
     setFormData(INITIAL_STATE);
   };

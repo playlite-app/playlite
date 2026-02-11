@@ -64,6 +64,7 @@ interface UseRecommendationProps {
  * @param contentBasedParams - Parâmetros de filtro para Content-Based
  * @param collaborativeParams - Parâmetros de filtro para Collaborative Filtering
  * @param hybridParams - Parâmetros de filtro para Híbrido
+ *
  * @returns Objeto contendo perfil, listas de recomendações, estados de carregamento e ações de feedback
  */
 export function useRecommendation({
@@ -78,6 +79,7 @@ export function useRecommendation({
   hybridParams = { minPlaytime: 0, maxPlaytime: 120, limit: 15 },
 }: UseRecommendationProps = {}) {
   // === HOOKS MENORES ===
+
   const { profile, loading: loadingProfile } = useRecommendationProfile({
     profileCache,
     setProfileCache,
@@ -99,6 +101,7 @@ export function useRecommendation({
   } = useRecommendationConfig();
 
   // === ESTADOS LOCAIS ===
+
   const [recommendations, setRecommendations] = useState<RecommendedGame[]>([]);
   const [collaborativeRecs, setCollaborativeRecs] = useState<RecommendedGame[]>(
     []
@@ -113,6 +116,7 @@ export function useRecommendation({
   const storeReady = blacklistReady && configReady;
 
   // === BUSCAR RECOMENDAÇÕES ===
+
   const refreshRecommendations = useCallback(async () => {
     if (allGames.length === 0 || !storeReady || isRefreshingRef.current) return;
 
@@ -234,11 +238,7 @@ export function useRecommendation({
     refreshRecommendations();
   }, [refreshRecommendations]);
 
-  // === AÇÕES DE FEEDBACK (Delegadas aos hooks menores) ===
-
-  /**
-   * Marca jogo como "Não Útil" e remove de todas as listas visualmente
-   */
+  // Marca jogo como "Não Útil" e remove de todas as listas visualmente
   const markAsNotUseful = useCallback(
     async (gameId: string) => {
       // 1. Optimistic Update (Remove da UI instantaneamente)
@@ -252,9 +252,7 @@ export function useRecommendation({
     [addToBlacklist]
   );
 
-  /**
-   * Reseta todo o feedback negativo (Limpa blacklist)
-   */
+  // Reseta feedback negativo (Limpa blacklist)
   const resetFeedback = useCallback(async () => {
     await clearBlacklist();
     refreshRecommendations(); // Força recarga do backend

@@ -1,10 +1,51 @@
-import { Moon, Plus, Search, Settings, Sun } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Moon,
+  Plus,
+  Scan,
+  Search,
+  Settings,
+  Sun,
+} from 'lucide-react';
 import { useState } from 'react';
 
-import { AdultFilterToggle } from '@/components/layout';
-import { QuickSettingsModal } from '@/components/modals/QuickSettingsModal';
-import { Button } from '@/components/ui/button';
+import { QuickSettings } from '@/dialogs/QuickSettings.tsx';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
+import { Button } from '@/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
+import { ScanFolder } from '@/windows/ScanFolder';
+
+interface AdultFilterToggleProps {
+  hideAdult: boolean;
+  onToggle: () => void;
+}
+
+function AdultFilterToggle({ hideAdult, onToggle }: AdultFilterToggleProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className={`shrink-0 transition-colors ${
+            hideAdult
+              ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20 hover:text-green-600'
+              : 'text-muted-foreground hover:bg-red-500/10 hover:text-red-500'
+          }`}
+        >
+          {hideAdult ? <EyeOff size={18} /> : <Eye size={18} />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        <p>
+          {hideAdult ? 'Conteúdo adulto oculto' : 'Ocultar conteúdo adulto'}
+        </p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 interface HeaderProps {
   onAddGame: () => void;
@@ -30,6 +71,8 @@ export default function Header({
     useHeaderState(activeSection);
 
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+
+  const [isScanFolderOpen, setIsScanFolderOpen] = useState(false);
 
   // Hook para gerenciar análises de recomendação
   const { analysisStatus, generateRecommendationAnalysis } =
@@ -84,6 +127,17 @@ export default function Header({
           <span className="ml-1 hidden md:inline">Adicionar</span>
         </Button>
 
+        {/* Botão de Escanear Pasta */}
+        <Button
+          onClick={() => setIsScanFolderOpen(true)}
+          size="sm"
+          className="shrink-0 px-3 md:px-4"
+          title="Escanear Pasta"
+        >
+          <Scan size={18} />
+          <span className="ml-1 hidden md:inline">Escanear</span>
+        </Button>
+
         {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
         {isSearchable && (
           <AdultFilterToggle
@@ -115,11 +169,16 @@ export default function Header({
         </Button>
       </div>
 
-      <QuickSettingsModal
+      <QuickSettings
         open={isQuickSettingsOpen}
         onClose={() => setIsQuickSettingsOpen(false)}
         onGenerateReport={generateRecommendationAnalysis}
         onCheckUpdates={onCheckUpdates}
+      />
+
+      <ScanFolder
+        open={isScanFolderOpen}
+        onClose={() => setIsScanFolderOpen(false)}
       />
     </header>
   );

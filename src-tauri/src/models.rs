@@ -7,9 +7,92 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::str::FromStr;
 
 // Reexportar GameTag do utils para consistência
 pub use crate::utils::tag_utils::GameTag;
+
+// === ENUMS ===
+
+/// Nível de confiança da importação do jogo
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum ImportConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+impl FromStr for ImportConfidence {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "High" => Ok(ImportConfidence::High),
+            "Medium" => Ok(ImportConfidence::Medium),
+            "Low" => Ok(ImportConfidence::Low),
+            _ => Err(()),
+        }
+    }
+}
+
+impl std::fmt::Display for ImportConfidence {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ImportConfidence::High => "High",
+            ImportConfidence::Medium => "Medium",
+            ImportConfidence::Low => "Low",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+/// Plataformas suportadas
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum Platform {
+    Steam,
+    Epic,
+    GOG,
+    EA,
+    Ubisoft,
+    #[serde(rename = "Battle.net")]
+    BattleNet,
+    Amazon,
+    Indie, // Para jogos sem plataforma específica ou de desenvolvedores independentes
+    Outra, // Para jogos de plataformas não listadas ou desconhecidas
+}
+
+impl FromStr for Platform {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Steam" => Ok(Platform::Steam),
+            "Epic" => Ok(Platform::Epic),
+            "GOG" => Ok(Platform::GOG),
+            "EA" => Ok(Platform::EA),
+            "Ubisoft" => Ok(Platform::Ubisoft),
+            "Battle.net" => Ok(Platform::BattleNet),
+            "Amazon" => Ok(Platform::Amazon),
+            "Outra" => Ok(Platform::Outra),
+            _ => Err(()),
+        }
+    }
+}
+
+impl std::fmt::Display for Platform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Platform::Steam => "Steam",
+            Platform::Epic => "Epic",
+            Platform::GOG => "GOG",
+            Platform::EA => "EA",
+            Platform::Ubisoft => "Ubisoft",
+            Platform::BattleNet => "Battle.net",
+            Platform::Amazon => "Amazon",
+            Platform::Indie => "Indie",
+            Platform::Outra => "Outra",
+        };
+        write!(f, "{}", s)
+    }
+}
 
 // === Modelos de Dados ===
 
@@ -25,19 +108,20 @@ pub struct Game {
     pub cover_url: Option<String>,
     pub genres: Option<String>,
     pub developer: Option<String>,
-
-    // Identificação
-    pub platform: String,
-    #[serde(rename = "platformId")]
-    pub platform_id: Option<String>,
+    pub platform: Platform,
+    #[serde(rename = "platformGameId")]
+    pub platform_game_id: String,
 
     // Execução
+    pub installed: bool,
     #[serde(rename = "installPath")]
     pub install_path: Option<String>,
     #[serde(rename = "executablePath")]
     pub executable_path: Option<String>,
     #[serde(rename = "launchArgs")]
     pub launch_args: Option<String>,
+    #[serde(rename = "importConfidence")]
+    pub import_confidence: Option<ImportConfidence>,
 
     // Dados do Usuário
     #[serde(rename = "userRating")]

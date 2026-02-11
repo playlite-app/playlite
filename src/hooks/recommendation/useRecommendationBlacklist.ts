@@ -1,14 +1,13 @@
 import { Store } from '@tauri-apps/plugin-store';
 import { useCallback, useEffect, useState } from 'react';
 
-const STORE_FILENAME = 'recommendation.store';
+const STORE_FILENAME = 'recommendations.store';
 
 /**
  * Hook para gerenciar a blacklist de jogos ignorados (feedback negativo).
  *
  * Quando um usuário marca um jogo como "Não Útil", ele é adicionado à blacklist
  * e não aparecerá mais nas recomendações futuras.
- *
  * A blacklist é persistida localmente usando Tauri Store.
  *
  * @returns Objeto com lista de ignorados e ações de gerenciamento
@@ -37,9 +36,7 @@ export function useRecommendationBlacklist() {
     loadBlacklist();
   }, []);
 
-  /**
-   * Adiciona um jogo à blacklist
-   */
+  // Adiciona um jogo à blacklist
   const addToBlacklist = useCallback(
     async (gameId: string) => {
       const newIgnored = [...ignoredIds, gameId];
@@ -56,9 +53,7 @@ export function useRecommendationBlacklist() {
     [ignoredIds]
   );
 
-  /**
-   * Remove um jogo da blacklist
-   */
+  // Remove um jogo da blacklist
   const removeFromBlacklist = useCallback(
     async (gameId: string) => {
       const newIgnored = ignoredIds.filter(id => id !== gameId);
@@ -75,9 +70,7 @@ export function useRecommendationBlacklist() {
     [ignoredIds]
   );
 
-  /**
-   * Limpa toda a blacklist (reseta feedback)
-   */
+  // Limpa toda a blacklist (reseta feedback)
   const clearBlacklist = useCallback(async () => {
     setIgnoredIds([]);
 

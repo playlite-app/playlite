@@ -7,7 +7,7 @@ use crate::constants::RAWG_RATE_LIMIT_MS;
 use crate::database::{self, AppState};
 use crate::errors::AppError;
 use crate::models::WishlistGame;
-use crate::services::{itad, rawg};
+use crate::services::integration::{itad, rawg};
 use chrono::NaiveDate;
 use rusqlite::{params, Connection};
 use serde::Deserialize;
@@ -194,7 +194,7 @@ pub async fn import_wishlist(
     // 1. Lê o arquivo
     let content = fs::read_to_string(&file_path)?;
 
-    // 2. Tenta detectar o formato usando os parsers do steam.rs e wishlist logic
+    // 2. Tenta detectar o formato usando os parsers do steam_store e wishlist logic
     let games = if let Some(steam_games) = parse_steam_wishlist(&content) {
         steam_games
     } else if let Some(itad_games) = parse_itad_wishlist(&content) {

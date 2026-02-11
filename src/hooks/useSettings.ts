@@ -23,6 +23,10 @@ export function useSettings(onLibraryUpdate: () => void) {
     geminiApiKey: '',
   });
 
+  const [steamRoot, setSteamRoot] = useState(
+    localStorage.getItem('steam_root') || ''
+  );
+
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
@@ -70,6 +74,11 @@ export function useSettings(onLibraryUpdate: () => void) {
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
 
+  // Salva steamRoot no localStorage quando muda
+  useEffect(() => {
+    localStorage.setItem('steam_root', steamRoot);
+  }, [steamRoot]);
+
   const saveKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
     setStatus({ type: null, message: '' });
@@ -99,12 +108,22 @@ export function useSettings(onLibraryUpdate: () => void) {
       return;
     }
 
+    if (!steamRoot) {
+      setStatus({
+        type: 'error',
+        message: 'Selecione o diretório de instalação do Steam.',
+      });
+
+      return;
+    }
+
     setLoading(prev => ({ ...prev, importing: true }));
 
     try {
       const msg = await settingsService.importSteamLibrary(
         keys.steamId,
-        keys.steamApiKey
+        keys.steamApiKey,
+        steamRoot
       );
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
@@ -112,6 +131,23 @@ export function useSettings(onLibraryUpdate: () => void) {
       setStatus({ type: 'error', message: String(e) });
     } finally {
       setLoading(prev => ({ ...prev, importing: false }));
+    }
+  };
+
+  const chooseSteamDirectory = async () => {
+    try {
+      const selected = await import('@tauri-apps/plugin-dialog').then(m =>
+        m.open({
+          directory: true,
+          multiple: false,
+        })
+      );
+
+      if (selected) {
+        setSteamRoot(selected as string);
+      }
+    } catch (error) {
+      console.error('Erro ao escolher diretório:', error);
     }
   };
 
@@ -349,6 +385,7 @@ export function useSettings(onLibraryUpdate: () => void) {
   return {
     keys,
     setKeys,
+    steamRoot,
     loading,
     status,
     progress,
@@ -364,6 +401,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       importDatabase,
       cleanupCache,
       clearAllCache,
+      chooseSteamDirectory,
     },
   };
 }

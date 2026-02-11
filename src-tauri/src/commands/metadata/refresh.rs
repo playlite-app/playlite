@@ -5,7 +5,8 @@
 use crate::constants::{BACKGROUND_TASK_INTERVAL_SECS, STARTUP_DELAY_SECS};
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::{cache, itad, steam};
+use crate::services::cache;
+use crate::services::integration::{itad, steam_api};
 use rusqlite::params;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -65,12 +66,12 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
     let steam_games: Vec<(u32, String)> = {
         let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
 
-        conn.prepare("SELECT platform_id, title FROM games WHERE platform = 'Steam'")
+        conn.prepare("SELECT platform_game_id, name FROM games WHERE platform = 'Steam'")
             .and_then(|mut stmt| {
                 stmt.query_map([], |row| {
                     let id_str: String = row.get(0)?;
-                    let title: String = row.get(1)?;
-                    Ok((id_str.parse::<u32>().unwrap_or(0), title))
+                    let name: String = row.get(1)?;
+                    Ok((id_str.parse::<u32>().unwrap_or(0), name))
                 })
                 .and_then(|mapped| mapped.collect::<Result<Vec<_>, _>>())
             })
@@ -102,7 +103,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
         if should_update {
             let app_id_str = app_id.to_string();
             // C. Busca na API (Só se expirou)
-            match steam::get_app_reviews(&app_id_str).await {
+            match steam_api::get_app_reviews(&app_id_str).await {
                 Ok(Some(summary)) => {
                     // D. Sucesso? Atualiza Library DB e Metadata Cache
                     {
@@ -132,7 +133,7 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
 
                         if let Ok(conn) = state.library_db.lock() {
                             let _ = conn.execute(
-                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_id = ?2",
+                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_game_id = ?2",
                                 params![percent_positive, app_id_str],
                             );
                         }

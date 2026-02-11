@@ -1,9 +1,9 @@
 import { Calendar, ExternalLink } from 'lucide-react';
 
-import { AffinityTooltip } from '@/components';
-import { Badge } from '@/components/ui/badge';
+import { Affinity } from '@/components';
 import { cn } from '@/lib/utils';
 import { Giveaway } from '@/types';
+import { Badge } from '@/ui/badge';
 import { getPlatformColor, getPlatformLabel } from '@/utils/platform';
 
 interface FreeGameCardProps extends Giveaway {
@@ -73,11 +73,11 @@ export function FreeGameCard({
         {/* Badge Recomendação com Tooltip */}
         {badge && (
           <div className="absolute top-3 left-3">
-            <AffinityTooltip badge={badge}>
+            <Affinity badge={badge}>
               <Badge className="bg-purple-600 font-bold text-white">
                 {badge}
               </Badge>
-            </AffinityTooltip>
+            </Affinity>
           </div>
         )}
 

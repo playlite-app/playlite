@@ -44,6 +44,22 @@ Criar uma aplicação desktop para gerenciamento de biblioteca de jogos, com foc
 
 ---
 
+### 3.1 Organização do Frontend para Aplicação Desktop
+
+**Decisão:** Adotar uma estrutura híbrida no frontend, com organização por camadas técnicas (components, hooks,
+services, types) e agrupamento por domínio.
+
+**Contexto:** Embora o frontend utilize React, o projeto é um app desktop via Tauri. O uso excessivo de padrões
+típicos de aplicações web (ex.: muitos modais genéricos) começou a gerar complexidade conforme o projeto cresceu.
+
+**Motivação:**
+
+- Alinhar a estrutura do frontend ao modelo mental de aplicações desktop
+- Facilitar a navegação e manutenção do código
+- Reduzir complexidade desnecessária
+
+---
+
 ## 4. Backend Local
 
 **Decisão:** Backend local em Rust (Tauri commands).
@@ -87,6 +103,8 @@ O projeto precisa persistir credenciais de acesso a APIs externas para funcionar
 
 - Avaliado como solução mais adequada para aplicações desktop comerciais.
 - Falhou por falta de assinatura de código e/ou reputação do app, e o sistema a recusou o armazenamento.
+
+---
 
 ## 7. Estratégia de Recomendação de Jogos
 

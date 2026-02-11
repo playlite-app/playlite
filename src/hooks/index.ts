@@ -2,7 +2,6 @@
  * Hooks organizados por domínio/feature
  *
  * Estrutura:
- * - analysis/       - Análise e relatórios
  * - library/        - Gerenciamento de biblioteca
  * - recommendation/ - Sistema de recomendação
  * - trending/       - Jogos em alta e lançamentos
@@ -10,6 +9,7 @@
  * - ui/             - Componentes de interface
  * - user/           - Perfil e detalhes
  * - common/         - Utilitários genéricos
+ * - update/         - Verificação e aplicação de atualizações
  */
 
 // Library hooks
@@ -33,7 +33,9 @@ export * from './user';
 // Common hooks
 export * from './common';
 
+// Update hooks
+export * from './update';
+
 // Special hooks (na raiz)
-export * from './useAppUpdate';
 export * from './useHome';
 export * from './useSettings';

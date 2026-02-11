@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { RecommendationConfig } from '@/types/recommendation';
 
-const STORE_FILENAME = 'recommendation.store';
+const STORE_FILENAME = 'recommendations.store';
 
 const DEFAULT_CONFIG: RecommendationConfig = {
   content_weight: 0.65,
@@ -53,9 +53,7 @@ export function useRecommendationConfig() {
     loadConfig();
   }, []);
 
-  /**
-   * Atualiza a configuração e persiste
-   */
+  // Atualiza a configuração e persiste
   const updateConfig = useCallback(async (newConfig: RecommendationConfig) => {
     setConfig(newConfig);
 
@@ -68,9 +66,7 @@ export function useRecommendationConfig() {
     }
   }, []);
 
-  /**
-   * Reseta para configuração padrão
-   */
+  // Reseta para configuração padrão
   const resetConfig = useCallback(async () => {
     setConfig(DEFAULT_CONFIG);
 
@@ -83,9 +79,7 @@ export function useRecommendationConfig() {
     }
   }, []);
 
-  /**
-   * Alterna filtro de conteúdo adulto
-   */
+  // Alterna filtro de conteúdo adulto
   const toggleAdultFilter = useCallback(async () => {
     const newConfig = {
       ...config,
@@ -94,9 +88,7 @@ export function useRecommendationConfig() {
     await updateConfig(newConfig);
   }, [config, updateConfig]);
 
-  /**
-   * Define limite de séries nas recomendações
-   */
+  // Define limite de séries nas recomendações
   const setSeriesLimit = useCallback(
     async (limit: 'none' | 'moderate' | 'aggressive') => {
       const newConfig = {

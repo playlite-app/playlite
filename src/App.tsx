@@ -2,29 +2,28 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo } from 'react';
 import { toast, Toaster } from 'sonner';
 
-import GameDetailsModal from '@/components/game-details/GameDetailsModal.tsx';
-import { UpdateManager } from '@/components/update/UpdateManager.tsx';
-import { UpdateProvider } from '@/components/update/UpdateProvider.tsx';
+import { ErrorBoundary } from '@/components';
+import AddGame from '@/dialogs/AddGame.tsx';
 import { useDebounce, useGameDetails } from '@/hooks';
+import { UpdateProvider } from '@/providers/UpdateProvider.tsx';
 import { Game } from '@/types';
+import Favorites from '@/views/Favorites';
+import Home from '@/views/Home';
+import Libraries from '@/views/Libraries.tsx';
+import Playlist from '@/views/Playlist';
+import Settings from '@/views/Settings';
+import Trending from '@/views/Trending';
+import Wishlist from '@/views/Wishlist';
+import GameDetail from '@/windows/GameDetail/GameDetail.tsx';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import AddGameModal from './components/modals/AddGameModal';
-import { ErrorBoundary } from './components/wrappers/ErrorBoundary';
 import {
   GameLibraryProvider,
   UIProvider,
   useGameLibrary,
   useUI,
 } from './contexts';
-import Favorites from './pages/Favorites';
-import Home from './pages/Home';
-import Libraries from './pages/Libraries.tsx';
-import Playlist from './pages/Playlist';
-import Settings from './pages/Settings';
-import Trending from './pages/Trending';
-import Wishlist from './pages/Wishlist';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider.tsx';
 
 function AppContent() {
@@ -251,13 +250,13 @@ function AppContent() {
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>
       <ErrorBoundary>
-        <AddGameModal
+        <AddGame
           isOpen={isAddModalOpen}
           onClose={closeAddModal}
           onSave={handleSaveGameWrapper}
           gameToEdit={gameToEdit}
         />
-        <GameDetailsModal
+        <GameDetail
           isOpen={!!selectedGameId}
           onClose={closeDetails}
           game={selectedGame}
@@ -269,21 +268,20 @@ function AppContent() {
         />
       </ErrorBoundary>
       <Toaster />
-      <UpdateManager />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <UpdateProvider>
-      <ConfirmProvider>
-        <GameLibraryProvider>
-          <UIProvider>
+    <ConfirmProvider>
+      <GameLibraryProvider>
+        <UIProvider>
+          <UpdateProvider>
             <AppContent />
-          </UIProvider>
-        </GameLibraryProvider>
-      </ConfirmProvider>
-    </UpdateProvider>
+          </UpdateProvider>
+        </UIProvider>
+      </GameLibraryProvider>
+    </ConfirmProvider>
   );
 }

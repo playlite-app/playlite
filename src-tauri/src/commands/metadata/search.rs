@@ -5,8 +5,8 @@
 
 use crate::database;
 use crate::errors::AppError;
-use crate::services::gamerpower::{self, Giveaway};
-use crate::services::rawg;
+use crate::services::integration::gamerpower::{self, Giveaway};
+use crate::services::integration::rawg;
 use tauri::AppHandle;
 
 /// Busca detalhes de um jogo na RAWG

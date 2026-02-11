@@ -21,7 +21,10 @@ export const librariesService = {
     id: string;
     name: string;
     platform: string;
+    platformGameId: string;
     coverUrl: string | null;
+    installed: boolean;
+    importConfidence: string | null;
     playtime: number;
     userRating: number | null;
     status: 'playing' | 'completed' | 'backlog' | 'abandoned' | 'plan_to_play';
@@ -40,7 +43,10 @@ export const librariesService = {
     id: string;
     name: string;
     platform: string;
+    platformGameId: string;
     coverUrl: string | null;
+    installed: boolean;
+    importConfidence: string | null;
     playtime: number;
     userRating: number | null;
     status: 'playing' | 'completed' | 'backlog' | 'abandoned' | 'plan_to_play';

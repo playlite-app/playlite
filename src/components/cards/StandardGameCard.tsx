@@ -29,7 +29,6 @@ interface StandardGameCardProps {
  * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
  * - Efeito hover: elevação + zoom suave na imagem
  */
-
 export default function StandardGameCard({
   id,
   title,

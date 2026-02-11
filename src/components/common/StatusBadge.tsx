@@ -5,10 +5,6 @@ interface StatusBadgeProps {
   message: string;
 }
 
-/**
- * Badge de status para exibir mensagens de sucesso ou erro.
- * Aparece com animação no canto superior direito.
- */
 export function StatusBadge({ type, message }: StatusBadgeProps) {
   if (!type) return null;
 

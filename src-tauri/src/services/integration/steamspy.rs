@@ -1,0 +1,45 @@
+//! Módulo de integração com a API do SteamSpy
+//!
+//! Usado para obter dados públicos de playtime para estima a duração de um jogo.
+
+use crate::constants::{STEAMSPY_API_URL, STEAM_REVIEWS_TIMEOUT_SECS, USER_AGENT_STEAM};
+use crate::utils::http_client::HTTP_CLIENT;
+use serde::Deserialize;
+use std::time::Duration;
+
+#[derive(Debug, Deserialize)]
+struct SteamSpyResponse {
+    median_forever: u32,
+}
+
+/// Busca tempo médio de jogo no SteamSpy (em minutos)
+pub async fn get_median_playtime(app_id: &str) -> Result<Option<u32>, String> {
+    let url = format!("{}?request=appdetails&appid={}", STEAMSPY_API_URL, app_id);
+
+    let response = HTTP_CLIENT
+        .get(&url)
+        .header("User-Agent", USER_AGENT_STEAM)
+        .timeout(Duration::from_secs(STEAM_REVIEWS_TIMEOUT_SECS))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        return Ok(None);
+    }
+
+    // Tenta parsear. Se falhar (ex: jogo não trackeado), retorna None sem erro crítico
+    match response.json::<SteamSpyResponse>().await {
+        Ok(data) => {
+            // SteamSpy retorna em minutos, converter para horas
+            let median_hours = data.median_forever / 60;
+            // Filtra zeros (jogos sem dados ou nunca jogados)
+            if median_hours > 0 {
+                Ok(Some(median_hours))
+            } else {
+                Ok(None)
+            }
+        }
+        Err(_) => Ok(None),
+    }
+}

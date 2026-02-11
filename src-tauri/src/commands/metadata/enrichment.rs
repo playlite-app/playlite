@@ -14,7 +14,8 @@ use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::{cache, playtime, steam};
+use crate::services::integration::{steam_api, steamspy};
+use crate::services::{cache, playtime};
 use crate::utils::series;
 use rusqlite::params;
 use std::collections::{HashMap, HashSet};
@@ -81,16 +82,16 @@ fn extract_steam_id_from_url(url: &str) -> Option<String> {
 async fn fetch_steam_store_data(
     steam_id: &str,
     cache_conn: &rusqlite::Connection,
-) -> Option<steam::SteamStoreData> {
+) -> Option<steam_api::SteamStoreData> {
     let cache_key = format!("store_{}", steam_id);
 
     if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(data) = serde_json::from_str::<steam::SteamStoreData>(&cached) {
+        if let Ok(data) = serde_json::from_str::<steam_api::SteamStoreData>(&cached) {
             return Some(data);
         }
     }
 
-    match steam::get_app_details(steam_id).await {
+    match steam_api::get_app_details(steam_id).await {
         Ok(Some(data)) => {
             if let Ok(json) = serde_json::to_string(&data) {
                 let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
@@ -105,16 +106,16 @@ async fn fetch_steam_store_data(
 async fn fetch_steam_reviews(
     steam_id: &str,
     cache_conn: &rusqlite::Connection,
-) -> Option<steam::SteamReviewSummary> {
+) -> Option<steam_api::SteamReviewSummary> {
     let cache_key = format!("reviews_{}", steam_id);
 
     if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(reviews) = serde_json::from_str::<steam::SteamReviewSummary>(&cached) {
+        if let Ok(reviews) = serde_json::from_str::<steam_api::SteamReviewSummary>(&cached) {
             return Some(reviews);
         }
     }
 
-    match steam::get_app_reviews(steam_id).await {
+    match steam_api::get_app_reviews(steam_id).await {
         Ok(Some(reviews)) => {
             if let Ok(json) = serde_json::to_string(&reviews) {
                 let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
@@ -135,7 +136,7 @@ async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection)
         }
     }
 
-    match steam::get_median_playtime(steam_id).await {
+    match steamspy::get_median_playtime(steam_id).await {
         Ok(Some(hours)) => {
             let _ =
                 cache::save_cached_api_data(cache_conn, "steam", &cache_key, &hours.to_string());
@@ -153,7 +154,7 @@ async fn enrich_game_metadata(
     game_id: &str,
     name: &str,
     platform: &str,
-    platform_id: Option<String>,
+    platform_game_id: Option<String>,
     cache_conn: &rusqlite::Connection,
 ) -> (ProcessedGameDetails, Vec<String>) {
     let series_name = series::infer_series(name);
@@ -187,7 +188,7 @@ async fn enrich_game_metadata(
 
     // 1. Estratégia de Steam ID
     let mut target_steam_id = if platform.to_lowercase() == "steam" {
-        platform_id
+        platform_game_id
     } else {
         None
     };
@@ -225,7 +226,7 @@ async fn enrich_game_metadata(
         }
         links_map.insert(
             "rawg".to_string(),
-            format!("https://rawg.io/api/games/{}", rawg_det.id),
+            format!("https://rawg.io/games/{}", rawg_det.id),
         );
 
         // Descobre Steam ID via RAWG
@@ -253,7 +254,7 @@ async fn enrich_game_metadata(
 
         // A. Store data
         if let Some(store_data) = fetch_steam_store_data(steam_id, cache_conn).await {
-            let (detected_adult, flags) = steam::detect_adult_content(&store_data);
+            let (detected_adult, flags) = steam_api::detect_adult_content(&store_data);
             details.is_adult = detected_adult;
             if !flags.is_empty() {
                 details.adult_tags = serde_json::to_string(&flags).ok();
@@ -377,7 +378,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 };
                 let mut stmt = conn
                     .prepare(
-                        "SELECT g.id, g.name, g.platform, g.platform_id
+                        "SELECT g.id, g.name, g.platform, g.platform_game_id
                          FROM games g
                          LEFT JOIN game_details gd ON g.id = gd.game_id
                          WHERE gd.game_id IS NULL
@@ -400,7 +401,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
             let total_in_batch = games_to_update.len();
 
             // 2. Processa batch
-            for (index, (game_id, name, platform, platform_id)) in
+            for (index, (game_id, name, platform, platform_game_id)) in
                 games_to_update.into_iter().enumerate()
             {
                 let _ = app_handle.emit(
@@ -429,7 +430,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                                 &game_id,
                                 &name,
                                 &platform,
-                                platform_id.clone(),
+                                platform_game_id.clone(),
                                 &cache_conn,
                             )
                             .await

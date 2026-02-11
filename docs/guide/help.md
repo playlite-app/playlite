@@ -69,6 +69,20 @@ Todos os backups são gerados em formato **JSON**, facilitando o armazenamento e
   - fazer um backup do estado atual antes de tentar novamente
   - realizar o restore numa instalação limpa do aplicativo
 
+## Limitações conhecidas
+
+Playlite utiliza a API RAWG para enriquecer jogos com capas e descrições automaticamente.
+Jogos independentes, especialmente os distribuídos fora de lojas oficiais como Steam,
+podem não existir na base de dados ou possuir nomes genéricos.
+
+Nesses casos, o aplicativo pode:
+
+- não encontrar informações
+- ou associar dados incorretos a jogos com nomes semelhantes
+
+Quando isso acontecer, recomendamos editar o jogo manualmente para corrigir as informações
+ou adicionar os dados faltantes.
+
 ## Ainda com dúvidas?
 
 Consulte:

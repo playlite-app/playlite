@@ -25,8 +25,23 @@ export const CATEGORY_MULTIPLIERS: Record<TagCategory | 'unknown', number> = {
   unknown: 0.5,
 };
 
+/// Plataformas suportadas (deve corresponder ao enum Platform do Rust)
+export type Platform =
+  | 'Steam'
+  | 'Epic'
+  | 'GOG'
+  | 'EA'
+  | 'Ubisoft'
+  | 'Battle.net'
+  | 'Amazon'
+  | 'Indie'
+  | 'Outra';
+
+/// Nível de confiança da importação
+export type ImportConfidence = 'High' | 'Medium' | 'Low';
+
 /**
- * Informações básicas do jogo - Schema 2.0
+ * Informações básicas do jogo - Schema 3.0
  *
  * Dados básicos armazenados no banco de dados local.
  * Esses dados são essenciais para a exibição e gerenciamento dos jogos na biblioteca.
@@ -36,17 +51,19 @@ export interface Game {
   id: string;
   name: string;
   coverUrl?: string;
-  platform: string;
-  platformId?: string;
+
+  // Identificação
+  platform: Platform;
+  platformGameId: string;
   genres?: string;
-  tags?: string;
-  series?: string;
   developer?: string;
 
-  // Campos para execução
+  // Execução
+  installed: boolean;
   installPath?: string;
   executablePath?: string;
   launchArgs?: string;
+  importConfidence?: ImportConfidence;
 
   // Dados do usuário
   status?: 'playing' | 'completed' | 'backlog' | 'abandoned' | 'plan_to_play';
@@ -58,6 +75,7 @@ export interface Game {
   lastPlayed?: string;
   addedAt: string;
 
+  // Conteúdo Adulto
   isAdult: boolean;
 }
 

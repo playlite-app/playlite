@@ -4,6 +4,9 @@
 //! - Migrações só ocorrem entre MAJOR versions
 //! - Sempre assume backup automático antes de migrar
 //! - Falha de migração nunca destrói dados existentes
+//!
+//! **Nota:** Durante a fase de testes, as migrações estão desabilitadas.
+//! O banco deve ser deletado e recriado manualmente para aplicar mudanças de schema.
 
 use crate::database::{current_schema_version, expected_schema_version};
 use crate::errors::AppError;
@@ -35,50 +38,10 @@ pub fn run_migrations(app: &AppHandle, conn: &Connection) -> Result<(), AppError
         )));
     }
 
-    // Migração incremental
-    migrate_schema(conn, current, expected)?;
-
-    // Atualiza versão do schema
-    conn.pragma_update(None, "user_version", expected)
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
-
-    Ok(())
-}
-
-/// Função central de migração
-fn migrate_schema(conn: &Connection, from: u32, to: u32) -> Result<(), AppError> {
-    let mut current = from;
-
-    while current < to {
-        match current {
-            2 => migrate_v2_to_v3(conn)?,
-            _ => {
-                return Err(AppError::ValidationError(format!(
-                    "Migração não implementada: v{} → v{}",
-                    current,
-                    current + 1
-                )));
-            }
-        }
-
-        current += 1;
-    }
-
-    Ok(())
-}
-
-/// Migração do schema v2 para v3
-///
-/// Principais mudanças:
-/// - Campos HLTB removidos
-/// - URLs legadas removidas (migradas para external_links JSON)
-/// - users_score removido (substituído por steam_review_*)
-fn migrate_v2_to_v3(_conn: &Connection) -> Result<(), AppError> {
-    // Remove colunas antigas se existirem
-    // SQLite não suporta DROP COLUMN diretamente, então usamos uma abordagem de recriar tabela
-
-    // Por enquanto, apenas marca como migrado
-    // A migração real deve ser implementada conforme necessário
-
-    Ok(())
+    // Durante fase de testes, migrações estão desabilitadas
+    // O usuário deve deletar e recriar o banco manualmente
+    Err(AppError::ValidationError(format!(
+        "Migração necessária de v{} para v{}. Durante a fase de testes, delete o banco e deixe o app recriá-lo.",
+        current, expected
+    )))
 }

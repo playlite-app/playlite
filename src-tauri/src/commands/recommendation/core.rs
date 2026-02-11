@@ -7,7 +7,7 @@
 
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::models::Game;
+use crate::models::{Game, Platform};
 use crate::services::recommendation::{
     calculate_user_profile, parse_release_year, rank_games_collaborative, rank_games_content_based,
     rank_games_hybrid, GameWithDetails, RecommendationConfig, RecommendationReason, SeriesLimit,
@@ -168,7 +168,7 @@ fn fetch_all_games_with_details(state: &AppState) -> Result<Vec<GameWithDetails>
     let mut stmt = conn.prepare(
         "SELECT
             g.id, g.name, g.playtime, g.favorite, g.user_rating, g.cover_url,
-            g.platform_id, g.last_played, g.added_at, g.platform,
+            g.platform_game_id, g.last_played, g.added_at, g.platform,
             gd.genres, gd.steam_app_id, gd.release_date, gd.series, gd.tags
          FROM games g
          LEFT JOIN game_details gd ON g.id = gd.game_id
@@ -184,12 +184,10 @@ fn fetch_all_games_with_details(state: &AppState) -> Result<Vec<GameWithDetails>
                 favorite: row.get(3)?,
                 user_rating: row.get(4)?,
                 cover_url: row.get(5)?,
-                platform_id: row.get(6)?,
+                platform_game_id: row.get(6)?,
                 last_played: row.get(7)?,
                 added_at: row.get(8)?,
-                platform: row
-                    .get::<_, String>(9)
-                    .unwrap_or_else(|_| "Unknown".to_string()),
+                platform: row.get::<_, String>(9)?.parse().unwrap_or(Platform::Outra),
                 // Campos não utilizados mas necessários
                 genres: None,
                 developer: None,
@@ -198,6 +196,8 @@ fn fetch_all_games_with_details(state: &AppState) -> Result<Vec<GameWithDetails>
                 launch_args: None,
                 status: None,
                 is_adult: false,
+                installed: false,
+                import_confidence: None,
             };
 
             let genres_json: Option<String> = row.get(10)?;

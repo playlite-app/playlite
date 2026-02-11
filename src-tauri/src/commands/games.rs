@@ -8,12 +8,14 @@ use crate::database;
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::models;
+use crate::models::Platform;
 use crate::utils::status_logic;
 use chrono::Utc;
 use rusqlite::{params, OptionalExtension};
 use serde::Deserialize;
 use tauri::State;
 use url::Url;
+use uuid::Uuid;
 
 /// Dados de entrada para criar ou atualizar um jogo.
 ///
@@ -22,9 +24,14 @@ use url::Url;
 pub struct GameInput {
     pub id: String,
     pub name: String,
-    pub platform: Option<String>,
+    pub platform: Platform,
+    #[serde(rename = "platformGameId")]
+    pub platform_game_id: String,
     #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
+    pub installed: bool,
+    #[serde(rename = "importConfidence")]
+    pub import_confidence: Option<String>,
     pub playtime: Option<i32>,
     #[serde(rename = "userRating")]
     pub user_rating: Option<i32>,
@@ -86,15 +93,6 @@ fn validate_input(game: &GameInput) -> Result<(), AppError> {
         }
     }
 
-    if let Some(ref p) = game.platform {
-        if p.len() > constants::MAX_PLATFORM_LENGTH {
-            return Err(AppError::ValidationError(format!(
-                "Plataforma muito longa (max {})",
-                constants::MAX_PLATFORM_LENGTH
-            )));
-        }
-    }
-
     if let Some(time) = game.playtime {
         if time < 0 {
             return Err(AppError::ValidationError(
@@ -149,25 +147,34 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), AppError>
         .unwrap_or_else(|| status_logic::calculate_status(game.playtime.unwrap_or(0)));
 
     let added_at = Utc::now().to_rfc3339();
-    let platform = game.platform.unwrap_or("Manual".to_string());
+    let platform = game.platform;
+
+    let platform_game_id = if matches!(platform, Platform::Outra) {
+        format!("manual-{}", Uuid::new_v4())
+    } else {
+        game.platform_game_id.clone()
+    };
 
     conn.execute(
         "INSERT INTO games (
-            id, name, cover_url, platform, platform_id, install_path, executable_path, launch_args,
-            user_rating, status, playtime, added_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        id, name, cover_url, platform, platform_game_id,
+        installed, import_confidence, install_path, executable_path, launch_args,
+        user_rating, status, playtime, added_at
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
         params![
             game.id,
             game.name,
             game.cover_url,
-            platform,
-            Option::<String>::None, // Platform ID null para manual
+            platform.to_string(),
+            platform_game_id,
+            game.installed,
+            game.import_confidence,
             game.install_path,
             game.executable_path,
             game.launch_args,
             game.user_rating,
             final_status,
-            game.playtime,
+            game.playtime.unwrap_or(0),
             added_at
         ],
     )?;
@@ -192,17 +199,23 @@ pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), AppErr
             name = ?1,
             cover_url = ?2,
             platform = ?3,
-            playtime = ?4,
-            user_rating = ?5,
-            status = ?6,
-            install_path = ?7,
-            executable_path = ?8,
-            launch_args = ?9
-         WHERE id = ?10",
+            platform_game_id = ?4,
+            installed = ?5,
+            import_confidence = ?6,
+            playtime = ?7,
+            user_rating = ?8,
+            status = ?9,
+            install_path = ?10,
+            executable_path = ?11,
+            launch_args = ?12
+         WHERE id = ?13",
         params![
             game.name,
             game.cover_url,
-            game.platform,
+            game.platform.to_string(),
+            game.platform_game_id,
+            game.installed,
+            game.import_confidence,
             game.playtime,
             game.user_rating,
             game.status,
@@ -227,7 +240,7 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, AppError> 
     let mut stmt = conn
         .prepare(
             "SELECT
-            g.id, g.name, g.cover_url, g.platform, g.platform_id, g.install_path, g.executable_path,
+            g.id, g.name, g.cover_url, g.platform, g.platform_game_id, g.installed, g.import_confidence, g.install_path, g.executable_path,
             g.launch_args, g.user_rating, g.favorite, g.status, g.playtime, g.last_played, g.added_at,
             gd.genres, gd.developer, COALESCE(gd.is_adult, 0) as is_adult -- Campos da tabela game_details
          FROM games g
@@ -241,20 +254,24 @@ pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, AppError> 
                 id: row.get(0)?,
                 name: row.get(1)?,
                 cover_url: row.get(2)?,
-                platform: row.get(3)?,
-                platform_id: row.get(4)?,
-                install_path: row.get(5)?,
-                executable_path: row.get(6)?,
-                launch_args: row.get(7)?,
-                user_rating: row.get(8)?,
-                favorite: row.get(9)?,
-                status: row.get(10)?,
-                playtime: row.get(11)?,
-                last_played: row.get(12)?,
-                added_at: row.get(13)?,
-                genres: row.get(14)?,
-                developer: row.get(15)?,
-                is_adult: row.get(16)?,
+                platform: row.get::<_, String>(3)?.parse().unwrap_or(Platform::Outra),
+                platform_game_id: row.get(4)?,
+                installed: row.get(5)?,
+                import_confidence: row
+                    .get::<_, Option<String>>(6)?
+                    .and_then(|s| s.parse().ok()),
+                install_path: row.get(7)?,
+                executable_path: row.get(8)?,
+                launch_args: row.get(9)?,
+                user_rating: row.get(10)?,
+                favorite: row.get(11)?,
+                status: row.get(12)?,
+                playtime: row.get(13)?,
+                last_played: row.get(14)?,
+                added_at: row.get(15)?,
+                genres: row.get(16)?,
+                developer: row.get(17)?,
+                is_adult: row.get(18)?,
             })
         })?
         .collect::<Result<Vec<_>, _>>()?;
@@ -406,19 +423,19 @@ pub fn update_game_details(
     let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Verifica o estado atual do jogo no banco
-    let current_state: Option<Option<String>> = conn
+    let current_state: Option<(Option<String>, Option<String>)> = conn
         .query_row(
-            "SELECT description_ptbr FROM game_details WHERE game_id = ?1",
+            "SELECT description_ptbr, description_raw FROM game_details WHERE game_id = ?1",
             params![payload.id],
-            |row| row.get(0),
+            |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()?; // O '?' converte erro de SQL para AppError
 
     match current_state {
         // CASO 1: Registro existe
-        Some(description_ptbr_atual) => {
-            // VALIDAÇÃO: Se a descrição PT-BR for nula, impede a edição
-            if description_ptbr_atual.is_none() {
+        Some((description_ptbr, description_raw)) => {
+            // VALIDAÇÃO: Se a descrição PT-BR for nula e description_raw não for nula, impede a edição
+            if description_ptbr.is_none() && description_raw.is_some() {
                 return Err(AppError::ValidationError(
                     "A descrição precisa ser traduzida (ou gerada) antes de ser editada manualmente.".to_string()
                 ));

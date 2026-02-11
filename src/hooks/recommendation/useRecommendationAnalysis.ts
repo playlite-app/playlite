@@ -102,7 +102,7 @@ async function openAnalysisFolder(
 }
 
 /**
- * Exporta o perfil do usuário (opcional)
+ * Exporta o perfil do usuário
  */
 async function exportUserProfile(): Promise<void> {
   try {

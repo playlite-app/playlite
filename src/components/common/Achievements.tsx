@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Medal, Trophy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/ui/skeleton';
 
 interface Achievement {
   game_name: string;

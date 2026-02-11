@@ -35,9 +35,14 @@ export const settingsService = {
    */
   importSteamLibrary: async (
     steamId: string,
-    apiKey: string
+    apiKey: string,
+    steamRoot: string
   ): Promise<string> => {
-    return await invoke<string>('import_steam_library', { steamId, apiKey });
+    return await invoke<string>('import_steam_library', {
+      steamId,
+      apiKey,
+      steamRoot,
+    });
   },
 
   /**

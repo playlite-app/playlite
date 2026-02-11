@@ -10,7 +10,7 @@
 //! - `games`: Comandos CRUD para a biblioteca de jogos.
 //! - `metadata`: Comandos para enriquecimento, atualização e busca de metadados via RAWG/Steam API.
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
-//! - `recommendation`: Sistema completo de recomendação v4.0 (core + análise).
+//! - `tooltips`: Sistema completo de recomendação v4.0 (core + análise).
 //! - `settings`: Comandos para gerenciar configurações e segredos do usuário.
 //! - `system`: Comandos para interagir com o sistema (abrir pastas, arquivos, etc).
 //! - `version`: Comandos para gerenciar informações de versão da aplicação.

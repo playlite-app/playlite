@@ -1,11 +1,10 @@
 import { useState } from 'react';
 
-import { avatarComponents } from '@/components/profile/AvatarIcons.tsx';
+import { avatarComponents } from '@/components/icons/avatars';
+import Profile from '@/dialogs/Profile.tsx';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
 import { MENU_ITEMS } from '@/utils/navigation.ts';
-
-import ProfileModal from '../profile/ProfileModal';
 
 interface SidebarProps {
   activeSection: string;
@@ -108,10 +107,7 @@ export default function Sidebar({
       </aside>
 
       {/* Modal de Perfil */}
-      <ProfileModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <Profile isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   );
 }
