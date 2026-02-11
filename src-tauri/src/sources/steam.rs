@@ -5,12 +5,15 @@
 //! - Buscar jogos não instalados (via librarycache)
 //! - Buscar via API Steam como fallback
 //! - Fazer merge de múltiplas fontes
+//! - Filtrar duplicatas (demos vs jogos-base)
+//! - Preservar jogos gratuitos não instalados
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use tracing::{info, warn};
+use tokio::time::{sleep, Duration};
+use tracing::{debug, info, warn};
 
 /// Estrutura interna para representar um jogo
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -33,37 +36,64 @@ pub async fn get_complete_library(
     api_key: &str,
     steam_id: &str,
 ) -> Result<Vec<GameData>, String> {
-    let mut sources = Vec::new();
+    info!("Iniciando importação da biblioteca Steam");
 
-    // 1. Jogos instalados (maior prioridade)
-    match scan_installed_games(steam_root) {
+    // 1. API Steam primeiro (para obter owned AppIDs)
+    let api_games = match fetch_steam_api(api_key, steam_id).await {
         Ok(games) => {
-            info!("Encontrados {} jogos instalados", games.len());
-            sources.push(games);
+            info!("API: {} jogos possuídos", games.len());
+            games
         }
-        Err(e) => warn!("Aviso ao buscar instalados: {}", e),
-    }
-
-    // 2. Library cache (prioridade média)
-    match scan_library_cache(steam_root).await {
-        Ok(games) => {
-            info!("Encontrados {} jogos no cache", games.len());
-            sources.push(games);
+        Err(e) => {
+            warn!("Aviso ao buscar API: {}", e);
+            Vec::new()
         }
-        Err(e) => warn!("Aviso ao buscar cache: {}", e),
-    }
+    };
 
-    // 3. API Steam (fallback)
-    match fetch_steam_api(api_key, steam_id).await {
-        Ok(games) => {
-            info!("Encontrados {} jogos via API", games.len());
-            sources.push(games);
+    // Conjunto de AppIDs possuídos (para filtro de duplicatas)
+    let owned_appids: HashSet<String> = api_games
+        .iter()
+        .map(|g| g.platform_game_id.clone())
+        .collect();
+
+    // 2. Jogos instalados (com filtro leve)
+    let installed = match scan_installed_games(steam_root) {
+        Ok(mut games) => {
+            // Remove apenas duplicatas óbvias (mesmo AppID instalado 2x)
+            let mut seen = HashSet::new();
+            games.retain(|g| seen.insert(g.platform_game_id.clone()));
+            info!("VDF: {} jogos instalados encontrados", games.len());
+            games
         }
-        Err(e) => warn!("Buscar na API: {}", e),
-    }
+        Err(e) => {
+            warn!("Aviso ao buscar instalados: {}", e);
+            Vec::new()
+        }
+    };
 
-    let merged = merge_games(sources);
-    info!("Total: {} jogos após merge", merged.len());
+    // 3. Library cache (com filtro leve)
+    let cached = match scan_library_cache(steam_root).await {
+        Ok(mut games) => {
+            // Remove duplicatas internas
+            let mut seen = HashSet::new();
+            games.retain(|g| seen.insert(g.platform_game_id.clone()));
+            info!("Cache: {} jogos encontrados", games.len());
+            games
+        }
+        Err(e) => {
+            warn!("Aviso ao buscar cache: {}", e);
+            Vec::new()
+        }
+    };
+
+    // 4. Merge de todas as fontes
+    let sources = vec![installed, cached, api_games];
+    let mut merged = merge_games(sources);
+    info!("Merge: {} jogos antes de filtro de demos", merged.len());
+
+    // 5. Filtro inteligente de demos
+    merged = filter_duplicate_demos(merged, &owned_appids);
+    info!("Final: {} jogos após filtro de demos", merged.len());
 
     Ok(merged)
 }
@@ -81,7 +111,6 @@ pub fn scan_installed_games(steam_root: &Path) -> Result<Vec<GameData>, String> 
             continue;
         }
 
-        // Lê todos os appmanifest_*.acf
         let entries =
             fs::read_dir(&steamapps).map_err(|e| format!("Erro ao ler steamapps: {}", e))?;
 
@@ -111,25 +140,21 @@ fn read_library_folders(steam_root: &Path) -> Result<Vec<PathBuf>, String> {
     let content = fs::read_to_string(&vdf_path)
         .map_err(|e| format!("Erro ao ler libraryfolders.vdf: {}", e))?;
 
-    // Parse manual do VDF
     let mut in_folder = false;
     let mut current_path: Option<PathBuf> = None;
 
     for line in content.lines() {
         let trimmed = line.trim();
 
-        // Detecta entrada de folder (número como chave)
         if trimmed.starts_with('"') && trimmed.contains('"') {
             let parts: Vec<&str> = trimmed.split('"').collect();
             if parts.len() >= 2 {
-                // Se é um número, estamos entrando em um folder
                 if parts[1].chars().all(|c| c.is_ascii_digit()) {
                     in_folder = true;
                 }
             }
         }
 
-        // Extrai path
         if in_folder && trimmed.starts_with("\"path\"") {
             if let Some(path_str) = extract_vdf_value(trimmed) {
                 let cleaned = path_str.replace("\\\\", "\\");
@@ -137,7 +162,6 @@ fn read_library_folders(steam_root: &Path) -> Result<Vec<PathBuf>, String> {
             }
         }
 
-        // Fim do folder
         if trimmed == "}" && in_folder {
             if let Some(path) = current_path.take() {
                 if path != steam_root.to_path_buf() {
@@ -171,7 +195,6 @@ fn parse_appmanifest(manifest_path: &Path, library_root: &Path) -> Result<GameDa
             installdir = extract_vdf_value(trimmed);
         }
 
-        // Otimização: para quando tiver tudo
         if appid.is_some() && name.is_some() && installdir.is_some() {
             break;
         }
@@ -200,7 +223,6 @@ fn parse_appmanifest(manifest_path: &Path, library_root: &Path) -> Result<GameDa
     })
 }
 
-/// Verifica se o path é um appmanifest
 fn is_appmanifest(path: &Path) -> bool {
     path.file_name()
         .and_then(|f| f.to_str())
@@ -208,7 +230,6 @@ fn is_appmanifest(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-/// Extrai valor de uma linha VDF: "key" "value" → "value"
 fn extract_vdf_value(line: &str) -> Option<String> {
     let parts: Vec<&str> = line.split('"').collect();
     if parts.len() >= 4 {
@@ -239,11 +260,11 @@ pub async fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, Stri
         let cache_dir = user_entry.path().join("config").join("librarycache");
 
         if cache_dir.exists() {
-            scan_librarycache_dir(&cache_dir, &mut games).await?; // ← async
+            scan_librarycache_dir(&cache_dir, &mut games).await?;
         }
     }
 
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = HashSet::new();
     games.retain(|g| seen.insert(g.platform_game_id.clone()));
 
     Ok(games)
@@ -253,6 +274,9 @@ pub async fn scan_library_cache(steam_root: &Path) -> Result<Vec<GameData>, Stri
 async fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<(), String> {
     let entries = fs::read_dir(dir).map_err(|e| format!("Erro: {}", e))?;
 
+    // Coleta todos os AppIDs primeiro
+    let mut appids = Vec::new();
+
     for entry in entries.flatten() {
         let path = entry.path();
 
@@ -261,51 +285,104 @@ async fn scan_librarycache_dir(dir: &Path, games: &mut Vec<GameData>) -> Result<
         }
 
         if let Some(filename) = path.file_stem().and_then(|s| s.to_str()) {
-            if !filename.chars().all(|c| c.is_ascii_digit()) {
-                continue;
+            if filename.chars().all(|c| c.is_ascii_digit()) {
+                appids.push(filename.to_string());
             }
         }
+    }
 
-        if let Ok(cache_games) = parse_librarycache_file(&path).await {
-            // ← async
-            games.extend(cache_games);
-        }
+    if appids.is_empty() {
+        return Ok(());
+    }
+
+    info!("Cache: {} AppIDs para buscar nomes", appids.len());
+
+    // Busca nomes em batch com rate limiting
+    let names = fetch_game_names_batch(&appids).await;
+
+    // Cria GameData para cada jogo
+    for appid in appids {
+        let name = names
+            .get(&appid)
+            .cloned()
+            .unwrap_or_else(|| format!("Game {}", appid));
+
+        games.push(GameData {
+            name,
+            platform: "Steam".to_string(),
+            platform_game_id: appid,
+            install_path: None,
+            installed: false,
+            import_confidence: "Medium".to_string(),
+            playtime_forever: 0,
+            rtime_last_played: 0,
+        });
     }
 
     Ok(())
 }
 
-/// Parseia um arquivo JSON do library cache
-async fn parse_librarycache_file(path: &Path) -> Result<Vec<GameData>, String> {
-    let appid = extract_appid_from_filename(path)?;
+/// Busca nomes de jogos em lote com rate limiting
+async fn fetch_game_names_batch(appids: &[String]) -> HashMap<String, String> {
+    let mut names = HashMap::new();
+    let batch_size = 10;
+    let delay_between_batches = Duration::from_millis(1000); // 1 segundo entre batches
+    let delay_between_requests = Duration::from_millis(100); // 100ms entre requests
 
-    let game_name = fetch_steam_game_name(&appid)
-        .await // ← async
-        .unwrap_or_else(|| format!("Game {}", appid));
+    info!("Iniciando busca em batch de {} jogos", appids.len());
 
-    Ok(vec![GameData {
-        name: game_name,
-        platform: "Steam".to_string(),
-        platform_game_id: appid,
-        install_path: None,
-        installed: false,
-        import_confidence: "Medium".to_string(),
-        playtime_forever: 0,
-        rtime_last_played: 0,
-    }])
+    for (batch_idx, chunk) in appids.chunks(batch_size).enumerate() {
+        debug!(
+            "Processando batch {}/{}",
+            batch_idx + 1,
+            (appids.len() + batch_size - 1) / batch_size
+        );
+
+        for appid in chunk {
+            if let Some(name) = fetch_steam_game_name(appid).await {
+                names.insert(appid.clone(), name);
+            }
+
+            // Rate limiting entre requests
+            sleep(delay_between_requests).await;
+        }
+
+        // Rate limiting entre batches (exceto no último)
+        if batch_idx < (appids.len() + batch_size - 1) / batch_size - 1 {
+            debug!("Aguardando antes do próximo batch...");
+            sleep(delay_between_batches).await;
+        }
+    }
+
+    info!(
+        "Batch concluído: {}/{} nomes obtidos",
+        names.len(),
+        appids.len()
+    );
+    names
 }
 
 /// Busca nome do jogo via Steam Store API - VERSÃO ASYNC
-pub async fn fetch_steam_game_name(app_id: &str) -> Option<String> {
-    use crate::utils::http_client::HTTP_CLIENT; // Usa o cliente async existente
+async fn fetch_steam_game_name(app_id: &str) -> Option<String> {
+    use crate::utils::http_client::HTTP_CLIENT;
 
     let url = format!(
         "https://store.steampowered.com/api/appdetails?appids={}",
         app_id
     );
 
-    let resp = HTTP_CLIENT.get(&url).send().await.ok()?; // ← async
-    let json: serde_json::Value = resp.json().await.ok()?; // ← async
+    let resp = HTTP_CLIENT
+        .get(&url)
+        .timeout(Duration::from_secs(5))
+        .send()
+        .await
+        .ok()?;
+
+    if !resp.status().is_success() {
+        return None;
+    }
+
+    let json: serde_json::Value = resp.json().await.ok()?;
 
     let app_data = json.get(app_id)?;
     if !app_data.get("success")?.as_bool()? {
@@ -317,20 +394,6 @@ pub async fn fetch_steam_game_name(app_id: &str) -> Option<String> {
         .get("name")?
         .as_str()
         .map(|s| s.to_string())
-}
-
-/// Extrai o AppID do nome do arquivo
-fn extract_appid_from_filename(path: &Path) -> Result<String, String> {
-    let filename = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .ok_or_else(|| format!("Nome de arquivo inválido: {:?}", path))?;
-
-    if filename.chars().all(|c| c.is_ascii_digit()) {
-        Ok(filename.to_string())
-    } else {
-        Err(format!("Não é um AppID válido: {}", filename))
-    }
 }
 
 // === API STEAM ===
@@ -355,13 +418,132 @@ async fn fetch_steam_api(api_key: &str, steam_id: &str) -> Result<Vec<GameData>,
         .collect())
 }
 
+// === FILTRO DE DEMOS DUPLICADAS ===
+
+/// Detecta se um jogo é uma demo baseado no nome
+fn is_demo_game(name: &str) -> bool {
+    let name_lower = name.to_lowercase();
+
+    let demo_keywords = [
+        " demo",
+        "(demo)",
+        " - demo",
+        " playtest",
+        "(playtest)",
+        " - playtest",
+        " free weekend",
+        " trial",
+        " beta test",
+        " limited test",
+        " technical test",
+    ];
+
+    demo_keywords
+        .iter()
+        .any(|keyword| name_lower.contains(keyword))
+}
+
+/// Normaliza nome do jogo removendo sufixos de demo
+fn normalize_game_name(name: &str) -> String {
+    let mut normalized = name.to_lowercase();
+
+    let suffixes_to_remove = [
+        " demo",
+        " (demo)",
+        " - demo",
+        " playtest",
+        " (playtest)",
+        " - playtest",
+        " free weekend",
+        " trial",
+        " beta test",
+        " limited test",
+        " technical test",
+    ];
+
+    for suffix in &suffixes_to_remove {
+        if let Some(pos) = normalized.find(suffix) {
+            normalized = normalized[..pos].to_string();
+            break;
+        }
+    }
+
+    normalized.trim().to_string()
+}
+
+/// Filtra demos duplicadas mantendo jogos gratuitos
+fn filter_duplicate_demos(games: Vec<GameData>, owned_appids: &HashSet<String>) -> Vec<GameData> {
+    // Agrupa jogos por nome normalizado
+    let mut by_normalized_name: HashMap<String, Vec<GameData>> = HashMap::new();
+
+    for game in games {
+        let normalized = normalize_game_name(&game.name);
+        by_normalized_name.entry(normalized).or_default().push(game);
+    }
+
+    let mut result = Vec::new();
+
+    for (normalized_name, mut games_group) in by_normalized_name {
+        // Se só tem um jogo, mantém
+        if games_group.len() == 1 {
+            result.push(games_group.pop().unwrap());
+            continue;
+        }
+
+        // Separa demos de jogos-base
+        let mut demos: Vec<GameData> = Vec::new();
+        let mut base_games: Vec<GameData> = Vec::new();
+
+        for game in games_group {
+            if is_demo_game(&game.name) {
+                demos.push(game);
+            } else {
+                base_games.push(game);
+            }
+        }
+
+        // Caso 1: Tem jogo base E demo
+        if !base_games.is_empty() && !demos.is_empty() {
+            // Verifica se o jogo base está na API (foi comprado)
+            let has_owned_base = base_games
+                .iter()
+                .any(|g| owned_appids.contains(&g.platform_game_id));
+
+            if has_owned_base {
+                // Usuário comprou o jogo base: remove demos
+                debug!(
+                    "Removendo demos de '{}' (jogo base possuído)",
+                    normalized_name
+                );
+                result.extend(base_games);
+            } else {
+                // Usuário só tem a demo gratuita: mantém apenas demos
+                debug!(
+                    "Mantendo demos de '{}' (jogo base não possuído)",
+                    normalized_name
+                );
+                result.extend(demos);
+            }
+        }
+        // Caso 2: Só tem demos (sem jogo base)
+        else if !demos.is_empty() {
+            result.extend(demos);
+        }
+        // Caso 3: Só tem jogos base (sem demos)
+        else {
+            result.extend(base_games);
+        }
+    }
+
+    result
+}
+
 // === MERGE DE JOGOS ===
 
 /// Faz merge de múltiplas fontes de jogos
 pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
     let mut map: HashMap<String, Vec<GameData>> = HashMap::new();
 
-    // Coleta todas as entradas para cada jogo
     for list in sources {
         for game in list {
             let key = format!("{}::{}", game.platform, game.platform_game_id);
@@ -369,7 +551,6 @@ pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
         }
     }
 
-    // Faz merge de todas as entradas para cada jogo
     let mut result: Vec<GameData> = map
         .into_iter()
         .map(|(_, games)| merge_multiple(games))
@@ -379,7 +560,6 @@ pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
     result
 }
 
-/// Faz merge de múltiplos registros do mesmo jogo
 fn merge_multiple(mut games: Vec<GameData>) -> GameData {
     if games.is_empty() {
         panic!("Lista vazia");
@@ -388,21 +568,18 @@ fn merge_multiple(mut games: Vec<GameData>) -> GameData {
         return games.into_iter().next().unwrap();
     }
 
-    // Ordena por confiança decrescente (High primeiro)
     games.sort_by(|a, b| {
         let a_score = confidence_score(&a.import_confidence);
         let b_score = confidence_score(&b.import_confidence);
-        b_score.cmp(&a_score) // Decrescente
+        b_score.cmp(&a_score)
     });
 
-    // Fold com enrich, usando o de maior confiança como base
     games
         .into_iter()
         .reduce(|acc, next| enrich(&acc, &next))
         .unwrap()
 }
 
-/// Score de confiança
 fn confidence_score(conf: &str) -> i32 {
     match conf {
         "High" => 3,
@@ -412,7 +589,6 @@ fn confidence_score(conf: &str) -> i32 {
     }
 }
 
-/// Enriquece dados primários com secundários
 fn enrich(primary: &GameData, secondary: &GameData) -> GameData {
     GameData {
         name: if primary.name.len() >= secondary.name.len() {
