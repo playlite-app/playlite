@@ -55,7 +55,7 @@ pub async fn import_steam_library(
     }
 
     // Busca biblioteca completa (arquivos locais + API Steam)
-    let complete_library = steam::get_complete_library(&steam_root_path, &api_key, &steam_id)
+    let complete_library = steam::get_complete_library(steam_root_path, &api_key, &steam_id)
         .await
         .map_err(AppError::NetworkError)?;
 

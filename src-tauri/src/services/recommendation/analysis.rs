@@ -405,7 +405,7 @@ fn calculate_median(games: &[DetailedScoreBreakdown]) -> f32 {
     let mut sorted_scores: Vec<f32> = games.iter().map(|g| g.final_score).collect();
     sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    if sorted_scores.len() % 2 == 0 {
+    if sorted_scores.len().is_multiple_of(2) {
         let mid = sorted_scores.len() / 2;
         (sorted_scores[mid - 1] + sorted_scores[mid]) / 2.0
     } else {

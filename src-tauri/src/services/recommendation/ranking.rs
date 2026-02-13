@@ -109,9 +109,7 @@ pub fn rank_games_content_based(
     ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     // Estágio 6: Diversidade
-    let result = apply_diversity_rules(ranked, user_settings);
-
-    result
+    apply_diversity_rules(ranked, user_settings)
 }
 
 /// Ranqueia jogos usando apenas Collaborative Filtering

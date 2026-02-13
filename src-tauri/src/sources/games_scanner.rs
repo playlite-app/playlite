@@ -241,7 +241,7 @@ fn detect_executable_type(path: &Path) -> Result<ExecutableType, String> {
                 return Ok(ExecutableType::WindowsExe);
             }
         }
-        return Ok(ExecutableType::Unknown);
+        Ok(ExecutableType::Unknown)
     }
 
     // Linux/Unix: verifica bit de execução

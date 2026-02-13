@@ -148,11 +148,10 @@ fn read_library_folders(steam_root: &Path) -> Result<Vec<PathBuf>, String> {
 
         if trimmed.starts_with('"') && trimmed.contains('"') {
             let parts: Vec<&str> = trimmed.split('"').collect();
-            if parts.len() >= 2 {
-                if parts[1].chars().all(|c| c.is_ascii_digit()) {
+            if parts.len() >= 2
+                && parts[1].chars().all(|c| c.is_ascii_digit()) {
                     in_folder = true;
                 }
-            }
         }
 
         if in_folder && trimmed.starts_with("\"path\"") {
@@ -335,7 +334,7 @@ async fn fetch_game_names_batch(appids: &[String]) -> HashMap<String, String> {
         debug!(
             "Processando batch {}/{}",
             batch_idx + 1,
-            (appids.len() + batch_size - 1) / batch_size
+            appids.len().div_ceil(batch_size)
         );
 
         for appid in chunk {
@@ -348,7 +347,7 @@ async fn fetch_game_names_batch(appids: &[String]) -> HashMap<String, String> {
         }
 
         // Rate limiting entre batches (exceto no último)
-        if batch_idx < (appids.len() + batch_size - 1) / batch_size - 1 {
+        if batch_idx < appids.len().div_ceil(batch_size) - 1 {
             debug!("Aguardando antes do próximo batch...");
             sleep(delay_between_batches).await;
         }
@@ -547,13 +546,11 @@ pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
     for list in sources {
         for game in list {
             let key = format!("{}::{}", game.platform, game.platform_game_id);
-            map.entry(key).or_insert_with(Vec::new).push(game);
+            map.entry(key).or_default().push(game);
         }
     }
 
-    let mut result: Vec<GameData> = map
-        .into_iter()
-        .map(|(_, games)| merge_multiple(games))
+    let mut result: Vec<GameData> = map.into_values().map(|games| merge_multiple(games))
         .collect();
 
     result.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
