@@ -16,6 +16,9 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, State};
 
+/// Type alias para dados de backup
+type BackupDataTuple = (Vec<Game>, Vec<GameDetails>, Vec<WishlistGame>, u32);
+
 /// Estrutura do arquivo de ‘backup’.
 ///
 /// Contém metadados e todos os dados exportados da aplicação.
@@ -32,9 +35,7 @@ pub struct BackupData {
 /// Função auxiliar interna para buscar dados do backup com transação ACID
 ///
 /// Retorna tupla com (games, game_details, wishlist_game, schema_version)
-fn fetch_backup_data(
-    state: &State<AppState>,
-) -> Result<(Vec<Game>, Vec<GameDetails>, Vec<WishlistGame>, u32), AppError> {
+fn fetch_backup_data(state: &State<AppState>) -> Result<BackupDataTuple, AppError> {
     let conn = state.library_db.lock()?;
 
     // Inicia transação READ para consistência

@@ -36,29 +36,26 @@ pub async fn fetch_giveaways(app: &AppHandle) -> Result<Vec<Giveaway>, String> {
     let url = "https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity";
 
     // 1. Tenta buscar ONLINE
-    match HTTP_CLIENT.get(url).send().await {
-        Ok(res) => {
-            if res.status().is_success() {
-                let giveaways: Vec<Giveaway> = res.json().await.map_err(|e| e.to_string())?;
+    if let Ok(res) = HTTP_CLIENT.get(url).send().await {
+        if res.status().is_success() {
+            let giveaways: Vec<Giveaway> = res.json().await.map_err(|e| e.to_string())?;
 
-                // Filtra apenas ativos
-                let active_ones: Vec<Giveaway> = giveaways
-                    .into_iter()
-                    .filter(|g| g.status == "Active")
-                    .collect();
+            // Filtra apenas ativos
+            let active_ones: Vec<Giveaway> = giveaways
+                .into_iter()
+                .filter(|g| g.status == "Active")
+                .collect();
 
-                // Sucesso: Salva a lista filtrada no Cache
-                if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
-                    if let Ok(json) = serde_json::to_string(&active_ones) {
-                        // Usamos "gamerpower" como source
-                        let _ = cache::save_cached_api_data(&conn, "gamerpower", cache_key, &json);
-                    }
+            // Sucesso: Salva a lista filtrada no Cache
+            if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+                if let Ok(json) = serde_json::to_string(&active_ones) {
+                    // Usamos "gamerpower" como source
+                    let _ = cache::save_cached_api_data(&conn, "gamerpower", cache_key, &json);
                 }
-
-                return Ok(active_ones);
             }
+
+            return Ok(active_ones);
         }
-        Err(_) => {} // Fallback
     }
 
     // 2. FALLBACK: Cache Offline

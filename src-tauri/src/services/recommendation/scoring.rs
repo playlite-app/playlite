@@ -23,6 +23,18 @@ pub struct DetailedScoreComponents {
     pub top_context_tags: Vec<(String, f32)>,
 }
 
+/// Contexto mutável para processamento de tags
+struct TagProcessingContext<'a> {
+    affinity_score: &'a mut f32,
+    context_score: &'a mut f32,
+    diversity_score: &'a mut f32,
+    tag_score: &'a mut f32,
+    affinity_tag_contributions: &'a mut Vec<(String, f32)>,
+    context_tag_contributions: &'a mut Vec<(String, f32)>,
+    best_reason: &'a mut Option<RecommendationReason>,
+    max_affinity_contribution: &'a mut f32,
+}
+
 // === FUNÇÕES DE SCORING ===
 
 /// Calcula score content-based de um jogo
@@ -69,18 +81,17 @@ pub fn score_game_cb_detailed(
     );
 
     // 2. Processar Tags
-    process_tags(
-        &game.tags,
-        &profile.tags,
-        &mut affinity_score,
-        &mut context_score,
-        &mut diversity_score,
-        &mut tag_score,
-        &mut affinity_tag_contributions,
-        &mut context_tag_contributions,
-        &mut best_reason,
-        &mut max_affinity_contribution,
-    );
+    let mut tag_ctx = TagProcessingContext {
+        affinity_score: &mut affinity_score,
+        context_score: &mut context_score,
+        diversity_score: &mut diversity_score,
+        tag_score: &mut tag_score,
+        affinity_tag_contributions: &mut affinity_tag_contributions,
+        context_tag_contributions: &mut context_tag_contributions,
+        best_reason: &mut best_reason,
+        max_affinity_contribution: &mut max_affinity_contribution,
+    };
+    process_tags(&game.tags, &profile.tags, &mut tag_ctx);
 
     // 3. Processar Séries
     if config.favor_series {
@@ -164,14 +175,7 @@ fn process_genres(
 fn process_tags(
     game_tags: &[crate::models::GameTag],
     profile_tags: &std::collections::HashMap<TagKey, f32>,
-    affinity_score: &mut f32,
-    context_score: &mut f32,
-    diversity_score: &mut f32,
-    tag_score: &mut f32,
-    affinity_tag_contributions: &mut Vec<(String, f32)>,
-    context_tag_contributions: &mut Vec<(String, f32)>,
-    best_reason: &mut Option<RecommendationReason>,
-    max_affinity_contribution: &mut f32,
+    ctx: &mut TagProcessingContext,
 ) {
     for tag in game_tags {
         let key = TagKey::new(tag.category.clone(), tag.slug.clone());
@@ -183,26 +187,28 @@ fn process_tags(
 
             match tag.role {
                 TagRole::Affinity => {
-                    *affinity_score += contribution;
-                    *tag_score += contribution;
-                    affinity_tag_contributions.push((tag.name.clone(), contribution));
+                    *ctx.affinity_score += contribution;
+                    *ctx.tag_score += contribution;
+                    ctx.affinity_tag_contributions
+                        .push((tag.name.clone(), contribution));
 
-                    if contribution > *max_affinity_contribution {
-                        *max_affinity_contribution = contribution;
-                        *best_reason = Some(RecommendationReason {
+                    if contribution > *ctx.max_affinity_contribution {
+                        *ctx.max_affinity_contribution = contribution;
+                        *ctx.best_reason = Some(RecommendationReason {
                             label: format!("Tag: {}", tag.name),
                             type_id: "tag".to_string(),
                         });
                     }
                 }
                 TagRole::Context => {
-                    *context_score += contribution;
-                    *tag_score += contribution;
-                    context_tag_contributions.push((tag.name.clone(), contribution));
+                    *ctx.context_score += contribution;
+                    *ctx.tag_score += contribution;
+                    ctx.context_tag_contributions
+                        .push((tag.name.clone(), contribution));
                 }
                 TagRole::Diversity => {
-                    *diversity_score += contribution;
-                    *tag_score += contribution;
+                    *ctx.diversity_score += contribution;
+                    *ctx.tag_score += contribution;
                 }
                 TagRole::Filter => {}
             }

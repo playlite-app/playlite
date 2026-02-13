@@ -15,6 +15,9 @@ use serde::Serialize;
 use std::collections::HashSet;
 use tauri::{AppHandle, Manager, State};
 
+/// Type alias para dados de recomendação preparados
+type PreparedRecommendationData = (Vec<GameWithDetails>, Vec<GameWithDetails>, HashSet<String>);
+
 /// Resposta do comando de análise
 #[derive(Debug, Serialize)]
 pub struct AnalysisResponse {
@@ -107,9 +110,7 @@ fn create_analysis_file_paths(
     Ok((json_path, txt_path, csv_path))
 }
 
-fn fetch_and_prepare_data(
-    state: &State<AppState>,
-) -> Result<(Vec<GameWithDetails>, Vec<GameWithDetails>, HashSet<String>), String> {
+fn fetch_and_prepare_data(state: &State<AppState>) -> Result<PreparedRecommendationData, String> {
     let library_games = crate::commands::games::get_games(state.clone())
         .map_err(|e| format!("Erro ao buscar jogos da biblioteca: {}", e))?;
 

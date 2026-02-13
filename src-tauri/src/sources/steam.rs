@@ -550,7 +550,7 @@ pub fn merge_games(sources: Vec<Vec<GameData>>) -> Vec<GameData> {
         }
     }
 
-    let mut result: Vec<GameData> = map.into_values().map(|games| merge_multiple(games))
+    let mut result: Vec<GameData> = map.into_values().map(merge_multiple)
         .collect();
 
     result.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
