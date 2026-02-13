@@ -11,7 +11,7 @@ import { useAppUpdate } from '@/hooks/update/useAppUpdate.ts';
  * - Renderiza modal de Major Update quando há mudanças significativas
  * - Deve ser colocado no topo da árvore de componentes
  */
-export function UpdateProvider({ children }: PropsWithChildren) {
+export function UpdateProvider({ children }: Readonly<PropsWithChildren>) {
   const { isMajorOpen, closeMajorModal } = useAppUpdate();
   const { currentVersion, previousVersion } = useUpdateChecker();
 

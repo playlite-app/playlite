@@ -25,7 +25,7 @@
     ],
     "security": {
       "capabilities": ["default"],
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.cloudflare.steamstatic.com https://media.rawg.io https://*.gamerpower.com; connect-src 'self' https://api.steampowered.com https://store.steampowered.com https://steamspy.com/api.php https://api.rawg.io https://api.isthereanydeal.com https://*.gamerpower.com https://generativelanguage.googleapis.com"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://cdn.cloudflare.steamstatic.com https://media.rawg.io https://*.gamerpower.com; connect-src 'self' https://api.steampowered.com https://store.steampowered.com https://steamspy.com/api.php https://api.rawg.io https://api.isthereanydeal.com https://*.gamerpower.com https://generativelanguage.googleapis.com"
     }
   },
   "bundle": {

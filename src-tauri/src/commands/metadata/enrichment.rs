@@ -311,10 +311,12 @@ async fn enrich_game_metadata(
 
 // === PERSISTÊNCIA ===
 
-fn save_game_details(
-    conn: &rusqlite::Connection,
-    d: ProcessedGameDetails,
-) -> Result<(), rusqlite::Error> {
+/// Salva detalhes do jogo no banco
+/// Aceita tanto Connection quanto Transaction (via Deref trait)
+fn save_game_details<C>(conn: &C, d: ProcessedGameDetails) -> Result<(), rusqlite::Error>
+where
+    C: std::ops::Deref<Target = rusqlite::Connection>,
+{
     let tags_json = database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
 
     conn.execute(
@@ -400,7 +402,9 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
             let total_in_batch = games_to_update.len();
 
-            // 2. Processa batch
+            // 2. Processa batch - coleta todos os dados primeiro
+            let mut batch_results = Vec::new();
+
             for (index, (game_id, name, platform, platform_game_id)) in
                 games_to_update.into_iter().enumerate()
             {
@@ -414,7 +418,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                     },
                 );
 
-                // Primeiro fazer o processamento SEM async que precisa do cache
+                // Processa metadados com cache
                 let (processed_data, raw_tags) = {
                     let cache_conn = match state.metadata_db.lock() {
                         Ok(c) => c,
@@ -439,20 +443,53 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                     result
                 };
 
+                // Coleta tags da sessão
                 for tag in raw_tags {
                     all_session_tags.insert(tag);
                 }
 
-                {
-                    if let Ok(conn) = state.library_db.lock() {
-                        if let Err(e) = save_game_details(&conn, processed_data) {
-                            warn!("Erro ao salvar metadados para {}: {}", name, e);
+                // Armazena resultado para salvar em batch
+                batch_results.push((name.clone(), processed_data));
+            }
+
+            // 3. Salva todos os resultados do batch numa única transação
+            {
+                if let Ok(mut conn) = state.library_db.lock() {
+                    match conn.transaction() {
+                        Ok(tx) => {
+                            let mut success_count = 0;
+                            let mut error_count = 0;
+
+                            for (game_name, processed_data) in batch_results {
+                                if let Err(e) = save_game_details(&tx, processed_data) {
+                                    warn!("Erro ao preparar salvamento de {}: {}", game_name, e);
+                                    error_count += 1;
+                                } else {
+                                    success_count += 1;
+                                }
+                            }
+
+                            // Commit de todas as alterações do batch de uma vez
+                            match tx.commit() {
+                                Ok(_) => {
+                                    info!(
+                                        "Batch salvo com sucesso: {} jogos (erros: {})",
+                                        success_count, error_count
+                                    );
+                                }
+                                Err(e) => {
+                                    warn!("Erro ao commitar transação do batch: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Erro ao iniciar transação: {}", e);
                         }
                     }
                 }
             }
 
-            // 3. Rate limit por batch
+            // 4. Rate limit entre batches
             sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
         }
 

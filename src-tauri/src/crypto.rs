@@ -7,7 +7,7 @@ use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
 };
-use rand::RngCore;
+use rand::Rng;
 
 pub const NONCE_SIZE: usize = 12;
 

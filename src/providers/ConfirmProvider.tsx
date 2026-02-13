@@ -33,7 +33,9 @@ type ConfirmContextType = {
 
 const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
 
-export function ConfirmProvider({ children }: { children: ReactNode }) {
+export function ConfirmProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const [resolvePromise, setResolvePromise] = useState<
     ((value: boolean) => void) | null

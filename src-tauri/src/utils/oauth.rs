@@ -5,7 +5,7 @@
 
 use crate::constants::OAUTH_CALLBACK_TIMEOUT_SECS;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
-use rand::{distr::Alphanumeric, Rng};
+use rand::{distr::Alphanumeric, RngExt};
 use sha2::{Digest, Sha256};
 use std::{sync::mpsc, thread, time::Duration};
 use tiny_http::{Response, Server};

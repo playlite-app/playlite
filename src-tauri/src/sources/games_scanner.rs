@@ -11,13 +11,24 @@
 //! - Suporte cross-platform (Windows e Linux)
 //! - Foco em jogos indie/antigos/portados
 
+use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-use serde::{Deserialize, Serialize};
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
+// === CONSTANTES DE LIMITE ===
+
+/// Profundidade máxima de recursão ao escanear pastas
+const MAX_DEPTH: usize = 4;
+
+/// Número máximo de arquivos processados por diretório
+const MAX_FILES_PER_DIR: usize = 1000;
+
+/// Número máximo total de arquivos processados em um scan
+const MAX_TOTAL_FILES: usize = 10000;
 
 // === STRUCTS INTERNAS (NÃO REFLETEM O BANCO DE DADOS) ===
 
@@ -69,29 +80,21 @@ pub enum ExecutableType {
 /// * `Ok(Vec<GameDiscovery>)` - Lista de possíveis jogos encontrados
 /// * `Err(String)` - Mensagem de erro se houver falha na leitura
 pub fn scan_folder(root: &Path) -> Result<Vec<GameDiscovery>, String> {
-    let mut discoveries = Vec::new();
+    let entries: Vec<_> = fs::read_dir(root)
+        .map_err(|e| format!("Erro ao ler pasta raiz: {}", e))?
+        .flatten()
+        .collect();
 
-    // Gera ID único para esta sessão de scan
-    let session_id = uuid::Uuid::new_v4().to_string();
-
-    // Lê as entradas da pasta raiz
-    let entries = fs::read_dir(root)
-        .map_err(|e| format!("Erro ao ler pasta raiz '{}': {}", root.display(), e))?;
-
-    // Processa cada subpasta
-    for entry in entries.flatten() {
-        let path = entry.path();
-
-        // Ignora arquivos, processa apenas diretórios
-        if !path.is_dir() {
-            continue;
-        }
-
-        // Escaneia a pasta em busca de executáveis
-        if let Some(discovery) = scan_game_folder(&session_id, &path)? {
-            discoveries.push(discovery);
-        }
-    }
+    // Rust cria uma thread pool automaticamente
+    let discoveries: Vec<GameDiscovery> = entries
+        .par_iter()
+        .filter(|entry| entry.path().is_dir())
+        .filter_map(|entry| {
+            let session_id = "par_session";
+            // Cada pasta é escaneada numa thread diferente simultaneamente
+            scan_game_folder(session_id, &entry.path()).ok().flatten()
+        })
+        .collect();
 
     Ok(discoveries)
 }
@@ -108,9 +111,10 @@ pub fn scan_folder(root: &Path) -> Result<Vec<GameDiscovery>, String> {
 /// * `Err(String)` - Se houve erro na leitura
 fn scan_game_folder(_session_id: &str, folder: &Path) -> Result<Option<GameDiscovery>, String> {
     let mut executables = Vec::new();
+    let mut total_processed = 0;
 
     // Busca recursivamente por executáveis (profundidade limitada)
-    scan_executables_recursive(folder, &mut executables, 0)?;
+    scan_executables_recursive(folder, &mut executables, 0, &mut total_processed)?;
 
     // Se não encontrou nenhum executável, esta pasta não é um jogo
     if executables.is_empty() {
@@ -142,30 +146,58 @@ fn scan_game_folder(_session_id: &str, folder: &Path) -> Result<Option<GameDisco
 /// * `dir` - Diretório atual sendo escaneado
 /// * `out` - Vetor onde os candidatos encontrados serão adicionados
 /// * `depth` - Profundidade atual da recursão
+/// * `total_processed` - Contador global de arquivos processados
 ///
 /// **Limitações:**
 /// * Máximo de 4 níveis de profundidade para evitar scans muito longos
-/// * Ignora arquivos menores que 5MB (geralmente não são jogos)
+/// * Máximo de 1000 arquivos por diretório
+/// * Máximo de 10000 arquivos totais processados
 fn scan_executables_recursive(
     dir: &Path,
     out: &mut Vec<ExecutableCandidate>,
     depth: usize,
+    total_processed: &mut usize,
 ) -> Result<(), String> {
     // Limita profundidade para evitar scans infinitos ou muito lentos
-    const MAX_DEPTH: usize = 4;
     if depth > MAX_DEPTH {
         return Ok(());
     }
 
-    let entries =
-        fs::read_dir(dir).map_err(|e| format!("Erro ao ler pasta '{}': {}", dir.display(), e))?;
+    // Verifica limite global
+    if *total_processed >= MAX_TOTAL_FILES {
+        return Err(format!(
+            "Limite de arquivos atingido ({}). Scan interrompido.",
+            MAX_TOTAL_FILES
+        ));
+    }
 
-    for entry in entries.flatten() {
+    let entries: Vec<_> = fs::read_dir(dir)
+        .map_err(|e| format!("Erro ao ler pasta '{}': {}", dir.display(), e))?
+        .take(MAX_FILES_PER_DIR) // Limita arquivos por pasta
+        .flatten()
+        .collect();
+
+    for entry in entries {
         let path = entry.path();
+
+        // Incrementa contador
+        *total_processed += 1;
+
+        // Verifica limite global novamente
+        if *total_processed >= MAX_TOTAL_FILES {
+            return Err(format!(
+                "Limite de arquivos atingido ({}). Scan interrompido.",
+                MAX_TOTAL_FILES
+            ));
+        }
+
+        if path.is_symlink() {
+            continue;
+        }
 
         // Se for diretório, escaneia recursivamente
         if path.is_dir() {
-            scan_executables_recursive(&path, out, depth + 1)?;
+            scan_executables_recursive(&path, out, depth + 1, total_processed)?;
             continue;
         }
 
@@ -306,6 +338,7 @@ fn calculate_rank(filename: &str, path: &Path) -> i32 {
         "settings",
         "handler",
         "helper",
+        "unins000",
     ];
 
     for keyword in &bad_keywords {
@@ -365,7 +398,15 @@ impl GameDiscovery {
     }
 
     /// Ordena executáveis por ranking (maior primeiro)
-    pub fn sorted_executables(&self) -> Vec<ExecutableCandidate> {
+    /// Retorna referências para evitar clonagem desnecessária
+    pub fn sorted_executables(&self) -> Vec<&ExecutableCandidate> {
+        let mut refs: Vec<&ExecutableCandidate> = self.executables.iter().collect();
+        refs.sort_by(|a, b| b.rank_score.cmp(&a.rank_score));
+        refs
+    }
+
+    /// Versão que retorna owned (se necessário para serialização)
+    pub fn sorted_executables_owned(&self) -> Vec<ExecutableCandidate> {
         let mut sorted = self.executables.clone();
         sorted.sort_by(|a, b| b.rank_score.cmp(&a.rank_score));
         sorted

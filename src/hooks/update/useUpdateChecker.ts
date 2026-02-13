@@ -35,16 +35,30 @@ export function useUpdateChecker(): VersionInfo {
 
   // Escuta eventos de backup do Tauri
   useEffect(() => {
-    const unlisten = listen('backup-created', event => {
+    let unlistenFn: (() => void) | null = null;
+    let isMounted = true;
+
+    listen('backup-created', event => {
       const backupPath = event.payload as string;
       toast.success(`Backup criado com sucesso!`, {
         description: `Localizado em: ${backupPath}`,
         duration: 5000,
       });
+    }).then(fn => {
+      if (isMounted) {
+        unlistenFn = fn;
+      } else {
+        // Se desmontou antes de resolver, cleanup imediato
+        fn();
+      }
     });
 
     return () => {
-      unlisten.then(fn => fn());
+      isMounted = false;
+
+      if (unlistenFn) {
+        unlistenFn();
+      }
     };
   }, []);
 

@@ -37,38 +37,45 @@ export function useRecommendationBlacklist() {
   }, []);
 
   // Adiciona um jogo à blacklist
-  const addToBlacklist = useCallback(
-    async (gameId: string) => {
-      const newIgnored = [...ignoredIds, gameId];
-      setIgnoredIds(newIgnored);
+  const addToBlacklist = useCallback(async (gameId: string) => {
+    // Usa functional update para evitar dependência de ignoredIds
+    setIgnoredIds(prev => {
+      const newIgnored = [...prev, gameId];
 
-      try {
-        const store = await Store.load(STORE_FILENAME);
-        await store.set('ignored_ids', newIgnored);
-        await store.save();
-      } catch (e) {
-        console.error('Erro ao salvar blacklist:', e);
-      }
-    },
-    [ignoredIds]
-  );
+      // Salva no store de forma assíncrona
+      (async () => {
+        try {
+          const store = await Store.load(STORE_FILENAME);
+          await store.set('ignored_ids', newIgnored);
+          await store.save();
+        } catch (e) {
+          console.error('Erro ao salvar blacklist:', e);
+        }
+      })();
+
+      return newIgnored;
+    });
+  }, []);
 
   // Remove um jogo da blacklist
-  const removeFromBlacklist = useCallback(
-    async (gameId: string) => {
-      const newIgnored = ignoredIds.filter(id => id !== gameId);
-      setIgnoredIds(newIgnored);
+  const removeFromBlacklist = useCallback(async (gameId: string) => {
+    setIgnoredIds(prev => {
+      const newIgnored = prev.filter(id => id !== gameId);
 
-      try {
-        const store = await Store.load(STORE_FILENAME);
-        await store.set('ignored_ids', newIgnored);
-        await store.save();
-      } catch (e) {
-        console.error('Erro ao remover da blacklist:', e);
-      }
-    },
-    [ignoredIds]
-  );
+      // Salva no store de forma assíncrona
+      (async () => {
+        try {
+          const store = await Store.load(STORE_FILENAME);
+          await store.set('ignored_ids', newIgnored);
+          await store.save();
+        } catch (e) {
+          console.error('Erro ao remover da blacklist:', e);
+        }
+      })();
+
+      return newIgnored;
+    });
+  }, []);
 
   // Limpa toda a blacklist (reseta feedback)
   const clearBlacklist = useCallback(async () => {

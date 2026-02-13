@@ -7,32 +7,45 @@ use crate::database::AppState;
 use crate::errors::AppError;
 use crate::services::cache;
 use crate::services::integration::{itad, steam_api};
+use lazy_static::lazy_static;
 use rusqlite::params;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
+use tokio::sync::Semaphore;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
 
-// Flag global para evitar execuções duplicadas
-static BACKGROUND_REFRESH_RUNNING: AtomicBool = AtomicBool::new(false);
+// Semaphore para evitar execuções duplicadas (previne race conditions)
+// Arc permite compartilhamento seguro entre threads
+lazy_static! {
+    static ref BACKGROUND_REFRESH_SEMAPHORE: Arc<Semaphore> = Arc::new(Semaphore::new(1));
+}
 
 /// Comando disparado ao iniciar o app.
 /// Roda numa thread separada (spawn) para não bloquear a inicialização.
 /// Protegido contra execução duplicada (React Strict Mode chama useEffect 2x).
 #[tauri::command]
 pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError> {
-    // Verifica se já está rodando (previne duplicação)
-    if BACKGROUND_REFRESH_RUNNING.swap(true, Ordering::SeqCst) {
-        // Já existe uma instância rodando, ignora esta chamada
-        return Ok(());
-    }
+    // Try acquire (non-blocking) - retorna erro se já está rodando
+    let permit = match BACKGROUND_REFRESH_SEMAPHORE.try_acquire() {
+        Ok(permit) => permit,
+        Err(_) => {
+            // Já existe uma instância rodando, ignora esta chamada
+            tracing::debug!("Background refresh já em execução, ignorando chamada duplicada");
+            return Ok(());
+        }
+    };
 
     // Clone do app_handle para usar no spawn
     let app_clone = app.clone();
 
     // SPAWN: Isso garante que o Frontend continua fluido imediatamente
     tauri::async_runtime::spawn(async move {
+        // Permit é dropped automaticamente ao final (RAII pattern)
+        // Mesmo em caso de panic, o semaphore é liberado
+        let _permit = permit;
+
         // Pequeno delay inicial para não competir com o boot do banco de dados
         sleep(Duration::from_secs(STARTUP_DELAY_SECS)).await;
 
@@ -53,8 +66,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
         // Opcional: Avisar frontend que terminou (para debug)
         let _ = app_clone.emit("background_refresh_complete", ());
 
-        // Reseta a flag para permitir futuras execuções (ex: se usuário recarregar o app)
-        BACKGROUND_REFRESH_RUNNING.store(false, Ordering::SeqCst);
+        // _permit é automaticamente dropped aqui, liberando o semaphore
     });
 
     Ok(())
