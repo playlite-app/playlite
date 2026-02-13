@@ -113,6 +113,8 @@ npm run tauri build
 ## 📚 Documentação Adicional
 
 - Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
+- Arquitetura do projeto: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- Documentação online (VitePress): https://playlite.vercel.app/
 - Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
 - Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
