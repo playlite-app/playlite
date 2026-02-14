@@ -6,8 +6,10 @@
 //!
 //! **Módulos:**
 //!
-//! - `games_scanner`: Escaneia pastas em busca de jogos instalados localmente.
-//! - `steam`: Impporta jogos da Steam.
+//! - `providers`: Gerencia provedores de jogos, permitindo a integração com múltiplas plataformas de jogos.
+//! - `scanner`: Escaneia pastas em busca de jogos instalados localmente.
+//! - `steam`: Importa jogos da Steam.
 
-pub mod games_scanner;
+pub mod providers;
+pub mod scanner;
 pub mod steam;

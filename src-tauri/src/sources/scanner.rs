@@ -11,6 +11,9 @@
 //! - Suporte cross-platform (Windows e Linux)
 //! - Foco em jogos indie/antigos/portados
 
+use crate::errors::AppError;
+use crate::sources::providers::{GameSource, SourceGame};
+use async_trait::async_trait;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -18,7 +21,6 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-
 // === CONSTANTES DE LIMITE ===
 
 /// Profundidade máxima de recursão ao escanear pastas
@@ -31,6 +33,10 @@ const MAX_FILES_PER_DIR: usize = 1000;
 const MAX_TOTAL_FILES: usize = 10000;
 
 // === STRUCTS INTERNAS (NÃO REFLETEM O BANCO DE DADOS) ===
+
+pub struct ScanSource {
+    pub folder_path: String,
+}
 
 /// Representa uma sessão de escaneamento de pastas
 #[derive(Debug, Clone)]
@@ -45,6 +51,7 @@ pub struct ScanSession {
 pub struct GameDiscovery {
     pub id: String,
     pub base_path: String,
+    pub executable_path: String,
     pub suggested_name: String,
     pub confidence: i32,
     pub executables: Vec<ExecutableCandidate>,
@@ -131,9 +138,18 @@ fn scan_game_folder(_session_id: &str, folder: &Path) -> Result<Option<GameDisco
     // Calcula confiança baseada no melhor score dos executáveis
     let confidence = executables.iter().map(|e| e.rank_score).max().unwrap_or(0);
 
+    // Seleciona melhor executável como principal
+    let best_executable = executables
+        .iter()
+        .max_by_key(|e| e.rank_score)
+        .filter(|e| !e.path.is_empty())
+        .map(|e| e.path.clone())
+        .unwrap_or_default();
+
     Ok(Some(GameDiscovery {
         id: uuid::Uuid::new_v4().to_string(),
         base_path: folder.to_string_lossy().to_string(),
+        executable_path: best_executable,
         suggested_name: folder_name,
         confidence,
         executables,
@@ -421,5 +437,38 @@ impl std::fmt::Display for ExecutableType {
             ExecutableType::Script => write!(f, "Script"),
             ExecutableType::Unknown => write!(f, "Unknown"),
         }
+    }
+}
+
+/// Implementação do GameSource para ScanSource, permitindo integração com o sistema de fontes de jogos
+#[async_trait]
+impl GameSource for ScanSource {
+    async fn fetch_games(&self) -> Result<Vec<SourceGame>, AppError> {
+        let path = Path::new(&self.folder_path);
+
+        if !path.exists() || !path.is_dir() {
+            return Err(AppError::ValidationError(
+                "Pasta inválida para scan.".to_string(),
+            ));
+        }
+
+        let discoveries =
+            scan_folder(path).map_err(|e| AppError::ValidationError(e.to_string()))?;
+
+        let games = discoveries
+            .into_iter()
+            .map(|game| SourceGame {
+                platform: "Outra".to_string(),
+                platform_game_id: game.executable_path.clone(),
+                name: Some(game.suggested_name),
+                installed: true,
+                executable_path: Some(game.executable_path),
+                install_path: Some(game.base_path),
+                playtime_minutes: Some(0),
+                last_played: None,
+            })
+            .collect();
+
+        Ok(games)
     }
 }
