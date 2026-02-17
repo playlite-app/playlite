@@ -182,6 +182,22 @@ pub async fn import_steam_library(
     Ok(message)
 }
 
+// === EPIC GAMES ===
+
+#[tauri::command]
+pub async fn import_epic_games(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, AppError> {
+    use crate::sources::epic::EpicSource;
+
+    let games = EpicSource::import_installed().await?;
+    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let _ = app.emit("library_updated", ());
+
+    Ok(format!("{} adicionados, {} atualizados", inserted, updated))
+}
+
 // === SCAN FOLDERS ===
 
 /// Escaneia uma pasta local em busca de possíveis jogos.

@@ -285,6 +285,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
       {/* SEÇÃO 3: METADADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
+        {/* Configurações de API para metadados */}
         <SettingsRow
           icon={Search}
           title="RAWG.io"
@@ -299,6 +300,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
           />
         </SettingsRow>
 
+        {/* Ações para enriquecer metadados e buscar capas */}
         <SettingsRow
           icon={Search}
           title="Buscar Metadados"
@@ -341,13 +343,8 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
             )}
           </div>
         </SettingsRow>
-      </section>
 
-      {/* SEÇÃO 4: TRADUÇÃO COM IA */}
-      <section className="space-y-4">
-        <h3 className="flex items-center gap-2 text-lg font-semibold">
-          Tradução com IA
-        </h3>
+        {/* Configurações de API para tradução de descrições */}
         <SettingsRow
           icon={Sparkles}
           title="Google Gemini"
@@ -376,7 +373,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 5: ZONA DE DADOS */}
+      {/* SEÇÃO 4: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 
@@ -505,7 +502,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 6: SOBRE O PLAYLITE */}
+      {/* SEÇÃO 5: SOBRE O PLAYLITE */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Sobre</h3>
         <AboutPlaylite />
