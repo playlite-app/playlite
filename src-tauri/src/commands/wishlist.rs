@@ -3,7 +3,9 @@
 //! Adaptado para v2.0 com integração IsThereAnyDeal.
 //! Centraliza a importação via arquivos JSON (Steam e ITAD).
 
-use crate::constants::RAWG_RATE_LIMIT_MS;
+use crate::constants::{
+    DEFAULT_CURRENCY, RAWG_RATE_LIMIT_MS, STEAM_CDN_AKAMAI_URL, STEAM_STORE_URL,
+};
 use crate::database::{self, AppState};
 use crate::errors::AppError;
 use crate::models::WishlistGame;
@@ -129,22 +131,19 @@ fn parse_steam_wishlist(content: &str) -> Option<Vec<WishlistGame>> {
         let price = parse_steam_price(item.price.as_ref());
 
         // Steam Export não tem imagem direta, monta a URL padrão
-        let cover_url = format!(
-            "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg",
-            app_id
-        );
+        let cover_url = format!("{}/steam/apps/{}/header.jpg", STEAM_CDN_AKAMAI_URL, app_id);
 
         games.push(WishlistGame {
             id: app_id.clone(),
             name: item.title,
             cover_url: Some(cover_url),
-            store_url: Some(format!("https://store.steampowered.com/app/{}", app_id)),
+            store_url: Some(format!("{}/app/{}", STEAM_STORE_URL, app_id)),
             store_platform: Some("Steam".to_string()),
             itad_id: None,
             current_price: price,
             normal_price: price,
             lowest_price: price,
-            currency: Some("BRL".to_string()),
+            currency: Some(DEFAULT_CURRENCY.to_string()),
             on_sale: false,
             voucher: None,
             added_at: Some(parse_steam_date(item.added_date.as_ref())),
@@ -348,7 +347,7 @@ pub fn add_to_wishlist(
         current_price,
         normal_price: current_price,
         lowest_price: current_price,
-        currency: Some("BRL".to_string()),
+        currency: Some(DEFAULT_CURRENCY.to_string()),
         on_sale: false,
         voucher: None,
         added_at: Some(chrono::Utc::now().to_rfc3339()),

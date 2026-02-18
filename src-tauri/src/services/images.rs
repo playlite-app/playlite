@@ -3,6 +3,7 @@
 //! Fornece comandos Tauri para baixar, armazenar e limpar imagens localmente.
 //! Utiliza o diretório de dados do aplicativo para armazenar as imagens em cache.
 
+use crate::constants::{COVERS_DIR_NAME, COVER_IMAGE_EXTENSION};
 use crate::errors::AppError;
 use std::fs;
 use std::path::PathBuf;
@@ -17,7 +18,7 @@ fn get_covers_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
         )
     })?;
 
-    let covers_dir = app_data_dir.join("covers");
+    let covers_dir = app_data_dir.join(COVERS_DIR_NAME);
 
     // Se a pasta não existir, cria
     if !covers_dir.exists() {
@@ -70,7 +71,7 @@ pub async fn cache_cover_image(
 #[tauri::command]
 pub fn check_local_cover(app: AppHandle, game_id: String) -> Option<String> {
     let covers_dir = get_covers_dir(&app).ok()?;
-    let path = covers_dir.join(format!("{}.jpg", game_id));
+    let path = covers_dir.join(format!("{}{}", game_id, COVER_IMAGE_EXTENSION));
 
     if path.exists() {
         Some(path.to_string_lossy().to_string())

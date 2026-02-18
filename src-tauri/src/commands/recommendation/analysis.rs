@@ -3,6 +3,7 @@
 //! Este módulo fornece comandos Tauri para gerar relatórios de análise
 //! do sistema de recomendação, úteis para debug e ajuste fino dos algoritmos.
 
+use crate::constants::MINUTES_PER_HOUR_F32;
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::models::Platform;
@@ -119,7 +120,7 @@ fn fetch_and_prepare_data(state: &State<AppState>) -> Result<PreparedRecommendat
     let already_played_ids: HashSet<String> = library_games
         .iter()
         .filter(|g| {
-            let hours = g.playtime.unwrap_or(0) as f32 / 60.0;
+            let hours = g.playtime.unwrap_or(0) as f32 / MINUTES_PER_HOUR_F32;
             hours > 5.0 || g.favorite
         })
         .map(|g| g.id.clone())

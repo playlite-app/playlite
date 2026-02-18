@@ -1,9 +1,10 @@
 //! Cálculo de Perfil de Usuário
 //!
 //! Este módulo é responsável por calcular o vetor de preferências do usuário
-//! baseado em sua biblioteca de jogos.
+//! baseado na sua biblioteca de jogos.
 
 use super::core::*;
+use crate::constants::{RECOMMENDATION_WEIGHT_GENRE, RECOMMENDATION_WEIGHT_SERIES};
 use crate::utils::tag_utils::{combined_multiplier, TagKey, TagRole};
 use std::collections::{HashMap, HashSet};
 
@@ -50,7 +51,7 @@ pub fn calculate_user_profile(
 
 fn accumulate_genres(genres: &mut HashMap<String, f32>, game_genres: &[String], weight: f32) {
     for genre in game_genres {
-        *genres.entry(genre.clone()).or_insert(0.0) += weight * WEIGHT_GENRE;
+        *genres.entry(genre.clone()).or_insert(0.0) += weight * RECOMMENDATION_WEIGHT_GENRE;
     }
 }
 
@@ -75,6 +76,6 @@ fn accumulate_tags(
 
 fn accumulate_series(series: &mut HashMap<String, f32>, game_series: &Option<String>, weight: f32) {
     if let Some(series_name) = game_series {
-        *series.entry(series_name.clone()).or_insert(0.0) += weight * WEIGHT_SERIES;
+        *series.entry(series_name.clone()).or_insert(0.0) += weight * RECOMMENDATION_WEIGHT_SERIES;
     }
 }

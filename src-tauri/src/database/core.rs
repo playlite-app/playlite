@@ -93,7 +93,9 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
     metadata_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
-        .map_err(|e| format!("Erro ao configurar WAL no metadata.db: {}", e))?;
+        .map_err(|e| {
+            AppError::DatabaseWalConfigError("metadata.db".to_string(), e.to_string()).to_string()
+        })?;
 
     // Inicializa schema do cache
     crate::services::cache::initialize_cache_db(&metadata_conn)?;

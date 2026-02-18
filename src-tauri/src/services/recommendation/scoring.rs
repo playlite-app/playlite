@@ -4,6 +4,10 @@
 //! incluindo content-based e collaborative filtering.
 
 use super::core::*;
+use crate::constants::{
+    RECOMMENDATION_MAX_TAG_CONTRIBUTION, RECOMMENDATION_WEIGHT_GENRE,
+    RECOMMENDATION_WEIGHT_PLAYTIME_HOUR,
+};
 use crate::utils::tag_utils::{combined_multiplier, TagKey, TagRole};
 use chrono::Datelike;
 
@@ -156,7 +160,7 @@ fn process_genres(
 ) {
     for genre in game_genres {
         if let Some(&val) = profile_genres.get(genre) {
-            let contribution = val * WEIGHT_GENRE;
+            let contribution = val * RECOMMENDATION_WEIGHT_GENRE;
             *affinity_score += contribution;
             *genre_score += contribution;
             genre_contributions.push((genre.clone(), contribution));
@@ -182,8 +186,8 @@ fn process_tags(
 
         if let Some(&pref_val) = profile_tags.get(&key) {
             let multiplier = combined_multiplier(&tag.category, &tag.role);
-            let base_contribution = pref_val * multiplier * WEIGHT_PLAYTIME_HOUR;
-            let contribution = base_contribution.min(MAX_TAG_CONTRIBUTION);
+            let base_contribution = pref_val * multiplier * RECOMMENDATION_WEIGHT_PLAYTIME_HOUR;
+            let contribution = base_contribution.min(RECOMMENDATION_MAX_TAG_CONTRIBUTION);
 
             match tag.role {
                 TagRole::Affinity => {

@@ -27,6 +27,60 @@ pub enum AppError {
 
     #[error("Recurso já existe: {0}")]
     AlreadyExists(String),
+
+    #[error("Campo ausente no manifest Epic: {0}")]
+    EpicMissingField(String),
+
+    #[error("Erro ao ler steamapps: {0}")]
+    SteamReadError(String),
+
+    #[error("Erro ao ler libraryfolders.vdf: {0}")]
+    SteamLibraryFoldersError(String),
+
+    #[error("Erro ao ler manifest: {0}")]
+    SteamManifestError(String),
+
+    #[error("Pasta inválida para scan")]
+    ScanInvalidFolder,
+
+    #[error("Erro ao ler pasta raiz: {0}")]
+    ScanReadRootError(String),
+
+    #[error("Erro ao ler pasta '{0}': {1}")]
+    ScanReadDirError(String, String),
+
+    #[error("Erro ao obter metadata de '{0}': {1}")]
+    ScanMetadataError(String, String),
+
+    #[error("Erro ao obter permissões: {0}")]
+    ScanPermissionsError(String),
+
+    #[error("Limite de arquivos atingido ({0}). Scan interrompido.")]
+    ScanFileLimitReached(usize),
+
+    #[error("Erro ao criar tabela api_cache: {0}")]
+    CacheTableCreationError(String),
+
+    #[error("Erro ao criar índice: {0}")]
+    CacheIndexCreationError(String),
+
+    #[error("Erro ao salvar cache: {0}")]
+    CacheSaveError(String),
+
+    #[error("Erro ao limpar cache: {0}")]
+    CacheCleanupError(String),
+
+    #[error("Falha ao obter app_data_dir: {0}")]
+    AppDataDirError(String),
+
+    #[error("Falha ao criar diretório: {0}")]
+    DirectoryCreationError(String),
+
+    #[error("Erro ao abrir {0}: {1}")]
+    DatabaseOpenError(String, String),
+
+    #[error("Erro ao configurar WAL em {0}: {1}")]
+    DatabaseWalConfigError(String, String),
 }
 
 impl From<rusqlite::Error> for AppError {

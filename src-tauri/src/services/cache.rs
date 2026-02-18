@@ -7,6 +7,7 @@ use crate::constants::{
     CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS,
     CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
 };
+use crate::errors::AppError;
 use rusqlite::{params, Connection};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, warn};
@@ -149,7 +150,7 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
                 OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?4)",
             params![rawg_cutoff, store_cutoff, reviews_cutoff, playtime_cutoff],
         )
-        .map_err(|e| format!("Erro ao limpar cache: {}", e))?;
+        .map_err(|e| AppError::CacheCleanupError(e.to_string()).to_string())?;
 
     if deleted > 0 {
         info!("Cache cleanup: {} entradas removidas", deleted);

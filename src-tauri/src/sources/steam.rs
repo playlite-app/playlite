@@ -171,8 +171,8 @@ fn read_library_folders(steam_root: &Path) -> Result<Vec<PathBuf>, String> {
 
 /// Parseia um arquivo appmanifest
 fn parse_appmanifest(manifest_path: &Path, library_root: &Path) -> Result<GameData, String> {
-    let content =
-        fs::read_to_string(manifest_path).map_err(|e| format!("Erro ao ler manifest: {}", e))?;
+    let content = fs::read_to_string(manifest_path)
+        .map_err(|e| AppError::SteamManifestError(e.to_string()).to_string())?;
     let mut appid: Option<String> = None;
     let mut name: Option<String> = None;
     let mut installdir: Option<String> = None;

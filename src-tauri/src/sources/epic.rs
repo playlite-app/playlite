@@ -7,6 +7,7 @@
 //! - Cada arquivo `.item` é um JSON contendo informações sobre o jogo, como nome, caminho de instalação e executável de lançamento.
 //! - O source extrai essas informações para criar objetos `SourceGame` que representam os jogos instalados via Epic.
 
+use crate::constants::EPIC_MANIFEST_PATH_WINDOWS;
 use crate::errors::AppError;
 use crate::sources::providers::SourceGame;
 use serde::Deserialize;
@@ -14,9 +15,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 // === EPIC GAMES SOURCE - JOGOS INSTALADOS ===
-
-/// Caminho padrão dos manifests da Epic (Windows)
-const EPIC_MANIFEST_PATH: &str = r"C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests";
 
 /// Estrutura mínima do JSON dos arquivos `.item`
 #[derive(Debug, Deserialize)]
@@ -40,7 +38,7 @@ pub struct EpicSource;
 /// Importa todos os jogos instalados detectados nos manifests
 impl EpicSource {
     pub async fn import_installed() -> Result<Vec<SourceGame>, AppError> {
-        let manifest_dir = Path::new(EPIC_MANIFEST_PATH);
+        let manifest_dir = Path::new(EPIC_MANIFEST_PATH_WINDOWS);
 
         if !manifest_dir.exists() {
             return Ok(vec![]); // Epic não instalada ou sem jogos
@@ -77,17 +75,17 @@ impl EpicSource {
             .display_name
             .unwrap_or_else(|| "Unknown".to_string());
 
-        let install_location = manifest.install_location.ok_or_else(|| {
-            AppError::ValidationError("InstallLocation ausente no manifest Epic".into())
-        })?;
+        let install_location = manifest
+            .install_location
+            .ok_or_else(|| AppError::EpicMissingField("InstallLocation".into()))?;
 
-        let launch_executable = manifest.launch_executable.ok_or_else(|| {
-            AppError::ValidationError("LaunchExecutable ausente no manifest Epic".into())
-        })?;
+        let launch_executable = manifest
+            .launch_executable
+            .ok_or_else(|| AppError::EpicMissingField("LaunchExecutable".into()))?;
 
         let app_name = manifest
             .app_name
-            .ok_or_else(|| AppError::ValidationError("AppName ausente no manifest Epic".into()))?;
+            .ok_or_else(|| AppError::EpicMissingField("AppName".into()))?;
 
         let full_executable_path = Path::new(&install_location)
             .join(&launch_executable)

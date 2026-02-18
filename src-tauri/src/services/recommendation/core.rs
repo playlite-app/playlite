@@ -3,19 +3,16 @@
 //! Este módulo define as estruturas de dados e configurações centrais
 //! usadas em todo o sistema de recomendação.
 
+use crate::constants::{
+    MINUTES_PER_HOUR, RECOMMENDATION_DEFAULT_AGE_DECAY,
+    RECOMMENDATION_DEFAULT_COLLABORATIVE_WEIGHT, RECOMMENDATION_DEFAULT_CONTENT_WEIGHT,
+    RECOMMENDATION_MAX_PLAYTIME_HOURS, RECOMMENDATION_WEIGHT_FAVORITE,
+    RECOMMENDATION_WEIGHT_PLAYTIME_HOUR, RECOMMENDATION_WEIGHT_USER_RATING,
+};
 use crate::models::{Game, GameTag};
 use crate::utils::tag_utils::TagKey;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-// === CONSTANTES ===
-
-pub const MAX_TAG_CONTRIBUTION: f32 = 300.0; // Cap por tag affinity
-pub const WEIGHT_GENRE: f32 = 3.0;
-pub const WEIGHT_PLAYTIME_HOUR: f32 = 1.2;
-pub const WEIGHT_FAVORITE: f32 = 30.0;
-pub const WEIGHT_USER_RATING: f32 = 8.0;
-pub const WEIGHT_SERIES: f32 = 1.0;
 
 // === ESTRUTURAS ===
 
@@ -30,9 +27,9 @@ pub struct RecommendationConfig {
 impl Default for RecommendationConfig {
     fn default() -> Self {
         Self {
-            content_weight: 0.65,
-            collaborative_weight: 0.35,
-            age_decay: 0.98,
+            content_weight: RECOMMENDATION_DEFAULT_CONTENT_WEIGHT,
+            collaborative_weight: RECOMMENDATION_DEFAULT_COLLABORATIVE_WEIGHT,
+            age_decay: RECOMMENDATION_DEFAULT_AGE_DECAY,
             favor_series: true,
         }
     }
@@ -135,15 +132,16 @@ pub fn parse_release_year(date_str: &str) -> Option<i32> {
 
 /// Calcula o peso de um jogo baseado no tempo jogado, favoritos e avaliação do usuário.
 pub fn calculate_game_weight(game: &Game) -> f32 {
-    let playtime_hours = (game.playtime.unwrap_or(0) / 60).min(100);
-    let mut weight = 1.0 + (playtime_hours as f32 * WEIGHT_PLAYTIME_HOUR);
+    let playtime_hours =
+        (game.playtime.unwrap_or(0) / MINUTES_PER_HOUR).min(RECOMMENDATION_MAX_PLAYTIME_HOURS);
+    let mut weight = 1.0 + (playtime_hours as f32 * RECOMMENDATION_WEIGHT_PLAYTIME_HOUR);
 
     if game.favorite {
-        weight += WEIGHT_FAVORITE;
+        weight += RECOMMENDATION_WEIGHT_FAVORITE;
     }
 
     if let Some(rating) = game.user_rating {
-        weight += (rating as f32) * WEIGHT_USER_RATING;
+        weight += (rating as f32) * RECOMMENDATION_WEIGHT_USER_RATING;
     }
 
     weight

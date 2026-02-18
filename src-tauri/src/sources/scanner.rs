@@ -11,6 +11,9 @@
 //! - Suporte cross-platform (Windows e Linux)
 //! - Foco em jogos indie/antigos/portados
 
+use crate::constants::{
+    BYTES_PER_MB, SCANNER_MAX_DEPTH, SCANNER_MAX_FILES_PER_DIR, SCANNER_MAX_TOTAL_FILES,
+};
 use crate::errors::AppError;
 use crate::sources::providers::{GameSource, SourceGame};
 use async_trait::async_trait;
@@ -21,16 +24,6 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-// === CONSTANTES DE LIMITE ===
-
-/// Profundidade máxima de recursão ao escanear pastas
-const MAX_DEPTH: usize = 4;
-
-/// Número máximo de arquivos processados por diretório
-const MAX_FILES_PER_DIR: usize = 1000;
-
-/// Número máximo total de arquivos processados em um scan
-const MAX_TOTAL_FILES: usize = 10000;
 
 // === STRUCTS INTERNAS (NÃO REFLETEM O BANCO DE DADOS) ===
 
@@ -86,9 +79,9 @@ pub enum ExecutableType {
 /// **Retorna:**
 /// * `Ok(Vec<GameDiscovery>)` - Lista de possíveis jogos encontrados
 /// * `Err(String)` - Mensagem de erro se houver falha na leitura
-pub fn scan_folder(root: &Path) -> Result<Vec<GameDiscovery>, String> {
+pub fn scan_folder(root: &Path) -> Result<Vec<GameDiscovery>, AppError> {
     let entries: Vec<_> = fs::read_dir(root)
-        .map_err(|e| format!("Erro ao ler pasta raiz: {}", e))?
+        .map_err(|e| AppError::ScanReadRootError(e.to_string()))?
         .flatten()
         .collect();
 
@@ -173,23 +166,20 @@ fn scan_executables_recursive(
     out: &mut Vec<ExecutableCandidate>,
     depth: usize,
     total_processed: &mut usize,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     // Limita profundidade para evitar scans infinitos ou muito lentos
-    if depth > MAX_DEPTH {
+    if depth > SCANNER_MAX_DEPTH {
         return Ok(());
     }
 
     // Verifica limite global
-    if *total_processed >= MAX_TOTAL_FILES {
-        return Err(format!(
-            "Limite de arquivos atingido ({}). Scan interrompido.",
-            MAX_TOTAL_FILES
-        ));
+    if *total_processed >= SCANNER_MAX_TOTAL_FILES {
+        return Err(AppError::ScanFileLimitReached(SCANNER_MAX_TOTAL_FILES));
     }
 
     let entries: Vec<_> = fs::read_dir(dir)
-        .map_err(|e| format!("Erro ao ler pasta '{}': {}", dir.display(), e))?
-        .take(MAX_FILES_PER_DIR) // Limita arquivos por pasta
+        .map_err(|e| AppError::ScanReadDirError(dir.display().to_string(), e.to_string()))?
+        .take(SCANNER_MAX_FILES_PER_DIR) // Limita arquivos por pasta
         .flatten()
         .collect();
 
@@ -200,11 +190,8 @@ fn scan_executables_recursive(
         *total_processed += 1;
 
         // Verifica limite global novamente
-        if *total_processed >= MAX_TOTAL_FILES {
-            return Err(format!(
-                "Limite de arquivos atingido ({}). Scan interrompido.",
-                MAX_TOTAL_FILES
-            ));
+        if *total_processed >= SCANNER_MAX_TOTAL_FILES {
+            return Err(AppError::ScanFileLimitReached(SCANNER_MAX_TOTAL_FILES));
         }
 
         if path.is_symlink() {
@@ -239,13 +226,13 @@ fn scan_executables_recursive(
 /// * `Ok(Some(ExecutableCandidate))` - Se o arquivo é um candidato válido
 /// * `Ok(None)` - Se o arquivo deve ser ignorado
 /// * `Err(String)` - Se houve erro ao analisar
-fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, String> {
+fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, AppError> {
     let metadata = fs::metadata(path)
-        .map_err(|e| format!("Erro ao obter metadata de '{}': {}", path.display(), e))?;
+        .map_err(|e| AppError::ScanMetadataError(path.display().to_string(), e.to_string()))?;
 
     let filename = path
         .file_name()
-        .ok_or_else(|| "Nome de arquivo inválido".to_string())?
+        .ok_or_else(|| AppError::ValidationError("Nome de arquivo inválido".to_string()))?
         .to_string_lossy()
         .to_string();
 
@@ -256,7 +243,7 @@ fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, String> {
         return Ok(None);
     }
 
-    let size_mb = metadata.len() / (1024 * 1024);
+    let size_mb = metadata.len() / BYTES_PER_MB;
 
     // Calcula score de ranking para ordenação
     let rank_score = calculate_rank(&filename, path);
@@ -280,7 +267,7 @@ fn analyze_file(path: &Path) -> Result<Option<ExecutableCandidate>, String> {
 /// **Linux:**
 /// * Verifica bit de execução (chmod +x)
 /// * Idealmente deveria verificar ELF header, mas por simplicidade usa apenas permissões
-fn detect_executable_type(path: &Path) -> Result<ExecutableType, String> {
+fn detect_executable_type(path: &Path) -> Result<ExecutableType, AppError> {
     // Windows: verifica extensão .exe
     #[cfg(windows)]
     {
@@ -296,7 +283,7 @@ fn detect_executable_type(path: &Path) -> Result<ExecutableType, String> {
     #[cfg(unix)]
     {
         let metadata =
-            fs::metadata(path).map_err(|e| format!("Erro ao obter permissões: {}", e))?;
+            fs::metadata(path).map_err(|e| AppError::ScanPermissionsError(e.to_string()))?;
 
         let permissions = metadata.permissions();
 
@@ -447,13 +434,10 @@ impl GameSource for ScanSource {
         let path = Path::new(&self.folder_path);
 
         if !path.exists() || !path.is_dir() {
-            return Err(AppError::ValidationError(
-                "Pasta inválida para scan.".to_string(),
-            ));
+            return Err(AppError::ScanInvalidFolder);
         }
 
-        let discoveries =
-            scan_folder(path).map_err(|e| AppError::ValidationError(e.to_string()))?;
+        let discoveries = scan_folder(path)?;
 
         let games = discoveries
             .into_iter()

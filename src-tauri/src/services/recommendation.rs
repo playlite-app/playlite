@@ -36,8 +36,7 @@ pub use analysis::{
 };
 pub use core::{
     calculate_game_weight, parse_release_year, GameWithDetails, RecommendationConfig,
-    RecommendationReason, SeriesLimit, UserPreferenceVector, UserSettings, MAX_TAG_CONTRIBUTION,
-    WEIGHT_FAVORITE, WEIGHT_GENRE, WEIGHT_PLAYTIME_HOUR, WEIGHT_SERIES, WEIGHT_USER_RATING,
+    RecommendationReason, SeriesLimit, UserPreferenceVector, UserSettings,
 };
 pub use filtering::{apply_diversity_rules, apply_hard_filters};
 pub use profile::calculate_user_profile;

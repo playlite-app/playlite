@@ -78,9 +78,9 @@ async fn persist_source_games(
             // Define uma capa padrão da Steam se for essa a plataforma
             let cover_url = if game.platform == "Steam" {
                 Some(format!(
-                    "{}/steam/apps/{}/library_600x900.jpg",
+                    "{}/{}",
                     constants::STEAM_CDN_URL,
-                    &game.platform_game_id
+                    constants::STEAM_LIBRARY_IMAGE_PATH.replace("{}", &game.platform_game_id)
                 ))
             } else {
                 None
