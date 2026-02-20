@@ -155,7 +155,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   };
 
   /**
-   * Salva credenciais e importa biblioteca em uma única ação
+   * Salva credenciais e importa biblioteca numa única ação
    */
   const saveAndImport = async () => {
     await saveSteamKeys();

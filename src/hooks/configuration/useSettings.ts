@@ -8,28 +8,21 @@ import { settingsService } from '@/services/settingsService';
 
 /**
  * Hook para gerenciar as configurações do aplicativo, incluindo chaves de API,
- * importação de biblioteca, enriquecimento de metadados, backup e restauração,
- * autenticação com serviços externos e gerenciamento de cache.
+ * enriquecimento de metadados, backup e restauração, autenticação com serviços
+ * externos e gerenciamento de cache.
  *
  * @param onLibraryUpdate - Função callback chamada quando a biblioteca é atualizada
  * @returns Objeto contendo estados, chaves e ações relacionadas às configurações
  */
 export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({
-    steamId: '',
-    steamApiKey: '',
     rawgApiKey: '',
     geminiApiKey: '',
   });
 
-  const [steamRoot, setSteamRoot] = useState(
-    localStorage.getItem('steam_root') || ''
-  );
-
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
-    importing: false,
     enriching: false,
     fetchingCovers: false,
     exporting: false,
@@ -63,8 +56,6 @@ export function useSettings(onLibraryUpdate: () => void) {
       .getSecrets()
       .then(data => {
         setKeys({
-          steamId: data.steamId || '',
-          steamApiKey: data.steamApiKey || '',
           rawgApiKey: data.rawgApiKey || '',
           geminiApiKey: data.geminiApiKey || '',
         });
@@ -73,19 +64,17 @@ export function useSettings(onLibraryUpdate: () => void) {
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
 
-  // Salva steamRoot no localStorage quando muda
-  useEffect(() => {
-    localStorage.setItem('steam_root', steamRoot);
-  }, [steamRoot]);
-
   const saveKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
     setStatus({ type: null, message: '' });
 
     try {
+      // Carrega as credenciais Steam existentes para não sobrescrever
+      const currentSecrets = await settingsService.getSecrets();
+
       await settingsService.setSecrets({
-        steamId: keys.steamId.trim() || null,
-        steamApiKey: keys.steamApiKey.trim() || null,
+        steamId: currentSecrets.steamId || null,
+        steamApiKey: currentSecrets.steamApiKey || null,
         rawgApiKey: keys.rawgApiKey.trim() || null,
         geminiApiKey: keys.geminiApiKey.trim() || null,
       });
@@ -93,60 +82,13 @@ export function useSettings(onLibraryUpdate: () => void) {
         type: 'success',
         message: 'Credenciais salvas com segurança!',
       });
+      toast.success('Credenciais API salvas!');
     } catch (error) {
-      setStatus({ type: 'error', message: `Erro ao salvar: ${error}` });
+      const errorMsg = `Erro ao salvar: ${error}`;
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setLoading(prev => ({ ...prev, saving: false }));
-    }
-  };
-
-  const importLibrary = async () => {
-    if (!keys.steamId || !keys.steamApiKey) {
-      setStatus({ type: 'error', message: 'Preencha as chaves da Steam.' });
-
-      return;
-    }
-
-    if (!steamRoot) {
-      setStatus({
-        type: 'error',
-        message: 'Selecione o diretório de instalação do Steam.',
-      });
-
-      return;
-    }
-
-    setLoading(prev => ({ ...prev, importing: true }));
-
-    try {
-      const msg = await settingsService.importSteamLibrary(
-        keys.steamId,
-        keys.steamApiKey,
-        steamRoot
-      );
-      setStatus({ type: 'success', message: msg });
-      onLibraryUpdate();
-    } catch (e) {
-      setStatus({ type: 'error', message: String(e) });
-    } finally {
-      setLoading(prev => ({ ...prev, importing: false }));
-    }
-  };
-
-  const chooseSteamDirectory = async () => {
-    try {
-      const selected = await import('@tauri-apps/plugin-dialog').then(m =>
-        m.open({
-          directory: true,
-          multiple: false,
-        })
-      );
-
-      if (selected) {
-        setSteamRoot(selected as string);
-      }
-    } catch (error) {
-      console.error('Erro ao escolher diretório:', error);
     }
   };
 
@@ -384,7 +326,6 @@ export function useSettings(onLibraryUpdate: () => void) {
   return {
     keys,
     setKeys,
-    steamRoot,
     loading,
     status,
     progress,
@@ -393,14 +334,12 @@ export function useSettings(onLibraryUpdate: () => void) {
     handleClearCache,
     actions: {
       saveKeys,
-      importLibrary,
       enrichLibrary,
       fetchMissingCovers,
       exportDatabase,
       importDatabase,
       cleanupCache,
       clearAllCache,
-      chooseSteamDirectory,
     },
   };
 }
