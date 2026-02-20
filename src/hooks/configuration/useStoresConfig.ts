@@ -75,9 +75,9 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
 
       setStatus({
         type: 'success',
-        message: 'Credenciais Steam salvas com segurança!',
+        message: 'Credenciais Steam atualizadas com segurança!',
       });
-      toast.success('Credenciais Steam salvas!');
+      toast.success('Credenciais Steam atualizadas!');
     } catch (error) {
       const errorMsg = `Erro ao salvar: ${error}`;
       setStatus({ type: 'error', message: errorMsg });
@@ -159,7 +159,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
    */
   const saveAndImport = async () => {
     await saveSteamKeys();
-    // Aguarda um pouco para as chaves serem salvas antes de importar
+    // Aguarda para as chaves serem salvas antes de importar
     setTimeout(async () => {
       await importSteamLibrary();
     }, 500);
