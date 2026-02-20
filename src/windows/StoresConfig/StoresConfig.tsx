@@ -196,7 +196,7 @@ function SteamSettings({ onLibraryUpdate }: { onLibraryUpdate?: () => void }) {
         <Button
           onClick={actions.saveAndImport}
           disabled={loading.saving || loading.importing}
-          className="bg-secondary flex items-center gap-2"
+          className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
         >
           {loading.importing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
