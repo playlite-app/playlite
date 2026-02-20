@@ -1,8 +1,8 @@
 import {
   Eye,
   EyeOff,
+  Gamepad2,
   Moon,
-  Plus,
   Search,
   Settings,
   Store,
@@ -121,10 +121,11 @@ export default function Header({
         <Button
           onClick={onAddGame}
           size="sm"
+          variant="outline"
           className="shrink-0 px-3 md:px-4"
           title="Adicionar Jogo"
         >
-          <Plus size={18} />
+          <Gamepad2 size={18} />
           <span className="ml-1 hidden md:inline">Adicionar</span>
         </Button>
 
