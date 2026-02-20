@@ -1,4 +1,3 @@
-// src/components/wrappers/WindowBase.tsx
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/ui/dialog';
 

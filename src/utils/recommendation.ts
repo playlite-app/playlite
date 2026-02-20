@@ -38,8 +38,8 @@ export function calculateAffinity(
 
   // 2. Tags - Busca em todas as possíveis chaves
   tags.forEach(tag => {
-    // O backend agora usa o formato "CategoryEnum:slug" (ex: "Gameplay:rpg")
-    // Mas o RawgGame pode não ter category, então tentamos vários formatos
+    // O backend usa o formato "CategoryEnum:slug" (ex: "Gameplay:rpg")
+    // Mas o RawgGame pode não ter category, então tenta vários formatos
 
     const slug = tag.slug.toLowerCase();
     let found = false;
@@ -51,7 +51,7 @@ export function calculateAffinity(
       const [profileCategory, profileSlug] = profileKey.split(':');
 
       if (profileSlug && profileSlug.toLowerCase() === slug) {
-        // Encontrou! Usa o multiplicador da categoria do perfil
+        // Se encontrar, usa o multiplicador da categoria do perfil
         const category = profileCategory.toLowerCase();
         const multiplier =
           CATEGORY_MULTIPLIERS[category as keyof typeof CATEGORY_MULTIPLIERS] ||
@@ -61,7 +61,7 @@ export function calculateAffinity(
       }
     });
 
-    // Se não encontrou e tem categoria no tag, tenta o formato direto
+    // Se não encontrou e tem categoria na tag, tenta o formato direto
     if (!found && tag.category) {
       const category = tag.category.toLowerCase();
       const tagKey = `${category}:${slug}`;

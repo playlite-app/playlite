@@ -25,7 +25,7 @@ export const CATEGORY_MULTIPLIERS: Record<TagCategory | 'unknown', number> = {
   unknown: 0.5,
 };
 
-/// Plataformas suportadas (deve corresponder ao enum Platform do Rust)
+// Plataformas suportadas (deve corresponder ao enum Platform do Rust)
 export type Platform =
   | 'Steam'
   | 'Epic'
@@ -37,7 +37,7 @@ export type Platform =
   | 'Indie'
   | 'Outra';
 
-/// Nível de confiança da importação
+// Nível de confiança da importação
 export type ImportConfidence = 'High' | 'Medium' | 'Low';
 
 /**

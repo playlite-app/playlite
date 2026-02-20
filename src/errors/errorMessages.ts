@@ -4,7 +4,6 @@ import { isAppError } from '@/types/errors';
  * Mensagens de erro centralizadas
  * Facilita manutenção, tradução e consistência
  */
-
 export const ERROR_MESSAGES = {
   // Erros de diálogo/permissões
   DIALOG_SAVE_PERMISSION: 'Permissão necessária para salvar arquivos.',

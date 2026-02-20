@@ -6,6 +6,7 @@ import {
   Scan,
   Search,
   Settings,
+  Store,
   Sun,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 import { ScanFolder } from '@/windows/ScanFolder';
+import StoresConfig from '@/windows/StoresConfig/StoresConfig';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;
@@ -74,6 +76,8 @@ export default function Header({
 
   const [isScanFolderOpen, setIsScanFolderOpen] = useState(false);
 
+  const [isStoresConfigOpen, setIsStoresConfigOpen] = useState(false);
+
   // Hook para gerenciar análises de recomendação
   const { analysisStatus, generateRecommendationAnalysis } =
     useRecommendationAnalysis();
@@ -125,6 +129,18 @@ export default function Header({
         >
           <Plus size={18} />
           <span className="ml-1 hidden md:inline">Adicionar</span>
+        </Button>
+
+        {/* Botão Temporário - Configurar Lojas */}
+        <Button
+          onClick={() => setIsStoresConfigOpen(true)}
+          size="sm"
+          variant="outline"
+          className="shrink-0 px-3 md:px-4"
+          title="Configurar Lojas (Teste)"
+        >
+          <Store size={18} />
+          <span className="ml-1 hidden md:inline">Lojas</span>
         </Button>
 
         {/* Botão de Escanear Pasta */}
@@ -179,6 +195,11 @@ export default function Header({
       <ScanFolder
         open={isScanFolderOpen}
         onClose={() => setIsScanFolderOpen(false)}
+      />
+
+      <StoresConfig
+        isOpen={isStoresConfigOpen}
+        onClose={() => setIsStoresConfigOpen(false)}
       />
     </header>
   );

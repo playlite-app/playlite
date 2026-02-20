@@ -133,23 +133,6 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
                         }
                     }
 
-                    {
-                        // 2. Salva na Tabela de Jogos (Library)
-                        // Calcula a porcentagem de avaliações positivas
-                        let total = summary.total_reviews;
-                        let percent_positive = if total > 0 {
-                            (summary.total_positive as f64 / total as f64 * 100.0) as i32
-                        } else {
-                            0
-                        };
-
-                        if let Ok(conn) = state.library_db.lock() {
-                            let _ = conn.execute(
-                                "UPDATE games SET user_rating = ?1 WHERE platform = 'Steam' AND platform_game_id = ?2",
-                                params![percent_positive, app_id_str],
-                            );
-                        }
-                    }
                     updated_count += 1;
                 }
                 Ok(None) => { /* Jogo não tem reviews ou erro 404, ignora */ }
