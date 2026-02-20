@@ -109,6 +109,7 @@ pub fn run() {
             commands::plataforms::add_games_from_scan,
             commands::plataforms::import_steam_library,
             commands::plataforms::import_epic_games,
+            commands::plataforms::import_heroic_games,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
             commands::metadata::covers::fetch_missing_covers,
@@ -141,8 +142,10 @@ pub fn run() {
             // Comandos de Sistema
             commands::system::open_folder,
             commands::system::open_file,
-            // Comandos de Versionamento
+            // Comandos de Versão e SO
+            commands::version::get_app_version,
             commands::version::get_app_version_info,
+            commands::version::is_updater_enabled,
             // Comandos de Imagem
             services::images::cache_cover_image,
             services::images::check_local_cover,

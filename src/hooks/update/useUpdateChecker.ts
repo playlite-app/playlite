@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { useEffect, useState } from 'react';
@@ -27,6 +28,13 @@ export function useUpdateChecker(): VersionInfo {
   const [isChecking, setIsChecking] = useState(false);
   const [currentVersion, setCurrentVersion] = useState('');
   const [previousVersion, setPreviousVersion] = useState('');
+  const [updaterEnabled, setUpdaterEnabled] = useState(false);
+
+  useEffect(() => {
+    invoke<boolean>('is_updater_enabled')
+      .then(setUpdaterEnabled)
+      .catch(() => setUpdaterEnabled(false));
+  }, []);
 
   // Carrega informações de versão ao montar
   useEffect(() => {
@@ -64,7 +72,7 @@ export function useUpdateChecker(): VersionInfo {
 
   // Verifica updates automaticamente
   useEffect(() => {
-    if (!enableUpdaterChecks) return;
+    if (!enableUpdaterChecks || !updaterEnabled) return;
 
     // Aguarda 8s antes da primeira verificação (não bloqueia startup)
     const timeoutId = setTimeout(() => {
@@ -78,8 +86,7 @@ export function useUpdateChecker(): VersionInfo {
       clearTimeout(timeoutId);
       clearInterval(intervalId);
     };
-  }, [enableUpdaterChecks]);
-
+  }, [enableUpdaterChecks, updaterEnabled]);
   const loadVersionInfo = async () => {
     try {
       const versionInfo = await getAppVersionInfo();
@@ -91,6 +98,8 @@ export function useUpdateChecker(): VersionInfo {
   };
 
   const checkForUpdates = async () => {
+    if (!updaterEnabled) return;
+
     // Previne múltiplas verificações simultâneas
     if (isChecking) return;
 

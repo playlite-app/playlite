@@ -28,6 +28,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     saving: false,
     importing: false,
     importingEpic: false,
+    importingHeroic: false,
   });
 
   const [status, setStatus] = useState<{
@@ -192,6 +193,27 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
+  /**
+   * Importa jogos instalados via Heroic Games Launcher (Linux)
+   */
+  const importHeroicGames = async () => {
+    setLoading(prev => ({ ...prev, importingHeroic: true }));
+    setStatus({ type: null, message: 'Importando jogos Heroic...' });
+
+    try {
+      const msg = await settingsService.importHeroicGames();
+      setStatus({ type: 'success', message: msg });
+      toast.success(msg);
+      onLibraryUpdate?.();
+    } catch (e) {
+      const errorMsg = String(e);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
+    } finally {
+      setLoading(prev => ({ ...prev, importingHeroic: false }));
+    }
+  };
+
   // Listener para progresso de importação (se houver eventos)
   useEffect(() => {
     const setupListeners = async () => {
@@ -242,6 +264,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       chooseSteamDirectory,
       saveAndImport,
       importEpicGames,
+      importHeroicGames,
     },
   };
 }

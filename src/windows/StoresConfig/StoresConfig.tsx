@@ -1,16 +1,17 @@
 import { AlertCircle, CheckCircle2, Globe, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Epic, Steam } from '@/components/icons/logos';
+import { Epic, Heroic, Steam } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { cn } from '@/lib/utils';
 import {
   EpicGamesSettings,
+  HeroicSettings,
   LocalScannerSettings,
   SteamSettings,
 } from '@/windows';
 
-type StoreProvider = 'steam' | 'epic' | 'gog' | 'local';
+type StoreProvider = 'steam' | 'epic' | 'heroic' | 'gog' | 'local';
 
 export default function StoresConfig({
   isOpen,
@@ -26,6 +27,7 @@ export default function StoresConfig({
   const stores = [
     { id: 'steam', name: 'Steam', Icon: Steam, connected: true },
     { id: 'epic', name: 'Epic Games', Icon: Epic, connected: true },
+    { id: 'heroic', name: 'Heroic (Linux)', Icon: Heroic, connected: true },
     { id: 'gog', name: 'GOG', Icon: Globe, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
   ];
@@ -77,6 +79,9 @@ export default function StoresConfig({
           )}
           {activeStore === 'epic' && (
             <EpicGamesSettings onLibraryUpdate={onLibraryUpdate} />
+          )}
+          {activeStore === 'heroic' && (
+            <HeroicSettings onLibraryUpdate={onLibraryUpdate} />
           )}
           {activeStore === 'local' && <LocalScannerSettings />}
           {activeStore === 'gog' && (

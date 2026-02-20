@@ -56,8 +56,9 @@ pub enum Platform {
     #[serde(rename = "Battle.net")]
     BattleNet,
     Amazon,
-    Indie, // Para jogos sem plataforma específica ou de desenvolvedores independentes
-    Outra, // Para jogos de plataformas não listadas ou desconhecidas
+    Heroic, // Para jogos importados do Heroic Games Launcher
+    Indie,  // Para jogos sem plataforma específica ou de desenvolvedores independentes
+    Outra,  // Para jogos de plataformas não listadas ou desconhecidas
 }
 
 impl FromStr for Platform {
@@ -87,6 +88,7 @@ impl std::fmt::Display for Platform {
             Platform::Ubisoft => "Ubisoft",
             Platform::BattleNet => "Battle.net",
             Platform::Amazon => "Amazon",
+            Platform::Heroic => "Heroic",
             Platform::Indie => "Indie",
             Platform::Outra => "Outra",
         };

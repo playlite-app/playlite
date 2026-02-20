@@ -42,7 +42,7 @@ export function EpicGamesSettings({ onLibraryUpdate }: EpicGamesSettingsProps) {
             <p className="text-muted-foreground text-xs">
               <strong>Localização dos Manifestos:</strong>
               <br />
-              <code className="text-primary/80 text-[10px]">
+              <code className="text-primary/80 text-xs">
                 C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
               </code>
             </p>

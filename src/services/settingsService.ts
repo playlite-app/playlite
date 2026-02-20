@@ -57,6 +57,17 @@ export const settingsService = {
   },
 
   /**
+   * Importa jogos instalados via Heroic Games Launcher (Linux).
+   * Detecta automaticamente jogos lendo o arquivo installed.json do Heroic.
+   * Localizações: ~/.config/heroic ou ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
+   *
+   * @throws Se o Heroic não estiver instalado ou não houver jogos
+   */
+  importHeroicGames: async (): Promise<string> => {
+    return await invoke<string>('import_heroic_games');
+  },
+
+  /**
    * Enriquece jogos existentes com dados de gênero na Steam, buscados diretamente da API da Steam.
    * Processa apenas jogos sem dados completos.
    * Operação pode ser lenta para bibliotecas grandes.

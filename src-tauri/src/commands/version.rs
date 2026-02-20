@@ -61,3 +61,15 @@ pub fn get_app_version_info(app: AppHandle) -> Result<AppSystemInfo, AppError> {
         last_auto_backup_at,
     })
 }
+
+fn is_running_flatpak() -> bool {
+    std::env::var("FLATPAK_ID").is_ok()
+}
+
+#[tauri::command]
+pub fn is_updater_enabled() -> bool {
+    if cfg!(target_os = "linux") && is_running_flatpak() {
+        return false;
+    }
+    true
+}

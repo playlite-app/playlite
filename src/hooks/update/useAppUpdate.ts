@@ -1,7 +1,8 @@
+import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getAppVersionInfo } from '../../services/updaterService';
+import { getAppVersionInfo } from '@/services/updaterService.ts';
 
 export type UpdateType = 'none' | 'patch' | 'minor' | 'major';
 
@@ -36,8 +37,17 @@ function parseVersion(version: string): {
 export function useAppUpdate() {
   const [updateType, setUpdateType] = useState<UpdateType>('none');
   const [isMajorOpen, setIsMajorOpen] = useState(false);
+  const [updaterEnabled, setUpdaterEnabled] = useState(false);
 
   useEffect(() => {
+    invoke<boolean>('is_updater_enabled')
+      .then(setUpdaterEnabled)
+      .catch(() => setUpdaterEnabled(false));
+  }, []);
+
+  useEffect(() => {
+    if (!updaterEnabled) return;
+
     async function checkUpdate() {
       try {
         const { currentVersion, previousVersion } = await getAppVersionInfo();
