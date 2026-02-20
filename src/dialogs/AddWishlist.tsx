@@ -2,15 +2,15 @@ import { ImageOff, Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { SearchResult, wishlistService } from '@/services/wishlistService.ts';
-import { Button } from '@/ui/button.tsx';
+import { SearchResult, wishlistService } from '@/services/wishlistService';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/ui/dialog.tsx';
-import { Input } from '@/ui/input.tsx';
+} from '@/ui/dialog';
+import { Input } from '@/ui/input';
 
 interface AddWishlistModalProps {
   isOpen: boolean;

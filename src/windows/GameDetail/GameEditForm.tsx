@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { GameDetails } from '@/types';
-import { Button } from '@/ui/button.tsx';
-import { Input } from '@/ui/input.tsx';
-import { Label } from '@/ui/label.tsx';
-import { Textarea } from '@/ui/textarea.tsx';
-import { handleBackendError } from '@/utils/errorHandler.ts';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
+import { Textarea } from '@/ui/textarea';
+import { handleBackendError } from '@/utils/errorHandler';
 
 interface GameEditFormProps {
   gameId: string;

@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ERROR_MESSAGES } from '@/errors/errorMessages';
-
-import { settingsService } from '../services/settingsService';
+import { settingsService } from '@/services/settingsService';
 
 /**
  * Hook para gerenciar as configurações do aplicativo, incluindo chaves de API,

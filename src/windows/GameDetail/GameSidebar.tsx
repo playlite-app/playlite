@@ -13,14 +13,14 @@ import {
   Users,
 } from 'lucide-react';
 
-import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game.ts';
-import { Badge } from '@/ui/badge.tsx';
-import { Button } from '@/ui/button.tsx';
-import { formatTime } from '@/utils/formatTime.ts';
-import { getPlaytimeCategory } from '@/utils/playtime.ts';
+import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game';
+import { Badge } from '@/ui/badge';
+import { Button } from '@/ui/button';
+import { formatTime } from '@/utils/formatTime';
+import { getPlaytimeCategory } from '@/utils/playtime';
 
-import { GameLinks } from './GameLinks.tsx';
-import { SteamReviewBadge } from './SteamReviewBadge.tsx';
+import { GameLinks } from './GameLinks';
+import { SteamReviewBadge } from './SteamReviewBadge';
 
 interface GameSidebarProps {
   game: Game;

@@ -15,7 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/ui/alert-dialog.tsx';
+} from '@/ui/alert-dialog';
 
 // Tipagem das opções possíveis de passar ao chamar a função
 type ConfirmOptions = {

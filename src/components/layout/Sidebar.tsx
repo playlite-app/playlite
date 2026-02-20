@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 import { avatarComponents } from '@/components/icons/avatars';
-import Profile from '@/dialogs/Profile.tsx';
+import Profile from '@/dialogs/Profile';
 import { useUserProfile } from '@/hooks/user';
 import { Game } from '@/types';
-import { MENU_ITEMS } from '@/utils/navigation.ts';
+import { MENU_ITEMS } from '@/utils/navigation';
 
 interface SidebarProps {
   activeSection: string;

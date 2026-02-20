@@ -9,7 +9,7 @@ import {
 
 import { Game } from '@/types';
 import { Button } from '@/ui/button';
-import { launchGame } from '@/utils/launcher.ts';
+import { launchGame } from '@/utils/launcher';
 
 interface PlaylistItemProps {
   game: Game;

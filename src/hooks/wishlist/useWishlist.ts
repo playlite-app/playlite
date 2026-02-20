@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { wishlistService } from '@/services/wishlistService.ts';
+import { wishlistService } from '@/services/wishlistService';
 import { WishlistGame } from '@/types';
 
 /**

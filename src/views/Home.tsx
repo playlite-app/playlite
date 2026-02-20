@@ -18,17 +18,17 @@ import {
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
-import Hero from '@/components/common/Hero.tsx';
+import Hero from '@/components/common/Hero';
 import { Recommendation } from '@/components/tooltips';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
-import { Separator } from '@/ui/separator.tsx';
+import { Separator } from '@/ui/separator';
 
 import Achievements from '../components/common/Achievements';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
-import { openExternalLink } from '../utils/openLink.ts';
+import { openExternalLink } from '../utils/openLink';
 
 interface HomeProps {
   onChangeTab: (tab: string) => void;

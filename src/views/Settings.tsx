@@ -1,12 +1,9 @@
 import {
   BrainCircuit,
-  CloudDownload,
   Database,
   Download,
   ExternalLink,
   FileJson,
-  FolderOpen,
-  Gamepad2,
   HardDrive,
   History,
   Loader2,
@@ -30,7 +27,7 @@ import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
 import { Slider } from '@/ui/slider';
-import { Switch } from '@/ui/toggle-switch.tsx';
+import { Switch } from '@/ui/toggle-switch';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;
@@ -40,7 +37,6 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
   const {
     keys,
     setKeys,
-    steamRoot,
     loading,
     status,
     progress,
@@ -86,7 +82,8 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Configurações</h2>
           <p className="text-muted-foreground mt-2">
-            Gerencie suas integrações, chaves de API e dados locais.
+            Gerencie suas integrações, chaves de API, algoritmo de recomendação
+            e dados locais.
           </p>
         </div>
 
@@ -95,65 +92,93 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
 
       <Separator />
 
-      {/* SEÇÃO 1: PLATAFORMAS */}
+      {/* SEÇÃO 1: METADADOS */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">Plataformas</h3>
+        <h3 className="text-lg font-semibold">Metadados</h3>
+        {/* Configurações de API para metadados */}
         <SettingsRow
-          icon={Gamepad2}
-          title="Credenciais da Steam"
-          description="Necessário para importar sua biblioteca e conquistas."
+          icon={Search}
+          title="RAWG.io"
+          description="Usado como fonte de metadados, de jogos em alta e lançamentos próximos."
         >
-          <div className="grid gap-3">
-            <Input
-              placeholder="Steam ID (ex: 7656...)"
-              value={keys.steamId}
-              onChange={e => setKeys({ ...keys, steamId: e.target.value })}
-              className="bg-background/50"
-            />
-            <Input
-              type="password"
-              placeholder="API Key da Steam"
-              value={keys.steamApiKey}
-              onChange={e => setKeys({ ...keys, steamApiKey: e.target.value })}
-              className="bg-background/50"
-            />
+          <Input
+            type="password"
+            placeholder="RAWG API Key"
+            value={keys.rawgApiKey}
+            onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
+            className="bg-background/50"
+          />
+        </SettingsRow>
+
+        {/* Ações para enriquecer metadados e buscar capas */}
+        <SettingsRow
+          icon={Search}
+          title="Buscar Metadados"
+          description="Baixa capas e sinopses em segundo plano."
+        >
+          <div className="w-full space-y-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={actions.enrichLibrary}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.enriching || loading.fetchingCovers}
+              >
+                {loading.enriching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Atualizar Metadados'
+                )}
+              </Button>
+
+              <Button
+                onClick={actions.fetchMissingCovers}
+                variant="outline"
+                className="flex-1"
+                disabled={loading.fetchingCovers || loading.enriching}
+                title="Busca apenas capas para jogos que estão sem imagem"
+              >
+                {loading.fetchingCovers ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Buscar Capas'
+                )}
+              </Button>
+            </div>
+            {(loading.enriching || loading.fetchingCovers) && progress && (
+              <div className="text-muted-foreground animate-pulse text-center text-xs">
+                Processando: {progress.game} ({progress.current}/
+                {progress.total})
+              </div>
+            )}
           </div>
         </SettingsRow>
 
+        {/* Configurações de API para tradução de descrições */}
         <SettingsRow
-          icon={CloudDownload}
-          title="Sincronizar Jogos"
-          description="Importa jogos comprados na sua conta Steam."
+          icon={Sparkles}
+          title="Google Gemini"
+          description="Usado para traduzir descrições dos jogos para Português."
         >
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Button
-                onClick={actions.chooseSteamDirectory}
-                variant="outline"
-                className="flex-1"
+          <div className="grid gap-2">
+            <Input
+              type="password"
+              placeholder="Gemini API Key"
+              value={keys.geminiApiKey}
+              onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
+              className="bg-background/50"
+            />
+            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+              <span>Não tem uma chave?</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-0.5 text-blue-400 hover:underline"
               >
-                <FolderOpen className="mr-2 h-4 w-4" />
-                Local da Steam
-              </Button>
-              <Button
-                onClick={actions.importLibrary}
-                variant="outline"
-                className="flex-1"
-                disabled={loading.importing}
-              >
-                {loading.importing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CloudDownload className="mr-2 h-4 w-4" />
-                )}
-                Importar
-              </Button>
+                Obter no Google AI Studio <ExternalLink size={10} />
+              </a>
             </div>
-            {steamRoot && (
-              <div className="text-muted-foreground text-xs">
-                Diretório selecionado: <code>{steamRoot}</code>
-              </div>
-            )}
           </div>
         </SettingsRow>
       </section>
@@ -282,98 +307,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: METADADOS */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold">Metadados</h3>
-        {/* Configurações de API para metadados */}
-        <SettingsRow
-          icon={Search}
-          title="RAWG.io"
-          description="Usado como fonte de metadados, de jogos em alta e lançamentos próximos."
-        >
-          <Input
-            type="password"
-            placeholder="RAWG API Key"
-            value={keys.rawgApiKey}
-            onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
-            className="bg-background/50"
-          />
-        </SettingsRow>
-
-        {/* Ações para enriquecer metadados e buscar capas */}
-        <SettingsRow
-          icon={Search}
-          title="Buscar Metadados"
-          description="Baixa capas e sinopses em segundo plano."
-        >
-          <div className="w-full space-y-2">
-            <div className="flex gap-2">
-              <Button
-                onClick={actions.enrichLibrary}
-                variant="outline"
-                className="flex-1"
-                disabled={loading.enriching || loading.fetchingCovers}
-              >
-                {loading.enriching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  'Atualizar Metadados'
-                )}
-              </Button>
-
-              <Button
-                onClick={actions.fetchMissingCovers}
-                variant="outline"
-                className="flex-1"
-                disabled={loading.fetchingCovers || loading.enriching}
-                title="Busca apenas capas para jogos que estão sem imagem"
-              >
-                {loading.fetchingCovers ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Buscar Capas'
-                )}
-              </Button>
-            </div>
-            {(loading.enriching || loading.fetchingCovers) && progress && (
-              <div className="text-muted-foreground animate-pulse text-center text-xs">
-                Processando: {progress.game} ({progress.current}/
-                {progress.total})
-              </div>
-            )}
-          </div>
-        </SettingsRow>
-
-        {/* Configurações de API para tradução de descrições */}
-        <SettingsRow
-          icon={Sparkles}
-          title="Google Gemini"
-          description="Usado para traduzir descrições dos jogos para Português."
-        >
-          <div className="grid gap-2">
-            <Input
-              type="password"
-              placeholder="Gemini API Key"
-              value={keys.geminiApiKey}
-              onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
-              className="bg-background/50"
-            />
-            <div className="text-muted-foreground flex items-center gap-1 text-xs">
-              <span>Não tem uma chave?</span>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-0.5 text-blue-400 hover:underline"
-              >
-                Obter no Google AI Studio <ExternalLink size={10} />
-              </a>
-            </div>
-          </div>
-        </SettingsRow>
-      </section>
-
-      {/* SEÇÃO 4: ZONA DE DADOS */}
+      {/* SEÇÃO 3: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
 
@@ -502,7 +436,7 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 5: SOBRE O PLAYLITE */}
+      {/* SEÇÃO 4: SOBRE O PLAYLITE */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Sobre</h3>
         <AboutPlaylite />

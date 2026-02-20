@@ -1,4 +1,4 @@
-import { Game } from '@/types/game.ts';
+import { Game } from '@/types/game';
 
 export interface RecommendationReason {
   label: string; // Ex: "Fãs de RPG", "Série Favorita"

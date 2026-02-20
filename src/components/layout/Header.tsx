@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { QuickSettings } from '@/dialogs/QuickSettings.tsx';
+import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
@@ -57,6 +57,7 @@ interface HeaderProps {
   hideAdult: boolean;
   onToggleAdultFilter: () => void;
   onCheckUpdates: () => void;
+  onLibraryUpdate: () => void;
 }
 
 export default function Header({
@@ -67,6 +68,7 @@ export default function Header({
   hideAdult,
   onToggleAdultFilter,
   onCheckUpdates,
+  onLibraryUpdate,
 }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
   const { isSearchable, searchPlaceholder, searchAriaLabel } =
@@ -200,6 +202,7 @@ export default function Header({
       <StoresConfig
         isOpen={isStoresConfigOpen}
         onClose={() => setIsStoresConfigOpen(false)}
+        onLibraryUpdate={onLibraryUpdate}
       />
     </header>
   );

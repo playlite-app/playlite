@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { librariesService } from '@/services/librariesService.ts';
+import { librariesService } from '@/services/librariesService';
 import { Game } from '@/types';
 
 /**

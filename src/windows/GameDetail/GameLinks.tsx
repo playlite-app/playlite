@@ -7,7 +7,7 @@ import {
   Star,
 } from 'lucide-react';
 
-import { Button } from '@/ui/button.tsx';
+import { Button } from '@/ui/button';
 
 interface GameLinksProps {
   links?: Record<string, string>;

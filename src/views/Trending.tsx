@@ -16,7 +16,7 @@ import { Affinity, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
-import Hero from '@/components/common/Hero.tsx';
+import Hero from '@/components/common/Hero';
 import {
   calculateGameAffinity,
   GiveawayWithAffinity,
@@ -40,9 +40,9 @@ import {
   DropdownMenuTrigger,
 } from '@/ui/dropdown-menu';
 import { Separator } from '@/ui/separator';
-import { Skeleton } from '@/ui/skeleton.tsx';
+import { Skeleton } from '@/ui/skeleton';
 
-import { openExternalLink } from '../utils/openLink.ts';
+import { openExternalLink } from '../utils/openLink';
 
 interface TrendingProps {
   userGames: Game[];

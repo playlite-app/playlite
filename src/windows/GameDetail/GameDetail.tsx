@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import { GameEditForm } from '@/dialogs';
-import { Game, GameDetails, GamePlatformLink } from '@/types/game.ts';
-import { Dialog, DialogContent } from '@/ui/dialog.tsx';
+import { Game, GameDetails, GamePlatformLink } from '@/types/game';
+import { Dialog, DialogContent } from '@/ui/dialog';
 
-import { GameDescription } from './GameDescription.tsx';
-import { GameHeader } from './GameHeader.tsx';
-import { GameSidebar } from './GameSidebar.tsx';
+import { GameDescription } from './GameDescription';
+import { GameHeader } from './GameHeader';
+import { GameSidebar } from './GameSidebar';
 
 interface GameDetailsModalProps {
   isOpen: boolean;

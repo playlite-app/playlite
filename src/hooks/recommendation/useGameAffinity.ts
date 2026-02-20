@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import tagMetadata from '@/data/tag_metadata.json';
 import { Giveaway, RawgGame, UserPreferenceVector } from '@/types';
-import { calculateAffinity } from '@/utils/recommendation.ts';
+import { calculateAffinity } from '@/utils/recommendation';
 
 /**
  * Pré-processa os dados de tags para criar regexes de correspondência.

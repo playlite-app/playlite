@@ -7,7 +7,7 @@ import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Card, CardContent } from '@/ui/card';
 
-import { ExecutableSelection } from './ExecutableSelection.tsx';
+import { ExecutableSelection } from './ExecutableSelection';
 
 export function DiscoveriesList({
   discoveries,

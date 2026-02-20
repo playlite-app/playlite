@@ -2,17 +2,17 @@ import { Sparkles, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { PresetAvatar, useUserProfile } from '@/hooks/user';
-import { Button } from '@/ui/button.tsx';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/ui/dialog.tsx';
-import { Input } from '@/ui/input.tsx';
-import { Label } from '@/ui/label.tsx';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs.tsx';
+} from '@/ui/dialog';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/tabs';
 
 import { avatarComponents, avatarNames } from '../components/icons/avatars';
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useNetworkStatus } from '@/hooks/common';
-import { trendingService } from '@/services/trendingService.ts';
+import { trendingService } from '@/services/trendingService';
 import { RawgGame } from '@/types';
 
 const UPCOMING_TTL_MS = 30 * 60 * 1000; // 30 minutos

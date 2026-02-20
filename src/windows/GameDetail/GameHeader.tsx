@@ -1,7 +1,7 @@
 import { ImageOff, Pencil, Star, X } from 'lucide-react';
 
 import { Game } from '@/types';
-import { Badge } from '@/ui/badge.tsx';
+import { Badge } from '@/ui/badge';
 
 interface GameHeaderProps {
   game: Game;

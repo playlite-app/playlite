@@ -21,9 +21,9 @@ import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
 
-import PlaylistCard from '../components/cards/PlaylistCard.tsx';
+import PlaylistCard from '../components/cards/PlaylistCard';
 import { launchGame } from '../utils/launcher';
-import { getFavoriteSeries } from '../utils/recommendation.ts';
+import { getFavoriteSeries } from '../utils/recommendation';
 
 interface PlaylistProps {
   allGames: Game[];

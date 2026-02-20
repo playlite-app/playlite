@@ -1,8 +1,8 @@
 import { FolderOpen, Scan } from 'lucide-react';
 
-import { useScanner } from '@/hooks/useScanner.ts';
-import { cn } from '@/lib/utils.ts';
-import { Button } from '@/ui/button.tsx';
+import { useScanner } from '@/hooks/configuration/useScanner';
+import { cn } from '@/lib/utils';
+import { Button } from '@/ui/button';
 
 import { DiscoveriesList } from './DiscoveriesList';
 

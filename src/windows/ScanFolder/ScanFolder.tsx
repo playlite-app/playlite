@@ -2,7 +2,7 @@ import { Scan } from 'lucide-react';
 
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
-import { GameScanner } from '@/windows/ScanFolder/GameScanner.tsx';
+import { GameScanner } from '@/windows/ScanFolder/GameScanner';
 
 export function ScanFolder({
   open,

@@ -1,2 +1,2 @@
-export { Github } from './Github.tsx';
-export { Steam } from './Steam.tsx';
+export { Github } from './Github';
+export { Steam } from './Steam';

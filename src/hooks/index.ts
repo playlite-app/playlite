@@ -10,6 +10,10 @@
  * - user/           - Perfil e detalhes
  * - common/         - Utilitários genéricos
  * - update/         - Verificação e aplicação de atualizações
+ * - configuration/    - Configurações e integrações
+ * - useHome.ts       - Hook específico para a tela inicial (na raizs)
+ *
+ * Cada pasta pode conter múltiplos hooks relacionados àquela funcionalidade.
  */
 
 // Library hooks
@@ -36,6 +40,8 @@ export * from './common';
 // Update hooks
 export * from './update';
 
+// Configuration hooks
+export * from './configuration';
+
 // Special hooks (na raiz)
 export * from './useHome';
-export * from './useSettings';

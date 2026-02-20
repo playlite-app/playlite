@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useNetworkStatus } from '@/hooks/common';
-import { trendingService } from '@/services/trendingService.ts';
+import { trendingService } from '@/services/trendingService';
 import { Game, RawgGame } from '@/types';
 
 const TRENDING_TTL_MS = 10 * 60 * 1000; // 10 minutos

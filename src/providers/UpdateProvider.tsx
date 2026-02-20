@@ -2,7 +2,7 @@ import { PropsWithChildren } from 'react';
 
 import { MajorUpdate } from '@/dialogs/MajorUpdate';
 import { useUpdateChecker } from '@/hooks/update';
-import { useAppUpdate } from '@/hooks/update/useAppUpdate.ts';
+import { useAppUpdate } from '@/hooks/update/useAppUpdate';
 
 /**
  * Provider que gerencia atualizações da aplicação.

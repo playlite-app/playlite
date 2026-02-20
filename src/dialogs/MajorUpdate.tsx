@@ -1,6 +1,6 @@
 import { CheckCircle2 } from 'lucide-react';
 
-import { Button } from '@/ui/button.tsx';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/ui/dialog.tsx';
+} from '@/ui/dialog';
 
 interface MajorUpdateProps {
   open: boolean;

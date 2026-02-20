@@ -3,24 +3,24 @@ import { FileSearch, FolderOpen, Gamepad2, Star } from 'lucide-react';
 
 import { useGameForm } from '@/hooks';
 import { Game } from '@/types';
-import { Button } from '@/ui/button.tsx';
+import { Button } from '@/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/ui/dialog.tsx';
-import { Input } from '@/ui/input.tsx';
-import { Label } from '@/ui/label.tsx';
+} from '@/ui/dialog';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/select.tsx';
-import { Separator } from '@/ui/separator.tsx';
+} from '@/ui/select';
+import { Separator } from '@/ui/separator';
 
 interface AddGameModalProps {
   isOpen: boolean;
