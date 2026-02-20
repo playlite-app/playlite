@@ -10,7 +10,11 @@ import { useState } from 'react';
 import { Steam } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { cn } from '@/lib/utils';
-import { LocalScannerSettings, SteamSettings } from '@/windows';
+import {
+  EpicGamesSettings,
+  LocalScannerSettings,
+  SteamSettings,
+} from '@/windows';
 
 type StoreProvider = 'steam' | 'epic' | 'gog' | 'local';
 
@@ -27,7 +31,7 @@ export default function StoresConfig({
 
   const stores = [
     { id: 'steam', name: 'Steam', Icon: Steam, connected: true },
-    { id: 'epic', name: 'Epic Games', Icon: LayoutGrid, connected: false },
+    { id: 'epic', name: 'Epic Games', Icon: LayoutGrid, connected: true },
     { id: 'gog', name: 'GOG', Icon: Globe, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
   ];
@@ -77,8 +81,11 @@ export default function StoresConfig({
           {activeStore === 'steam' && (
             <SteamSettings onLibraryUpdate={onLibraryUpdate} />
           )}
+          {activeStore === 'epic' && (
+            <EpicGamesSettings onLibraryUpdate={onLibraryUpdate} />
+          )}
           {activeStore === 'local' && <LocalScannerSettings />}
-          {(activeStore === 'epic' || activeStore === 'gog') && (
+          {activeStore === 'gog' && (
             <div className="flex h-full flex-col items-center justify-center opacity-30">
               <AlertCircle size={48} className="mb-4" />
               <p className="text-lg font-medium">Integração em breve</p>

@@ -108,6 +108,7 @@ pub fn run() {
             commands::plataforms::add_game_from_scan,
             commands::plataforms::add_games_from_scan,
             commands::plataforms::import_steam_library,
+            commands::plataforms::import_epic_games,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
             commands::metadata::covers::fetch_missing_covers,

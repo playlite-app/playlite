@@ -46,6 +46,17 @@ export const settingsService = {
   },
 
   /**
+   * Importa jogos instalados da Epic Games Store.
+   * Detecta automaticamente jogos lendo os manifestos do Epic Games Launcher.
+   * Localização: C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
+   *
+   * @throws Se o Epic Games Launcher não estiver instalado ou não houver jogos
+   */
+  importEpicGames: async (): Promise<string> => {
+    return await invoke<string>('import_epic_games');
+  },
+
+  /**
    * Enriquece jogos existentes com dados de gênero na Steam, buscados diretamente da API da Steam.
    * Processa apenas jogos sem dados completos.
    * Operação pode ser lenta para bibliotecas grandes.

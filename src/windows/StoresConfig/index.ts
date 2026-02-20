@@ -2,6 +2,7 @@
 export { default as StoresConfig } from './StoresConfig';
 
 // Store-specific settings components
+export { EpicGamesSettings } from './EpicGamesSettings';
 export { LocalScannerSettings } from './LocalScannerSettings';
 export { SteamSettings } from './SteamSettings';
 

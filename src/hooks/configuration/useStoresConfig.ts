@@ -18,10 +18,16 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     steamRoot: localStorage.getItem('steam_root') || '',
   });
 
+  const [epicConfig] = useState({
+    // Epic não precisa de configuração manual, detecta automaticamente
+    autoDetect: true,
+  });
+
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
     importing: false,
+    importingEpic: false,
   });
 
   const [status, setStatus] = useState<{
@@ -165,6 +171,27 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }, 500);
   };
 
+  /**
+   * Importa jogos instalados da Epic Games Store
+   */
+  const importEpicGames = async () => {
+    setLoading(prev => ({ ...prev, importingEpic: true }));
+    setStatus({ type: null, message: 'Importando jogos Epic Games...' });
+
+    try {
+      const msg = await settingsService.importEpicGames();
+      setStatus({ type: 'success', message: msg });
+      toast.success(msg);
+      onLibraryUpdate?.();
+    } catch (e) {
+      const errorMsg = String(e);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
+    } finally {
+      setLoading(prev => ({ ...prev, importingEpic: false }));
+    }
+  };
+
   // Listener para progresso de importação (se houver eventos)
   useEffect(() => {
     const setupListeners = async () => {
@@ -205,6 +232,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   return {
     steamConfig,
     setSteamConfig,
+    epicConfig,
     loading,
     status,
     progress,
@@ -213,6 +241,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       importSteamLibrary,
       chooseSteamDirectory,
       saveAndImport,
+      importEpicGames,
     },
   };
 }
