@@ -1,13 +1,7 @@
-import {
-  AlertCircle,
-  CheckCircle2,
-  Globe,
-  LayoutGrid,
-  Settings2,
-} from 'lucide-react';
+import { AlertCircle, CheckCircle2, Globe, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Steam } from '@/components/icons/logos';
+import { Epic, Steam } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { cn } from '@/lib/utils';
 import {
@@ -31,7 +25,7 @@ export default function StoresConfig({
 
   const stores = [
     { id: 'steam', name: 'Steam', Icon: Steam, connected: true },
-    { id: 'epic', name: 'Epic Games', Icon: LayoutGrid, connected: true },
+    { id: 'epic', name: 'Epic Games', Icon: Epic, connected: true },
     { id: 'gog', name: 'GOG', Icon: Globe, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
   ];
