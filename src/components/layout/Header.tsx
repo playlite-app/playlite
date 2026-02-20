@@ -3,7 +3,6 @@ import {
   EyeOff,
   Moon,
   Plus,
-  Scan,
   Search,
   Settings,
   Store,
@@ -15,8 +14,7 @@ import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
-import { ScanFolder } from '@/windows/ScanFolder';
-import StoresConfig from '@/windows/StoresConfig/StoresConfig';
+import { StoresConfig } from '@/windows/StoresConfig';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;
@@ -75,9 +73,6 @@ export default function Header({
     useHeaderState(activeSection);
 
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
-
-  const [isScanFolderOpen, setIsScanFolderOpen] = useState(false);
-
   const [isStoresConfigOpen, setIsStoresConfigOpen] = useState(false);
 
   // Hook para gerenciar análises de recomendação
@@ -133,27 +128,16 @@ export default function Header({
           <span className="ml-1 hidden md:inline">Adicionar</span>
         </Button>
 
-        {/* Botão Temporário - Configurar Lojas */}
+        {/* Botão de Configurar Lojas (Steam, Scanner, etc) */}
         <Button
           onClick={() => setIsStoresConfigOpen(true)}
           size="sm"
           variant="outline"
           className="shrink-0 px-3 md:px-4"
-          title="Configurar Lojas (Teste)"
+          title="Configurar Lojas e Scanner"
         >
           <Store size={18} />
           <span className="ml-1 hidden md:inline">Lojas</span>
-        </Button>
-
-        {/* Botão de Escanear Pasta */}
-        <Button
-          onClick={() => setIsScanFolderOpen(true)}
-          size="sm"
-          className="shrink-0 px-3 md:px-4"
-          title="Escanear Pasta"
-        >
-          <Scan size={18} />
-          <span className="ml-1 hidden md:inline">Escanear</span>
         </Button>
 
         {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
@@ -192,11 +176,6 @@ export default function Header({
         onClose={() => setIsQuickSettingsOpen(false)}
         onGenerateReport={generateRecommendationAnalysis}
         onCheckUpdates={onCheckUpdates}
-      />
-
-      <ScanFolder
-        open={isScanFolderOpen}
-        onClose={() => setIsScanFolderOpen(false)}
       />
 
       <StoresConfig
