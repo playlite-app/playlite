@@ -93,10 +93,19 @@ Todo o processamento acontece localmente, sem coleta de dados do usuário.
 git clone <repo-url>
 cd game_manager
 
-# Volte para a raiz e instale dependências
-cd ..
+# Instale dependências
 npm install
 ```
+
+### Integração com o Desktop Linux (ícone na barra de tarefas)
+
+Se você estiver rodando no Linux, execute o script de integração para instalar o ícone e o arquivo `.desktop`:
+
+```bash
+npm run install:linux
+```
+
+Isso instala o ícone e o arquivo `.desktop` no diretório do usuário (`~/.local/share/`), permitindo que o Wayland/X11 associe a janela do app ao ícone correto na barra de tarefas.
 
 ### Desenvolvimento
 

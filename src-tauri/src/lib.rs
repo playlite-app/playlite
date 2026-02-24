@@ -28,6 +28,7 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
@@ -37,6 +38,13 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let app_handle = app.handle();
+
+            // === WAYLAND: Define app_id para ícone correto na barra de tarefas ===
+            #[cfg(target_os = "linux")]
+            {
+                glib::set_prgname(Some("Playlite"));
+                glib::set_application_name("Playlite");
+            }
 
             // === LOGGING ===
 
