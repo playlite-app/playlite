@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Playlite
+Comment=Game Library Manager
+Exec=playlite
+Icon=com.game-manager.dev
+Terminal=false
+Type=Application
+Categories=Game;
+StartupWMClass=Playlite
+StartupNotify=true
