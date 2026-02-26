@@ -68,6 +68,20 @@ export const settingsService = {
   },
 
   /**
+   * Importa jogos da Ubisoft a partir do diretório do Ubisoft Game Launcher.
+   * Lê os arquivos `.install` e o cache de configuração para detectar jogos instalados.
+   *
+   * @param ubisoftRoot - Caminho opcional para o diretório do Ubisoft Game Launcher.
+   *                      Se não informado, tenta detectar automaticamente.
+   * @throws Se o Ubisoft Game Launcher não estiver instalado ou não houver jogos
+   */
+  importUbisoftGames: async (ubisoftRoot?: string): Promise<string> => {
+    return await invoke<string>('import_ubisoft_games', {
+      ubisoftRoot: ubisoftRoot || null,
+    });
+  },
+
+  /**
    * Enriquece jogos existentes com dados de gênero na Steam, buscados diretamente da API da Steam.
    * Processa apenas jogos sem dados completos.
    * Operação pode ser lenta para bibliotecas grandes.

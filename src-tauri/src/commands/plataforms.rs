@@ -214,6 +214,37 @@ pub async fn import_heroic_games(
     Ok(format!("{} adicionados, {} atualizados", inserted, updated))
 }
 
+// === UBISOFT ===
+
+/// Importa jogos da Ubisoft a partir do diretório do Ubisoft Game Launcher.
+///
+/// Lê os arquivos `.install` e o cache de configuração da biblioteca para detectar
+/// jogos instalados e da biblioteca do usuário.
+#[tauri::command]
+pub async fn import_ubisoft_games(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    ubisoft_root: Option<String>,
+) -> Result<String, AppError> {
+    use crate::sources::providers::GameSource;
+    use crate::sources::ubisoft::UbisoftSource;
+
+    let source = UbisoftSource::new(ubisoft_root, true);
+    let games = source.fetch_games().await?;
+
+    if games.is_empty() {
+        return Ok("Nenhum jogo Ubisoft encontrado.".to_string());
+    }
+
+    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let _ = app.emit("library_updated", ());
+
+    Ok(format!(
+        "Ubisoft: {} adicionados, {} atualizados",
+        inserted, updated
+    ))
+}
+
 // === SCAN FOLDERS ===
 
 /// Escaneia uma pasta local em busca de possíveis jogos.

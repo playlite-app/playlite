@@ -6,6 +6,7 @@ export { EpicGamesSettings } from './EpicGamesSettings';
 export { HeroicSettings } from './HeroicSettings';
 export { LocalScannerSettings } from './LocalScannerSettings';
 export { SteamSettings } from './SteamSettings';
+export { UbisoftSettings } from './UbisoftSettings';
 
 // Scanner components
 export { DiscoveriesList } from './DiscoveriesList';

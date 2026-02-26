@@ -17,3 +17,4 @@ pub mod heroic;
 pub mod providers;
 pub mod scanner;
 pub mod steam;
+pub(crate) mod ubisoft;

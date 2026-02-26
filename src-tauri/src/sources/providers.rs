@@ -1,3 +1,8 @@
+//! Este módulo define a estrutura `SourceGame` e a trait `GameSource`.
+//!
+//! - Representa jogos detectados de várias fontes (como Steam, Epic Games, GOG, etc.)
+//! - Define a interface que cada fonte deve implementar para buscar os jogos instalados.
+
 use crate::errors::AppError;
 use async_trait::async_trait;
 

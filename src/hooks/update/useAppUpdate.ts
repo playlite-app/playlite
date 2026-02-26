@@ -73,7 +73,7 @@ export function useAppUpdate() {
 
         if (current.patch > previous.patch) {
           setUpdateType('patch');
-          toast(`Correções aplicadas (v${currentVersion})`, { icon: '🛠️' });
+          toast(`Correções aplicadas (v${currentVersion})`);
         }
       } catch (error) {
         console.error('Erro ao verificar atualização:', error);

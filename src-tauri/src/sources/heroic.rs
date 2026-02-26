@@ -69,7 +69,7 @@ impl HeroicSource {
             return Ok(flatpak_path);
         }
 
-        // Native install path
+        // Native installation path
         let native_path = Path::new(&home).join(".config/heroic");
 
         if native_path.exists() {

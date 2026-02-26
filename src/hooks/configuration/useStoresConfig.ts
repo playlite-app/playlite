@@ -23,12 +23,17 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     autoDetect: true,
   });
 
+  const [ubisoftConfig, setUbisoftConfig] = useState({
+    launcherRoot: localStorage.getItem('ubisoft_root') || '',
+  });
+
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
     importing: false,
     importingEpic: false,
     importingHeroic: false,
+    importingUbisoft: false,
   });
 
   const [status, setStatus] = useState<{
@@ -61,6 +66,11 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   useEffect(() => {
     localStorage.setItem('steam_root', steamConfig.steamRoot);
   }, [steamConfig.steamRoot]);
+
+  // Salva ubisoftRoot no localStorage quando muda
+  useEffect(() => {
+    localStorage.setItem('ubisoft_root', ubisoftConfig.launcherRoot);
+  }, [ubisoftConfig.launcherRoot]);
 
   /**
    * Salva as credenciais Steam (ID e API Key)
@@ -214,6 +224,55 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
+  /**
+   * Abre diálogo para selecionar o diretório do Ubisoft Game Launcher
+   */
+  const chooseUbisoftDirectory = async () => {
+    try {
+      const selected = await import('@tauri-apps/plugin-dialog').then(m =>
+        m.open({
+          directory: true,
+          multiple: false,
+          title: 'Selecione o diretório do Ubisoft Game Launcher',
+        })
+      );
+
+      if (selected) {
+        setUbisoftConfig(prev => ({
+          ...prev,
+          launcherRoot: selected as string,
+        }));
+        toast.success('Diretório do Ubisoft selecionado!');
+      }
+    } catch (error) {
+      console.error('Erro ao escolher diretório:', error);
+      toast.error('Erro ao selecionar diretório');
+    }
+  };
+
+  /**
+   * Importa jogos da Ubisoft usando o diretório configurado (ou detecção automática)
+   */
+  const importUbisoftGames = async () => {
+    setLoading(prev => ({ ...prev, importingUbisoft: true }));
+    setStatus({ type: null, message: 'Importando jogos Ubisoft...' });
+
+    try {
+      const msg = await settingsService.importUbisoftGames(
+        ubisoftConfig.launcherRoot || undefined
+      );
+      setStatus({ type: 'success', message: msg });
+      toast.success(msg);
+      onLibraryUpdate?.();
+    } catch (e) {
+      const errorMsg = String(e);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
+    } finally {
+      setLoading(prev => ({ ...prev, importingUbisoft: false }));
+    }
+  };
+
   // Listener para progresso de importação (se houver eventos)
   useEffect(() => {
     const setupListeners = async () => {
@@ -255,6 +314,8 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     steamConfig,
     setSteamConfig,
     epicConfig,
+    ubisoftConfig,
+    setUbisoftConfig,
     loading,
     status,
     progress,
@@ -265,6 +326,8 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       saveAndImport,
       importEpicGames,
       importHeroicGames,
+      chooseUbisoftDirectory,
+      importUbisoftGames,
     },
   };
 }
