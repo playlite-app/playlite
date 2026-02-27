@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { platformsService } from '@/services/plataformsService';
@@ -147,7 +147,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       );
 
       if (selected) {
-        setSteamConfig(prev => ({ ...prev, steamRoot: selected as string }));
+        setSteamConfig(prev => ({ ...prev, steamRoot: selected }));
         toast.success('Diretório do Steam selecionado!');
       }
     } catch (error) {
@@ -238,31 +238,35 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
 
   // === GERAL ===
 
+  const handleImportProgress = useCallback(
+    (event: { payload: { current: number; total: number; game: string } }) => {
+      setProgress(event.payload);
+    },
+    []
+  );
+
+  const handleImportComplete = useCallback(() => {
+    setLoading(prev => ({ ...prev, importing: false }));
+    setProgress(null);
+  }, []);
+
   // Listener para progresso de importação
   useEffect(() => {
-    const setupListeners = async () => {
-      const unlistenProgress = await listen(
-        'import_progress',
-        (event: {
-          payload: { current: number; total: number; game: string };
-        }) => {
-          setProgress(event.payload);
-        }
-      );
+    let unlistenProgress: (() => void) | null = null;
+    let unlistenComplete: (() => void) | null = null;
 
-      const unlistenComplete = await listen('import_complete', () => {
-        setLoading(prev => ({ ...prev, importing: false }));
-        setProgress(null);
-      });
-
-      return () => {
-        unlistenProgress();
-        unlistenComplete();
-      };
+    const registerListeners = async () => {
+      unlistenProgress = await listen('import_progress', handleImportProgress);
+      unlistenComplete = await listen('import_complete', handleImportComplete);
     };
 
-    setupListeners();
-  }, []);
+    void registerListeners();
+
+    return () => {
+      unlistenProgress?.();
+      unlistenComplete?.();
+    };
+  }, [handleImportComplete, handleImportProgress]);
 
   // Auto-fecha mensagens de status após 5 segundos
   useEffect(() => {

@@ -108,7 +108,7 @@ export const settingsService = {
         throw new Error(ERROR_MESSAGES.CANCELLED);
       }
 
-      const filePath = selected as string;
+      const filePath = selected;
 
       return await invoke<string>('import_database', { filePath });
     } catch (error: any) {
@@ -135,7 +135,7 @@ export const settingsService = {
   },
 
   /**
-   * Remove TODO o cache de metadados.
+   * Remove completamente o cache de metadados.
    * Use com cuidado - força nova busca em APIs na próxima atualização.
    */
   clearAllCache: async (): Promise<string> => {

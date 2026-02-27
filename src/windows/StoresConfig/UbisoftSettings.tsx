@@ -9,7 +9,9 @@ interface UbisoftSettingsProps {
   onLibraryUpdate?: () => void;
 }
 
-export function UbisoftSettings({ onLibraryUpdate }: UbisoftSettingsProps) {
+export function UbisoftSettings({
+  onLibraryUpdate,
+}: Readonly<UbisoftSettingsProps>) {
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 

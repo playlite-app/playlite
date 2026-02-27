@@ -10,7 +10,9 @@ interface SteamSettingsProps {
   onLibraryUpdate?: () => void;
 }
 
-export function SteamSettings({ onLibraryUpdate }: SteamSettingsProps) {
+export function SteamSettings({
+  onLibraryUpdate,
+}: Readonly<SteamSettingsProps>) {
   const { steamConfig, setSteamConfig, loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
