@@ -88,7 +88,7 @@ export function SteamSettings({ onLibraryUpdate }: SteamSettingsProps) {
       </div>
 
       {/* Progress Indicator */}
-      {loading.importing && progress && (
+      {loading.importingSteam && progress && (
         <div className="text-muted-foreground animate-pulse rounded-lg bg-blue-500/10 p-3 text-center text-sm">
           Importando: {progress.game} ({progress.current}/{progress.total})
         </div>
@@ -99,7 +99,7 @@ export function SteamSettings({ onLibraryUpdate }: SteamSettingsProps) {
         <Button
           variant="outline"
           onClick={actions.saveSteamKeys}
-          disabled={loading.saving || loading.importing}
+          disabled={loading.saving || loading.importingSteam}
           className="flex items-center gap-2"
         >
           {loading.saving ? (
@@ -110,10 +110,10 @@ export function SteamSettings({ onLibraryUpdate }: SteamSettingsProps) {
         </Button>
         <Button
           onClick={actions.saveAndImport}
-          disabled={loading.saving || loading.importing}
+          disabled={loading.saving || loading.importingSteam}
           className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
         >
-          {loading.importing ? (
+          {loading.importingSteam ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <RefreshCw size={16} />

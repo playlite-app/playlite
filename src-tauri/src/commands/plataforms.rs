@@ -173,7 +173,7 @@ pub async fn import_steam_library(
 
     // 3. Persiste usando a função genérica otimizada
     let (inserted, updated) = persist_source_games(&state, games).await?;
-    let message = format!("Steam: {} novos, {} atualizados", inserted, updated);
+    let message = format!("Steam: {} adicionados, {} atualizados", inserted, updated);
     info!("{}", message);
 
     // Notifica o frontend
@@ -195,7 +195,10 @@ pub async fn import_epic_games(
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 
-    Ok(format!("{} adicionados, {} atualizados", inserted, updated))
+    Ok(format!(
+        "Epic: {} adicionados, {} atualizados",
+        inserted, updated
+    ))
 }
 
 // === HEROIC GAMES ===
@@ -211,7 +214,10 @@ pub async fn import_heroic_games(
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 
-    Ok(format!("{} adicionados, {} atualizados", inserted, updated))
+    Ok(format!(
+        "Heroic: {} adicionados, {} atualizados",
+        inserted, updated
+    ))
 }
 
 // === UBISOFT ===
@@ -224,12 +230,11 @@ pub async fn import_heroic_games(
 pub async fn import_ubisoft_games(
     app: AppHandle,
     state: State<'_, AppState>,
-    ubisoft_root: Option<String>,
 ) -> Result<String, AppError> {
     use crate::sources::providers::GameSource;
     use crate::sources::ubisoft::UbisoftSource;
 
-    let source = UbisoftSource::new(ubisoft_root, true);
+    let source = UbisoftSource::new(true);
     let games = source.fetch_games().await?;
 
     if games.is_empty() {

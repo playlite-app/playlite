@@ -27,61 +27,6 @@ export const settingsService = {
   },
 
   /**
-   * Importa jogos do Steam e adiciona à biblioteca.
-   * Requer Steam ID público e API key válida.
-   * Pode demorar vários segundos dependendo do tamanho da biblioteca.
-   *
-   * @throws Se as credenciais forem inválidas ou a API estiver indisponível
-   */
-  importSteamLibrary: async (
-    steamId: string,
-    apiKey: string,
-    steamRoot: string
-  ): Promise<string> => {
-    return await invoke<string>('import_steam_library', {
-      steamId,
-      apiKey,
-      steamRoot,
-    });
-  },
-
-  /**
-   * Importa jogos instalados da Epic Games Store.
-   * Detecta automaticamente jogos lendo os manifestos do Epic Games Launcher.
-   * Localização: C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
-   *
-   * @throws Se o Epic Games Launcher não estiver instalado ou não houver jogos
-   */
-  importEpicGames: async (): Promise<string> => {
-    return await invoke<string>('import_epic_games');
-  },
-
-  /**
-   * Importa jogos instalados via Heroic Games Launcher (Linux).
-   * Detecta automaticamente jogos lendo o arquivo installed.json do Heroic.
-   * Localizações: ~/.config/heroic ou ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
-   *
-   * @throws Se o Heroic não estiver instalado ou não houver jogos
-   */
-  importHeroicGames: async (): Promise<string> => {
-    return await invoke<string>('import_heroic_games');
-  },
-
-  /**
-   * Importa jogos da Ubisoft a partir do diretório do Ubisoft Game Launcher.
-   * Lê os arquivos `.install` e o cache de configuração para detectar jogos instalados.
-   *
-   * @param ubisoftRoot - Caminho opcional para o diretório do Ubisoft Game Launcher.
-   *                      Se não informado, tenta detectar automaticamente.
-   * @throws Se o Ubisoft Game Launcher não estiver instalado ou não houver jogos
-   */
-  importUbisoftGames: async (ubisoftRoot?: string): Promise<string> => {
-    return await invoke<string>('import_ubisoft_games', {
-      ubisoftRoot: ubisoftRoot || null,
-    });
-  },
-
-  /**
    * Enriquece jogos existentes com dados de gênero na Steam, buscados diretamente da API da Steam.
    * Processa apenas jogos sem dados completos.
    * Operação pode ser lenta para bibliotecas grandes.

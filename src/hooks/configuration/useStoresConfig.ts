@@ -2,35 +2,27 @@ import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { platformsService } from '@/services/plataformsService';
 import { settingsService } from '@/services/settingsService';
 
 /**
- * Hook para gerenciar configurações das lojas (Steam, Epic, GOG, etc.)
- * Reutiliza a lógica e serviços de useSettings para importação Steam
+ * Hook para gerenciar configurações das lojas (Steam, Epic, Heroic, Ubisoft).
  *
- * @param onLibraryUpdate - Função callback chamada quando a biblioteca é atualizada
- * @returns Objeto contendo estados e ações relacionadas às configurações das lojas
+ * @param onLibraryUpdate - Callback chamado quando a biblioteca é atualizada
  */
 export function useStoresConfig(onLibraryUpdate?: () => void) {
+  // Steam precisa de ID, API Key e diretório raiz
   const [steamConfig, setSteamConfig] = useState({
     steamId: '',
     steamApiKey: '',
     steamRoot: localStorage.getItem('steam_root') || '',
   });
 
-  const [epicConfig] = useState({
-    // Epic não precisa de configuração manual, detecta automaticamente
-    autoDetect: true,
-  });
-
-  const [ubisoftConfig, setUbisoftConfig] = useState({
-    launcherRoot: localStorage.getItem('ubisoft_root') || '',
-  });
-
   const [loading, setLoading] = useState({
     initial: true,
     saving: false,
     importing: false,
+    importingSteam: false,
     importingEpic: false,
     importingHeroic: false,
     importingUbisoft: false,
@@ -62,25 +54,21 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       .finally(() => setLoading(prev => ({ ...prev, initial: false })));
   }, []);
 
-  // Salva steamRoot no localStorage quando muda
+  // Persiste steamRoot no localStorage quando muda
   useEffect(() => {
     localStorage.setItem('steam_root', steamConfig.steamRoot);
   }, [steamConfig.steamRoot]);
 
-  // Salva ubisoftRoot no localStorage quando muda
-  useEffect(() => {
-    localStorage.setItem('ubisoft_root', ubisoftConfig.launcherRoot);
-  }, [ubisoftConfig.launcherRoot]);
+  // === STEAM ===
 
   /**
-   * Salva as credenciais Steam (ID e API Key)
+   * Salva as credenciais Steam (ID e API Key) no keystore seguro.
    */
   const saveSteamKeys = async () => {
     setLoading(prev => ({ ...prev, saving: true }));
     setStatus({ type: null, message: '' });
 
     try {
-      // Carrega as outras chaves existentes para não sobrescrever
       const currentSecrets = await settingsService.getSecrets();
 
       await settingsService.setSecrets({
@@ -105,7 +93,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   };
 
   /**
-   * Importa a biblioteca Steam usando as credenciais configuradas
+   * Importa a biblioteca Steam usando as credenciais configuradas.
    */
   const importSteamLibrary = async () => {
     if (!steamConfig.steamId || !steamConfig.steamApiKey) {
@@ -124,11 +112,11 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       return;
     }
 
-    setLoading(prev => ({ ...prev, importing: true }));
+    setLoading(prev => ({ ...prev, importingSteam: true }));
     setStatus({ type: null, message: 'Importando biblioteca Steam...' });
 
     try {
-      const msg = await settingsService.importSteamLibrary(
+      const msg = await platformsService.importSteamLibrary(
         steamConfig.steamId,
         steamConfig.steamApiKey,
         steamConfig.steamRoot
@@ -141,12 +129,12 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       setStatus({ type: 'error', message: errorMsg });
       toast.error(errorMsg);
     } finally {
-      setLoading(prev => ({ ...prev, importing: false }));
+      setLoading(prev => ({ ...prev, importingSteam: false }));
     }
   };
 
   /**
-   * Abre diálogo para selecionar o diretório de instalação do Steam
+   * Abre diálogo para selecionar o diretório raiz do Steam.
    */
   const chooseSteamDirectory = async () => {
     try {
@@ -159,10 +147,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       );
 
       if (selected) {
-        setSteamConfig(prev => ({
-          ...prev,
-          steamRoot: selected as string,
-        }));
+        setSteamConfig(prev => ({ ...prev, steamRoot: selected as string }));
         toast.success('Diretório do Steam selecionado!');
       }
     } catch (error) {
@@ -172,25 +157,26 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   };
 
   /**
-   * Salva credenciais e importa biblioteca numa única ação
+   * Salva credenciais e importa biblioteca numa única ação.
    */
   const saveAndImport = async () => {
     await saveSteamKeys();
-    // Aguarda para as chaves serem salvas antes de importar
     setTimeout(async () => {
       await importSteamLibrary();
     }, 500);
   };
 
+  // === EPIC GAMES ===
+
   /**
-   * Importa jogos instalados da Epic Games Store
+   * Importa jogos instalados da Epic Games Store.
    */
   const importEpicGames = async () => {
     setLoading(prev => ({ ...prev, importingEpic: true }));
     setStatus({ type: null, message: 'Importando jogos Epic Games...' });
 
     try {
-      const msg = await settingsService.importEpicGames();
+      const msg = await platformsService.importEpicGames();
       setStatus({ type: 'success', message: msg });
       toast.success(msg);
       onLibraryUpdate?.();
@@ -203,15 +189,17 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
+  // === HEROIC GAMES LAUNCHER ===
+
   /**
-   * Importa jogos instalados via Heroic Games Launcher (Linux)
+   * Importa jogos instalados via Heroic Games Launcher (Linux).
    */
   const importHeroicGames = async () => {
     setLoading(prev => ({ ...prev, importingHeroic: true }));
     setStatus({ type: null, message: 'Importando jogos Heroic...' });
 
     try {
-      const msg = await settingsService.importHeroicGames();
+      const msg = await platformsService.importHeroicGames();
       setStatus({ type: 'success', message: msg });
       toast.success(msg);
       onLibraryUpdate?.();
@@ -224,43 +212,18 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
-  /**
-   * Abre diálogo para selecionar o diretório do Ubisoft Game Launcher
-   */
-  const chooseUbisoftDirectory = async () => {
-    try {
-      const selected = await import('@tauri-apps/plugin-dialog').then(m =>
-        m.open({
-          directory: true,
-          multiple: false,
-          title: 'Selecione o diretório do Ubisoft Game Launcher',
-        })
-      );
-
-      if (selected) {
-        setUbisoftConfig(prev => ({
-          ...prev,
-          launcherRoot: selected as string,
-        }));
-        toast.success('Diretório do Ubisoft selecionado!');
-      }
-    } catch (error) {
-      console.error('Erro ao escolher diretório:', error);
-      toast.error('Erro ao selecionar diretório');
-    }
-  };
+  // === UBISOFT GAME LAUNCHER ===
 
   /**
-   * Importa jogos da Ubisoft usando o diretório configurado (ou detecção automática)
+   * Importa jogos da Ubisoft.
+   * Detecta automaticamente via %LOCALAPPDATA%\Ubisoft Game Launcher.
    */
   const importUbisoftGames = async () => {
     setLoading(prev => ({ ...prev, importingUbisoft: true }));
     setStatus({ type: null, message: 'Importando jogos Ubisoft...' });
 
     try {
-      const msg = await settingsService.importUbisoftGames(
-        ubisoftConfig.launcherRoot || undefined
-      );
+      const msg = await platformsService.importUbisoftGames();
       setStatus({ type: 'success', message: msg });
       toast.success(msg);
       onLibraryUpdate?.();
@@ -273,7 +236,9 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
-  // Listener para progresso de importação (se houver eventos)
+  // === GERAL ===
+
+  // Listener para progresso de importação
   useEffect(() => {
     const setupListeners = async () => {
       const unlistenProgress = await listen(
@@ -299,7 +264,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     setupListeners();
   }, []);
 
-  // Auto-close status messages
+  // Auto-fecha mensagens de status após 5 segundos
   useEffect(() => {
     if (status.type && status.message) {
       const timer = setTimeout(() => {
@@ -313,9 +278,6 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   return {
     steamConfig,
     setSteamConfig,
-    epicConfig,
-    ubisoftConfig,
-    setUbisoftConfig,
     loading,
     status,
     progress,
@@ -326,7 +288,6 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       saveAndImport,
       importEpicGames,
       importHeroicGames,
-      chooseUbisoftDirectory,
       importUbisoftGames,
     },
   };

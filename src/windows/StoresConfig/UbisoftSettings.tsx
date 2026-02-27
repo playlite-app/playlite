@@ -1,6 +1,6 @@
-import { FolderOpen, Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 
-import { SettingsRow, StatusBadge } from '@/components/common';
+import { StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Separator } from '@/ui/separator';
@@ -10,7 +10,7 @@ interface UbisoftSettingsProps {
 }
 
 export function UbisoftSettings({ onLibraryUpdate }: UbisoftSettingsProps) {
-  const { ubisoftConfig, loading, status, progress, actions } =
+  const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
   return (
@@ -22,7 +22,7 @@ export function UbisoftSettings({ onLibraryUpdate }: UbisoftSettingsProps) {
             Importação Ubisoft
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos instalados e da biblioteca do Ubisoft Game Launcher.
+            Importe jogos instalados e da biblioteca do Ubisoft Connect.
           </p>
         </div>
         {status.type && (
@@ -32,44 +32,21 @@ export function UbisoftSettings({ onLibraryUpdate }: UbisoftSettingsProps) {
       <Separator className="mt-5" />
 
       <div className="space-y-4">
-        {/* Seleção de Diretório */}
-        <SettingsRow
-          icon={FolderOpen}
-          title="Diretório do Ubisoft Game Launcher"
-          description="Local de instalação do Ubisoft Game Launcher. Se não definido, a detecção automática será usada."
-        >
-          <div className="flex items-center gap-2">
-            <code className="text-muted-foreground bg-secondary/50 flex-1 rounded-md border p-2 text-[10px]">
-              {ubisoftConfig.launcherRoot ||
-                'Detecção automática (C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher)'}
-            </code>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={actions.chooseUbisoftDirectory}
-              className="text-xs"
-            >
-              <FolderOpen className="mr-1 h-3 w-3" />
-              Alterar
-            </Button>
-          </div>
-        </SettingsRow>
-
         {/* Info sobre o que será importado */}
         <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
           <h4 className="mb-2 text-sm font-semibold">O que será importado:</h4>
           <ul className="text-muted-foreground space-y-1 text-xs">
-            <li>
-              ✓ Jogos instalados (via arquivos <code>.install</code>)
-            </li>
             <li>✓ Biblioteca completa (via cache de configuração)</li>
+            <li>✓ Jogos instalados detectados automaticamente</li>
             <li>✓ Nome do jogo e identificador único</li>
             <li>✓ Diretório de instalação e executável principal</li>
           </ul>
           <p className="text-muted-foreground mt-4 text-xs">
-            <strong>Nota:</strong> O Ubisoft Game Launcher deve estar instalado.
-            Jogos da biblioteca que não estiverem instalados também serão
-            importados como não instalados.
+            <strong>Nota:</strong> O Ubisoft Connect deve estar instalado. A
+            detecção é automática via{' '}
+            <code>%LOCALAPPDATA%\Ubisoft Game Launcher</code>. Jogos da
+            biblioteca que não estiverem instalados também serão importados como
+            não instalados.
           </p>
         </div>
       </div>
