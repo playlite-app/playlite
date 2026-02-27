@@ -16,7 +16,6 @@ pub const STEAM_HEADER_IMAGE_PATH: &str = "steam/apps/{}/header.jpg";
 pub const STEAM_LIBRARY_IMAGE_PATH: &str = "steam/apps/{}/library_600x900.jpg";
 
 // === FORMATOS E EXTENSÕES ===
-pub const COVER_IMAGE_FORMAT: &str = "jpg";
 pub const COVER_IMAGE_EXTENSION: &str = ".jpg";
 
 // === DIRETÓRIOS ===
@@ -25,9 +24,6 @@ pub const EPIC_MANIFEST_PATH_WINDOWS: &str =
     r"C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests";
 
 // === DATA FILES ===
-pub const TAG_METADATA_JSON_PATH: &str = "../data/tag_metadata.json";
-pub const KNOWN_SERIES_JSON_PATH: &str = "../data/known_series.json";
-pub const COLLABORATIVE_INDEX_JSON_PATH: &str = "../../data/collaborative_index.json";
 
 // === VALORES PADRÕES E LIMITES ===
 pub const MAX_NAME_LENGTH: usize = 200;
@@ -40,15 +36,11 @@ pub const MAX_RATING: i32 = 5;
 pub const SCANNER_MAX_DEPTH: usize = 4;
 pub const SCANNER_MAX_FILES_PER_DIR: usize = 1000;
 pub const SCANNER_MAX_TOTAL_FILES: usize = 10000;
-pub const SCANNER_MIN_FILE_SIZE_MB: u64 = 5;
 
 // === CONVERSÕES ===
 pub const BYTES_PER_MB: u64 = 1024 * 1024;
 pub const MINUTES_PER_HOUR: i32 = 60;
-pub const SECONDS_PER_MINUTE: i64 = 60;
 pub const MINUTES_PER_HOUR_F32: f32 = 60.0;
-pub const SECONDS_PER_HOUR: i64 = 3600;
-pub const SECONDS_PER_DAY: i64 = 86400;
 
 // === PESOS DO SISTEMA DE RECOMENDAÇÃO ===
 pub const RECOMMENDATION_MAX_TAG_CONTRIBUTION: f32 = 300.0;
@@ -104,4 +96,3 @@ pub const DB_FILENAME_LIBRARY: &str = "library.db";
 pub const DB_FILENAME_SECRETS: &str = "secrets.db";
 pub const DB_FILENAME_METADATA: &str = "metadata.db";
 pub const DB_JOURNAL_MODE: &str = "WAL";
-pub const DB_SCHEMA_VERSION: u32 = 3;

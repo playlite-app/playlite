@@ -4,7 +4,8 @@
 //! Centraliza a importação via arquivos JSON (Steam e ITAD).
 
 use crate::constants::{
-    DEFAULT_CURRENCY, RAWG_RATE_LIMIT_MS, STEAM_CDN_AKAMAI_URL, STEAM_STORE_URL,
+    DEFAULT_CURRENCY, RAWG_RATE_LIMIT_MS, STEAM_CDN_AKAMAI_URL, STEAM_HEADER_IMAGE_PATH,
+    STEAM_STORE_URL,
 };
 use crate::database::{self, AppState};
 use crate::errors::AppError;
@@ -131,7 +132,11 @@ fn parse_steam_wishlist(content: &str) -> Option<Vec<WishlistGame>> {
         let price = parse_steam_price(item.price.as_ref());
 
         // Steam Export não tem imagem direta, monta a URL padrão
-        let cover_url = format!("{}/steam/apps/{}/header.jpg", STEAM_CDN_AKAMAI_URL, app_id);
+        let cover_url = format!(
+            "{}/{}",
+            STEAM_CDN_AKAMAI_URL,
+            STEAM_HEADER_IMAGE_PATH.replace("{}", &app_id)
+        );
 
         games.push(WishlistGame {
             id: app_id.clone(),

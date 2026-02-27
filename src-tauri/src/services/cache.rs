@@ -4,8 +4,8 @@
 //! reduzindo chamadas desnecessárias e melhorando performance.
 
 use crate::constants::{
-    CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS,
-    CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
+    CACHE_DEFAULT_TTL_DAYS, CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS,
+    CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
 };
 use crate::errors::AppError;
 use rusqlite::{params, Connection};
@@ -69,7 +69,7 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
     } else if cache_key.starts_with("playtime_") {
         CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60
     } else {
-        7 * 24 * 60 * 60 // default 7 dias
+        CACHE_DEFAULT_TTL_DAYS * 24 * 60 * 60 // default 7 dias
     }
 }
 
