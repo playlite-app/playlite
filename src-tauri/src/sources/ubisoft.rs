@@ -33,8 +33,7 @@ impl UbisoftSource {
 
     /// Resolve o diretório de dados do Ubisoft Game Launcher.
     ///
-    /// Sempre aponta para `%LOCALAPPDATA%\Ubisoft Game Launcher` (Windows).
-    /// Neste diretório está localizado `settings.yaml` e o cache de configuração.
+    /// Aponta para `%LOCALAPPDATA%\Ubisoft Game Launcher` (Windows), que tem `settings.yaml` e o cache de configuração.
     fn resolve_launcher_data_dir() -> Option<PathBuf> {
         #[cfg(target_os = "windows")]
         {
@@ -51,8 +50,7 @@ impl UbisoftSource {
 
     /// Lê o `settings.yaml` e retorna o caminho base de instalação dos jogos.
     ///
-    /// Extrai `misc.game_installation_path`, que indica onde os jogos ficam
-    /// instalados (ex: `C:/Ubisoft Game Launcher/games/`).
+    /// Extrai `misc.game_installation_path`, que indica onde os jogos ficam instalados.
     fn read_game_installation_path(data_dir: &Path) -> Option<PathBuf> {
         let settings_path = data_dir.join("settings.yaml");
         let content = fs::read_to_string(&settings_path).ok()?;
@@ -88,16 +86,7 @@ impl UbisoftSource {
 
     /// Lê o cache de biblioteca da Ubisoft.
     ///
-    /// O arquivo `cache/configuration/configurations` é binário com entradas YAML embutidas.
-    /// Cada entrada começa com `version: 2.0` (sem recuo) seguido de `root:`.
-    ///
-    /// Para cada jogo extrai:
-    /// - `  name:` (2 espaços) → nome de exibição
-    /// - `    game_identifier:` (4 espaços) → ID único (geralmente igual ao nome da pasta de instalação)
-    /// - `relative: *.exe` → caminho relativo do executável principal (qualquer indentação)
-    ///
     /// Retorna uma tupla `(Vec<SourceGame>, HashMap<game_identifier, exe_relativo>)`.
-    /// O `installed` de cada jogo é preenchido em `fetch_games` após verificar o filesystem.
     fn read_configuration_library(
         data_dir: &Path,
         games_base_path: Option<&Path>,
@@ -136,9 +125,7 @@ impl UbisoftSource {
                 return;
             }
 
-            // Resolve o nome de exibição: usa o nome do bloco quando válido,
-            // senão cai back para o game_identifier (ex: blocos com name: "l1"
-            // ou name: "GAMENAME" que ocorrem em AC Origins, Trials Rising e Far Cry 4).
+            // Resolve nome de exibição: usa o nome do bloco quando válido, senão o game_identifier
             let raw_name = name.unwrap_or_default();
             let is_placeholder =
                 raw_name.is_empty() || raw_name == "GAMENAME" || raw_name.to_lowercase() == "l1";
@@ -152,6 +139,11 @@ impl UbisoftSource {
                 return;
             }
 
+            // Nome com " - " mas game_identifier sem " - " indica DLC, conteúdo extra ou são dados incorretos
+            if n.contains(" - ") && !game_id.contains(" - ") {
+                return;
+            }
+
             let name_key = strip_trademark_symbols(&n).to_lowercase();
 
             if seen_ids.contains(&game_id) || seen_names.contains(&name_key) {
@@ -162,7 +154,6 @@ impl UbisoftSource {
             seen_names.insert(name_key);
 
             // Verifica se o jogo está instalado procurando sua pasta em game_installation_path.
-            // O `game_identifier` costuma coincidir com o nome da pasta de instalação.
             let (installed, install_path) = if let Some(base) = games_base_path {
                 let candidate = base.join(&game_id);
                 if candidate.exists() {
@@ -195,7 +186,6 @@ impl UbisoftSource {
         for raw_line in content.lines() {
             let line = raw_line.trim_end_matches('\r');
 
-            // Início de novo bloco de jogo
             if line == "version: 2.0" {
                 let name = current_name.take();
                 let id = current_id.take();
@@ -204,7 +194,6 @@ impl UbisoftSource {
                 continue;
             }
 
-            // Nome do jogo: exatamente 2 espaços (filho direto de `root:`)
             if let Some(rest) = line.strip_prefix("  name: ") {
                 let name = parse_yaml_string_value(rest);
                 if name.is_empty() || name == "GAMENAME" {
@@ -227,7 +216,6 @@ impl UbisoftSource {
                 continue;
             }
 
-            // Identificador único: exatamente 4 espaços
             if let Some(rest) = line.strip_prefix("    game_identifier: ") {
                 let id = parse_yaml_string_value(rest);
                 if !id.is_empty() && current_id.is_none() {
@@ -236,8 +224,7 @@ impl UbisoftSource {
                 continue;
             }
 
-            // Caminho relativo do executável principal.
-            // Indentação variável — filtramos pelo nome do arquivo para excluir utilitários.
+            // Caminho relativo do executável, filtra pelo nome do arquivo para excluir utilitários.
             if current_exe.is_none() {
                 let trimmed = line.trim_start();
                 if let Some(rest) = trimmed.strip_prefix("relative: ") {
@@ -260,7 +247,6 @@ impl UbisoftSource {
             }
         }
 
-        // Último bloco do arquivo
         let name = current_name.take();
         let id = current_id.take();
         let exe = current_exe.take();
@@ -271,7 +257,6 @@ impl UbisoftSource {
 }
 
 /// Remove símbolos de marca registrada do nome para exibição limpa.
-/// Exemplos: "Assassin's Creed® Syndicate" → "Assassin's Creed Syndicate"
 fn strip_trademark_symbols(s: &str) -> String {
     s.chars()
         .filter(|&c| c != '™' && c != '®' && c != '©')
@@ -307,13 +292,10 @@ impl GameSource for UbisoftSource {
         })?;
 
         // Lê o caminho base de instalação dos jogos a partir do settings.yaml.
-        // Se não encontrado, ainda importa os jogos da biblioteca, mas sem
-        // install_path nem executable_path.
+        // Se não encontrado, importa os jogos sem install_path e executable_path.
         let games_base_path = Self::read_game_installation_path(&data_dir);
 
         if !self.include_library_cache {
-            // Sem o cache de configuração não temos como listar jogos.
-            // Retorna vazio para sinalizar que a fonte está desabilitada.
             return Ok(Vec::new());
         }
 
@@ -325,18 +307,12 @@ impl GameSource for UbisoftSource {
 
 /// Detecta se uma entrada é provavelmente um DLC ou add-on e não um jogo base.
 ///
-/// Mantém apenas keywords genéricos que não causam falsos positivos
-/// em títulos legítimos de outros publishers.
+/// Mantém apenas keywords genéricos que não causam falsos positivos em títulos legítimos de outros publishers.
 fn is_likely_dlc(name: &str) -> bool {
     let lower = name.to_lowercase();
 
     // Entradas muito curtas (artefatos de parsing binário)
     if name.len() <= 2 {
-        return true;
-    }
-
-    // Padrão universal de DLC: "Nome do Jogo - Conteúdo Extra"
-    if name.contains(" - ") {
         return true;
     }
 
@@ -353,7 +329,6 @@ fn is_likely_dlc(name: &str) -> bool {
         "pre order",
         "starter pack",
         " pack",
-        "full game",
     ];
 
     for kw in &dlc_keywords {
