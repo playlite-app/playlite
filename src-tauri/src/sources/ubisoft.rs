@@ -10,7 +10,6 @@
 //!   incluindo nome, identificador e caminho relativo do executável.
 //!
 //! **Nota sobre jogos instalados:**
-//! A versão atual do Ubisoft Connect não gera mais arquivos `.install` por jogo.
 //! Para determinar se um jogo está instalado, verifica se sua pasta existe dentro
 //! de `game_installation_path`. O nome da pasta é inferido a partir do `game_identifier`
 //! (que normalmente corresponde ao nome da pasta de instalação).
@@ -54,7 +53,6 @@ impl UbisoftSource {
     ///
     /// Extrai `misc.game_installation_path`, que indica onde os jogos ficam
     /// instalados (ex: `C:/Ubisoft Game Launcher/games/`).
-    /// Usa parsing linha a linha para evitar dependência do crate `serde_yaml`.
     fn read_game_installation_path(data_dir: &Path) -> Option<PathBuf> {
         let settings_path = data_dir.join("settings.yaml");
         let content = fs::read_to_string(&settings_path).ok()?;
@@ -132,15 +130,31 @@ impl UbisoftSource {
                      games: &mut Vec<SourceGame>,
                      seen_ids: &mut std::collections::HashSet<String>,
                      seen_names: &mut std::collections::HashSet<String>| {
-            let Some(n) = name else { return };
+            // Regra 1: game_identifier obrigatório — descarta stubs binários sem ID
+            let Some(game_id) = id else { return };
+            if game_id.is_empty() {
+                return;
+            }
+
+            // Resolve o nome de exibição: usa o nome do bloco quando válido,
+            // senão cai back para o game_identifier (ex: blocos com name: "l1"
+            // ou name: "GAMENAME" que ocorrem em AC Origins, Trials Rising e Far Cry 4).
+            let raw_name = name.unwrap_or_default();
+            let is_placeholder =
+                raw_name.is_empty() || raw_name == "GAMENAME" || raw_name.to_lowercase() == "l1";
+            let n = if is_placeholder {
+                game_id.clone()
+            } else {
+                raw_name
+            };
+
             if is_likely_dlc(&n) {
                 return;
             }
 
-            let game_id = id.unwrap_or_else(|| n.clone());
-            let name_key = n.to_lowercase();
+            let name_key = strip_trademark_symbols(&n).to_lowercase();
 
-            if game_id.is_empty() || seen_ids.contains(&game_id) || seen_names.contains(&name_key) {
+            if seen_ids.contains(&game_id) || seen_names.contains(&name_key) {
                 return;
             }
 
@@ -169,7 +183,7 @@ impl UbisoftSource {
             games.push(SourceGame {
                 platform: "Ubisoft".to_string(),
                 platform_game_id: game_id,
-                name: Some(n),
+                name: Some(strip_trademark_symbols(&n)),
                 installed,
                 executable_path,
                 install_path,
@@ -256,6 +270,16 @@ impl UbisoftSource {
     }
 }
 
+/// Remove símbolos de marca registrada do nome para exibição limpa.
+/// Exemplos: "Assassin's Creed® Syndicate" → "Assassin's Creed Syndicate"
+fn strip_trademark_symbols(s: &str) -> String {
+    s.chars()
+        .filter(|&c| c != '™' && c != '®' && c != '©')
+        .collect::<String>()
+        .trim()
+        .to_string()
+}
+
 /// Remove aspas simples, duplas e espaços ao redor do valor de um campo YAML.
 fn parse_yaml_string_value(s: &str) -> String {
     let trimmed = s.trim().trim_end_matches('\r').trim();
@@ -316,9 +340,7 @@ fn is_likely_dlc(name: &str) -> bool {
         return true;
     }
 
-    // Keywords genéricos que identificam conteúdo extra sem ambiguidade.
-    // Espaço inicial em " dlc" evita falsos positivos em nomes que contenham
-    // "dlc" como parte de outra palavra.
+    // Keywords genéricos que identificam conteúdo extra ou demos sem ambiguidade.
     let dlc_keywords = [
         "season pass",
         " dlc",
