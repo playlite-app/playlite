@@ -29,6 +29,7 @@ pub struct UbisoftSource {
     pub include_library_cache: bool,
     /// Wine prefix utilizado no Linux para localizar o diretório de dados do Ubisoft Game Launcher.
     /// Ignorado no Windows.
+    #[allow(dead_code)]
     pub wine_prefix: Option<PathBuf>,
 }
 
