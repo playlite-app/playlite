@@ -6,37 +6,67 @@ interface UseLibraryFilterOptions {
   games: Game[];
   searchTerm: string;
   hideAdult?: boolean;
+  hideDuplicates?: boolean;
 }
 
 /**
- * Hook para filtrar jogos da biblioteca por busca e conteúdo adulto.
+ * Dado um grupo de jogos com o mesmo nome, retorna o mais relevante:
+ * prefere o que tiver favorito, rating, status ou playtime > 0.
+ * Caso empate, retorna o primeiro da lista.
+ */
+function pickBestGame(group: Game[]): Game {
+  return (
+    group.find(
+      g => g.favorite || g.userRating || g.status || (g.playtime ?? 0) > 0
+    ) ?? group[0]
+  );
+}
+
+/**
+ * Hook para filtrar jogos da biblioteca por busca, conteúdo adulto e duplicatas.
  * Busca em: nome, gêneros e plataforma.
  *
- * @param options.games - Lista completa de jogos
- * @param options.searchTerm - Termo de busca
- * @param options.hideAdult - Se true, oculta jogos marcados como adultos
+ * @param games - Lista completa de jogos
+ * @param searchTerm - Termo de busca
+ * @param hideAdult - Se true, oculta jogos marcados como adultos
+ * @param hideDuplicates - Se true, mantém apenas uma entrada por nome de jogo
  * @returns Jogos filtrados
  */
 export function useLibraryFilter({
   games,
   searchTerm,
   hideAdult,
+  hideDuplicates,
 }: UseLibraryFilterOptions) {
   return useMemo(() => {
     // 1. Aplica filtro de conteúdo adulto
-    const safeGames = hideAdult ? games.filter(game => !game.isAdult) : games;
+    let result = hideAdult ? games.filter(game => !game.isAdult) : games;
 
-    // 2. Se não há busca, retorna games filtrados por adulto
-    if (!searchTerm) return safeGames;
+    // 2. Oculta duplicatas (mesmo nome, plataformas diferentes)
+    if (hideDuplicates) {
+      const groups = new Map<string, Game[]>();
 
-    // 3. Aplica filtro de busca
+      for (const game of result) {
+        const key = game.name.trim().toLowerCase();
+        const group = groups.get(key) ?? [];
+        group.push(game);
+        groups.set(key, group);
+      }
+
+      result = Array.from(groups.values()).map(pickBestGame);
+    }
+
+    // 3. Se não há busca, retorna games já filtrados
+    if (!searchTerm) return result;
+
+    // 4. Aplica filtro de busca
     const term = searchTerm.toLowerCase();
 
-    return safeGames.filter(
+    return result.filter(
       game =>
         game.name.toLowerCase().includes(term) ||
-        (game.genres && game.genres.toLowerCase().includes(term)) ||
-        (game.platform && game.platform.toLowerCase().includes(term))
+        game.genres?.toLowerCase().includes(term) ||
+        game.platform?.toLowerCase().includes(term)
     );
-  }, [games, hideAdult, searchTerm]);
+  }, [games, hideAdult, hideDuplicates, searchTerm]);
 }

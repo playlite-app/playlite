@@ -30,6 +30,8 @@ interface UIContextType {
   // Filtros
   hideAdult: boolean;
   toggleAdultFilter: () => void;
+  hideDuplicates: boolean;
+  toggleDuplicatesFilter: () => void;
 
   // Cache (Trending e Profile)
   trendingCache: RawgGame[];
@@ -63,7 +65,7 @@ interface UIContextType {
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
-export function UIProvider({ children }: { children: ReactNode }) {
+export function UIProvider({ children }: Readonly<{ children: ReactNode }>) {
   // Navegação
   const [activeSection, setActiveSection] = useState('home');
 
@@ -80,6 +82,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
   // Filtros
   const [hideAdult, setHideAdult] = useState(() => {
     return localStorage.getItem('playlite_hide_adult') === 'true';
+  });
+
+  const [hideDuplicates, setHideDuplicates] = useState(() => {
+    return localStorage.getItem('playlite_hide_duplicates') === 'true';
   });
 
   // Cache
@@ -107,6 +113,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
     const newValue = !hideAdult;
     setHideAdult(newValue);
     localStorage.setItem('playlite_hide_adult', String(newValue));
+  };
+
+  const toggleDuplicatesFilter = () => {
+    const newValue = !hideDuplicates;
+    setHideDuplicates(newValue);
+    localStorage.setItem('playlite_hide_duplicates', String(newValue));
   };
 
   const openAddModal = () => {
@@ -138,6 +150,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
       setSelectedGameId,
       hideAdult,
       toggleAdultFilter,
+      hideDuplicates,
+      toggleDuplicatesFilter,
       trendingCache,
       setTrendingCache,
       trendingKey,
@@ -167,6 +181,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       gameToEdit,
       selectedGameId,
       hideAdult,
+      hideDuplicates,
       trendingCache,
       trendingKey,
       profileCache,

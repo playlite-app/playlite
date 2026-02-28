@@ -1,4 +1,6 @@
 import {
+  Copy,
+  CopySlash,
   Eye,
   EyeOff,
   Gamepad2,
@@ -50,6 +52,40 @@ function AdultFilterToggle({
   );
 }
 
+interface DuplicatesFilterToggleProps {
+  hideDuplicates: boolean;
+  onToggle: () => void;
+}
+
+function DuplicatesFilterToggle({
+  hideDuplicates,
+  onToggle,
+}: Readonly<DuplicatesFilterToggleProps>) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className={`shrink-0 transition-colors ${
+            hideDuplicates
+              ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-600'
+              : 'text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500'
+          }`}
+        >
+          {hideDuplicates ? <CopySlash size={18} /> : <Copy size={18} />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        <p>
+          {hideDuplicates ? 'Duplicatas ocultas' : 'Ocultar jogos duplicados'}
+        </p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 interface HeaderProps {
   onAddGame: () => void;
   searchTerm: string;
@@ -57,6 +93,8 @@ interface HeaderProps {
   activeSection: string;
   hideAdult: boolean;
   onToggleAdultFilter: () => void;
+  hideDuplicates: boolean;
+  onToggleDuplicatesFilter: () => void;
   onCheckUpdates: () => void;
   onLibraryUpdate: () => void;
 }
@@ -68,6 +106,8 @@ export default function Header({
   activeSection,
   hideAdult,
   onToggleAdultFilter,
+  hideDuplicates,
+  onToggleDuplicatesFilter,
   onCheckUpdates,
   onLibraryUpdate,
 }: Readonly<HeaderProps>) {
@@ -149,6 +189,14 @@ export default function Header({
           <AdultFilterToggle
             hideAdult={hideAdult}
             onToggle={onToggleAdultFilter}
+          />
+        )}
+
+        {/* Botão de Ocultar Duplicatas (Só aparece em telas de listagem) */}
+        {isSearchable && (
+          <DuplicatesFilterToggle
+            hideDuplicates={hideDuplicates}
+            onToggle={onToggleDuplicatesFilter}
           />
         )}
 

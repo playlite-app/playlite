@@ -64,59 +64,48 @@ export function matchesErrorPattern(
   return patterns.some(pattern => errorStr.includes(pattern));
 }
 
-/**
- * Extrai mensagem de erro amigável baseada no erro recebido
- */
-export function parseBackupError(error: unknown): string {
-  // Se for um AppError estruturado, trata de forma especial
-  if (isAppError(error)) {
-    switch (error.type) {
-      case 'ValidationError':
-        // Validações específicas
-        if (error.message.includes('backup inválido')) {
-          return ERROR_MESSAGES.BACKUP_INVALID_FILE;
-        }
+function parseBackupAppError(error: { type: string; message: string }): string {
+  switch (error.type) {
+    case 'ValidationError':
+      if (error.message.includes('backup inválido')) {
+        return ERROR_MESSAGES.BACKUP_INVALID_FILE;
+      }
 
-        if (error.message.includes('incompatível')) {
-          return ERROR_MESSAGES.BACKUP_INCOMPATIBLE_VERSION;
-        }
+      if (error.message.includes('incompatível')) {
+        return ERROR_MESSAGES.BACKUP_INCOMPATIBLE_VERSION;
+      }
 
-        return error.message;
+      return error.message;
 
-      case 'IoError':
-        if (error.message.includes('No such file')) {
-          return ERROR_MESSAGES.FILE_NOT_FOUND;
-        }
+    case 'IoError':
+      if (error.message.includes('No such file')) {
+        return ERROR_MESSAGES.FILE_NOT_FOUND;
+      }
 
-        return `Erro ao acessar arquivo: ${error.message}`;
+      return `Erro ao acessar arquivo: ${error.message}`;
 
-      case 'DatabaseError':
-        return ERROR_MESSAGES.DatabaseError;
+    case 'DatabaseError':
+      return ERROR_MESSAGES.DatabaseError;
 
-      case 'NetworkError':
-        return ERROR_MESSAGES.NetworkError;
+    case 'NetworkError':
+      return ERROR_MESSAGES.NetworkError;
 
-      case 'MutexError':
-        return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
+    case 'MutexError':
+      return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
 
-      case 'SerializationError':
-        return `Erro ao processar dados: ${error.message}`;
+    case 'SerializationError':
+      return `Erro ao processar dados: ${error.message}`;
 
-      case 'AlreadyExists':
-        return error.message;
-
-      case 'NotFound':
-        return error.message;
-
-      default:
-        return error.message;
-    }
+    case 'AlreadyExists':
+    case 'NotFound':
+    default:
+      return error.message;
   }
+}
 
-  // Fallback para erros não estruturados (legacy)
+function parseBackupLegacyError(error: unknown): string {
   const errorStr = String(error);
 
-  // Verifica permissões de diálogo
   if (
     matchesErrorPattern(error, ['dialog.save not allowed', 'dialog:allow-save'])
   ) {
@@ -129,7 +118,6 @@ export function parseBackupError(error: unknown): string {
     return ERROR_MESSAGES.DIALOG_OPEN_PERMISSION;
   }
 
-  // Verifica erros de backup
   if (errorStr.includes('Arquivo de backup inválido')) {
     return ERROR_MESSAGES.BACKUP_INVALID_FILE;
   }
@@ -138,7 +126,6 @@ export function parseBackupError(error: unknown): string {
     return ERROR_MESSAGES.BACKUP_INCOMPATIBLE_VERSION;
   }
 
-  // Verifica erros de sistema
   if (matchesErrorPattern(error, ['Falha no Mutex', 'lock'])) {
     return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
   }
@@ -147,84 +134,78 @@ export function parseBackupError(error: unknown): string {
     return ERROR_MESSAGES.FILE_NOT_FOUND;
   }
 
-  // Erro genérico
   return errorStr;
 }
 
-/**
- * Extrai mensagem de erro amigável para operações de importação de plataformas
- * (Steam, Epic, Heroic, Ubisoft, etc.).
- *
- * Tauri serializa AppError como `{ type: string; message: string }`, portanto
- * `String(e)` produziria "[object Object]". Esta função trata todos os casos.
- */
-export function parsePlatformError(error: unknown): string {
-  if (isAppError(error)) {
-    switch (error.type) {
-      case 'ValidationError': {
-        const msg = error.message.toLowerCase();
+function parsePlatformValidationError(message: string): string {
+  const msg = message.toLowerCase();
 
-        // Launcher não encontrado / não instalado
-        if (
-          msg.includes('não encontrado') ||
-          msg.includes('not found') ||
-          msg.includes('não está instalado') ||
-          msg.includes('not installed')
-        ) {
-          return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
-        }
-
-        // Caminho inválido / diretório incorreto
-        if (
-          msg.includes('inválido') ||
-          msg.includes('invalid') ||
-          msg.includes('incorreto') ||
-          msg.includes('incorrect') ||
-          msg.includes('not a directory') ||
-          msg.includes('diretório')
-        ) {
-          return ERROR_MESSAGES.LAUNCHER_INVALID_PATH;
-        }
-
-        // Retorna a mensagem original para outros erros de validação
-        return error.message;
-      }
-
-      case 'IoError': {
-        const msg = error.message.toLowerCase();
-
-        if (msg.includes('no such file') || msg.includes('not found')) {
-          return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
-        }
-
-        if (
-          msg.includes('permission denied') ||
-          msg.includes('access is denied')
-        ) {
-          return `Permissão negada ao acessar os arquivos do launcher.`;
-        }
-
-        return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
-      }
-
-      case 'SerializationError':
-        return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
-
-      case 'NotFound':
-        return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
-
-      case 'DatabaseError':
-        return ERROR_MESSAGES.DatabaseError;
-
-      case 'MutexError':
-        return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
-
-      default:
-        return error.message;
-    }
+  if (
+    msg.includes('não encontrado') ||
+    msg.includes('not found') ||
+    msg.includes('não está instalado') ||
+    msg.includes('not installed')
+  ) {
+    return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
   }
 
-  // Fallback: string raw (ex.: erros de permissão do plugin de diálogo)
+  if (
+    msg.includes('inválido') ||
+    msg.includes('invalid') ||
+    msg.includes('incorreto') ||
+    msg.includes('incorrect') ||
+    msg.includes('not a directory') ||
+    msg.includes('diretório')
+  ) {
+    return ERROR_MESSAGES.LAUNCHER_INVALID_PATH;
+  }
+
+  return message;
+}
+
+function parsePlatformIoError(message: string): string {
+  const msg = message.toLowerCase();
+
+  if (msg.includes('no such file') || msg.includes('not found')) {
+    return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+  }
+
+  if (msg.includes('permission denied') || msg.includes('access is denied')) {
+    return `Permissão negada ao acessar os arquivos do launcher.`;
+  }
+
+  return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
+}
+
+function parsePlatformAppError(error: {
+  type: string;
+  message: string;
+}): string {
+  switch (error.type) {
+    case 'ValidationError':
+      return parsePlatformValidationError(error.message);
+
+    case 'IoError':
+      return parsePlatformIoError(error.message);
+
+    case 'SerializationError':
+      return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
+
+    case 'NotFound':
+      return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+
+    case 'DatabaseError':
+      return ERROR_MESSAGES.DatabaseError;
+
+    case 'MutexError':
+      return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
+
+    default:
+      return error.message;
+  }
+}
+
+function parsePlatformLegacyError(error: unknown): string {
   const errorStr = String(error);
 
   if (errorStr === '[object Object]') {
@@ -238,4 +219,30 @@ export function parsePlatformError(error: unknown): string {
   }
 
   return errorStr;
+}
+
+/**
+ * Extrai mensagem de erro amigável baseada no erro recebido
+ */
+export function parseBackupError(error: unknown): string {
+  if (isAppError(error)) {
+    return parseBackupAppError(error);
+  }
+
+  return parseBackupLegacyError(error);
+}
+
+/**
+ * Extrai mensagem de erro amigável para operações de importação de plataformas
+ * (Steam, Epic, Heroic, Ubisoft, etc.).
+ *
+ * Tauri serializa AppError como `{ type: string; message: string }`, portanto
+ * `String(e)` produziria "[object Object]". Esta função trata todos os casos.
+ */
+export function parsePlatformError(error: unknown): string {
+  if (isAppError(error)) {
+    return parsePlatformAppError(error);
+  }
+
+  return parsePlatformLegacyError(error);
 }

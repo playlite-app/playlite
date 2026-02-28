@@ -12,14 +12,16 @@ interface LibraryProps extends GameActions {
   games: Game[];
   searchTerm: string;
   hideAdult?: boolean;
+  hideDuplicates?: boolean;
 }
 
 export default function Libraries({
   games,
   searchTerm,
   hideAdult,
+  hideDuplicates,
   ...actions
-}: LibraryProps) {
+}: Readonly<LibraryProps>) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
   // Handler para adicionar à playlist com notificação
@@ -33,7 +35,12 @@ export default function Libraries({
   };
 
   // Usa hook para filtrar jogos (busca + filtro adulto)
-  const displayedGames = useLibraryFilter({ games, searchTerm, hideAdult });
+  const displayedGames = useLibraryFilter({
+    games,
+    searchTerm,
+    hideAdult,
+    hideDuplicates,
+  });
 
   // Empty state
   if (displayedGames.length === 0) {

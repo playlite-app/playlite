@@ -41,6 +41,8 @@ function AppContent() {
     setSelectedGameId,
     hideAdult,
     toggleAdultFilter,
+    hideDuplicates,
+    toggleDuplicatesFilter,
     trendingCache,
     setTrendingCache,
     trendingKey,
@@ -78,7 +80,7 @@ function AppContent() {
       const { check } = await import('@tauri-apps/plugin-updater');
       const update = await check();
 
-      if (update?.available) {
+      if (update) {
         toast.info(`Nova versão disponível: ${update.version}`, {
           description: 'Clique para atualizar agora',
           duration: 10000,
@@ -181,6 +183,7 @@ function AppContent() {
             games={games}
             searchTerm={debouncedSearchTerm}
             hideAdult={hideAdult}
+            hideDuplicates={hideDuplicates}
             {...commonGameActions}
           />
         );
@@ -190,6 +193,7 @@ function AppContent() {
             games={games}
             searchTerm={debouncedSearchTerm}
             hideAdult={hideAdult}
+            hideDuplicates={hideDuplicates}
             {...commonGameActions}
           />
         );
@@ -245,6 +249,8 @@ function AppContent() {
           activeSection={activeSection}
           hideAdult={hideAdult}
           onToggleAdultFilter={toggleAdultFilter}
+          hideDuplicates={hideDuplicates}
+          onToggleDuplicatesFilter={toggleDuplicatesFilter}
           onCheckUpdates={handleCheckUpdates}
           onLibraryUpdate={refreshGames}
         />

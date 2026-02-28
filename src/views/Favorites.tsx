@@ -13,14 +13,16 @@ interface FavoritesProps extends GameActions {
   games: Game[];
   searchTerm: string;
   hideAdult?: boolean;
+  hideDuplicates?: boolean;
 }
 
 export default function Favorites({
   games,
   searchTerm,
   hideAdult,
+  hideDuplicates,
   ...actions
-}: FavoritesProps) {
+}: Readonly<FavoritesProps>) {
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
   // Handler para adicionar à playlist com notificação
@@ -39,6 +41,7 @@ export default function Favorites({
     games: favoriteGames,
     searchTerm,
     hideAdult,
+    hideDuplicates,
   });
 
   // Empty state
