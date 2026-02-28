@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useRecommendationBlacklist,
@@ -115,6 +115,32 @@ export function useRecommendation({
   // Store ready quando ambos os hooks estão prontos
   const storeReady = blacklistReady && configReady;
 
+  const gamesById = useMemo(
+    () => new Map(allGames.map(game => [game.id, game])),
+    [allGames]
+  );
+
+  const mapToGame = useCallback(
+    (results: GameRecommendationResult[]): RecommendedGame[] => {
+      const mapped: RecommendedGame[] = [];
+
+      for (const rec of results) {
+        const game = gamesById.get(rec.game_id);
+
+        if (!game) continue;
+
+        mapped.push({
+          ...game,
+          matchScore: rec.score,
+          reason: rec.reason,
+        });
+      }
+
+      return mapped;
+    },
+    [gamesById]
+  );
+
   // === BUSCAR RECOMENDAÇÕES ===
 
   const refreshRecommendations = useCallback(async () => {
@@ -122,25 +148,6 @@ export function useRecommendation({
 
     isRefreshingRef.current = true;
     setLoadingRecommendations(true);
-
-    // Helper para transformar dados do Rust em objetos de jogo completos
-    const mapToGame = (
-      results: GameRecommendationResult[]
-    ): RecommendedGame[] => {
-      return results
-        .map(rec => {
-          const game = allGames.find(g => g.id === rec.game_id);
-
-          if (!game) return null;
-
-          return {
-            ...game,
-            matchScore: rec.score,
-            reason: rec.reason,
-          } as RecommendedGame;
-        })
-        .filter((g): g is RecommendedGame => g !== null);
-    };
 
     try {
       // A. Content-Based
@@ -232,6 +239,7 @@ export function useRecommendation({
     hybridParams.limit,
     hybridParams.maxPlaytime,
     hybridParams.minPlaytime,
+    mapToGame,
   ]);
 
   useEffect(() => {

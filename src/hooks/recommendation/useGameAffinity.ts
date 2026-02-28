@@ -40,9 +40,9 @@ function buildTagRegex(value: string): RegExp | null {
 
   if (tokens.length === 0) return null;
 
-  const pattern = tokens.join('(?:\\s|-)');
+  const pattern = tokens.join(String.raw`(?:\s|-)`);
 
-  return new RegExp(`\\b${pattern}\\b`, 'gi');
+  return new RegExp(String.raw`\b${pattern}\b`, 'gi');
 }
 
 /**

@@ -96,7 +96,7 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
       installed: formData.installed,
       importConfidence: formData.importConfidence || null,
       status: formData.status,
-      playtime: parseInt(formData.playtime) || 0,
+      playtime: Number.parseInt(formData.playtime, 10) || 0,
       userRating: formData.rating > 0 ? formData.rating : null,
       installPath: formData.installPath || null,
       executablePath: formData.executablePath || null,

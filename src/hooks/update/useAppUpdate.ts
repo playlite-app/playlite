@@ -20,9 +20,9 @@ function parseVersion(version: string): {
   const parts = version.split('.');
 
   return {
-    major: parseInt(parts[0] || '0', 10),
-    minor: parseInt(parts[1] || '0', 10),
-    patch: parseInt(parts[2] || '0', 10),
+    major: Number.parseInt(parts[0] || '0', 10),
+    minor: Number.parseInt(parts[1] || '0', 10),
+    patch: Number.parseInt(parts[2] || '0', 10),
   };
 }
 

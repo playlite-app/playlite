@@ -38,7 +38,7 @@ export function useRecommendationSliders(
     (value: number) => {
       setWeights(value);
       const collab = value / 100;
-      const content = 1.0 - collab;
+      const content = 1 - collab;
 
       updateConfig({
         ...config,

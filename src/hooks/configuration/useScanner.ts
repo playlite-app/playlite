@@ -45,7 +45,7 @@ export function useScanner() {
   };
 
   const handleAddAll = async () => {
-    if (!result || !result.discoveries.length) return;
+    if (!result?.discoveries.length) return;
 
     try {
       const games = result.discoveries

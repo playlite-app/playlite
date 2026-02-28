@@ -107,11 +107,13 @@ export function useUpdateChecker(): VersionInfo {
       setIsChecking(true);
       const update = await check();
 
-      if (update?.available) {
+      if (update) {
         toast.info(`Nova versão disponível: ${update.version}`, {
           action: {
             label: 'Atualizar',
-            onClick: () => installUpdate(update),
+            onClick: () => {
+              void installUpdate(update);
+            },
           },
           duration: 10000,
         });
