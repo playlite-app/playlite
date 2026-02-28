@@ -140,13 +140,13 @@ export function useSettings(onLibraryUpdate: () => void) {
       const msg = await settingsService.exportDatabase();
       setStatus({ type: 'success', message: msg });
     } catch (error: unknown) {
-      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
+      if ((error as any).message === ERROR_MESSAGES.CANCELLED) {
+        setStatus({ type: null, message: '' });
+      } else {
         setStatus({
           type: 'error',
           message: (error as any).message || 'Erro ao exportar',
         });
-      } else {
-        setStatus({ type: null, message: '' });
       }
     } finally {
       setLoading(prev => ({ ...prev, exporting: false }));
@@ -162,13 +162,13 @@ export function useSettings(onLibraryUpdate: () => void) {
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
     } catch (error: unknown) {
-      if ((error as any).message !== ERROR_MESSAGES.CANCELLED) {
+      if ((error as any).message === ERROR_MESSAGES.CANCELLED) {
+        setStatus({ type: null, message: '' });
+      } else {
         setStatus({
           type: 'error',
           message: (error as any).message || 'Erro ao importar',
         });
-      } else {
-        setStatus({ type: null, message: '' });
       }
     } finally {
       setLoading(prev => ({ ...prev, importingBackup: false }));

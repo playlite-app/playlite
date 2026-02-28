@@ -34,7 +34,7 @@ interface SettingsProps {
   onLibraryUpdate: () => void;
 }
 
-export default function Settings({ onLibraryUpdate }: SettingsProps) {
+export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
   const {
     keys,
     setKeys,
