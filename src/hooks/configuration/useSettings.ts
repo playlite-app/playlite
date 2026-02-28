@@ -51,6 +51,14 @@ export function useSettings(onLibraryUpdate: () => void) {
     localStorage.getItem('config_save_covers') === 'true'
   );
 
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    return fallback;
+  };
+
   // Carrega secrets ao iniciar
   useEffect(() => {
     settingsService
@@ -140,12 +148,14 @@ export function useSettings(onLibraryUpdate: () => void) {
       const msg = await settingsService.exportDatabase();
       setStatus({ type: 'success', message: msg });
     } catch (error: unknown) {
-      if ((error as any).message === ERROR_MESSAGES.CANCELLED) {
+      const errorMessage = getErrorMessage(error, 'Erro ao exportar');
+
+      if (errorMessage === ERROR_MESSAGES.CANCELLED) {
         setStatus({ type: null, message: '' });
       } else {
         setStatus({
           type: 'error',
-          message: (error as any).message || 'Erro ao exportar',
+          message: errorMessage,
         });
       }
     } finally {
@@ -162,12 +172,14 @@ export function useSettings(onLibraryUpdate: () => void) {
       setStatus({ type: 'success', message: msg });
       onLibraryUpdate();
     } catch (error: unknown) {
-      if ((error as any).message === ERROR_MESSAGES.CANCELLED) {
+      const errorMessage = getErrorMessage(error, 'Erro ao importar');
+
+      if (errorMessage === ERROR_MESSAGES.CANCELLED) {
         setStatus({ type: null, message: '' });
       } else {
         setStatus({
           type: 'error',
-          message: (error as any).message || 'Erro ao importar',
+          message: errorMessage,
         });
       }
     } finally {
@@ -224,99 +236,137 @@ export function useSettings(onLibraryUpdate: () => void) {
     }
   };
 
+  const updateLoadingForEnrichProgress = (isCoverTask: boolean) => {
+    setLoading(prev => ({
+      ...prev,
+      enriching: !isCoverTask,
+      fetchingCovers: isCoverTask,
+    }));
+  };
+
+  const finishEnrichment = () => {
+    setLoading(prev => ({
+      ...prev,
+      enriching: false,
+      fetchingCovers: false,
+      fillingMissing: false,
+    }));
+  };
+
+  const updateLoadingForRefreshProgress = (
+    refreshType: 'reviews' | 'prices'
+  ) => {
+    setLoading(prev => ({
+      ...prev,
+      refreshingReviews: refreshType === 'reviews',
+      refreshingWishlistPrices: refreshType === 'prices',
+    }));
+  };
+
+  const finishReviewsRefresh = () => {
+    setLoading(prev => ({ ...prev, refreshingReviews: false }));
+  };
+
+  const finishWishlistRefresh = () => {
+    setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
+  };
+
   // Listeners para eventos de enriquecimento
   useEffect(() => {
-    const setupListeners = async () => {
-      const unlistenProgress = await listen(
-        'enrich_progress',
-        (event: {
-          payload: { current: number; total_found: number; last_game: string };
-        }) => {
-          const p = event.payload;
-          setProgress({
-            current: p.current,
-            total: p.total_found,
-            game: p.last_game,
-          });
-
-          const isCoverTask = p.last_game.startsWith('Capa:');
-
-          setLoading(prev => ({
-            ...prev,
-            enriching: !isCoverTask,
-            fetchingCovers: isCoverTask,
-          }));
-        }
-      );
-
-      const unlistenComplete = await listen('enrich_complete', () => {
-        setLoading(prev => ({
-          ...prev,
-          enriching: false,
-          fetchingCovers: false,
-          fillingMissing: false,
-        }));
-        setProgress(null);
-        setStatus({
-          type: 'success',
-          message: 'Processo concluído com sucesso!',
-        });
-        onLibraryUpdate();
+    const handleEnrichProgress = (event: {
+      payload: { current: number; total_found: number; last_game: string };
+    }) => {
+      const p = event.payload;
+      setProgress({
+        current: p.current,
+        total: p.total_found,
+        game: p.last_game,
       });
 
-      const unlistenRefreshProgress = await listen(
-        'refresh_progress',
-        (event: {
-          payload: {
-            current: number;
-            total: number;
-            item_name: string;
-            refresh_type: 'reviews' | 'prices';
-          };
-        }) => {
-          const p = event.payload;
-          setProgress({
-            current: p.current,
-            total: p.total,
-            game: p.item_name,
-          });
+      updateLoadingForEnrichProgress(p.last_game.startsWith('Capa:'));
+    };
 
-          setLoading(prev => ({
-            ...prev,
-            refreshingReviews: p.refresh_type === 'reviews',
-            refreshingWishlistPrices: p.refresh_type === 'prices',
-          }));
-        }
-      );
+    const handleEnrichComplete = () => {
+      finishEnrichment();
+      setProgress(null);
+      setStatus({
+        type: 'success',
+        message: 'Processo concluído com sucesso!',
+      });
+      onLibraryUpdate();
+    };
 
-      const unlistenReviewsComplete = await listen(
-        'reviews_refresh_complete',
-        (event: { payload: string }) => {
-          setLoading(prev => ({ ...prev, refreshingReviews: false }));
-          setProgress(null);
-          toast.info(String(event.payload), { duration: 4000 });
-        }
-      );
+    const handleRefreshProgress = (event: {
+      payload: {
+        current: number;
+        total: number;
+        item_name: string;
+        refresh_type: 'reviews' | 'prices';
+      };
+    }) => {
+      const p = event.payload;
+      setProgress({
+        current: p.current,
+        total: p.total,
+        game: p.item_name,
+      });
 
-      const unlistenWishlistComplete = await listen(
-        'wishlist_refresh_complete',
-        (event: { payload: string }) => {
-          setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
-          setProgress(null);
-          toast.info(String(event.payload), { duration: 4000 });
-        }
-      );
+      updateLoadingForRefreshProgress(p.refresh_type);
+    };
 
-      return () => {
+    const handleReviewsRefreshComplete = (event: { payload: string }) => {
+      finishReviewsRefresh();
+      setProgress(null);
+      toast.info(String(event.payload), { duration: 4000 });
+    };
+
+    const handleWishlistRefreshComplete = (event: { payload: string }) => {
+      finishWishlistRefresh();
+      setProgress(null);
+      toast.info(String(event.payload), { duration: 4000 });
+    };
+
+    let cleanup = () => {};
+    let isActive = true;
+
+    const setupListeners = async () => {
+      const [
+        unlistenProgress,
+        unlistenComplete,
+        unlistenRefreshProgress,
+        unlistenReviewsComplete,
+        unlistenWishlistComplete,
+      ] = await Promise.all([
+        listen('enrich_progress', handleEnrichProgress),
+        listen('enrich_complete', handleEnrichComplete),
+        listen('refresh_progress', handleRefreshProgress),
+        listen('reviews_refresh_complete', handleReviewsRefreshComplete),
+        listen('wishlist_refresh_complete', handleWishlistRefreshComplete),
+      ]);
+
+      const currentCleanup = () => {
         unlistenProgress();
         unlistenComplete();
         unlistenRefreshProgress();
         unlistenReviewsComplete();
         unlistenWishlistComplete();
       };
+
+      if (!isActive) {
+        currentCleanup();
+
+        return;
+      }
+
+      cleanup = currentCleanup;
     };
 
-    setupListeners();
+    void setupListeners();
+
+    return () => {
+      isActive = false;
+      cleanup();
+    };
   }, [onLibraryUpdate]);
 
   // Auto-close status messages
