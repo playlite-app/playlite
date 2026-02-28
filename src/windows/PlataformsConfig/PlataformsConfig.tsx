@@ -1,12 +1,13 @@
 import { AlertCircle, CheckCircle2, Settings2, Wine } from 'lucide-react';
 import { useState } from 'react';
 
-import { Epic, Heroic, Steam, Ubisoft } from '@/components/icons/logos';
+import { Epic, Heroic, Legacy, Steam, Ubisoft } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { cn } from '@/lib/utils';
 import {
   EpicGamesSettings,
   HeroicSettings,
+  LegacySettings,
   LocalScannerSettings,
   SteamSettings,
   UbisoftSettings,
@@ -18,6 +19,7 @@ type SourceProvider =
   | 'epic'
   | 'heroic'
   | 'ubisoft'
+  | 'legacy'
   | 'gog'
   | 'local'
   | 'wine';
@@ -38,6 +40,7 @@ export default function PlataformsConfig({
     { id: 'epic', name: 'Epic Games', Icon: Epic, connected: true },
     { id: 'heroic', name: 'Heroic', Icon: Heroic, connected: true },
     { id: 'ubisoft', name: 'Ubisoft', Icon: Ubisoft, connected: true },
+    { id: 'legacy', name: 'Legacy Games', Icon: Legacy, connected: true },
     { id: 'gog', name: 'GOG', Icon: AlertCircle, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
     { id: 'wine', name: 'Wine (Linux)', Icon: Wine, connected: true },
@@ -96,6 +99,9 @@ export default function PlataformsConfig({
           )}
           {activeStore === 'ubisoft' && (
             <UbisoftSettings onLibraryUpdate={onLibraryUpdate} />
+          )}
+          {activeStore === 'legacy' && (
+            <LegacySettings onLibraryUpdate={onLibraryUpdate} />
           )}
           {activeStore === 'local' && <LocalScannerSettings />}
           {activeStore === 'wine' && <WineSettings />}

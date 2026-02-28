@@ -68,4 +68,22 @@ export const platformsService = {
       winePrefix: winePrefix ?? null,
     });
   },
+
+  /**
+   * Importa a biblioteca de jogos da Legacy Games.
+   * Lê o arquivo app-state-bck.json do launcher.
+   *
+   * Windows: %APPDATA%\legacy-games-launcher\app-state-bck.json
+   * Linux (Wine): <wine_prefix>/drive_c/users/<USER>/AppData/Roaming/legacy-games-launcher/app-state-bck.json
+   *
+   * @throws Se o Legacy Games Launcher não estiver instalado ou não houver jogos
+   */
+  importLegacyGames: async (appStatePath?: string): Promise<string> => {
+    const winePrefix = localStorage.getItem('wine_prefix') || undefined;
+
+    return await invoke<string>('import_legacy_games', {
+      appStatePath: appStatePath ?? null,
+      winePrefix: winePrefix ?? null,
+    });
+  },
 };

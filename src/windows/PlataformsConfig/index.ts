@@ -4,6 +4,7 @@ export { default as PlataformsConfig } from './PlataformsConfig.tsx';
 // Store-specific settings components
 export { EpicGamesSettings } from './EpicGamesSettings';
 export { HeroicSettings } from './HeroicSettings';
+export { LegacySettings } from './LegacySettings';
 export { LocalScannerSettings } from './LocalScannerSettings';
 export { SteamSettings } from './SteamSettings';
 export { UbisoftSettings } from './UbisoftSettings';

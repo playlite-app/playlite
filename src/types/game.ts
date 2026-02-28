@@ -35,6 +35,7 @@ export type Platform =
   | 'Battle.net'
   | 'Amazon'
   | 'Heroic'
+  | 'Legacy Games'
   | 'Indie'
   | 'Outra';
 

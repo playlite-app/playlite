@@ -56,9 +56,11 @@ pub enum Platform {
     #[serde(rename = "Battle.net")]
     BattleNet,
     Amazon,
-    Heroic, // Para jogos importados do Heroic Games Launcher
-    Indie,  // Para jogos sem plataforma específica ou de desenvolvedores independentes
-    Outra,  // Para jogos de plataformas não listadas ou desconhecidas
+    Heroic,
+    #[serde(rename = "Legacy Games")]
+    LegacyGames,
+    Indie,
+    Outra,
 }
 
 impl FromStr for Platform {
@@ -72,6 +74,8 @@ impl FromStr for Platform {
             "Ubisoft" => Ok(Platform::Ubisoft),
             "Battle.net" => Ok(Platform::BattleNet),
             "Amazon" => Ok(Platform::Amazon),
+            "Heroic" => Ok(Platform::Heroic),
+            "Legacy Games" => Ok(Platform::LegacyGames),
             "Outra" => Ok(Platform::Outra),
             _ => Err(()),
         }
@@ -89,6 +93,7 @@ impl std::fmt::Display for Platform {
             Platform::BattleNet => "Battle.net",
             Platform::Amazon => "Amazon",
             Platform::Heroic => "Heroic",
+            Platform::LegacyGames => "Legacy Games",
             Platform::Indie => "Indie",
             Platform::Outra => "Outra",
         };

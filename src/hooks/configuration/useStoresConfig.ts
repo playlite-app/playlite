@@ -27,6 +27,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     importingEpic: false,
     importingHeroic: false,
     importingUbisoft: false,
+    importingLegacy: false,
   });
 
   const [status, setStatus] = useState<{
@@ -238,6 +239,31 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     }
   };
 
+  // === LEGACY GAMES ===
+
+  /**
+   * Importa jogos da Legacy Games.
+   * No Linux usa o Wine prefix configurado para localizar o launcher.
+   * `appStatePath` — caminho manual para o app-state-bck.json (opcional).
+   */
+  const importLegacyGames = async (appStatePath?: string) => {
+    setLoading(prev => ({ ...prev, importingLegacy: true }));
+    setStatus({ type: null, message: 'Importando jogos Legacy Games...' });
+
+    try {
+      const msg = await platformsService.importLegacyGames(appStatePath);
+      setStatus({ type: 'success', message: msg });
+      toast.success(msg);
+      onLibraryUpdate?.();
+    } catch (e) {
+      const errorMsg = parsePlatformError(e);
+      setStatus({ type: 'error', message: errorMsg });
+      toast.error(errorMsg);
+    } finally {
+      setLoading(prev => ({ ...prev, importingLegacy: false }));
+    }
+  };
+
   // === GERAL ===
 
   const handleImportProgress = useCallback(
@@ -295,6 +321,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       importEpicGames,
       importHeroicGames,
       importUbisoftGames,
+      importLegacyGames,
     },
   };
 }
