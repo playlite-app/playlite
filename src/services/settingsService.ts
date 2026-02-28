@@ -4,6 +4,9 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { ERROR_MESSAGES, parseBackupError } from '@/errors/errorMessages';
 import { ImportSummary, KeysBatch } from '@/types';
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
 export const settingsService = {
   /**
    * Obtém as chaves de API salvas para usar em serviços externos.
@@ -83,14 +86,16 @@ export const settingsService = {
       await invoke('export_database', { filePath });
 
       return 'Backup exportado com sucesso!';
-    } catch (error: any) {
-      if (error.message === ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+
+      if (errorMessage === ERROR_MESSAGES.CANCELLED) {
         throw new Error(ERROR_MESSAGES.CANCELLED);
       }
 
       const friendlyError = parseBackupError(error);
 
-      if (friendlyError === String(error)) {
+      if (friendlyError === errorMessage) {
         throw new Error(ERROR_MESSAGES.BACKUP_EXPORT_FAILED);
       }
 
@@ -124,14 +129,16 @@ export const settingsService = {
       const filePath = selected;
 
       return await invoke<string>('import_database', { filePath });
-    } catch (error: any) {
-      if (error.message === ERROR_MESSAGES.CANCELLED) {
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+
+      if (errorMessage === ERROR_MESSAGES.CANCELLED) {
         throw new Error(ERROR_MESSAGES.CANCELLED);
       }
 
       const friendlyError = parseBackupError(error);
 
-      if (friendlyError === String(error)) {
+      if (friendlyError === errorMessage) {
         throw new Error(ERROR_MESSAGES.BACKUP_IMPORT_FAILED);
       }
 

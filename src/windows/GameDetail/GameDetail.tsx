@@ -25,7 +25,7 @@ export default function GameDetail({
   onSwitchGame,
   onRefresh,
   loading,
-}: GameDetailsModalProps) {
+}: Readonly<GameDetailsModalProps>) {
   // Estado local para manter os detalhes atualizados se houver tradução
   const [currentDetails, setCurrentDetails] = useState<GameDetails | null>(
     initialDetails

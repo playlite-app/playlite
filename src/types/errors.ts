@@ -20,13 +20,15 @@ export interface AppError {
  * Type guard para verificar se um erro é do tipo AppError
  */
 export function isAppError(error: unknown): error is AppError {
+  const candidate = error as Record<string, unknown> | null;
+
   return (
     typeof error === 'object' &&
     error !== null &&
     'type' in error &&
     'message' in error &&
-    typeof (error as any).type === 'string' &&
-    typeof (error as any).message === 'string'
+    typeof candidate?.type === 'string' &&
+    typeof candidate?.message === 'string'
   );
 }
 

@@ -15,15 +15,14 @@ import {
 import { toast } from 'sonner';
 
 import { Recommendation } from '@/components';
+import PlaylistCard from '@/components/cards/PlaylistCard';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
-
-import PlaylistCard from '../components/cards/PlaylistCard';
-import { launchGame } from '../utils/launcher';
-import { getFavoriteSeries } from '../utils/recommendation';
+import { launchGame } from '@/utils/launcher';
+import { getFavoriteSeries } from '@/utils/recommendation';
 
 interface PlaylistProps {
   allGames: Game[];
@@ -35,7 +34,7 @@ export default function Playlist({
   allGames,
   onGameClick,
   profileCache,
-}: PlaylistProps) {
+}: Readonly<PlaylistProps>) {
   const {
     playlistGames,
     addToPlaylist,
@@ -129,7 +128,6 @@ export default function Playlist({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
                             style={{
                               ...provided.draggableProps.style,
                               opacity: snapshot.isDragging ? 0.8 : 1,
@@ -140,11 +138,12 @@ export default function Playlist({
                               game={game}
                               index={index}
                               total={playlistGames.length}
-                              onMoveUp={() => moveUp(index)}
-                              onMoveDown={() => moveDown(index)}
-                              onRemove={() => handleRemoveFromPlaylist(game)}
-                              onPlay={() => launchGame(game)}
-                              onClick={() => onGameClick(game)}
+                              dragHandleProps={provided.dragHandleProps}
+                              onMoveUp={moveUp}
+                              onMoveDown={moveDown}
+                              onRemove={handleRemoveFromPlaylist}
+                              onPlay={launchGame}
+                              onClick={onGameClick}
                             />
                           </div>
                         )}

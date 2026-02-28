@@ -10,7 +10,7 @@ interface TechLinkProps {
   description?: string;
 }
 
-function TechLink({ name, url, description }: TechLinkProps) {
+function TechLink({ name, url, description }: Readonly<TechLinkProps>) {
   return (
     <a
       href={url}
@@ -33,7 +33,9 @@ interface AboutPlayliteProps {
   className?: string;
 }
 
-export function AboutPlaylite({ className = '' }: AboutPlayliteProps) {
+export function AboutPlaylite({
+  className = '',
+}: Readonly<AboutPlayliteProps>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [appVersion, setAppVersion] = useState('3.0.0');
 

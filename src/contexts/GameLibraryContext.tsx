@@ -4,6 +4,7 @@ import {
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -24,7 +25,9 @@ const GameLibraryContext = createContext<GameLibraryContextType | undefined>(
   undefined
 );
 
-export function GameLibraryProvider({ children }: { children: ReactNode }) {
+export function GameLibraryProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -130,17 +133,20 @@ export function GameLibraryProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const contextValue = useMemo(
+    () => ({
+      games,
+      isLoading,
+      refreshGames,
+      saveGame,
+      removeGame,
+      toggleFavorite,
+    }),
+    [games, isLoading]
+  );
+
   return (
-    <GameLibraryContext.Provider
-      value={{
-        games,
-        isLoading,
-        refreshGames,
-        saveGame,
-        removeGame,
-        toggleFavorite,
-      }}
-    >
+    <GameLibraryContext.Provider value={contextValue}>
       {children}
     </GameLibraryContext.Provider>
   );

@@ -42,7 +42,7 @@ interface HomeProps {
   setTrendingFetchedAt: (value: number | null) => void;
 }
 
-export default function Home(props: HomeProps) {
+export default function Home(props: Readonly<HomeProps>) {
   const {
     stats,
     continuePlaying,
@@ -88,6 +88,52 @@ export default function Home(props: HomeProps) {
   const isLocalGame = (game: Game | RawgGame): game is Game =>
     'playtime' in game;
 
+  const recommendationsContent = (() => {
+    if (loadingRecommendations) {
+      return (
+        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-white/10">
+          <Loader2 className="text-muted-foreground animate-spin" />
+        </div>
+      );
+    }
+
+    if (backlogRecommendations.length > 0) {
+      return (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {backlogRecommendations.map(game => (
+            <StandardGameCard
+              id={game.id.toString()}
+              key={game.id}
+              title={game.name}
+              coverUrl={game.coverUrl}
+              subtitle={game.genres?.split(',')[0]}
+              onClick={() => props.onGameClick(game)}
+              badge={
+                <Recommendation reason={game.reason}>
+                  <span>Recomendado</span>
+                </Recommendation>
+              }
+              actions={
+                <ActionButton
+                  icon={Play}
+                  variant="secondary"
+                  onClick={() => launchGame(game)}
+                  tooltip="Jogar Agora"
+                />
+              }
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="border-border text-muted-foreground rounded-xl border border-dashed p-8 text-center">
+        <p>Tudo em dia! Nenhum jogo parado encontrado para o seu perfil.</p>
+      </div>
+    );
+  })();
+
   if (profileLoading) {
     return (
       <div className="animate-in fade-in flex h-full flex-1 flex-col items-center justify-center gap-4 duration-700">
@@ -106,11 +152,7 @@ export default function Home(props: HomeProps) {
           backgroundUrl={getHeroImage(currentHero)}
           coverUrl={getHeroImage(currentHero)}
           genres={getGenresList(currentHero)}
-          rating={
-            isLocalGame(currentHero)
-              ? (currentHero as Game).userRating
-              : undefined
-          }
+          rating={isLocalGame(currentHero) ? currentHero.userRating : undefined}
           showNavigation={heroSlides.length > 1}
           onNext={next}
           onPrev={prev}
@@ -237,43 +279,7 @@ export default function Home(props: HomeProps) {
             </div>
           </div>
 
-          {loadingRecommendations ? (
-            <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-white/10">
-              <Loader2 className="text-muted-foreground animate-spin" />
-            </div>
-          ) : backlogRecommendations.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {backlogRecommendations.map(game => (
-                <StandardGameCard
-                  id={game.id.toString()}
-                  key={game.id}
-                  title={game.name}
-                  coverUrl={game.coverUrl}
-                  subtitle={game.genres?.split(',')[0]}
-                  onClick={() => props.onGameClick(game)}
-                  badge={
-                    <Recommendation reason={game.reason}>
-                      <span>Recomendado</span>
-                    </Recommendation>
-                  }
-                  actions={
-                    <ActionButton
-                      icon={Play}
-                      variant="secondary"
-                      onClick={() => launchGame(game)}
-                      tooltip="Jogar Agora"
-                    />
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="border-border text-muted-foreground rounded-xl border border-dashed p-8 text-center">
-              <p>
-                Tudo em dia! Nenhum jogo parado encontrado para o seu perfil.
-              </p>
-            </div>
-          )}
+          {recommendationsContent}
         </section>
 
         {/* Seção: Collaborative Filtering */}
@@ -335,9 +341,10 @@ export default function Home(props: HomeProps) {
             <Separator className={'mb-3'} />
             <div className="grid grid-cols-1 gap-4">
               {mostPlayed.map((game, index) => (
-                <div
+                <button
+                  type="button"
                   key={game.id}
-                  className="hover:bg-muted/50 group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors"
+                  className="hover:bg-muted/50 group flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors"
                   onClick={() => launchGame(game)}
                 >
                   <div className="text-muted-foreground w-6 text-center font-bold">
@@ -367,7 +374,7 @@ export default function Home(props: HomeProps) {
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

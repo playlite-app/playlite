@@ -15,7 +15,7 @@ export type TagCategory =
   | 'input';
 
 export const CATEGORY_MULTIPLIERS: Record<TagCategory | 'unknown', number> = {
-  gameplay: 2.0,
+  gameplay: 2,
   theme: 1.5,
   narrative: 1.3,
   mode: 1.2,

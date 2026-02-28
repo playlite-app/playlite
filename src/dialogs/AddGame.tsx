@@ -25,7 +25,7 @@ import { Separator } from '@/ui/separator';
 interface AddGameModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (gameData: any) => void;
+  onSave: (gameData: Partial<Game>) => void;
   gameToEdit?: Game | null;
 }
 
@@ -34,7 +34,7 @@ export default function AddGame({
   onClose,
   onSave,
   gameToEdit,
-}: AddGameModalProps) {
+}: Readonly<AddGameModalProps>) {
   const { formData, handleChange, isValid, buildPayload } = useGameForm(
     isOpen,
     gameToEdit
@@ -81,7 +81,7 @@ export default function AddGame({
     if (!isValid()) return;
 
     const payload = buildPayload();
-    onSave(payload);
+    onSave(payload as Partial<Game>);
     onClose();
   };
 
@@ -253,9 +253,11 @@ export default function AddGame({
                     : ''
                 }
                 onChange={e => {
-                  const hours = parseFloat(e.target.value);
-                  const minutes = isNaN(hours) ? 0 : Math.floor(hours * 60);
-                  handleChange('playtime', minutes);
+                  const hours = Number.parseFloat(e.target.value);
+                  const minutes = Number.isNaN(hours)
+                    ? 0
+                    : Math.floor(hours * 60);
+                  handleChange('playtime', String(minutes));
                 }}
               />
             </div>

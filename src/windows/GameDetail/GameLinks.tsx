@@ -2,6 +2,7 @@ import {
   BookOpen,
   ExternalLink,
   Globe,
+  type LucideIcon,
   MessageSquare,
   ShoppingCart,
   Star,
@@ -13,7 +14,7 @@ interface GameLinksProps {
   links?: Record<string, string>;
 }
 
-const LINK_CONFIG: Record<string, { label: string; icon: any }> = {
+const LINK_CONFIG: Record<string, { label: string; icon: LucideIcon }> = {
   website: { label: 'Site Oficial', icon: Globe },
   steam: { label: 'Steam', icon: ShoppingCart },
   epic: { label: 'Epic Games', icon: ShoppingCart },
@@ -24,7 +25,7 @@ const LINK_CONFIG: Record<string, { label: string; icon: any }> = {
   pcgamingwiki: { label: 'Wiki', icon: BookOpen },
 };
 
-export function GameLinks({ links }: GameLinksProps) {
+export function GameLinks({ links }: Readonly<GameLinksProps>) {
   // Verifica se o objeto existe e se tem chaves
   if (!links || Object.keys(links).length === 0) return null;
 

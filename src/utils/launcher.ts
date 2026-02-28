@@ -1,8 +1,8 @@
 import { toast } from 'sonner';
 
-import { Game, RawgGame } from '@/types';
+import { Game } from '@/types';
 
-export const launchGame = (game: Game | RawgGame | any) => {
+export const launchGame = (game: Game) => {
   if (!game.platform || game.platform === 'Steam') {
     const steamId = game.platformGameId;
     const steamUrl = `steam://rungameid/${steamId}`;

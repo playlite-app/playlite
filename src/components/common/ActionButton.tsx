@@ -43,7 +43,7 @@ export function ActionButton({
   tooltip,
   onClick,
   ...props
-}: ActionButtonProps) {
+}: Readonly<ActionButtonProps>) {
   // Tratamento especial para variantes customizadas que não existem no Shadcn padrão
   const getVariantClasses = () => {
     switch (variant) {

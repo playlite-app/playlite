@@ -50,7 +50,7 @@ export function calculateAffinity(
       // profileKey está no formato "Gameplay:rpg"
       const [profileCategory, profileSlug] = profileKey.split(':');
 
-      if (profileSlug && profileSlug.toLowerCase() === slug) {
+      if (profileSlug?.toLowerCase() === slug) {
         // Se encontrar, usa o multiplicador da categoria do perfil
         const category = profileCategory.toLowerCase();
         const multiplier =
@@ -90,7 +90,7 @@ export function getFavoriteSeries(
   profile: UserPreferenceVector | null,
   limit = 5
 ): string[] {
-  if (!profile || !profile.series) return [];
+  if (!profile?.series) return [];
 
   return Object.entries(profile.series)
     .sort(([, a], [, b]) => b - a)

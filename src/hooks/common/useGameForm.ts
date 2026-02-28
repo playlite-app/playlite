@@ -75,7 +75,10 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
   }, [isOpen, gameToEdit]);
 
   // Atualiza um campo do formulário
-  const handleChange = (field: keyof GameFormData, value: any) => {
+  const handleChange = <K extends keyof GameFormData>(
+    field: K,
+    value: GameFormData[K]
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -90,17 +93,17 @@ export function useGameForm(isOpen: boolean, gameToEdit?: Game | null) {
       // Mantém ID se estiver editando
       id: gameToEdit?.id,
       name: formData.name,
-      coverUrl: formData.coverUrl || null,
+      coverUrl: formData.coverUrl || undefined,
       platform: formData.platform,
       platformGameId: formData.platformGameId || '',
       installed: formData.installed,
-      importConfidence: formData.importConfidence || null,
+      importConfidence: formData.importConfidence || undefined,
       status: formData.status,
       playtime: Number.parseInt(formData.playtime, 10) || 0,
-      userRating: formData.rating > 0 ? formData.rating : null,
-      installPath: formData.installPath || null,
-      executablePath: formData.executablePath || null,
-      launchArgs: formData.launchArgs || null,
+      userRating: formData.rating > 0 ? formData.rating : undefined,
+      installPath: formData.installPath || undefined,
+      executablePath: formData.executablePath || undefined,
+      launchArgs: formData.launchArgs || undefined,
     };
   };
 

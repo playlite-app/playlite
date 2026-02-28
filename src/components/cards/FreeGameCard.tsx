@@ -21,7 +21,7 @@ export function FreeGameCard({
   platforms,
   end_date: endDate,
   open_giveaway_url: url,
-}: FreeGameCardProps) {
+}: Readonly<FreeGameCardProps>) {
   const openLink = async () => {
     const { open } = await import('@tauri-apps/plugin-shell');
     open(url);
@@ -32,10 +32,10 @@ export function FreeGameCard({
   const platformColor = getPlatformColor(platforms);
 
   const isValidDate =
-    endDate && endDate !== 'N/A' && !isNaN(new Date(endDate).getTime());
+    endDate && endDate !== 'N/A' && !Number.isNaN(new Date(endDate).getTime());
 
   const formattedDate = isValidDate
-    ? new Date(endDate!)
+    ? new Date(endDate)
         .toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: 'short',
@@ -46,7 +46,7 @@ export function FreeGameCard({
   // Calcula dias restantes
   const daysLeft = isValidDate
     ? Math.ceil(
-        (new Date(endDate!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       )
     : null;
 
@@ -56,8 +56,16 @@ export function FreeGameCard({
         'group border-border bg-card relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
         className
       )}
-      onClick={openLink}
     >
+      <button
+        type="button"
+        className="absolute inset-0 z-20"
+        aria-label={`Abrir giveaway: ${title}`}
+        onClick={() => {
+          void openLink();
+        }}
+      />
+
       {/* Container da Imagem com aspect ratio 16:9 */}
       <div className="relative aspect-video w-full overflow-hidden">
         <img
@@ -99,7 +107,7 @@ export function FreeGameCard({
       </div>
 
       {/* Conteúdo */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="relative flex flex-1 flex-col gap-2 p-3">
         <h3 className="text-foreground line-clamp-2 text-sm leading-tight font-semibold transition-colors">
           {title}
         </h3>
