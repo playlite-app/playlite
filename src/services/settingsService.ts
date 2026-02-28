@@ -46,6 +46,19 @@ export const settingsService = {
   },
 
   /**
+   * Preenche campos de metadados vazios para todos os jogos da biblioteca.
+   *
+   * Ignora o cache da RAWG para garantir dados atualizados, mas nunca
+   * sobrescreve campos que já possuem valor — apenas preenche lacunas.
+   *
+   * Útil após importações parciais (ex: Legacy Games) ou quando a RAWG
+   * atualizou o catálogo depois da última sincronização.
+   */
+  fillMissingMetadata: async (): Promise<void> => {
+    await invoke('fill_missing_metadata');
+  },
+
+  /**
    * Exporta toda a biblioteca para JSON.
    * Abre diálogo nativo para escolher local de salvamento.
    *

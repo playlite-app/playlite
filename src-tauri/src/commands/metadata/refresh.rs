@@ -52,7 +52,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
         let state: State<AppState> = app_clone.state();
 
         // 1. Atualizar Reviews da Steam (Se cache > 7 dias)
-        if let Err(e) = refresh_steam_reviews_background(&state).await {
+        if let Err(e) = refresh_steam_reviews_background(&app_clone, &state).await {
             warn!("Falha ao atualizar reviews: {}", e);
         }
 
@@ -63,7 +63,7 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
             warn!("Falha ao atualizar preços: {}", e);
         }
 
-        // Opcional: Avisar frontend que terminou (para debug)
+        // Avisa o frontend que o ciclo de background terminou
         let _ = app_clone.emit("background_refresh_complete", ());
 
         // _permit é automaticamente dropped aqui, liberando o semaphore
@@ -72,8 +72,12 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
     Ok(())
 }
 
-/// Atualiza reviews apenas se o cache estiver expirado
-async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result<(), String> {
+/// Atualiza reviews apenas se o cache estiver expirado.
+/// Emite `reviews_refresh_complete` ao final (mesmo que nada tenha mudado).
+async fn refresh_steam_reviews_background(
+    app: &AppHandle,
+    state: &State<'_, AppState>,
+) -> Result<(), String> {
     // A. Ler IDs da Steam do banco (Leitura rápida)
     let steam_games: Vec<(u32, String)> = {
         let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
@@ -148,6 +152,13 @@ async fn refresh_steam_reviews_background(state: &State<'_, AppState>) -> Result
 
     if updated_count > 0 {
         info!("{} avaliações atualizadas", updated_count);
+        let _ = app.emit(
+            "reviews_refresh_complete",
+            format!(
+                "{} avaliações Steam atualizadas em background.",
+                updated_count
+            ),
+        );
     }
 
     Ok(())
@@ -302,7 +313,13 @@ async fn refresh_wishlist_prices_background(
 
     if updated_count > 0 {
         info!("{} preços atualizados", updated_count);
-        let _ = app.emit("wishlist_prices_updated", ());
+        let _ = app.emit(
+            "wishlist_refresh_complete",
+            format!(
+                "{} preços da Wishlist atualizados em background.",
+                updated_count
+            ),
+        );
     }
 
     Ok(())

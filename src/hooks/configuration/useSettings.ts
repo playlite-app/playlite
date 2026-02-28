@@ -25,6 +25,7 @@ export function useSettings(onLibraryUpdate: () => void) {
     saving: false,
     enriching: false,
     fetchingCovers: false,
+    fillingMissing: false,
     exporting: false,
     importingBackup: false,
     authenticating: false,
@@ -116,6 +117,18 @@ export function useSettings(onLibraryUpdate: () => void) {
     } catch (error) {
       setStatus({ type: 'error', message: String(error) });
       setLoading(prev => ({ ...prev, fetchingCovers: false }));
+    }
+  };
+
+  const fillMissingMetadata = async () => {
+    setLoading(prev => ({ ...prev, fillingMissing: true }));
+    setStatus({ type: null, message: 'Buscando campos faltantes na RAWG...' });
+
+    try {
+      await settingsService.fillMissingMetadata();
+    } catch (error) {
+      setStatus({ type: 'error', message: String(error) });
+      setLoading(prev => ({ ...prev, fillingMissing: false }));
     }
   };
 
@@ -241,6 +254,7 @@ export function useSettings(onLibraryUpdate: () => void) {
           ...prev,
           enriching: false,
           fetchingCovers: false,
+          fillingMissing: false,
         }));
         setProgress(null);
         setStatus({
@@ -280,11 +294,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         (event: { payload: string }) => {
           setLoading(prev => ({ ...prev, refreshingReviews: false }));
           setProgress(null);
-          setStatus({
-            type: 'success',
-            message: String(event.payload),
-          });
-          onLibraryUpdate();
+          toast.info(String(event.payload), { duration: 4000 });
         }
       );
 
@@ -293,10 +303,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         (event: { payload: string }) => {
           setLoading(prev => ({ ...prev, refreshingWishlistPrices: false }));
           setProgress(null);
-          setStatus({
-            type: 'success',
-            message: String(event.payload),
-          });
+          toast.info(String(event.payload), { duration: 4000 });
         }
       );
 
@@ -336,6 +343,7 @@ export function useSettings(onLibraryUpdate: () => void) {
       saveKeys,
       enrichLibrary,
       fetchMissingCovers,
+      fillMissingMetadata,
       exportDatabase,
       importDatabase,
       cleanupCache,

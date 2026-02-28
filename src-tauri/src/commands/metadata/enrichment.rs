@@ -36,29 +36,29 @@ pub struct ImportSummary {
 }
 
 /// Estrutura intermediária
-struct ProcessedGameDetails {
-    game_id: String,
-    description_raw: Option<String>,
-    description_ptbr: Option<String>,
-    release_date: Option<String>,
-    genres: String,
-    tags: Vec<crate::models::GameTag>,
-    developer: Option<String>,
-    publisher: Option<String>,
-    critic_score: Option<i32>,
-    background_image: Option<String>,
-    series: Option<String>,
-    steam_review_label: Option<String>,
-    steam_review_count: Option<i32>,
-    steam_review_score: Option<f32>,
-    steam_review_updated_at: Option<String>,
-    esrb_rating: Option<String>,
-    is_adult: bool,
-    adult_tags: Option<String>,
-    external_links: Option<String>,
-    steam_app_id: Option<String>,
-    median_playtime: Option<i32>,
-    estimated_playtime: Option<f32>,
+pub(in crate::commands::metadata) struct ProcessedGameDetails {
+    pub(in crate::commands::metadata) game_id: String,
+    pub(in crate::commands::metadata) description_raw: Option<String>,
+    pub(in crate::commands::metadata) description_ptbr: Option<String>,
+    pub(in crate::commands::metadata) release_date: Option<String>,
+    pub(in crate::commands::metadata) genres: String,
+    pub(in crate::commands::metadata) tags: Vec<crate::models::GameTag>,
+    pub(in crate::commands::metadata) developer: Option<String>,
+    pub(in crate::commands::metadata) publisher: Option<String>,
+    pub(in crate::commands::metadata) critic_score: Option<i32>,
+    pub(in crate::commands::metadata) background_image: Option<String>,
+    pub(in crate::commands::metadata) series: Option<String>,
+    pub(in crate::commands::metadata) steam_review_label: Option<String>,
+    pub(in crate::commands::metadata) steam_review_count: Option<i32>,
+    pub(in crate::commands::metadata) steam_review_score: Option<f32>,
+    pub(in crate::commands::metadata) steam_review_updated_at: Option<String>,
+    pub(in crate::commands::metadata) esrb_rating: Option<String>,
+    pub(in crate::commands::metadata) is_adult: bool,
+    pub(in crate::commands::metadata) adult_tags: Option<String>,
+    pub(in crate::commands::metadata) external_links: Option<String>,
+    pub(in crate::commands::metadata) steam_app_id: Option<String>,
+    pub(in crate::commands::metadata) median_playtime: Option<i32>,
+    pub(in crate::commands::metadata) estimated_playtime: Option<f32>,
 }
 
 // === FUNÇÕES AUXILIARES ===
@@ -313,25 +313,70 @@ async fn enrich_game_metadata(
 
 /// Salva detalhes do jogo no banco
 /// Aceita tanto Connection quanto Transaction (via Deref trait)
-fn save_game_details<C>(conn: &C, d: ProcessedGameDetails) -> Result<(), rusqlite::Error>
+pub(in crate::commands::metadata) fn save_game_details<C>(
+    conn: &C,
+    d: ProcessedGameDetails,
+) -> Result<(), rusqlite::Error>
 where
     C: std::ops::Deref<Target = rusqlite::Connection>,
 {
     let tags_json = database::serialize_tags(&d.tags).unwrap_or_else(|_| "[]".to_string());
 
+    // Garante que a linha existe antes do UPDATE (para jogos que já têm
+    // description_raw da Legacy Games, o INSERT OR IGNORE preserva o valor).
     conn.execute(
-        "INSERT OR REPLACE INTO game_details (
-            game_id, description_raw, description_ptbr, release_date, genres, tags,
-            developer, publisher, critic_score, background_image, series,
-            steam_review_label, steam_review_count, steam_review_score, steam_review_updated_at,
-            esrb_rating, is_adult, adult_tags, external_links, steam_app_id, median_playtime,
-            estimated_playtime
-         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)",
+        "INSERT OR IGNORE INTO game_details (game_id) VALUES (?1)",
+        params![d.game_id],
+    )?;
+
+    // Atualiza todos os campos usando COALESCE nos campos de texto para nunca
+    // sobrescrever um valor existente com NULL vindo da RAWG.
+    conn.execute(
+        "UPDATE game_details SET
+            description_raw     = COALESCE(?2,  description_raw),
+            description_ptbr    = COALESCE(?3,  description_ptbr),
+            release_date        = COALESCE(?4,  release_date),
+            genres              = COALESCE(NULLIF(?5, ''), genres),
+            tags                = COALESCE(NULLIF(?6, '[]'), tags),
+            developer           = COALESCE(?7,  developer),
+            publisher           = COALESCE(?8,  publisher),
+            critic_score        = COALESCE(?9,  critic_score),
+            background_image    = COALESCE(?10, background_image),
+            series              = COALESCE(?11, series),
+            steam_review_label  = COALESCE(?12, steam_review_label),
+            steam_review_count  = COALESCE(?13, steam_review_count),
+            steam_review_score  = COALESCE(?14, steam_review_score),
+            steam_review_updated_at = COALESCE(?15, steam_review_updated_at),
+            esrb_rating         = COALESCE(?16, esrb_rating),
+            is_adult            = ?17,
+            adult_tags          = COALESCE(?18, adult_tags),
+            external_links      = COALESCE(?19, external_links),
+            steam_app_id        = COALESCE(?20, steam_app_id),
+            median_playtime     = COALESCE(?21, median_playtime),
+            estimated_playtime  = COALESCE(?22, estimated_playtime)
+         WHERE game_id = ?1",
         params![
-            d.game_id, d.description_raw, d.description_ptbr, d.release_date, d.genres, tags_json,
-            d.developer, d.publisher, d.critic_score, d.background_image, d.series,
-            d.steam_review_label, d.steam_review_count, d.steam_review_score, d.steam_review_updated_at,
-            d.esrb_rating, d.is_adult, d.adult_tags, d.external_links, d.steam_app_id, d.median_playtime,
+            d.game_id,
+            d.description_raw,
+            d.description_ptbr,
+            d.release_date,
+            d.genres,
+            tags_json,
+            d.developer,
+            d.publisher,
+            d.critic_score,
+            d.background_image.clone(),
+            d.series,
+            d.steam_review_label,
+            d.steam_review_count,
+            d.steam_review_score,
+            d.steam_review_updated_at,
+            d.esrb_rating,
+            d.is_adult,
+            d.adult_tags,
+            d.external_links,
+            d.steam_app_id,
+            d.median_playtime,
             d.estimated_playtime
         ],
     )?;
@@ -380,10 +425,20 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 };
                 let mut stmt = conn
                     .prepare(
+                        // Inclui jogos sem nenhuma entrada em game_details
+                        // E também jogos da Legacy Games que já têm description_raw
+                        // do catálogo da loja, mas ainda não foram enriquecidos pela
+                        // RAWG (identificados pela ausência de genres/developer/tags).
                         "SELECT g.id, g.name, g.platform, g.platform_game_id
                          FROM games g
                          LEFT JOIN game_details gd ON g.id = gd.game_id
                          WHERE gd.game_id IS NULL
+                            OR (
+                                gd.game_id IS NOT NULL
+                                AND (gd.genres IS NULL OR gd.genres = '')
+                                AND (gd.developer IS NULL OR gd.developer = '')
+                                AND (gd.tags IS NULL OR gd.tags = '' OR gd.tags = '[]')
+                            )
                          LIMIT ?",
                     )
                     .unwrap();

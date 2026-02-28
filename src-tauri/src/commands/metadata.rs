@@ -6,12 +6,14 @@
 //! Módulos:
 //! - `covers`: Comandos para baixar capas de jogos
 //! - `enrichment`: Comandos para buscar e atualizar metadados de jogos
-//! - `refresh`: Comandos para atualizar preços e reviwews de jogos
+//! - `get_metadata`: Comando para preencher campos de metadados faltantes
+//! - `refresh`: Comandos para atualizar preços e reviews de jogos
 //! - `search`: Comandos para buscar metadados externos
 //! - `shared`: Funções e estruturas compartilhadas entre os módulos de metadados
 
 pub mod covers;
 pub mod enrichment;
+pub mod get_metadata;
 pub mod refresh;
 pub mod search;
 pub mod shared;

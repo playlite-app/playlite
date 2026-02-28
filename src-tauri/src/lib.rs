@@ -121,6 +121,7 @@ pub fn run() {
             commands::plataforms::import_legacy_games,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
+            commands::metadata::get_metadata::fill_missing_metadata,
             commands::metadata::covers::fetch_missing_covers,
             commands::metadata::refresh::check_and_refresh_background,
             commands::metadata::search::get_trending_games,

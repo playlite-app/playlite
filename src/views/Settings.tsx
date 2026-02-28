@@ -14,6 +14,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  WandSparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -122,7 +123,11 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 onClick={actions.enrichLibrary}
                 variant="outline"
                 className="flex-1"
-                disabled={loading.enriching || loading.fetchingCovers}
+                disabled={
+                  loading.enriching ||
+                  loading.fetchingCovers ||
+                  loading.fillingMissing
+                }
               >
                 {loading.enriching ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -135,7 +140,11 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 onClick={actions.fetchMissingCovers}
                 variant="outline"
                 className="flex-1"
-                disabled={loading.fetchingCovers || loading.enriching}
+                disabled={
+                  loading.fetchingCovers ||
+                  loading.enriching ||
+                  loading.fillingMissing
+                }
                 title="Busca apenas capas para jogos que estão sem imagem"
               >
                 {loading.fetchingCovers ? (
@@ -145,12 +154,40 @@ export default function Settings({ onLibraryUpdate }: SettingsProps) {
                 )}
               </Button>
             </div>
-            {(loading.enriching || loading.fetchingCovers) && progress && (
-              <div className="text-muted-foreground animate-pulse text-center text-xs">
-                Processando: {progress.game} ({progress.current}/
-                {progress.total})
-              </div>
-            )}
+
+            <Button
+              onClick={actions.fillMissingMetadata}
+              variant="outline"
+              className="w-full"
+              disabled={
+                loading.fillingMissing ||
+                loading.enriching ||
+                loading.fetchingCovers
+              }
+              title="Preenche gêneros, descrição, tags e outros campos vazios consultando a RAWG ao vivo"
+            >
+              {loading.fillingMissing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Preenchendo campos...
+                </>
+              ) : (
+                <>
+                  <WandSparkles className="mr-2 h-4 w-4" />
+                  Preencher Campos Vazios
+                </>
+              )}
+            </Button>
+
+            {(loading.enriching ||
+              loading.fetchingCovers ||
+              loading.fillingMissing) &&
+              progress && (
+                <div className="text-muted-foreground animate-pulse text-center text-xs">
+                  Processando: {progress.game} ({progress.current}/
+                  {progress.total})
+                </div>
+              )}
           </div>
         </SettingsRow>
 

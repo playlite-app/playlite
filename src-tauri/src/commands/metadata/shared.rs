@@ -27,22 +27,43 @@ pub async fn fetch_rawg_metadata(
     name: &str,
     cache_conn: &rusqlite::Connection,
 ) -> Option<rawg::GameDetails> {
-    // Tenta buscar no cache primeiro
+    fetch_rawg_metadata_inner(api_key, name, cache_conn, false).await
+}
+
+/// Variante que ignora o cache e sempre consulta a RAWG ao vivo.
+///
+/// Usada pelo comando `fill_missing_metadata` para garantir que dados
+/// possivelmente atualizados na RAWG sejam buscados mesmo para jogos
+/// cujo cache ainda é válido.
+pub async fn fetch_rawg_metadata_fresh(
+    api_key: &str,
+    name: &str,
+    cache_conn: &rusqlite::Connection,
+) -> Option<rawg::GameDetails> {
+    fetch_rawg_metadata_inner(api_key, name, cache_conn, true).await
+}
+
+async fn fetch_rawg_metadata_inner(
+    api_key: &str,
+    name: &str,
+    cache_conn: &rusqlite::Connection,
+    bypass_cache: bool,
+) -> Option<rawg::GameDetails> {
     let cache_key = format!("search_{}", name.to_lowercase());
 
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
-        if let Ok(details) = serde_json::from_str::<rawg::GameDetails>(&cached) {
-            return Some(details);
+    if !bypass_cache {
+        if let Some(cached) = cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
+            if let Ok(details) = serde_json::from_str::<rawg::GameDetails>(&cached) {
+                return Some(details);
+            }
         }
     }
 
-    // Se não está em cache, busca na API
     match rawg::search_games(api_key, name).await {
         Ok(results) => {
             if let Some(best_match) = results.first() {
                 match rawg::fetch_game_details(api_key, best_match.id.to_string()).await {
                     Ok(details) => {
-                        // Salva no cache
                         if let Ok(json) = serde_json::to_string(&details) {
                             let _ =
                                 cache::save_cached_api_data(cache_conn, "rawg", &cache_key, &json);
