@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 export function useTheme() {
   const [isDark, setIsDark] = useState(() => {
     // Verifica localStorage ou preferência do sistema ao iniciar
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       return (
         document.documentElement.classList.contains('dark') ||
         localStorage.getItem('theme') === 'dark'

@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   handleRetry = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    globalThis.location.reload();
   };
 
   // Traduz mensagens técnicas para as constantes
