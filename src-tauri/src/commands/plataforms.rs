@@ -188,10 +188,16 @@ pub async fn import_steam_library(
 pub async fn import_epic_games(
     app: AppHandle,
     state: State<'_, AppState>,
+    wine_prefix: Option<String>,
 ) -> Result<String, AppError> {
     use crate::sources::epic::EpicSource;
 
-    let games = EpicSource::import_installed().await?;
+    let prefix = wine_prefix
+        .filter(|s| !s.trim().is_empty())
+        .map(std::path::PathBuf::from);
+
+    let source = EpicSource::new(prefix);
+    let games = source.import_installed().await?;
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 
@@ -207,10 +213,15 @@ pub async fn import_epic_games(
 pub async fn import_heroic_games(
     app: AppHandle,
     state: State<'_, AppState>,
+    heroic_config_path: Option<String>,
 ) -> Result<String, AppError> {
     use crate::sources::heroic::HeroicSource;
 
-    let games = HeroicSource::import_installed().await?;
+    let config_path = heroic_config_path
+        .filter(|s| !s.trim().is_empty())
+        .map(std::path::PathBuf::from);
+
+    let games = HeroicSource::import_installed(config_path).await?;
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 

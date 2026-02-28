@@ -1,17 +1,40 @@
-import { FolderOpen, Loader2, RefreshCw } from 'lucide-react';
+import {
+  FolderOpen,
+  Info,
+  Loader2,
+  RefreshCw,
+  TriangleAlert,
+} from 'lucide-react';
+import { useState } from 'react';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
 import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
 
 interface HeroicSettingsProps {
   onLibraryUpdate?: () => void;
 }
 
-export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
+export function HeroicSettings({
+  onLibraryUpdate,
+}: Readonly<HeroicSettingsProps>) {
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
+
+  const [configPath, setConfigPath] = useState('');
+
+  const handleChooseDir = async () => {
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: 'Selecione o diretório de configuração do Heroic',
+    });
+
+    if (selected) setConfigPath(selected);
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
@@ -22,7 +45,8 @@ export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
             Importação Heroic Games Launcher
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos instalados via Heroic Games Launcher (Linux).
+            Importe jogos instalados via Heroic Games Launcher (Linux e
+            Windows).
           </p>
         </div>
         {status.type && (
@@ -32,37 +56,77 @@ export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
       <Separator className="mt-5" />
 
       <div className="space-y-4">
-        {/* Info sobre Detecção Automática */}
+        {/* Detecção automática */}
         <SettingsRow
           icon={FolderOpen}
           title="Detecção Automática"
-          description="O Playlite detecta automaticamente jogos instalados via Heroic Games Launcher."
+          description="O Playlite detecta automaticamente o diretório de configuração do Heroic."
         >
-          <div className="bg-muted/30 rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">
-              <strong>Localizações de Configuração:</strong>
-              <br />
-              <code className="text-primary/80 text-xs">
-                ~/.config/heroic/installed.json
-              </code>
-              <br />
-              <code className="text-primary/80 text-xs">
-                ~/.var/app/com.heroicgameslauncher.hgl/config/heroic/installed.json
-              </code>
-              <br />
-              <span className="text-muted-foreground mt-1 block text-xs">
-                (Detecta automaticamente instalação nativa ou Flatpak)
-              </span>
+          <div className="bg-muted/30 space-y-2 rounded-md border p-3">
+            <p className="text-muted-foreground text-xs font-medium">
+              Caminhos verificados:
             </p>
-            <p className="text-muted-foreground mt-2 text-xs">
-              O Heroic é um launcher open-source que suporta{' '}
-              <strong>Epic Games</strong>, <strong>GOG</strong>,{' '}
-              <strong>Amazon Games</strong> e outras plataformas no Linux.
-            </p>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-xs">
+                <span className="text-primary/60 font-semibold">
+                  Linux (nativo):
+                </span>
+              </p>
+              <code className="text-primary/80 block pl-2 text-xs">
+                ~/.config/heroic
+              </code>
+              <p className="text-muted-foreground pt-1 text-xs">
+                <span className="text-primary/60 font-semibold">
+                  Linux (Flatpak):
+                </span>
+              </p>
+              <code className="text-primary/80 block pl-2 text-xs">
+                ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
+              </code>
+              <p className="text-muted-foreground pt-1 text-xs">
+                <span className="text-primary/60 font-semibold">Windows:</span>
+              </p>
+              <code className="text-primary/80 block pl-2 text-xs">
+                %APPDATA%\heroic
+              </code>
+            </div>
           </div>
         </SettingsRow>
 
-        {/* Info sobre Plataformas Suportadas */}
+        {/* Diretório manual (opcional) */}
+        <SettingsRow
+          icon={Info}
+          title="Diretório Personalizado (opcional)"
+          description="Informe manualmente o diretório de configuração caso a detecção automática não funcione."
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                value={configPath}
+                onChange={e => setConfigPath(e.target.value)}
+                placeholder="Deixe vazio para detecção automática"
+                className="bg-background/50 font-mono text-xs"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleChooseDir}
+                className="shrink-0 text-xs"
+              >
+                <FolderOpen className="mr-1 h-3 w-3" />
+                Procurar
+              </Button>
+            </div>
+            {configPath && (
+              <code className="text-muted-foreground bg-secondary/40 truncate rounded-md border px-2 py-1.5 text-[10px]">
+                {configPath}
+              </code>
+            )}
+          </div>
+        </SettingsRow>
+
+        {/* Plataformas suportadas */}
         <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
           <h4 className="mb-2 text-sm font-semibold">
             Plataformas suportadas via Heroic:
@@ -73,25 +137,27 @@ export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
             <li>✓ Amazon Games</li>
             <li>✓ Sideloaded games (jogos manuais)</li>
           </ul>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Todos os jogos serão importados com plataforma "Heroic" no Playlite.
-          </p>
         </div>
 
-        {/* Info sobre o que será importado */}
-        <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
-          <h4 className="mb-2 text-sm font-semibold">O que será importado:</h4>
-          <ul className="text-muted-foreground space-y-1 text-xs">
-            <li>✓ Nome do jogo</li>
-            <li>✓ Diretório de instalação</li>
-            <li>✓ Executável de lançamento</li>
-            <li>✓ App Name (ID do jogo)</li>
-          </ul>
-          <p className="text-muted-foreground mt-4 text-xs">
-            <strong>Nota Linux:</strong> O Heroic Games Launcher deve estar
-            instalado e configurado. Certifique-se de ter jogos instalados via
-            Heroic antes de importar.
-          </p>
+        {/* Aviso de duplicatas */}
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/25 bg-amber-500/8 p-4">
+          <TriangleAlert size={16} className="mt-0.5 shrink-0 text-amber-400" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-amber-400">
+              Atenção: Possível duplicação de jogos
+            </p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Se você importar jogos via Heroic{' '}
+              <strong className="text-foreground/80">e</strong> também via o
+              launcher nativo correspondente (Epic, GOG, etc.), os mesmos
+              títulos aparecerão{' '}
+              <strong className="text-foreground/80">duas vezes</strong> na
+              biblioteca — uma entrada por plataforma (ex.:{' '}
+              <code>"Heroic"</code> e <code>"Epic Games"</code>). Isso é
+              esperado: cada entrada representa uma instalação ou plataforma
+              distinta.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -105,7 +171,7 @@ export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
       {/* Botão de Importação */}
       <div className="border-border/10 flex justify-end gap-3 border-t pt-8">
         <Button
-          onClick={actions.importHeroicGames}
+          onClick={() => actions.importHeroicGames(configPath || undefined)}
           disabled={loading.importingHeroic}
           className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
         >
@@ -116,17 +182,6 @@ export function HeroicSettings({ onLibraryUpdate }: HeroicSettingsProps) {
           )}
           {loading.importingHeroic ? 'Importando...' : 'Importar Jogos Heroic'}
         </Button>
-      </div>
-
-      {/* Notas de Rodapé */}
-      <div className="space-y-2">
-        <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-3">
-          <p className="text-muted-foreground text-xs">
-            <strong>Compatibilidade:</strong> Esta integração foi projetada para
-            Linux. No Windows, use as integrações nativas (Epic, GOG) ao invés
-            do Heroic.
-          </p>
-        </div>
       </div>
     </div>
   );

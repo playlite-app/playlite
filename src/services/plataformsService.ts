@@ -22,23 +22,36 @@ export const platformsService = {
   /**
    * Importa jogos instalados da Epic Games Store.
    * Detecta automaticamente via manifestos do Epic Games Launcher.
-   * Localização: C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
+   *
+   * Windows: C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
+   * Linux (Wine): <wine_prefix>/drive_c/ProgramData/Epic/EpicGamesLauncher/Data/Manifests
    *
    * @throws Se o Epic Games Launcher não estiver instalado ou não houver jogos
    */
   importEpicGames: async (): Promise<string> => {
-    return await invoke<string>('import_epic_games');
+    const winePrefix = localStorage.getItem('wine_prefix') || undefined;
+
+    return await invoke<string>('import_epic_games', {
+      winePrefix: winePrefix ?? null,
+    });
   },
 
   /**
-   * Importa jogos instalados via Heroic Games Launcher (Linux).
+   * Importa jogos instalados via Heroic Games Launcher.
    * Detecta automaticamente via installed.json do Heroic.
-   * Localizações: ~/.config/heroic ou ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
+   *
+   * Linux: ~/.config/heroic ou ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
+   * Windows: %APPDATA%\heroic
+   *
+   * `heroicConfigPath` — caminho manual para o diretório de configuração do Heroic.
+   * Quando omitido, a detecção automática é usada.
    *
    * @throws Se o Heroic não estiver instalado ou não houver jogos
    */
-  importHeroicGames: async (): Promise<string> => {
-    return await invoke<string>('import_heroic_games');
+  importHeroicGames: async (heroicConfigPath?: string): Promise<string> => {
+    return await invoke<string>('import_heroic_games', {
+      heroicConfigPath: heroicConfigPath ?? null,
+    });
   },
 
   /**

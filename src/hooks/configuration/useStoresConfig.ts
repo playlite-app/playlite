@@ -2,6 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { parsePlatformError } from '@/errors/errorMessages';
 import { platformsService } from '@/services/plataformsService';
 import { settingsService } from '@/services/settingsService';
 
@@ -125,7 +126,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       toast.success(msg);
       onLibraryUpdate?.();
     } catch (e) {
-      const errorMsg = String(e);
+      const errorMsg = parsePlatformError(e);
       setStatus({ type: 'error', message: errorMsg });
       toast.error(errorMsg);
     } finally {
@@ -181,7 +182,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       toast.success(msg);
       onLibraryUpdate?.();
     } catch (e) {
-      const errorMsg = String(e);
+      const errorMsg = parsePlatformError(e);
       setStatus({ type: 'error', message: errorMsg });
       toast.error(errorMsg);
     } finally {
@@ -192,19 +193,20 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
   // === HEROIC GAMES LAUNCHER ===
 
   /**
-   * Importa jogos instalados via Heroic Games Launcher (Linux).
+   * Importa jogos instalados via Heroic Games Launcher.
+   * `configPath` — caminho manual para o diretório de configuração do Heroic (opcional).
    */
-  const importHeroicGames = async () => {
+  const importHeroicGames = async (configPath?: string) => {
     setLoading(prev => ({ ...prev, importingHeroic: true }));
     setStatus({ type: null, message: 'Importando jogos Heroic...' });
 
     try {
-      const msg = await platformsService.importHeroicGames();
+      const msg = await platformsService.importHeroicGames(configPath);
       setStatus({ type: 'success', message: msg });
       toast.success(msg);
       onLibraryUpdate?.();
     } catch (e) {
-      const errorMsg = String(e);
+      const errorMsg = parsePlatformError(e);
       setStatus({ type: 'error', message: errorMsg });
       toast.error(errorMsg);
     } finally {
@@ -228,7 +230,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
       toast.success(msg);
       onLibraryUpdate?.();
     } catch (e) {
-      const errorMsg = String(e);
+      const errorMsg = parsePlatformError(e);
       setStatus({ type: 'error', message: errorMsg });
       toast.error(errorMsg);
     } finally {

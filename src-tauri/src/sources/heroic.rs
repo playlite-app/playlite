@@ -2,12 +2,22 @@
 //!
 //! Fornece funcionalidade para detectar jogos instalados via Heroic, lendo os arquivos de
 //! configuração do Heroic e mapeando-os para o formato genérico de jogos usado pela aplicação.
-//! Este módulo se concentra em detectar jogos instalados via Heroic, independentemente da
-//! plataforma original do jogo e será usado no Linux, onde o Heroic é mais popular.
 //!
-//! ** Observação:**
-//! O Heroic Games Launcher é um gerenciador de jogos de código aberto que suporta várias
-//! plataformas, incluindo Epic Games, GOG, Steam e outros.
+//! Suporta **Linux** (instalação nativa e Flatpak) e **Windows** (detecção automática via
+//! `%APPDATA%\heroic` ou caminho personalizado fornecido pelo usuário).
+//!
+//! ## Caminhos de configuração detectados automaticamente
+//!
+//! **Linux (nativo):** `~/.config/heroic/installed.json`  
+//! **Linux (Flatpak):** `~/.var/app/com.heroicgameslauncher.hgl/config/heroic/installed.json`  
+//! **Windows:** `%APPDATA%\heroic\installed.json`
+//!
+//! ## Aviso sobre duplicatas
+//!
+//! Se o usuário importar jogos via Heroic **e** via um launcher nativo (Epic, GOG, etc.),
+//! os mesmos títulos aparecerão duas vezes na biblioteca com plataformas diferentes
+//! (ex.: "Heroic" e "Epic Games"). Isso é esperado — cada entrada representa uma
+//! instalação/plataforma distinta.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -33,8 +43,17 @@ struct HeroicInstalledFile {
 pub struct HeroicSource;
 
 impl HeroicSource {
-    pub async fn import_installed() -> Result<Vec<SourceGame>, AppError> {
-        let config_path = Self::detect_heroic_config_path()?;
+    /// Importa os jogos instalados via Heroic.
+    ///
+    /// `config_path_override` — permite fornecer um caminho personalizado para o diretório de
+    /// configuração do Heroic. Quando `None`, a detecção automática é usada.
+    pub async fn import_installed(
+        config_path_override: Option<PathBuf>,
+    ) -> Result<Vec<SourceGame>, AppError> {
+        let config_path = match config_path_override {
+            Some(path) => path,
+            None => Self::detect_heroic_config_path()?,
+        };
 
         let installed_file = config_path.join("installed.json");
 
@@ -57,27 +76,46 @@ impl HeroicSource {
         Ok(games)
     }
 
+    /// Detecta automaticamente o diretório de configuração do Heroic.
+    ///
+    /// Ordem de verificação:
+    /// 1. **Linux Flatpak:** `~/.var/app/com.heroicgameslauncher.hgl/config/heroic`
+    /// 2. **Linux nativo:** `~/.config/heroic`
+    /// 3. **Windows:** `%APPDATA%\heroic`
     fn detect_heroic_config_path() -> Result<PathBuf, AppError> {
-        let home = std::env::var("HOME")
-            .map_err(|_| AppError::ValidationError("HOME não encontrado".into()))?;
+        // === LINUX ===
+        #[cfg(target_os = "linux")]
+        {
+            let home = std::env::var("HOME")
+                .map_err(|_| AppError::ValidationError("HOME não encontrado".into()))?;
 
-        // Flatpak path
-        let flatpak_path =
-            Path::new(&home).join(".var/app/com.heroicgameslauncher.hgl/config/heroic");
+            // Flatpak path
+            let flatpak_path =
+                Path::new(&home).join(".var/app/com.heroicgameslauncher.hgl/config/heroic");
+            if flatpak_path.exists() {
+                return Ok(flatpak_path);
+            }
 
-        if flatpak_path.exists() {
-            return Ok(flatpak_path);
+            // Native installation path
+            let native_path = Path::new(&home).join(".config/heroic");
+            if native_path.exists() {
+                return Ok(native_path);
+            }
         }
 
-        // Native installation path
-        let native_path = Path::new(&home).join(".config/heroic");
-
-        if native_path.exists() {
-            return Ok(native_path);
+        // === WINDOWS ===
+        #[cfg(target_os = "windows")]
+        {
+            if let Ok(appdata) = std::env::var("APPDATA") {
+                let path = Path::new(&appdata).join("heroic");
+                if path.exists() {
+                    return Ok(path);
+                }
+            }
         }
 
         Err(AppError::ValidationError(
-            "Heroic não encontrado no sistema".into(),
+            "Heroic não encontrado no sistema. Verifique se está instalado ou informe o diretório manualmente.".into(),
         ))
     }
 

@@ -38,6 +38,16 @@ export const ERROR_MESSAGES = {
   // Erros de rede
   NetworkError: 'Verifique sua conexão com a internet.',
 
+  // Erros de plataformas/launchers
+  LAUNCHER_NOT_FOUND:
+    'Launcher não instalado ou localização incorreta. Verifique se está instalado ou informe o diretório manualmente.',
+  LAUNCHER_NO_GAMES:
+    'Nenhum jogo encontrado. Certifique-se de ter jogos instalados.',
+  LAUNCHER_INVALID_PATH:
+    'Diretório informado não contém uma instalação válida do launcher.',
+  LAUNCHER_CONFIG_UNREADABLE:
+    'Não foi possível ler os arquivos de configuração do launcher.',
+
   // Operações canceladas
   CANCELLED: 'CANCELLED', // Erro especial que não deve ser mostrado ao usuário
 } as const;
@@ -138,5 +148,94 @@ export function parseBackupError(error: unknown): string {
   }
 
   // Erro genérico
+  return errorStr;
+}
+
+/**
+ * Extrai mensagem de erro amigável para operações de importação de plataformas
+ * (Steam, Epic, Heroic, Ubisoft, etc.).
+ *
+ * Tauri serializa AppError como `{ type: string; message: string }`, portanto
+ * `String(e)` produziria "[object Object]". Esta função trata todos os casos.
+ */
+export function parsePlatformError(error: unknown): string {
+  if (isAppError(error)) {
+    switch (error.type) {
+      case 'ValidationError': {
+        const msg = error.message.toLowerCase();
+
+        // Launcher não encontrado / não instalado
+        if (
+          msg.includes('não encontrado') ||
+          msg.includes('not found') ||
+          msg.includes('não está instalado') ||
+          msg.includes('not installed')
+        ) {
+          return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+        }
+
+        // Caminho inválido / diretório incorreto
+        if (
+          msg.includes('inválido') ||
+          msg.includes('invalid') ||
+          msg.includes('incorreto') ||
+          msg.includes('incorrect') ||
+          msg.includes('not a directory') ||
+          msg.includes('diretório')
+        ) {
+          return ERROR_MESSAGES.LAUNCHER_INVALID_PATH;
+        }
+
+        // Retorna a mensagem original para outros erros de validação
+        return error.message;
+      }
+
+      case 'IoError': {
+        const msg = error.message.toLowerCase();
+
+        if (msg.includes('no such file') || msg.includes('not found')) {
+          return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+        }
+
+        if (
+          msg.includes('permission denied') ||
+          msg.includes('access is denied')
+        ) {
+          return `Permissão negada ao acessar os arquivos do launcher.`;
+        }
+
+        return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
+      }
+
+      case 'SerializationError':
+        return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
+
+      case 'NotFound':
+        return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+
+      case 'DatabaseError':
+        return ERROR_MESSAGES.DatabaseError;
+
+      case 'MutexError':
+        return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
+
+      default:
+        return error.message;
+    }
+  }
+
+  // Fallback: string raw (ex.: erros de permissão do plugin de diálogo)
+  const errorStr = String(error);
+
+  if (errorStr === '[object Object]') {
+    return ERROR_MESSAGES.LAUNCHER_NOT_FOUND;
+  }
+
+  if (
+    matchesErrorPattern(error, ['dialog.open not allowed', 'dialog:allow-open'])
+  ) {
+    return ERROR_MESSAGES.DIALOG_OPEN_PERMISSION;
+  }
+
   return errorStr;
 }

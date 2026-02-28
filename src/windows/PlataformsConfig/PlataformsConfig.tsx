@@ -13,7 +13,7 @@ import {
   WineSettings,
 } from '@/windows';
 
-type StoreProvider =
+type SourceProvider =
   | 'steam'
   | 'epic'
   | 'heroic'
@@ -26,17 +26,17 @@ export default function PlataformsConfig({
   isOpen,
   onClose,
   onLibraryUpdate,
-}: {
+}: Readonly<{
   isOpen: boolean;
   onClose: () => void;
   onLibraryUpdate?: () => void;
-}) {
-  const [activeStore, setActiveStore] = useState<StoreProvider>('steam');
+}>) {
+  const [activeStore, setActiveStore] = useState<SourceProvider>('steam');
 
   const stores = [
     { id: 'steam', name: 'Steam', Icon: Steam, connected: true },
     { id: 'epic', name: 'Epic Games', Icon: Epic, connected: true },
-    { id: 'heroic', name: 'Heroic (Linux)', Icon: Heroic, connected: true },
+    { id: 'heroic', name: 'Heroic', Icon: Heroic, connected: true },
     { id: 'ubisoft', name: 'Ubisoft', Icon: Ubisoft, connected: true },
     { id: 'gog', name: 'GOG', Icon: AlertCircle, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
@@ -46,7 +46,7 @@ export default function PlataformsConfig({
   return (
     <WindowBase isOpen={isOpen} onClose={onClose} maxWidth="7xl">
       <div className="flex h-full flex-row">
-        {/* Sidebar com visual "Cinza" similar à principal */}
+        {/* Sidebar */}
         <aside className="border-border/40 bg-secondary/10 w-64 border-r p-6">
           <h2 className="text-muted-foreground mb-6 text-xs font-bold tracking-widest uppercase">
             Fontes de Jogos
@@ -59,7 +59,7 @@ export default function PlataformsConfig({
               return (
                 <button
                   key={store.id}
-                  onClick={() => setActiveStore(store.id as StoreProvider)}
+                  onClick={() => setActiveStore(store.id as SourceProvider)}
                   className={cn(
                     'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors',
                     isActive

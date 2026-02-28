@@ -1,4 +1,4 @@
-import { FolderOpen, Loader2, RefreshCw } from 'lucide-react';
+import { FolderOpen, Info, Loader2, RefreshCw } from 'lucide-react';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
@@ -9,7 +9,9 @@ interface EpicGamesSettingsProps {
   onLibraryUpdate?: () => void;
 }
 
-export function EpicGamesSettings({ onLibraryUpdate }: EpicGamesSettingsProps) {
+export function EpicGamesSettings({
+  onLibraryUpdate,
+}: Readonly<EpicGamesSettingsProps>) {
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
@@ -22,7 +24,8 @@ export function EpicGamesSettings({ onLibraryUpdate }: EpicGamesSettingsProps) {
             Importação de Jogos Epic Games
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos instalados via Epic Games Launcher automaticamente.
+            Importe jogos instalados via Epic Games Launcher (Windows e Linux
+            via Wine).
           </p>
         </div>
         {status.type && (
@@ -36,19 +39,48 @@ export function EpicGamesSettings({ onLibraryUpdate }: EpicGamesSettingsProps) {
         <SettingsRow
           icon={FolderOpen}
           title="Detecção Automática"
-          description="O Playlite detecta automaticamente jogos instalados via Epic Games Launcher."
+          description="O Playlite detecta automaticamente os manifestos do Epic Games Launcher."
         >
-          <div className="bg-muted/30 rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">
-              <strong>Localização dos Manifestos:</strong>
-              <br />
-              <code className="text-primary/80 text-xs">
+          <div className="bg-muted/30 space-y-2 rounded-md border p-3">
+            <p className="text-muted-foreground text-xs font-medium">
+              Caminhos verificados:
+            </p>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-xs">
+                <span className="text-primary/60 font-semibold">Windows:</span>
+              </p>
+              <code className="text-primary/80 block pl-2 text-xs">
                 C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
               </code>
-            </p>
+              <p className="text-muted-foreground pt-1 text-xs">
+                <span className="text-primary/60 font-semibold">
+                  Linux (Wine):
+                </span>
+              </p>
+              <code className="text-primary/80 block pl-2 text-xs">
+                {'<wine_prefix>'}/drive_c/ProgramData/Epic/.../Manifests
+              </code>
+            </div>
             <p className="text-muted-foreground mt-2 text-xs">
               O scanner lê os arquivos <code>.item</code> que contêm informações
               sobre os jogos instalados (nome, caminho, executável).
+            </p>
+          </div>
+        </SettingsRow>
+
+        {/* Nota Wine */}
+        <SettingsRow
+          icon={Info}
+          title="Wine (Linux)"
+          description="No Linux, configure o Wine prefix na aba Wine para detectar a instalação."
+        >
+          <div className="bg-muted/30 rounded-md border p-3">
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              O diretório de manifestos é resolvido automaticamente a partir do{' '}
+              <strong className="text-foreground/70">Wine prefix</strong>{' '}
+              configurado na aba{' '}
+              <strong className="text-foreground/70">Wine (Linux)</strong>.
+              Nenhuma configuração adicional é necessária aqui.
             </p>
           </div>
         </SettingsRow>

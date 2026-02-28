@@ -3,11 +3,11 @@
 //! Detecta jogos instalados lendo os arquivos de manifesto `.item` do Epic Games Launcher.
 //!
 //! **Observações:**
-//! - Atualmente suporta apenas Windows, onde os manifests estão localizados em `C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests`.
-//! - Cada arquivo `.item` é um JSON contendo informações sobre o jogo, como nome, caminho de instalação e executável de lançamento.
-//! - O source extrai essas informações para criar objetos `SourceGame` que representam os jogos instalados via Epic.
+//! - **Windows:** os manifestos estão em `C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests`.
+//! - **Linux (Wine):** o mesmo caminho é resolvido dentro do Wine prefix em
+//!   `<prefix>/drive_c/ProgramData/Epic/EpicGamesLauncher/Data/Manifests`.
+//! - Cada arquivo `.item` é um JSON com nome, caminho de instalação e executável do jogo.
 
-use crate::constants::EPIC_MANIFEST_PATH_WINDOWS;
 use crate::errors::AppError;
 use crate::sources::providers::SourceGame;
 use serde::Deserialize;
@@ -33,20 +33,61 @@ struct EpicManifest {
 }
 
 /// Source responsável por importar jogos instalados via Epic Games
-pub struct EpicSource;
+pub struct EpicSource {
+    /// Wine prefix utilizado no Linux para localizar os manifestos do Epic.
+    /// Ignorado no Windows.
+    #[allow(dead_code)]
+    pub wine_prefix: Option<PathBuf>,
+}
 
-/// Importa todos os jogos instalados detectados nos manifests
 impl EpicSource {
-    pub async fn import_installed() -> Result<Vec<SourceGame>, AppError> {
-        let manifest_dir = Path::new(EPIC_MANIFEST_PATH_WINDOWS);
+    pub fn new(wine_prefix: Option<PathBuf>) -> Self {
+        Self { wine_prefix }
+    }
 
-        if !manifest_dir.exists() {
-            return Ok(vec![]); // Epic não instalada ou sem jogos
+    /// Resolve o diretório de manifestos do Epic Games Launcher.
+    ///
+    /// - **Windows:** `C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests`
+    /// - **Linux:** `<wine_prefix>/drive_c/ProgramData/Epic/EpicGamesLauncher/Data/Manifests`
+    fn resolve_manifest_dir(&self) -> Option<PathBuf> {
+        #[cfg(target_os = "windows")]
+        {
+            use crate::constants::EPIC_MANIFEST_PATH_WINDOWS;
+            let path = PathBuf::from(EPIC_MANIFEST_PATH_WINDOWS);
+            if path.exists() {
+                return Some(path);
+            }
         }
+
+        #[cfg(target_os = "linux")]
+        {
+            if let Some(prefix) = &self.wine_prefix {
+                let path = prefix
+                    .join("drive_c")
+                    .join("ProgramData")
+                    .join("Epic")
+                    .join("EpicGamesLauncher")
+                    .join("Data")
+                    .join("Manifests");
+                if path.exists() {
+                    return Some(path);
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Importa todos os jogos instalados detectados nos manifestos
+    pub async fn import_installed(&self) -> Result<Vec<SourceGame>, AppError> {
+        let manifest_dir = match self.resolve_manifest_dir() {
+            Some(dir) => dir,
+            None => return Ok(vec![]), // Epic não instalada ou sem jogos
+        };
 
         let mut games = Vec::new();
 
-        for entry in fs::read_dir(manifest_dir)? {
+        for entry in fs::read_dir(&manifest_dir)? {
             let entry = entry?;
             let path = entry.path();
 
