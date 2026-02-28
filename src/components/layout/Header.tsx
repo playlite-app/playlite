@@ -14,14 +14,17 @@ import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
-import { StoresConfig } from '@/windows/StoresConfig';
+import { PlataformsConfig } from '@/windows/PlataformsConfig';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;
   onToggle: () => void;
 }
 
-function AdultFilterToggle({ hideAdult, onToggle }: AdultFilterToggleProps) {
+function AdultFilterToggle({
+  hideAdult,
+  onToggle,
+}: Readonly<AdultFilterToggleProps>) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -67,7 +70,7 @@ export default function Header({
   onToggleAdultFilter,
   onCheckUpdates,
   onLibraryUpdate,
-}: HeaderProps) {
+}: Readonly<HeaderProps>) {
   const { isDark, toggleTheme } = useTheme();
   const { isSearchable, searchPlaceholder, searchAriaLabel } =
     useHeaderState(activeSection);
@@ -138,7 +141,7 @@ export default function Header({
           title="Configurar Lojas e Scanner"
         >
           <Store size={18} />
-          <span className="ml-1 hidden md:inline">Lojas</span>
+          <span className="ml-1 hidden md:inline">Plataformas</span>
         </Button>
 
         {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
@@ -179,7 +182,7 @@ export default function Header({
         onCheckUpdates={onCheckUpdates}
       />
 
-      <StoresConfig
+      <PlataformsConfig
         isOpen={isStoresConfigOpen}
         onClose={() => setIsStoresConfigOpen(false)}
         onLibraryUpdate={onLibraryUpdate}

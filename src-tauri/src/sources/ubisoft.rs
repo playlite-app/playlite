@@ -13,6 +13,11 @@
 //! Para determinar se um jogo está instalado, verifica se sua pasta existe dentro
 //! de `game_installation_path`. O nome da pasta é inferido a partir do `game_identifier`
 //! (que normalmente corresponde ao nome da pasta de instalação).
+//!
+//! **Linux (Wine):**
+//! No Linux, o diretório de dados é resolvido a partir do `wine_prefix` configurado.
+//! O caminho equivale a `<prefix>/drive_c/users/<USER>/AppData/Local/Ubisoft Game Launcher`.
+//! Se nenhum prefix for fornecido, a importação não estará disponível no Linux.
 
 use crate::errors::AppError;
 use crate::sources::providers::{GameSource, SourceGame};
@@ -22,23 +27,45 @@ use std::path::{Path, PathBuf};
 
 pub struct UbisoftSource {
     pub include_library_cache: bool,
+    /// Wine prefix utilizado no Linux para localizar o diretório de dados do Ubisoft Game Launcher.
+    /// Ignorado no Windows.
+    pub wine_prefix: Option<PathBuf>,
 }
 
 impl UbisoftSource {
-    pub fn new(include_library_cache: bool) -> Self {
+    pub fn new(include_library_cache: bool, wine_prefix: Option<PathBuf>) -> Self {
         Self {
             include_library_cache,
+            wine_prefix,
         }
     }
 
     /// Resolve o diretório de dados do Ubisoft Game Launcher.
     ///
-    /// Aponta para `%LOCALAPPDATA%\Ubisoft Game Launcher` (Windows), que tem `settings.yaml` e o cache de configuração.
-    fn resolve_launcher_data_dir() -> Option<PathBuf> {
+    /// - **Windows:** `%LOCALAPPDATA%\Ubisoft Game Launcher`
+    /// - **Linux:** `<wine_prefix>/drive_c/users/<USER>/AppData/Local/Ubisoft Game Launcher`
+    fn resolve_launcher_data_dir(&self) -> Option<PathBuf> {
         #[cfg(target_os = "windows")]
         {
             if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
                 let path = Path::new(&local_app_data).join("Ubisoft Game Launcher");
+                if path.exists() {
+                    return Some(path);
+                }
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            if let Some(prefix) = &self.wine_prefix {
+                let user = std::env::var("USER").ok()?;
+                let path = prefix
+                    .join("drive_c")
+                    .join("users")
+                    .join(&user)
+                    .join("AppData")
+                    .join("Local")
+                    .join("Ubisoft Game Launcher");
                 if path.exists() {
                     return Some(path);
                 }
@@ -283,7 +310,7 @@ fn parse_yaml_string_value(s: &str) -> String {
 #[async_trait]
 impl GameSource for UbisoftSource {
     async fn fetch_games(&self) -> Result<Vec<SourceGame>, AppError> {
-        let data_dir = UbisoftSource::resolve_launcher_data_dir().ok_or_else(|| {
+        let data_dir = self.resolve_launcher_data_dir().ok_or_else(|| {
             AppError::NotFound(
                 "Pasta de dados do Ubisoft Game Launcher não encontrada. \
                 Verifique se o Ubisoft Connect está instalado."

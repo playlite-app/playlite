@@ -43,12 +43,16 @@ export const platformsService = {
 
   /**
    * Importa jogos da Ubisoft lendo o cache de configuração do Ubisoft Connect.
-   * Detecta automaticamente via %LOCALAPPDATA%\Ubisoft Game Launcher.
-   * Não requer nenhuma configuração manual do usuário.
+   * Detecta automaticamente via %LOCALAPPDATA%\Ubisoft Game Launcher (Windows)
+   * ou via Wine prefix configurado (Linux).
    *
    * @throws Se o Ubisoft Connect não estiver instalado ou não houver jogos
    */
   importUbisoftGames: async (): Promise<string> => {
-    return await invoke<string>('import_ubisoft_games');
+    const winePrefix = localStorage.getItem('wine_prefix') || undefined;
+
+    return await invoke<string>('import_ubisoft_games', {
+      winePrefix: winePrefix ?? null,
+    });
   },
 };

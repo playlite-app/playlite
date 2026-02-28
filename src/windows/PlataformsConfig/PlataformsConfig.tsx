@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Settings2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Settings2, Wine } from 'lucide-react';
 import { useState } from 'react';
 
 import { Epic, Heroic, Steam, Ubisoft } from '@/components/icons/logos';
@@ -10,11 +10,19 @@ import {
   LocalScannerSettings,
   SteamSettings,
   UbisoftSettings,
+  WineSettings,
 } from '@/windows';
 
-type StoreProvider = 'steam' | 'epic' | 'heroic' | 'ubisoft' | 'gog' | 'local';
+type StoreProvider =
+  | 'steam'
+  | 'epic'
+  | 'heroic'
+  | 'ubisoft'
+  | 'gog'
+  | 'local'
+  | 'wine';
 
-export default function StoresConfig({
+export default function PlataformsConfig({
   isOpen,
   onClose,
   onLibraryUpdate,
@@ -32,6 +40,7 @@ export default function StoresConfig({
     { id: 'ubisoft', name: 'Ubisoft', Icon: Ubisoft, connected: true },
     { id: 'gog', name: 'GOG', Icon: AlertCircle, connected: false },
     { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
+    { id: 'wine', name: 'Wine (Linux)', Icon: Wine, connected: true },
   ];
 
   return (
@@ -89,6 +98,7 @@ export default function StoresConfig({
             <UbisoftSettings onLibraryUpdate={onLibraryUpdate} />
           )}
           {activeStore === 'local' && <LocalScannerSettings />}
+          {activeStore === 'wine' && <WineSettings />}
           {activeStore === 'gog' && (
             <div className="flex h-full flex-col items-center justify-center opacity-30">
               <AlertCircle size={48} className="mb-4" />

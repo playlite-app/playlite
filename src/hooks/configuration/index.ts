@@ -2,3 +2,4 @@
 export * from './useScanner';
 export * from './useSettings';
 export * from './useStoresConfig';
+export * from './useWineConfig';
