@@ -6,8 +6,10 @@ import {
   FileJson,
   HardDrive,
   History,
+  ImageIcon,
   Loader2,
   RefreshCcw,
+  RefreshCw,
   Save,
   Search,
   ShieldAlert,
@@ -96,6 +98,35 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
       {/* SEÇÃO 1: METADADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Metadados</h3>
+
+        {/* Configurações de API para tradução de descrições */}
+        <SettingsRow
+          icon={Sparkles}
+          title="Google Gemini"
+          description="Usado para traduzir descrições dos jogos para Português."
+        >
+          <div className="grid gap-2">
+            <Input
+              type="password"
+              placeholder="Gemini API Key"
+              value={keys.geminiApiKey}
+              onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
+              className="bg-background/50"
+            />
+            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+              <span>Não tem uma chave?</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-0.5 text-blue-400 hover:underline"
+              >
+                Obter no Google AI Studio <ExternalLink size={10} />
+              </a>
+            </div>
+          </div>
+        </SettingsRow>
+
         {/* Configurações de API para metadados */}
         <SettingsRow
           icon={Search}
@@ -130,9 +161,15 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 }
               >
                 {loading.enriching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Atualizando...
+                  </>
                 ) : (
-                  'Atualizar Metadados'
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Atualizar
+                  </>
                 )}
               </Button>
 
@@ -148,9 +185,15 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 title="Busca apenas capas para jogos que estão sem imagem"
               >
                 {loading.fetchingCovers ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Buscando...
+                  </>
                 ) : (
-                  'Buscar Capas'
+                  <>
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Buscar Capas
+                  </>
                 )}
               </Button>
             </div>
@@ -188,34 +231,6 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                   {progress.total})
                 </div>
               )}
-          </div>
-        </SettingsRow>
-
-        {/* Configurações de API para tradução de descrições */}
-        <SettingsRow
-          icon={Sparkles}
-          title="Google Gemini"
-          description="Usado para traduzir descrições dos jogos para Português."
-        >
-          <div className="grid gap-2">
-            <Input
-              type="password"
-              placeholder="Gemini API Key"
-              value={keys.geminiApiKey}
-              onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
-              className="bg-background/50"
-            />
-            <div className="text-muted-foreground flex items-center gap-1 text-xs">
-              <span>Não tem uma chave?</span>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-0.5 text-blue-400 hover:underline"
-              >
-                Obter no Google AI Studio <ExternalLink size={10} />
-              </a>
-            </div>
           </div>
         </SettingsRow>
       </section>
@@ -339,7 +354,9 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
             disabled={ignoredIds.length === 0}
             className="w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
+            <>
+              <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
+            </>
           </Button>
         </SettingsRow>
       </section>
@@ -430,7 +447,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
             <Button
               onClick={actions.clearAllCache}
               variant="outline"
-              className="flex-1 text-red-500 hover:bg-red-500/10"
+              className="flex-1 text-red-500 hover:bg-red-500/10 hover:text-red-600"
             >
               {loading.clearingAllCache ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -464,7 +481,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 variant="outline"
                 size="sm"
                 onClick={handleClearCache}
-                className="w-full text-xs text-red-400 hover:bg-red-500/10 hover:text-red-500"
+                className="w-full text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600"
               >
                 <Trash2 size={12} className="mr-1" /> Excluir Imagens Salvas
               </Button>
