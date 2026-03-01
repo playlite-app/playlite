@@ -2,6 +2,35 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [3.1.0] - 2026-02-12
+
+### Adicionado
+
+- **Scanner de Diretórios Locais**: Nova funcionalidade que permite monitorar pastas do PC para adicionar jogos
+  automaticamente à biblioteca Playlite.
+- **Detecção de Instalação Steam**: O importador da Steam agora identifica quais jogos já estão instalados no sistema,
+  marcando-os corretamente na interface.
+- **Nova Estrutura de UI**: Refatoração completa de componentes de interface, incluindo um novo sistema de Dialogs (
+  caixas de diálogo) e Tooltips mais leves e responsivos.
+
+### Modificado
+
+- **Refatoração do Backend (Rust)**: Reestruturação das integrações no core em Rust para maior estabilidade e
+  performance na comunicação via IPC (Inter-Process Communication).
+- **Otimização de Assets**: Melhoria no carregamento de capas vindas da API GamerPower, corrigindo falhas de exibição em
+  conexões instáveis.
+- **Fluxo de Importação**: O processo de sincronização com a Steam agora é mais resiliente, ignorando entradas
+  corrompidas sem interromper toda a tarefa.
+
+### Corrigido
+
+- **Carregamento de Capas**: Corrigido o erro que impedia a exibição correta de imagens na aba de "Jogos Grátis" (
+  GamerPower).
+- **Posicionamento de Tooltips**: Ajuste fino no cálculo de coordenadas dos tooltips para evitar que saiam da tela em
+  resoluções menores.
+- **Estabilidade de Importação**: Resolvido um bug onde o scanner local poderia entrar em loop infinito em pastas com
+  links simbólicos (symlinks).
+
 ## [3.0.0] - 2026-02-01
 
 ### Adicionado
