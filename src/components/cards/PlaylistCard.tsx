@@ -1,4 +1,3 @@
-import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import {
   ArrowDown,
   ArrowUp,
@@ -16,23 +15,40 @@ interface PlaylistItemProps {
   game: Game;
   index: number;
   total: number;
-  dragHandleProps?: DraggableProvidedDragHandleProps | null;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
-  onRemove: (game: Game) => void;
-  onPlay: (game: Game) => void;
-  onClick: (game: Game) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+  onPlay: () => void;
+  onClick: () => void;
 }
 
 /**
  * Item individual da fila de jogos (Playlist).
  * Suporta drag & drop e reordenação manual via setas.
+ *
+ * Layout horizontal compacto:
+ * - Grip icon (indicador de drag)
+ * - Setas de reordenação + número da posição
+ * - Miniatura da capa com overlay de Play
+ * - Info do jogo (nome, gênero, tempo jogado)
+ * - Botão Play principal + botão Remover
+ *
+ * Cursor muda para 'grab' no hover e 'grabbing' ao arrastar.
+ * Botões de seta desabilitam automaticamente nos extremos (primeiro/último).
+ *
+ * @param game - Dados completos do jogo
+ * @param index - Posição atual na fila (0-based)
+ * @param total - Total de itens na fila (para desabilitar seta baixo no último)
+ * @param onMoveUp - Callback para mover uma posição acima
+ * @param onMoveDown - Callback para mover uma posição abaixo
+ * @param onRemove - Callback para remover da fila
+ * @param onPlay - Callback do overlay da capa (lança o jogo)
+ * @param onClick - Callback ao clicar no card (abre detalhes)
  */
 export default function PlaylistCard({
   game,
   index,
   total,
-  dragHandleProps,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -40,23 +56,18 @@ export default function PlaylistCard({
   onClick,
 }: Readonly<PlaylistItemProps>) {
   return (
-    <div className="group bg-card border-border hover:border-primary/50 animate-in fade-in slide-in-from-left-4 relative flex items-center gap-3 rounded-xl border p-2.5 transition-all duration-300 hover:shadow-md lg:gap-4 lg:p-3">
-      <div
-        {...dragHandleProps}
-        className="bg-background/95 text-muted-foreground hover:text-primary border-border pointer-events-none absolute top-1.5 left-1/2 z-40 flex h-7 w-12 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border opacity-0 shadow-sm transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 active:cursor-grabbing"
-        aria-label={`Arrastar ${game.name}`}
-      >
-        <GripVertical size={16} />
-      </div>
+    <div
+      className="group bg-card border-border hover:border-primary/50 animate-in fade-in slide-in-from-left-4 flex cursor-grab items-center gap-3 rounded-xl border p-2.5 transition-all duration-300 hover:shadow-md active:cursor-grabbing lg:gap-4 lg:p-3"
+      onClick={onClick}
+    >
+      {/* Bloco de controle (Grip + Setas) */}
+      <div className="mr-1 flex items-center gap-0">
+        <GripVertical
+          size={18}
+          className="text-muted-foreground/40 lg:h-5 lg:w-5"
+        />
 
-      <button
-        type="button"
-        className="absolute inset-0 z-20"
-        aria-label={`Abrir detalhes de ${game.name}`}
-        onClick={() => onClick(game)}
-      />
-
-      <div className="relative z-30 mr-1 flex items-center gap-0">
+        {/* Botões de mover na fila */}
         <div className="text-muted-foreground flex flex-col items-center justify-center gap-0.5">
           <Button
             variant="ghost"
@@ -65,7 +76,7 @@ export default function PlaylistCard({
             onClick={e => {
               e.stopPropagation();
               e.preventDefault();
-              onMoveUp(index);
+              onMoveUp();
             }}
             onMouseDown={e => e.stopPropagation()}
             onTouchStart={e => e.stopPropagation()}
@@ -86,7 +97,7 @@ export default function PlaylistCard({
             onClick={e => {
               e.stopPropagation();
               e.preventDefault();
-              onMoveDown(index);
+              onMoveDown();
             }}
             onMouseDown={e => e.stopPropagation()}
             onTouchStart={e => e.stopPropagation()}
@@ -98,7 +109,8 @@ export default function PlaylistCard({
         </div>
       </div>
 
-      <div className="bg-muted group/img relative z-30 h-14 w-10 shrink-0 cursor-pointer overflow-hidden rounded shadow-sm lg:h-16 lg:w-12">
+      {/* Cover do jogo */}
+      <div className="bg-muted group/img relative h-14 w-10 shrink-0 cursor-pointer overflow-hidden rounded shadow-sm lg:h-16 lg:w-12">
         {game.coverUrl ? (
           <img
             src={game.coverUrl}
@@ -111,22 +123,21 @@ export default function PlaylistCard({
             <ImageOff className="h-4 w-4 opacity-50" />
           </div>
         )}
-        <button
-          type="button"
+        <div
           className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/img:opacity-100"
-          aria-label={`Jogar ${game.name}`}
           onClick={e => {
             e.stopPropagation();
             e.preventDefault();
-            onPlay(game);
+            onPlay();
           }}
           onMouseDown={e => e.stopPropagation()}
           onTouchStart={e => e.stopPropagation()}
         >
           <Play size={15} className="fill-white text-white lg:h-4 lg:w-4" />
-        </button>
+        </div>
       </div>
 
+      {/* Info Principal */}
       <div className="min-w-0 flex-1 cursor-pointer select-none">
         <h4 className="group-hover:text-primary truncate text-sm font-semibold transition-colors">
           {game.name}
@@ -135,7 +146,7 @@ export default function PlaylistCard({
           <span className="bg-secondary/50 text-secondary-foreground border-border/50 max-w-25 truncate rounded border px-1.5 py-0.5 lg:max-w-none">
             {game.genres || 'Geral'}
           </span>
-          <span>{'\u2022'}</span>
+          <span>•</span>
           <span>
             {(game.playtime ?? 0) > 0
               ? `${Math.floor((game.playtime ?? 0) / 60)}h`
@@ -144,7 +155,8 @@ export default function PlaylistCard({
         </div>
       </div>
 
-      <div className="relative z-30 flex items-center gap-1.5 lg:gap-2">
+      {/* Botões de Ação */}
+      <div className="flex items-center gap-1.5 lg:gap-2">
         <Button
           size="sm"
           className="bg-primary/90 hover:bg-primary text-primary-foreground flex h-7 items-center gap-1 px-2 shadow-sm"
@@ -167,7 +179,7 @@ export default function PlaylistCard({
           onClick={e => {
             e.stopPropagation();
             e.preventDefault();
-            onRemove(game);
+            onRemove();
           }}
           onMouseDown={e => e.stopPropagation()}
           onTouchStart={e => e.stopPropagation()}
