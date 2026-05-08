@@ -91,7 +91,7 @@ Todo o processamento acontece localmente, sem coleta de dados do usuário.
 ```bash
 # Clone o repositório
 git clone <repo-url>
-cd game_manager
+cd playlite
 
 # Instale dependências
 npm install
@@ -105,7 +105,8 @@ Se você estiver rodando no Linux, execute o script de integração para instala
 npm run install:linux
 ```
 
-Isso instala o ícone e o arquivo `.desktop` no diretório do usuário (`~/.local/share/`), permitindo que o Wayland/X11 associe a janela do app ao ícone correto na barra de tarefas.
+Isso instala o ícone e o arquivo `.desktop` no diretório do usuário (`~/.local/share/`), permitindo que o Wayland/X11
+associe a janela do app ao ícone correto na barra de tarefas.
 
 ### Desenvolvimento
 

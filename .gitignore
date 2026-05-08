@@ -37,11 +37,6 @@ target/
 # Secrets - Don't commit API keys
 src-tauri/src/secrets.rs
 
-# Datasets
-data/raw/
-data/processed/
-data/output/
-
 # Python
 venv/
 __pycache__/
