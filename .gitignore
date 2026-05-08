@@ -36,7 +36,3 @@ target/
 
 # Secrets - Don't commit API keys
 src-tauri/src/secrets.rs
-
-# Python
-venv/
-__pycache__/
