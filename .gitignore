@@ -34,5 +34,6 @@ docs/.vitepress/cache
 # Documentation Artifacts
 target/
 
-# Secrets - Don't commit API keys
+# Secrets
+src-tauri/.cargo/config.toml
 src-tauri/src/secrets.rs
