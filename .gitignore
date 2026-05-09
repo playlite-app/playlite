@@ -36,4 +36,3 @@ target/
 
 # Secrets
 src-tauri/.cargo/config.toml
-src-tauri/src/secrets.rs

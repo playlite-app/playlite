@@ -1,0 +1,38 @@
+use once_cell::sync::OnceCell;
+use sha2::{Digest, Sha256};
+use tauri::AppHandle;
+use tauri_plugin_machine_uid::MachineUidExt;
+
+static MASTER_KEY: OnceCell<[u8; 32]> = OnceCell::new();
+
+// Retorna a chave mestre derivada de dados únicos da máquina.
+pub fn master_key(app: &AppHandle) -> Result<&'static [u8; 32], String> {
+    MASTER_KEY.get_or_try_init(|| {
+        let uid = app
+            .machine_uid()
+            .get_machine_uid()
+            .map_err(|e| e.to_string())?
+            .id
+            .ok_or("Machine UID missing")?;
+
+        let username = whoami::username().unwrap_or_else(|_| "unknown_user".to_string());
+        let app_id = app.config().identifier.clone();
+
+        let mut hasher = Sha256::new();
+        hasher.update(uid);
+        hasher.update(username.as_bytes());
+        hasher.update(app_id.as_bytes());
+
+        let hash = hasher.finalize();
+        let mut key = [0u8; 32];
+        key.copy_from_slice(&hash[..32]);
+        Ok(key)
+    })
+}
+
+const ITAD_API_KEY_RAW: &str = env!("ITAD_API_KEY", "ITAD_API_KEY env var not set");
+
+// Retorna a API Key da ITAD embutida no binário.
+pub fn itad_api_key() -> &'static str {
+    ITAD_API_KEY_RAW
+}
