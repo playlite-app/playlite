@@ -36,3 +36,5 @@ target/
 
 # Secrets
 src-tauri/.cargo/config.toml
+src-tauri/playlite.key
+src-tauri/playlite.key.pub
