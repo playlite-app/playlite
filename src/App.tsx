@@ -18,12 +18,7 @@ import GameDetail from '@/windows/GameDetail/GameDetail';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import {
-  GameLibraryProvider,
-  UIProvider,
-  useGameLibrary,
-  useUI,
-} from './contexts';
+import { GameLibraryProvider, UIProvider, useGameLibrary, useUI, } from './contexts';
 import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider';
 
 function AppContent() {
@@ -82,8 +77,28 @@ function AppContent() {
 
       if (update) {
         toast.info(`Nova versão disponível: ${update.version}`, {
-          description: 'Clique para atualizar agora',
+          description: 'Clique em Atualizar para instalar.',
           duration: 10000,
+          action: {
+            label: 'Atualizar',
+            onClick: async () => {
+              const toastId = toast.loading('Baixando atualização...', {
+                duration: Infinity,
+              });
+
+              try {
+                await update.downloadAndInstall();
+                toast.success('Atualização instalada! Reiniciando...', {
+                  id: toastId,
+                  duration: 2000,
+                });
+              } catch {
+                toast.error('Falha ao instalar. Tente novamente.', {
+                  id: toastId,
+                });
+              }
+            },
+          },
         });
       } else {
         toast.success('Você já está na versão mais recente!');
@@ -274,7 +289,7 @@ function AppContent() {
           onRefresh={refresh}
         />
       </ErrorBoundary>
-      <Toaster />
+      <Toaster position="bottom-center" />
     </div>
   );
 }

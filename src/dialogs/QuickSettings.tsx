@@ -3,13 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from '@/ui/dialog';
 import { Separator } from '@/ui/separator';
 
 interface QuickSettingsModalProps {
@@ -31,7 +25,7 @@ export function QuickSettings({
     setIsChecking(true);
 
     try {
-      await onCheckUpdates();
+      onCheckUpdates();
     } finally {
       setIsChecking(false);
     }
@@ -70,6 +64,7 @@ export function QuickSettings({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
+      <DialogTrigger></DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
