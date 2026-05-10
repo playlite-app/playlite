@@ -33,7 +33,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_machine_uid::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let app_handle = app.handle();
@@ -136,11 +135,11 @@ pub fn run() {
             commands::settings::get_secrets,
             commands::settings::set_secrets,
             // Comandos de Recomendação
-            commands::recommendation::get_user_profile,
-            commands::recommendation::recommend_hybrid_library,
-            commands::recommendation::recommend_collaborative_library,
-            commands::recommendation::recommend_from_library,
-            commands::recommendation::generate_recommendation_analysis,
+            commands::recommendation::core::get_user_profile,
+            commands::recommendation::core::recommend_hybrid_library,
+            commands::recommendation::core::recommend_collaborative_library,
+            commands::recommendation::core::recommend_from_library,
+            commands::recommendation::analysis::generate_recommendation_analysis,
             // Comandos de Tradução de Descrição
             commands::ai_translation::translate_description,
             // Comandos de Conquistas de Jogos

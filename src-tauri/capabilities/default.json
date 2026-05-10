@@ -26,8 +26,6 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:default",
-    "machine-uid:default",
-    "machine-uid:allow-get-machine-uid",
     "updater:default",
     "updater:allow-check",
     "updater:allow-download",
