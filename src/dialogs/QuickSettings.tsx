@@ -3,7 +3,14 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from '@/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/ui/dialog';
 import { Separator } from '@/ui/separator';
 
 interface QuickSettingsModalProps {

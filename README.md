@@ -12,25 +12,25 @@
 
 </div>
 
-Gerenciador de biblioteca de jogos desktop (local-first) com sistema inteligente de recomendação baseado em Machine
-Learning clássico.
+A local-first desktop game library manager with an intelligent recommendation system based on classical Machine
+Learning.
 
-![Demo do Playlite](https://github.com/Alan-oliveir/game_manager/blob/main/docs/assets/demo.gif?raw=true)
+![Playlite Demo](https://github.com/Alan-oliveir/game_manager/blob/main/docs/assets/demo.gif?raw=true)
 
-## 💡 Motivação
+## 💡 Motivation
 
-Tenho uma biblioteca grande de jogos e frequentemente fico em dúvida sobre qual jogar depois.
-Este projeto nasceu para resolver esse problema real, ao mesmo tempo, em que serve como um projeto completo de portfólio
-para explorar Rust, Tauri, React e sistemas de recomendação.
+I have a large game library and often struggle to decide what to play next.
+This project was born to solve that real problem, while also serving as a complete portfolio project to explore Rust,
+Tauri, React, and recommendation systems.
 
-## ✨ Funcionalidades
+## ✨ Features
 
-- Gerenciamento completo de biblioteca de jogos (CRUD)
-- Persistência local com SQLite (offline-first)
-- Interface desktop inspirada na Microsoft Store
-- Sistema de favoritos, avaliações e tempo de jogo
-- Base para sistema de recomendação inteligente
-- Backup e Restauração de dados (JSON)
+- Full game library management (CRUD)
+- Local persistence with SQLite (offline-first)
+- Desktop UI inspired by the Microsoft Store
+- Favorites system, ratings, and playtime tracking
+- Foundation for an intelligent recommendation system
+- Data backup and restore (JSON)
 
 ## 🛠️ Stack
 
@@ -39,101 +39,100 @@ para explorar Rust, Tauri, React e sistemas de recomendação.
 - **UI:** Tailwind CSS v4 + Shadcn/UI
 - **Database:** SQLite (local)
 
-## 🧱 Arquitetura (High-level)
+## 🧱 Architecture (High-level)
 
-- Aplicação desktop local-first
-- Core de negócio em Rust
-- UI desacoplada em React
-- Comunicação via Tauri Commands
-- Banco SQLite embarcado
+- Local-first desktop application
+- Business core in Rust
+- Decoupled UI in React
+- Communication via Tauri Commands
+- Embedded SQLite database
 
-## 🤖 Uso de Inteligência Artificial no Desenvolvimento
+## 🤖 Use of Artificial Intelligence in Development
 
-O Playlite foi desenvolvido com apoio extensivo de ferramentas de Inteligência Artificial como parte de um processo de
-*AI-assisted development* (também conhecido como “vibe coding”).
+Playlite was developed with extensive support from Artificial Intelligence tools as part of an *AI-assisted development*
+process (also known as "vibe coding").
 
-As ferramentas de IA foram utilizadas principalmente para:
+AI tools were primarily used for:
 
-- geração inicial de código e protótipos
-- sugestões de arquitetura e refatoração
-- apoio à documentação e análise técnica
+- Initial code generation and prototyping
+- Architecture suggestions and refactoring
+- Documentation support and technical analysis
 
-Todas as decisões finais de arquitetura, integração entre sistemas, testes, correções de bugs e validação do código
-foram realizadas manualmente. O uso de IA neste projeto teve como objetivo acelerar o desenvolvimento, facilitar o
-aprendizado de Rust e React, e reduzir esforço em tarefas repetitivas, mantendo total entendimento e responsabilidade
-sobre o código final.
+All final architecture decisions, system integration, testing, bug fixes, and code validation were performed manually.
+The use of AI in this project aimed to accelerate development, facilitate learning of Rust and React, and reduce effort
+on repetitive tasks, while maintaining full understanding and ownership of the final code.
 
-📄 Detalhes mais aprofundados sobre o uso de IA estão disponíveis na documentação do projeto.
+📄 More in-depth details about AI usage are available in the project documentation.
 
-## 🤖 Sistema de Recomendação
+## 🤖 Recommendation System
 
-O Playlite utiliza um sistema híbrido de recomendação, combinando:
+Playlite uses a hybrid recommendation system, combining:
 
-- Filtragem baseada em conteúdo (perfil do usuário)
-- Filtragem colaborativa offline (padrões globais da Steam)
+- Content-based filtering (user profile)
+- Offline collaborative filtering (global Steam patterns)
 
-Todo o processamento acontece localmente, sem coleta de dados do usuário.
+All processing happens locally, with no user data collection.
 
-- ⭐ Avaliações e favoritos influenciam o peso das recomendações
-- 👥 Padrões de outros jogadores são usados sem identificação pessoal
-- 📦 Dados colaborativos são pré-processados e distribuídos com o app
+- ⭐ Ratings and favorites influence recommendation weights
+- 👥 Patterns from other players are used without personal identification
+- 📦 Collaborative data is pre-processed and distributed with the app
 
-## 🚀 Como rodar localmente
+## 🚀 Running Locally
 
-### Requisitos
+### Requirements
 
 - Node.js 18+
 - Rust (rustup)
-- npm ou pnpm
+- npm or pnpm
 
 ### Setup
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone <repo-url>
 cd playlite
 
-# Instale dependências
+# Install dependencies
 npm install
 ```
 
-### Integração com o Desktop Linux (ícone na barra de tarefas)
+### Linux Desktop Integration (taskbar icon)
 
-Se você estiver rodando no Linux, execute o script de integração para instalar o ícone e o arquivo `.desktop`:
+If you are running on Linux, execute the integration script to install the icon and `.desktop` file:
 
 ```bash
 npm run install:linux
 ```
 
-Isso instala o ícone e o arquivo `.desktop` no diretório do usuário (`~/.local/share/`), permitindo que o Wayland/X11
-associe a janela do app ao ícone correto na barra de tarefas.
+This installs the icon and `.desktop` file in the user directory (`~/.local/share/`), allowing Wayland/X11 to associate
+the app window with the correct taskbar icon.
 
-### Desenvolvimento
+### Development
 
 ```bash
 npm run tauri dev
 ```
 
-### Build de Produção
+### Production Build
 
 ```bash
 npm run tauri build
 ```
 
-## 📚 Documentação Adicional
+## 📚 Additional Documentation
 
-- Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
-- Arquitetura do projeto: [`ARCHITECTURE.md`](ARCHITECTURE.md)
-- Documentação online (VitePress): https://playlite.vercel.app/
-- Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
-- Diário de desenvolvimento: [`DEV_LOG.md`](DEV_LOG.md)
+- Architectural decisions (ADR): [`ADR.md`](ADR.md)
+- Project architecture: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- Online documentation (VitePress): https://playlite.vercel.app/
+- Project updates: [`CHANGELOG.md`](CHANGELOG.md)
+- Development diary: [`DEV_LOG.md`](DEV_LOG.md)
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
 
-## 🤝 Contribuição
+## 🤝 Contributing
 
-Sugestões e contribuições são bem-vindas!
-Veja o arquivo [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Suggestions and contributions are welcome!
+See the [`CONTRIBUTING.md`](CONTRIBUTING.md) file.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
