@@ -289,7 +289,7 @@ function AppContent() {
           onRefresh={refresh}
         />
       </ErrorBoundary>
-      <Toaster position="bottom-center" />
+      <Toaster />
     </div>
   );
 }
