@@ -1,55 +1,55 @@
 ---
 name: 🐞 Bug Report
-about: Reportar um problema ou comportamento inesperado
+about: Report a problem or unexpected behavior
 title: "[Bug] "
 labels: bug
 assignees: ''
 ---
 
-## 🐛 Descrição do Bug
+## 🐛 Bug Description
 
-Descreva claramente o problema encontrado.
-
----
-
-## ✅ Comportamento Esperado
-
-O que deveria acontecer?
+Describe the issue clearly.
 
 ---
 
-## ❌ Comportamento Atual
+## ✅ Expected Behavior
 
-O que está acontecendo de fato?
-
----
-
-## 🔁 Passos para Reproduzir
-
-1. Abra o aplicativo
-2. Vá para '...'
-3. Clique em '...'
-4. Veja o erro
+What should happen?
 
 ---
 
-## 🖥️ Ambiente
+## ❌ Current Behavior
 
-- Sistema Operacional: (Windows 10, Windows 11, etc)
-- Versão do App:
+What is actually happening?
+
+---
+
+## 🔁 Steps to Reproduce
+
+1. Open the application
+2. Go to '...'
+3. Click on '...'
+4. See the error
+
+---
+
+## 🖥️ Environment
+
+- Operating System: (Windows 10, Windows 11, etc)
+- App Version:
 - Node.js:
 - Rust:
 
 ---
 
-## 📎 Evidências (opcional)
+## 📎 Evidence (optional)
 
-- Prints de tela
+- Screenshots
 - Logs
-- Mensagens de erro
+- Error messages
 
 ---
 
-## 📝 Informações Adicionais
+## 📝 Additional Information
 
-Qualquer outro detalhe que possa ajudar a entender o problema.
+Any other details that may help understand the issue.

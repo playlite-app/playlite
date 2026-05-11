@@ -125,7 +125,6 @@ npm run tauri build
 - Project architecture: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Online documentation (VitePress): https://playlite.vercel.app/
 - Project updates: [`CHANGELOG.md`](CHANGELOG.md)
-- Development diary: [`DEV_LOG.md`](DEV_LOG.md)
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
 
 ## 🤝 Contributing

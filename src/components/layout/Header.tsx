@@ -1,15 +1,4 @@
-import {
-  Copy,
-  CopySlash,
-  Eye,
-  EyeOff,
-  Gamepad2,
-  Moon,
-  Search,
-  Settings,
-  Store,
-  Sun,
-} from 'lucide-react';
+import { Copy, CopySlash, Eye, EyeOff, Gamepad2, Moon, Search, Settings, Store, Sun, } from 'lucide-react';
 import { useState } from 'react';
 
 import { QuickSettings } from '@/dialogs/QuickSettings';
@@ -123,9 +112,9 @@ export default function Header({
     useRecommendationAnalysis();
 
   return (
-    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b px-4 backdrop-blur md:px-6">
+    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-border sticky top-0 z-50 flex h-16 items-center justify-between gap-2 border-b px-3 backdrop-blur md:px-4">
       {/* Search Bar */}
-      <div className="max-w-xl flex-1 transition-opacity duration-200">
+      <div className="mr-2 max-w-xl flex-1 transition-opacity duration-200">
         <div className="group relative">
           <Search
             className={`absolute top-1/2 left-3 -translate-y-1/2 transition-colors ${
@@ -159,7 +148,7 @@ export default function Header({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {/* Botão de Adicionar Jogo */}
         <Button
           onClick={onAddGame}

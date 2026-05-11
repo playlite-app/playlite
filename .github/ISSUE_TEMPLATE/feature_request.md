@@ -1,35 +1,35 @@
 ---
 name: ✨ Feature Request
-about: Sugerir uma nova funcionalidade ou melhoria
+about: Suggest a new feature or improvement
 title: "[Feature] "
 labels: enhancement
 assignees: ''
 ---
 
-## 🚀 Descrição da Funcionalidade
+## 🚀 Feature Description
 
-Descreva a funcionalidade ou melhoria que você gostaria de ver no projeto.
-
----
-
-## 🎯 Problema que Isso Resolve
-
-Qual problema essa funcionalidade resolve ou qual valor ela agrega?
+Describe the feature or improvement you would like to see in the project.
 
 ---
 
-## 💡 Solução Proposta (opcional)
+## 🎯 Problem This Solves
 
-Se você já tiver alguma ideia de como implementar, descreva aqui.
-
----
-
-## 🔄 Alternativas Consideradas (opcional)
-
-Outras soluções ou abordagens possíveis.
+What problem does this feature solve, or what value does it add?
 
 ---
 
-## 📌 Informações Adicionais
+## 💡 Proposed Solution (optional)
 
-Links, referências ou exemplos que possam ajudar.
+If you already have an idea for how it could be implemented, describe it here.
+
+---
+
+## 🔄 Alternatives Considered (optional)
+
+Other possible solutions or approaches.
+
+---
+
+## 📌 Additional Information
+
+Links, references, or examples that may help.

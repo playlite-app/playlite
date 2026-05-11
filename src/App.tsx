@@ -1,12 +1,12 @@
-import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo } from 'react';
-import { toast, Toaster } from 'sonner';
+import {invoke} from '@tauri-apps/api/core';
+import {useEffect, useMemo} from 'react';
+import {toast, Toaster} from 'sonner';
 
-import { ErrorBoundary } from '@/components';
+import {ErrorBoundary} from '@/components';
 import AddGame from '@/dialogs/AddGame';
-import { useDebounce, useGameDetails } from '@/hooks';
-import { UpdateProvider } from '@/providers/UpdateProvider';
-import { Game } from '@/types';
+import {useDebounce, useGameDetails} from '@/hooks';
+import {UpdateProvider} from '@/providers/UpdateProvider';
+import {Game} from '@/types';
 import Favorites from '@/views/Favorites';
 import Home from '@/views/Home';
 import Libraries from '@/views/Libraries';
@@ -18,8 +18,8 @@ import GameDetail from '@/windows/GameDetail/GameDetail';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import { GameLibraryProvider, UIProvider, useGameLibrary, useUI, } from './contexts';
-import { ConfirmProvider, useConfirm } from './providers/ConfirmProvider';
+import {GameLibraryProvider, UIProvider, useGameLibrary, useUI,} from './contexts';
+import {ConfirmProvider, useConfirm} from './providers/ConfirmProvider';
 
 function AppContent() {
   // Contexts

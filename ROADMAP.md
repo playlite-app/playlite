@@ -1,30 +1,62 @@
-# 🗺️ Roadmap do Playlite
+# 🗺️ Playlite Roadmap
 
-Este documento descreve os planos de longo prazo para o Playlite.
-O foco é expandir a compatibilidade e a riqueza de dados, mantendo a filosofia *local-first*.
+This document outlines the next steps for Playlite based on the project's current state.
+The priority remains maintaining the local-first philosophy as the app evolves from a manager into a more complete
+library hub.
 
-## 🚧 v2.0.0 - A Era dos Metadados (Em Planejamento)
+## ✅ Consolidated Base
 
-O foco desta versão é enriquecer a biblioteca visualmente e informativamente.
+The following milestones are already implemented in the code and the project's recent history:
 
-- [ ] **Integração IGDB:** Migração/Complemento da RAWG para IGDB (Twitch) para capas de alta resolução e metadados
-  precisos.
-- [ ] **Sistema de Cache de Imagens:** Otimizar o armazenamento local de capas para reduzir chamadas de rede.
-- [ ] **Abstração de MetadataProvider:** Refatoração do Rust (Traits) para suportar múltiplas fontes.
+- Local library with SQLite and backup/restore.
+- Steam integration and local directory scanner.
+- Hybrid recommendation system.
+- Cache and graceful degradation for online content.
+- Auto-updates, code signing, and release pipeline.
+- More modular UI and backend structure.
 
-## 🔮 v3.0.0 - O Hub Universal
+## 🎯 Next Focus: Enriching Metadata and Stabilizing the Catalog Layer
 
-Transformar o app em um lançador centralizado real.
+The goal of this phase is to improve the visual and informative quality of games without abandoning local execution.
 
-- [ ] **Leitura da Epic Games Store:** Importação local via manifestos `.item`.
-- [ ] **Leitura da GOG Galaxy:** Importação local de jogos instalados.
-- [ ] **Monitoramento de Execução:** Detectar quando um jogo fecha para atualizar o "Tempo Jogado" automaticamente.
+- [x] **More efficient image caching**: Improve local storage, expiration, and cover reuse to reduce network calls.
+- [x] **Metadata normalization**: Unify enrichment rules, fallbacks, and prioritization across sources.
 
-## ☁️ v4.0.0 - Sincronização & Expansão
+## 🕹️ Game Hub Expansion: Other Stores and Local Execution
 
-- [ ] **Cloud Sync (Supabase):** Salvar banco de dados e configurações na nuvem (Opcional/Opt-in).
-- [ ] **Build Linux:** Suporte oficial para Debian/Ubuntu e Flatpak (focado no Steam Deck?).
+After consolidating the catalog layer, the next evolution is to expand the app's ability to discover and track games
+installed on other platforms.
 
-## 📱 Projetos Satélites
+- [~] **Epic Games Store**: Local import via manifests and/or detected installations.
+- [x] **Ubisoft Connect**: Local reading of installed games and library integration.
+- [ ] **Origin / EA Desktop**: Local reading of installed games and library integration.
+- [ ] **GOG Galaxy / GOG**: Local reading of installed games and library integration.
+- [ ] **Local sync improvements**: Reduce inconsistencies between imports, manual edits, and data enrichment.
 
-- **Playlite Companion (Android):** App React Native separado para visualização da biblioteca longe do PC.
+## ☁️ Optional Future Synchronization
+
+Cloud synchronization remains in the long-term plan, but only after integration with other stores and the stabilization
+of the local catalog.
+
+- [ ] **Cloud Sync (Supabase)**: Synchronize library, preferences, and settings as an optional/opt-in feature.
+- [ ] **Conflict resolution**: Define clear rules for local data versus synchronized data.
+- [ ] **Security and privacy**: Keep the local-first model as the default, with cloud only when the user opts in.
+
+## 📦 Platform and Distribution
+
+With the functional base consolidated, the distribution focus can move toward broader support.
+
+- [ ] **Robust Linux build**: Improve the experience on Debian/Ubuntu and Flatpak, with special attention to the Steam
+  Deck.
+- [ ] **Desktop integration adjustments**: Validate icons, launchers, and behavior in Wayland/X11 environments.
+
+## 📱 Satellite Projects
+
+Parallel explorations that do not block the evolution of the main app.
+
+- [ ] **Playlite Companion (Android)**: A separate app for library browsing and remote tracking.
+
+## 📝 Note
+
+This roadmap is intentionally flexible. As new features are stabilized, items should be reordered to reflect the actual
+priorities of the project.

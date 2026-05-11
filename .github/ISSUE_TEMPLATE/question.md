@@ -1,23 +1,23 @@
 ---
-name: ❓ Pergunta ou Discussão
-about: Tirar dúvidas ou discutir ideias
+name: ❓ Question or Discussion
+about: Ask questions or discuss ideas
 title: "[Question] "
 labels: question
 assignees: ''
 ---
 
-## ❓ Pergunta
+## ❓ Question
 
-Descreva sua dúvida ou tópico de discussão.
-
----
-
-## 💭 Contexto
-
-Explique o contexto da pergunta (ex: uso do projeto, ideia futura, arquitetura).
+Describe your question or discussion topic.
 
 ---
 
-## 📌 Informações Adicionais
+## 💭 Context
 
-Qualquer detalhe extra que ajude na resposta.
+Explain the context of the question (e.g. project usage, future idea, architecture).
+
+---
+
+## 📌 Additional Information
+
+Any extra details that may help with the answer.

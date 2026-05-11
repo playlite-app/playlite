@@ -1,227 +1,227 @@
 # Architecture Decision Record (ADR)
 
-Este documento registra as principais decisões arquiteturais do projeto **Game Manager**, explicando o contexto e os
-motivos por trás das escolhas técnicas.
+This document records the main architectural decisions of the **Game Manager** project, explaining the context and
+reasoning behind each technical choice.
 
 ---
 
-## 1. Objetivo do Projeto
+## 1. Project Goal
 
-Criar uma aplicação desktop para gerenciamento de biblioteca de jogos, com foco em:
+Build a desktop application for managing a game library, focused on:
 
-- uso pessoal real
-- aprendizado de tecnologias modernas
-- demonstração de habilidades full-stack num projeto de portfólio
+- Real personal use
+- Learning modern technologies
+- Showcasing full-stack skills as a portfolio project
 
 ---
 
-## 2. Plataforma e Arquitetura Geral
+## 2. Platform and General Architecture
 
-**Decisão:** Aplicação desktop multiplataforma usando Tauri.
+**Decision:** Cross-platform desktop application using Tauri.
 
-**Motivação:**
+**Motivation:**
 
-- Melhor desempenho e menor consumo de memória comparado a Electron
-- Uso de Rust no backend para aprendizado e segurança
-- Integração natural com frontend web moderno
+- Better performance and lower memory usage compared to Electron
+- Use of Rust in the backend for learning purposes and security
+- Natural integration with a modern web frontend
 
-**Consequências:**
+**Consequences:**
 
-- Curva de aprendizado maior com Rust
-- Build mais complexo, porém mais eficiente
+- Steeper learning curve with Rust
+- More complex build pipeline, but more efficient output
 
 ---
 
 ## 3. Frontend
 
-**Decisão:** React com TypeScript.
+**Decision:** React with TypeScript.
 
-**Motivação:**
+**Motivation:**
 
-- Stack já conhecida
-- Ecossistema maduro
-- Facilidade de manutenção e escalabilidade
-
----
-
-### 3.1 Organização do Frontend para Aplicação Desktop
-
-**Decisão:** Adotar uma estrutura híbrida no frontend, com organização por camadas técnicas (components, hooks,
-services, types) e agrupamento por domínio.
-
-**Contexto:** Embora o frontend utilize React, o projeto é um app desktop via Tauri. O uso excessivo de padrões
-típicos de aplicações web (ex.: muitos modais genéricos) começou a gerar complexidade conforme o projeto cresceu.
-
-**Motivação:**
-
-- Alinhar a estrutura do frontend ao modelo mental de aplicações desktop
-- Facilitar a navegação e manutenção do código
-- Reduzir complexidade desnecessária
+- Already familiar stack
+- Mature ecosystem
+- Easy to maintain and scale
 
 ---
 
-## 4. Backend Local
+### 3.1 Frontend Organization for a Desktop Application
 
-**Decisão:** Backend local em Rust (Tauri commands).
+**Decision:** Adopt a hybrid structure in the frontend, organized by technical layers (components, hooks,
+services, types) with domain-based grouping.
 
-**Motivação:**
+**Context:** Although the frontend uses React, the project is a desktop app built with Tauri. Overusing patterns
+typical of web applications (e.g. many generic modals) started to create complexity as the project grew.
 
-- Processamento local de dados
-- Evitar dependência de serviços externos
-- Melhor privacidade do usuário
+**Motivation:**
 
----
-
-## 5. Persistência de Dados
-
-**Decisão:** Banco de dados local (ex: SQLite).
-
-**Motivação:**
-
-- Simplicidade
-- Portabilidade
-- Adequado para aplicação desktop
+- Align the frontend structure with the mental model of desktop applications
+- Make the codebase easier to navigate and maintain
+- Reduce unnecessary complexity
 
 ---
 
-## 6. Segurança de Credenciais e Dados Sensíveis
+## 4. Local Backend
 
-**Decisão:** Armazenar credenciais de APIs em banco de dados SQLite criptografado com AES-256, mas sem derivação de
-chave lenta (Argon2), optando por uma abordagem menos segura, porém mais rápida e prática para o contexto do projeto.
+**Decision:** Local backend in Rust (Tauri commands).
 
-**Contexto:**
-O projeto precisa persistir credenciais de acesso a APIs externas para funcionar corretamente.
+**Motivation:**
 
-**Alternativas avaliadas:**
-
-1. **Criptografia simétrica (AES-256) com derivação de chave (Argon2)**
-
-- Implementada experimentalmente.
-- Utilizou derivação deliberadamente lenta para mitigar força bruta.
-
-2. **Keyring/credential store do sistema operacional**
-
-- Avaliado como solução mais adequada para aplicações desktop comerciais.
-- Falhou por falta de assinatura de código e/ou reputação do app, e o sistema a recusou o armazenamento.
+- Local data processing
+- Avoid dependency on external services
+- Better user privacy
 
 ---
 
-## 7. Estratégia de Recomendação de Jogos
+## 5. Data Persistence
+
+**Decision:** Local database (e.g. SQLite).
+
+**Motivation:**
+
+- Simplicity
+- Portability
+- Well-suited for a desktop application
+
+---
+
+## 6. Credential and Sensitive Data Security
+
+**Decision:** Store API credentials in an AES-256 encrypted SQLite database, but without slow key derivation
+(Argon2), opting for a less secure but faster and more practical approach for this project's context.
+
+**Context:**
+The project needs to persist API credentials to function correctly.
+
+**Alternatives considered:**
+
+1. **Symmetric encryption (AES-256) with key derivation (Argon2)**
+
+- Implemented experimentally.
+- Used deliberately slow key derivation to mitigate brute-force attacks.
+
+2. **OS keyring/credential store**
+
+- Evaluated as the most appropriate solution for commercial desktop applications.
+- Failed due to lack of code signing and/or app reputation; the system refused to store the credentials.
+
+---
+
+## 7. Game Recommendation Strategy
 
 ### 7.1 Content-Based Filtering
 
-**Decisão:** Regras simples e filtros baseados em metadados.
+**Decision:** Simple rules and filters based on metadata.
 
-Sinais considerados:
+Signals considered:
 
-- Gêneros mais jogados
-- Tags favoritas
-- Tempo de jogo
-- Avaliações do usuário
+- Most-played genres
+- Favorite tags
+- Playtime
+- User ratings
 
-**Motivação:**
+**Motivation:**
 
-- Baixo custo computacional
-- Resultados rápidos e explicáveis
-- Sem necessidade de datasets externos
-
----
-
-### 7.2 Collaborative Filtering Offline
-
-**Decisão:** Filtragem Colaborativa Baseada em Itens usando feedback implícito (avaliações positivas), pré-computada
-offline com Python. Utiliza datasets públicos, com distribuição de artefatos estáticos junto ao aplicativo.
-
-Algoritmo escolhido:
-
-- Similaridade por cosseno
-
-**Motivação:**
-
-- Custo computacional moderado
-- Resultados potencialmente mais precisos
-
-**Consequências:**
-
-- Requer engenharia de features
-- Necessita volume mínimo de dados
+- Low computational cost
+- Fast and explainable results
+- No need for external datasets
 
 ---
 
-### 7.3 Explicação das Recomendações
+### 7.2 Offline Collaborative Filtering
 
-**Decisão:** A explicação das recomendações é gerada de forma determinística, sem uso de LLMs.
+**Decision:** Item-Based Collaborative Filtering using implicit feedback (positive ratings), pre-computed
+offline with Python. Uses public datasets, with static artifacts distributed alongside the application.
 
-**Motivação:**
+Algorithm chosen:
 
-- As razões da recomendação são diretamente derivadas de dados estruturados (gêneros, tags, séries).
-- Evita dependência de APIs externas ou modelos locais.
-- Garante explicações rápidas, previsíveis e offline.
+- Cosine similarity
 
-**Consequências:**
+**Motivation:**
 
-- Menor complexidade
-- Maior transparência
-- Melhor alinhamento com a filosofia local-first
+- Moderate computational cost
+- Potentially more accurate results
 
----
+**Consequences:**
 
-## 8. Infraestrutura e DevOps
-
-**Decisão:** Projeto local, sem dependência obrigatória de cloud.
-
-**Motivação:**
-
-- Aplicação desktop
-- Reduz custos
-- Simplicidade
-
-**Observação:** Experimentos futuros podem incluir serviços em cloud para:
-
-- sincronização
+- Requires feature engineering
+- Needs a minimum data volume
 
 ---
 
-## 9. Tradução automática com IA
+### 7.3 Recommendation Explanations
 
-**Decisão:** Utilizar Gemini para traduzir a descrição do jogo.
+**Decision:** Recommendation explanations are generated deterministically, without the use of LLMs.
 
-**Motivação:** melhorar a experiência do usuário no uso da aplicação bem como explorar a integração de LLMs em
-funcionalidades relevantes do aplicativo.
+**Motivation:**
 
-**Alternativas avaliadas:**
+- Recommendation reasons are directly derived from structured data (genres, tags, series).
+- Avoids dependency on external APIs or local models.
+- Guarantees fast, predictable, and offline explanations.
 
-1. Não utilizar tradução automática
+**Consequences:**
 
-- Simplicidade
-- Menor custo
-- Experiência do usuário inferior
-
-2. Utilizar serviços de tradução tradicionais (ex.: Google Translate API, DeepL)
-
-- Custo mais elevado
-- Limitações de uso para bibliotecas grandes
-- Necessidade de cadastro de cartão de crédito e complexidade adicional
-
-**Consequências:**
-
-- Custo controlado com uso moderado
-- Melhoria significativa na experiência do usuário final
+- Lower complexity
+- Greater transparency
+- Better alignment with the local-first philosophy
 
 ---
 
-## 10. Documentação e Open Source
+## 8. Infrastructure and DevOps
 
-**Decisão:** Documentação enxuta no GitHub (README, CONTRIBUTING, ADR).
+**Decision:** Local project, with no mandatory cloud dependency.
 
-**Motivação:**
+**Motivation:**
 
-- Foco em clareza
-- Evitar sobrecarga de manutenção
-- Demonstrar boas práticas de projetos open source
+- Desktop application
+- Reduces costs
+- Simplicity
+
+**Note:** Future experiments may include cloud services for:
+
+- Synchronization
+
+---
+
+## 9. AI-Powered Auto-Translation
+
+**Decision:** Use Gemini to translate game descriptions.
+
+**Motivation:** Improve the user experience within the application, as well as explore LLM integration in
+meaningful app features.
+
+**Alternatives considered:**
+
+1. No automatic translation
+
+- Simplicity
+- Lower cost
+- Inferior user experience
+
+2. Traditional translation services (e.g. Google Translate API, DeepL)
+
+- Higher cost
+- Usage limitations for large libraries
+- Requires credit card registration and additional complexity
+
+**Consequences:**
+
+- Controlled cost with moderate usage
+- Significant improvement in end-user experience
+
+---
+
+## 10. Documentation and Open Source
+
+**Decision:** Lean documentation on GitHub (README, CONTRIBUTING, ADR).
+
+**Motivation:**
+
+- Focus on clarity
+- Avoid maintenance overhead
+- Demonstrate good open source project practices
 
 ---
 
 ## 11. Status
 
-Este ADR representa o estado atual das decisões arquiteturais e pode evoluir conforme o projeto crescer.
+This ADR reflects the current state of architectural decisions and may evolve as the project grows.

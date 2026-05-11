@@ -1,164 +1,178 @@
 # Changelog
 
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+All notable changes to this project will be documented in this file.
+
+## [3.3.0] - 2026-05-11
+
+### Added
+
+- Automated CI/CD release pipeline with GitHub Actions
+- Automatic updater artifact generation
+- Cryptographic signing for updater packages
+- Automated latest.json generation
+- Improved release distribution workflow
+
+### Improved
+
+- Release engineering and deployment process
+- Cross-platform packaging pipeline
+- Update reliability and integrity verification
 
 ## [3.1.0] - 2026-02-12
 
-### Adicionado
+### Added
 
-- **Scanner de Diretórios Locais**: Nova funcionalidade que permite monitorar pastas do PC para adicionar jogos
-  automaticamente à biblioteca Playlite.
-- **Detecção de Instalação Steam**: O importador da Steam agora identifica quais jogos já estão instalados no sistema,
-  marcando-os corretamente na interface.
-- **Nova Estrutura de UI**: Refatoração completa de componentes de interface, incluindo um novo sistema de Dialogs (
-  caixas de diálogo) e Tooltips mais leves e responsivos.
+- **Local Directory Scanner**: New feature that allows monitoring PC folders to automatically add games
+  to the Playlite library.
+- **Steam Installation Detection**: The Steam importer now identifies which games are already installed on the system,
+  marking them correctly in the interface.
+- **New UI Structure**: Complete refactoring of interface components, including a new Dialog system and
+  lighter, more responsive Tooltips.
 
-### Modificado
+### Changed
 
-- **Refatoração do Backend (Rust)**: Reestruturação das integrações no core em Rust para maior estabilidade e
-  performance na comunicação via IPC (Inter-Process Communication).
-- **Otimização de Assets**: Melhoria no carregamento de capas vindas da API GamerPower, corrigindo falhas de exibição em
-  conexões instáveis.
-- **Fluxo de Importação**: O processo de sincronização com a Steam agora é mais resiliente, ignorando entradas
-  corrompidas sem interromper toda a tarefa.
+- **Backend Refactoring (Rust)**: Restructuring of integrations in the Rust core for greater stability and
+  performance in IPC (Inter-Process Communication).
+- **Asset Optimization**: Improved loading of cover art from the GamerPower API, fixing display failures on
+  unstable connections.
+- **Import Flow**: The Steam sync process is now more resilient, skipping corrupted entries without
+  interrupting the entire task.
 
-### Corrigido
+### Fixed
 
-- **Carregamento de Capas**: Corrigido o erro que impedia a exibição correta de imagens na aba de "Jogos Grátis" (
-  GamerPower).
-- **Posicionamento de Tooltips**: Ajuste fino no cálculo de coordenadas dos tooltips para evitar que saiam da tela em
-  resoluções menores.
-- **Estabilidade de Importação**: Resolvido um bug onde o scanner local poderia entrar em loop infinito em pastas com
-  links simbólicos (symlinks).
+- **Cover Art Loading**: Fixed the error that prevented images from displaying correctly in the "Free Games"
+  (GamerPower) tab.
+- **Tooltip Positioning**: Fine-tuned tooltip coordinate calculation to prevent them from going off-screen
+  on smaller resolutions.
+- **Import Stability**: Resolved a bug where the local scanner could enter an infinite loop in folders
+  containing symbolic links (symlinks).
 
 ## [3.0.0] - 2026-02-01
 
-### Adicionado
+### Added
 
-- **Sistema de Recomendação Híbrido (v4.0)**: O algoritmo agora cruza seu perfil local (Content-Based) com dados obtidos
-  de usuários na Steam (Collaborative Filtering) para sugerir jogos.
-- **Transparência (XAI)**: Adicionados *Tooltips Inteligentes* nas recomendações que explicam o motivo da sugestão (
-  ex: "Série Favorita", "Tendência na Comunidade", "Alta Afinidade de Tags").
-- **Ciclo de Feedback**: Botão "Não Útil" (Dislike) nas recomendações, permitindo que o usuário treine o algoritmo
-  ignorando jogos específicos.
-- **Sistema de Atualização Automática**: Integração completa com Tauri Updater. O app agora verifica, baixa e instala
-  atualizações, criando **Backups Automáticos** do banco de dados antes de mudanças críticas (Major Updates).
-- **Modo Offline Resiliente**: As páginas "Em Alta", "Lançamentos" e "Jogos Grátis" agora funcionam sem internet,
-  utilizando um cache inteligente ("Stale-while-revalidate") e exibindo um banner informativo.
-- **Configurações de Algoritmo**: Nova seção em Configurações permitindo ajustar pesos (Perfil vs Comunidade),
-  penalidade de tempo (Nostalgia) e priorização de séries.
-- **Cache de Imagens Híbrido**: Opção para salvar capas localmente para visualização offline ou economizar espaço usando
-  apenas URLs remotas.
-- **Giveaways**: Integração com GamerPower para descoberta de jogos grátis.
-- **Tradução Automática com IA**: Tradução da descrição dos jogos usando a API do Gemini.
+- **Hybrid Recommendation System (v4.0)**: The algorithm now cross-references your local profile (Content-Based)
+  with data obtained from Steam users (Collaborative Filtering) to suggest games.
+- **Transparency (XAI)**: Added *Smart Tooltips* on recommendations that explain the reason for the suggestion
+  (e.g. "Favorite Series", "Community Trend", "High Tag Affinity").
+- **Feedback Loop**: "Not Useful" (Dislike) button on recommendations, allowing the user to train the algorithm
+  by ignoring specific games.
+- **Automatic Update System**: Full integration with Tauri Updater. The app now checks, downloads and installs
+  updates, creating **Automatic Backups** of the database before critical changes (Major Updates).
+- **Resilient Offline Mode**: The "Trending", "Upcoming" and "Free Games" pages now work without internet,
+  using a smart cache ("Stale-while-revalidate") and displaying an informational banner.
+- **Algorithm Settings**: New section in Settings allowing adjustment of weights (Profile vs Community),
+  time penalty (Nostalgia) and series prioritization.
+- **Hybrid Image Cache**: Option to save cover art locally for offline viewing or save space by using
+  only remote URLs.
+- **Giveaways**: GamerPower integration for discovering free games.
+- **AI Auto-Translation**: Game description translation using the Gemini API.
 
-### Modificado
+### Changed
 
-- **Refatoração GameDetailModal**: Componente reestruturado em arquivos menores, com melhorias de performance e UX.
-- **Refatoração de Hooks**: `useTrending`, `useUpcoming` e `useGiveaways` reescritos para suportar falhas de rede e
-  servir dados do cache local (`api_cache`) transparentemente.
-- **Refatoração de metadata.rs**: Separação do arquivo em módulos menores, com melhorias na manipulação de erros
-  e logging detalhado.
-- **Lista de Desejos Avançada**: A Wishlist agora tem opção de importar listas da Steam e IsThereAnyDeal, além de
-  monitorar preços e cupons de desconto.
-- **Arquitetura de Banco de Dados**: Introdução da tabela `app_config` para configurações genéricas de sistema (Data de
-  instalação, Versão do Schema).
-- **Interface de Configurações**: Substituição de checkboxes padrão pelo componente visual `ToggleSwitch` para melhor
-  UX.
-- **Tratamento de Cache**: Otimização do TTL (Time-To-Live) diferenciado para listas (24h) vs detalhes de jogos (30
-  dias).
+- **GameDetailModal Refactoring**: Component restructured into smaller files, with performance and UX improvements.
+- **Hooks Refactoring**: `useTrending`, `useUpcoming` and `useGiveaways` rewritten to handle network failures and
+  transparently serve data from the local cache (`api_cache`).
+- **metadata.rs Refactoring**: File split into smaller modules, with improvements in error handling
+  and detailed logging.
+- **Advanced Wishlist**: The Wishlist now has the option to import lists from Steam and IsThereAnyDeal, in addition
+  to monitoring prices and discount coupons.
+- **Database Architecture**: Introduction of the `app_config` table for generic system settings (Installation Date,
+  Schema Version).
+- **Settings Interface**: Replaced standard checkboxes with the visual `ToggleSwitch` component for better UX.
+- **Cache Handling**: Optimized differentiated TTL (Time-To-Live) for lists (24h) vs game details (30 days).
 
-### Corrigido
+### Fixed
 
-- Correção na persistência de configurações onde certos pesos do algoritmo não eram salvos corretamente.
-- Resolvido problema onde a página "Em Alta" mostrava tela de erro fatal ao perder conexão; agora degrada graciosamente
-  para o cache.
+- Fixed persistence of settings where certain algorithm weights were not being saved correctly.
+- Resolved issue where the "Trending" page showed a fatal error screen upon losing connection; it now degrades
+  gracefully to the cache.
 
 ## [2.0.0] - 2026-01-12
 
-### Adicionado
+### Added
 
-- **Banco de Dados SQLite**: Migração completa do armazenamento para SQLite (`library.db` e `secrets.db`), permitindo
-  relacionamentos complexos entre jogos e detalhes.
-- **Sistema de Recomendação v2 (Rust)**: Novo algoritmo nativo no backend que calcula afinidade baseado em gênero, tags
-  e séries, aplicando penalidade temporal (Age Decay) para jogos parados há muito tempo.
-- **Integração IsThereAnyDeal**: A Wishlist agora busca preços em múltiplas lojas, histórico de menor preço e identifica
-  **Cupons de Desconto** automaticamente.
-- **Suporte Backend HLTB**: Implementação do serviço de busca para *HowLongToBeat* no backend (preparação para futura
-  UI).
-- **Coluna de Voucher**: Adicionado suporte visual para exibir códigos de cupom diretamente no card do jogo na Wishlist.
+- **SQLite Database**: Complete migration of storage to SQLite (`library.db` and `secrets.db`), enabling
+  complex relationships between games and details.
+- **Recommendation System v2 (Rust)**: New native backend algorithm that calculates affinity based on genre, tags
+  and series, applying a time penalty (Age Decay) for games that haven't been played in a long time.
+- **IsThereAnyDeal Integration**: The Wishlist now fetches prices from multiple stores, historical lowest price,
+  and automatically identifies **Discount Coupons**.
+- **HLTB Backend Support**: Implementation of the search service for *HowLongToBeat* in the backend
+  (preparation for future UI).
+- **Voucher Column**: Added visual support to display coupon codes directly on game cards in the Wishlist.
 
-### Modificado
+### Changed
 
-- **Arquitetura Agnóstica**: O sistema não depende mais exclusivamente da Steam para metadados, priorizando a API da
-  RAWG para capas e descrições.
-- **Refatoração de Hooks**: `useRecommendation` e `useHome` foram reescritos para consumir dados processados pelo Rust,
-  removendo cálculos pesados do JavaScript.
-- **Backup System**: Atualizado para incluir as novas tabelas `wishlist` e `game_details` na exportação/importação JSON.
-- **Logs Detalhados**: Melhoria nos logs de rastreamento (tracing) para operações de banco de dados e requisições HTTP.
+- **Agnostic Architecture**: The system no longer relies exclusively on Steam for metadata, prioritizing the
+  RAWG API for cover art and descriptions.
+- **Hooks Refactoring**: `useRecommendation` and `useHome` rewritten to consume data processed by Rust,
+  removing heavy calculations from JavaScript.
+- **Backup System**: Updated to include the new `wishlist` and `game_details` tables in JSON export/import.
+- **Detailed Logs**: Improved tracing logs for database operations and HTTP requests.
 
-### Removido
+### Removed
 
-- **Lógica Legada v1**: Removidas funções antigas de cálculo de afinidade no frontend.
-- **Campos Obsoletos**: Limpeza de campos não utilizados nas interfaces de configuração.
+- **Legacy v1 Logic**: Removed old affinity calculation functions from the frontend.
+- **Deprecated Fields**: Cleanup of unused fields in configuration interfaces.
 
 ## [1.2.0] - 2026-01-06
 
-### Adicionado
+### Added
 
-- **ConfirmProvider**: Sistema global de diálogos de confirmação customizados (substituindo o `window.confirm` nativo).
-- Documentação completa do Backend (Rust) gerável via `cargo doc`.
-- Toasts de feedback visual para todas as operações de exclusão e edição.
-- JSDocs nos principais Hooks e Componentes reutilizáveis.
+- **ConfirmProvider**: Global system of custom confirmation dialogs (replacing the native `window.confirm`).
+- Complete Backend (Rust) documentation, generatable via `cargo doc`.
+- Visual feedback toasts for all delete and edit operations.
+- JSDocs on the main reusable Hooks and Components.
 
-### Modificado
+### Changed
 
-- Refatoração completa da estrutura de pastas de tipos (`src/types/`), agora dividida por domínios.
-- Modernização da estrutura de módulos do Rust (padrão Rust 2018+).
-- Padronização visual dos botões de ação (Play, Favoritar, Menu) usando o novo componente `ActionButton`.
-- Ajustes de responsividade no Modal de Detalhes para janelas com altura reduzida.
+- Complete refactoring of the types folder structure (`src/types/`), now split by domain.
+- Modernization of the Rust module structure (Rust 2018+ standard).
+- Visual standardization of action buttons (Play, Favorite, Menu) using the new `ActionButton` component.
+- Responsiveness adjustments in the Details Modal for windows with reduced height.
 
-### Corrigido
+### Fixed
 
-- Bug de "Race Condition" na exclusão: Ação de deletar ocorria antes da confirmação do usuário. Corrigido com
-  implementação adequada de `async/await` no fluxo de confirmação.
+- "Race Condition" bug on deletion: The delete action was occurring before the user's confirmation. Fixed with
+  proper implementation of `async/await` in the confirmation flow.
 
 ## [1.1.0] - 2026-01-02
 
-### Adicionado
+### Added
 
-- Logging de erros para facilitar debug e melhorias futuras.
-- Botão para adicionar manualmente um game para a lista de desejos.
-- ChangeLog.md para documentação das mudanças do projeto.
-- Componente ErrorBoundary para capturar erros em componentes React e exibir uma mensagem amigável ao usuário.
+- Error logging to facilitate debugging and future improvements.
+- Button to manually add a game to the wishlist.
+- ChangeLog.md for documenting project changes.
+- ErrorBoundary component to catch errors in React components and display a friendly message to the user.
 
-### Modificado
+### Changed
 
-- Melhorias na UI da página Biblioteca, agora com estado vazio personalizado quando não há jogos importados.
-- Melhprias na UI da página Em Alta, agora com estado vazio personalizado indicando o tipo de erro ocorrido (erro de
-  conexão, erro de API, etc).
-- Aprimoramento na performance da importação de metadados dos jogos na Steam, reduzindo o tempo de carregamento.
+- UI improvements on the Library page, now with a custom empty state when no games have been imported.
+- UI improvements on the Trending page, now with a custom empty state indicating the type of error that occurred
+  (connection error, API error, etc.).
+- Performance improvements for Steam game metadata import, reducing load time.
 
-### Removido
+### Removed
 
-- Integração com API CheapShark para preços de jogos, devido à instabilidade e preços apenas em dólar.
+- CheapShark API integration for game prices, due to instability and prices in USD only.
 
 ## [1.0.1] - 2026-01-02
 
-### Adicionado
+### Added
 
-- Loading animado na Home com identidade visual do Playlite.
+- Animated loading screen on the Home page with Playlite's visual identity.
 
-### Removido
+### Removed
 
-- Splashscreen nativa para acelerar a percepção de carregamento.
+- Native splashscreen to improve perceived loading speed.
 
 ## [1.0.0] - 2026-01-01
 
-### Adicionado
+### Added
 
-- Versão inicial do Playlite (MVP Desktop).
-- Integração com Steam para importação de biblioteca.
-- Sistema de Recomendação baseado em conteúdo.
-- Suporte a Backup e Restore do banco de dados (JSON).
-- Criptografia local (AES-256) para credenciais.
+- Initial release of Playlite (Desktop MVP).
+- Steam integration for library import.
+- Content-based Recommendation System.
+- Database Backup and Restore support (JSON).
+- Local encryption (AES-256) for credentials.

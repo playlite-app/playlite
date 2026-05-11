@@ -1,40 +1,40 @@
-## 📋 Descrição
+## 📋 Description
 
-Descreva de forma clara o que foi alterado neste Pull Request.
-
----
-
-## 🔧 Tipo de mudança
-
-Marque o que se aplica:
-
-- [ ] Bug fix (correção de erro)
-- [ ] Nova funcionalidade
-- [ ] Refatoração
-- [ ] Melhoria de UI/UX
-- [ ] Documentação
-- [ ] Outro (descrever abaixo)
+Clearly describe what was changed in this Pull Request.
 
 ---
 
-## 🧪 Como testar
+## 🔧 Type of Change
 
-Explique como alguém pode testar esta mudança:
+Check what applies:
 
-1. Passo 1
-2. Passo 2
-3. Resultado esperado
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactoring
+- [ ] UI/UX improvement
+- [ ] Documentation
+- [ ] Other (describe below)
 
 ---
 
-## 📸 Evidências (opcional)
+## 🧪 How to Test
 
-- Prints de tela
+Explain how someone can test this change:
+
+1. Step 1
+2. Step 2
+3. Expected result
+
+---
+
+## 📸 Evidence (optional)
+
+- Screenshots
 - GIFs
-- Logs relevantes
+- Relevant logs
 
 ---
 
-## 📝 Observações adicionais
+## 📝 Additional Notes
 
-Algum contexto extra, trade-offs ou decisões importantes?
+Any extra context, trade-offs, or important decisions?

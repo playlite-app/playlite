@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Documentação
-    url: https://github.com/Alan-oliveir/game-manager
-    about: Confira o README e a documentação antes de abrir uma issue.
+  - name: Documentation
+    url: https://github.com/playlite-app/playlite
+    about: Check the README and documentation before opening an issue.

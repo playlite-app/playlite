@@ -1,67 +1,68 @@
 # Contributing to Game Manager
 
-Obrigado por considerar contribuir com o **Game Manager** 🎮  
-Este projeto é open source e contribuições são muito bem-vindas, seja com ideias, feedback ou código.
+Thank you for considering contributing to **Game Manager** 🎮  
+This project is open source and contributions are very welcome, whether with ideas, feedback, or code.
 
 > Language note: you can open Issues/PRs in **Português (PT-BR)** or **English**.
 
 ---
 
-## 💡 Tipos de Contribuição
+## 💡 Types of Contribution
 
-Você pode contribuir de várias formas:
+You can contribute in many ways:
 
-- 💬 Sugestões de melhorias e novas funcionalidades
-- 🐛 Relato de bugs
-- 📚 Melhorias na documentação
-- 🧩 Implementação de novas features
-- 🎨 Ajustes de UI/UX
+- 💬 Suggestions for improvements and new features
+- 🐛 Bug reports
+- 📚 Documentation improvements
+- 🧩 Implementation of new features
+- 🎨 UI/UX adjustments
 
-Nenhuma contribuição é pequena
-
----
-
-## 🐞 Como Reportar Bugs ou Sugerir Melhorias
-
-1. Verifique se já existe uma *Issue* relacionada
-2. Caso não exista, abra uma nova *Issue* descrevendo:
-   - O problema ou sugestão
-   - O comportamento esperado
-   - Passos para reproduzir (se for bug)
-   - Prints ou logs (se aplicável)
-
-Use títulos claros e objetivos.
+No contribution is too small.
 
 ---
 
-## 🛠️ Como Contribuir com Código
+## 🐞 How to Report Bugs or Suggest Improvements
 
-1. Faça um **fork** do repositório
-2. Crie uma branch a partir da `main`:
+1. Check if a related *Issue* already exists
+2. If not, open a new *Issue* describing:
+
+- The problem or suggestion
+- The expected behavior
+- Steps to reproduce (if it's a bug)
+- Screenshots or logs (if applicable)
+
+Use clear and concise titles.
+
+---
+
+## 🛠️ How to Contribute Code
+
+1. **Fork** the repository
+2. Create a branch from `main`:
 
     ```bash
-    git checkout -b feature/nome-da-feature
+    git checkout -b feature/feature-name
     ```
 
-3. Faça suas alterações
-4. Garanta que o projeto roda corretamente
-5. Faça commit seguindo o padrão abaixo
-6. Abra um Pull Request explicando o que foi feito
+3. Make your changes
+4. Make sure the project runs correctly
+5. Commit following the pattern below
+6. Open a Pull Request explaining what was done
 
 ---
 
-## 🧾 Padrão de Commits
+## 🧾 Commit Message Pattern
 
-Use mensagens de commit simples e descritivas:
+Use simple and descriptive commit messages:
 
-- feat: nova funcionalidade
-- fix: correção de bug
-- docs: documentação
-- refactor: refatoração de código
-- style: mudanças visuais/UI
-- chore: tarefas de manutenção
+- feat: new feature
+- fix: bug fix
+- docs: documentation
+- refactor: code refactoring
+- style: visual/UI changes
+- chore: maintenance tasks
 
-**Exemplos:**
+**Examples:**
 
 ```text
 feat: add game edit modal
@@ -71,18 +72,19 @@ docs: update README installation steps
 
 ---
 
-## 🧪 Testes e Qualidade
+## 🧪 Testing and Quality
 
-- Evite quebrar funcionalidades existentes
-- Prefira mudanças pequenas e bem explicadas
-- Código claro é mais importante do que código complexo
-
----
-
-## 🤝 Comunicação
-
-Se tiver dúvidas ou quiser discutir uma ideia antes de implementar, fique à vontade para abrir uma Issue ou comentar em uma existente.
+- Avoid breaking existing functionality
+- Prefer small, well-explained changes
+- Clear code is more important than complex code
 
 ---
 
-Obrigado por contribuir! 🚀
+## 🤝 Communication
+
+If you have questions or want to discuss an idea before implementing it, feel free to open an Issue or comment on an
+existing one.
+
+---
+
+Thank you for contributing! 🚀
