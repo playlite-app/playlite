@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { getAppVersionInfo } from '@/services/updaterService.ts';
 
@@ -89,3 +89,4 @@ export function useAppUpdate() {
     closeMajorModal: () => setIsMajorOpen(false),
   };
 }
+

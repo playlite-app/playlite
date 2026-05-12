@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Languages, Loader2, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { cn } from '@/lib/utils';
 import { GameDetails } from '@/types/game';
@@ -169,3 +169,4 @@ export function GameDescription({
     </div>
   );
 }
+

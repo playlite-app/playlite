@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { ERROR_MESSAGES } from '@/errors/errorMessages';
 import { settingsService } from '@/services/settingsService';
@@ -401,3 +401,4 @@ export function useSettings(onLibraryUpdate: () => void) {
     },
   };
 }
+

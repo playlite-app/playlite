@@ -18,7 +18,7 @@ import {
   Upload,
   WandSparkles,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import {
@@ -498,3 +498,4 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ import {
   Sparkles,
   ThumbsDown,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { Recommendation } from '@/components';
 import StandardGameCard from '@/components/cards/StandardGameCard';
@@ -298,3 +298,4 @@ export default function Playlist({
     </div>
   );
 }
+

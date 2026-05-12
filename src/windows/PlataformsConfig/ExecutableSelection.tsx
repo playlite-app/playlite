@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Cpu, FileText, HardDrive, MousePointer2, Star } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { formatFileSize } from '@/services/scannerService';
 import { ExecutableCandidate, GameDiscovery } from '@/types/scanner';
@@ -164,3 +164,4 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
     </Dialog>
   );
 }
+

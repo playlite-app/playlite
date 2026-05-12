@@ -1,6 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { parsePlatformError } from '@/errors/errorMessages';
 import { platformsService } from '@/services/plataformsService';
@@ -325,3 +325,4 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     },
   };
 }
+

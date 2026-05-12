@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { Game } from '@/types';
 
@@ -17,3 +17,4 @@ export const launchGame = (game: Game) => {
     toast.info(`Lançamento para ${game.platform} será implementado em breve`);
   }
 };
+

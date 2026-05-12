@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { AppError, getErrorMessage, isAppError } from '@/types/errors';
 
@@ -146,3 +146,4 @@ export function handleValidationError(error: unknown): string {
 
   return message;
 }
+

@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { librariesService } from '@/services/librariesService';
 import { Game } from '@/types';
@@ -162,3 +162,4 @@ export function useGameLibrary() {
 
   return context;
 }
+

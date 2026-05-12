@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
@@ -303,3 +303,4 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
     </div>
   );
 }
+

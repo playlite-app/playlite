@@ -1,6 +1,6 @@
 import { ImageOff, Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { SearchResult, wishlistService } from '@/services/wishlistService';
 import { Button } from '@/ui/button';
@@ -134,3 +134,4 @@ export default function AddWishlist({
     </Dialog>
   );
 }
+

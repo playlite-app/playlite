@@ -1,5 +1,5 @@
 import { Heart, Library } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { ActionButton, GameActionsMenu } from '@/components/common';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
@@ -122,3 +122,4 @@ export default function Libraries({
     </div>
   );
 }
+

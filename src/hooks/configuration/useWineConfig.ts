@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 const WINE_PREFIX_KEY = 'wine_prefix';
 
@@ -72,3 +72,4 @@ export function useWineConfig() {
     },
   };
 }
+

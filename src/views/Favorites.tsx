@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton, GameActionsMenu } from '@/components/common';
@@ -120,3 +120,4 @@ export default function Favorites({
     </div>
   );
 }
+

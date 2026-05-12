@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { GameDetails } from '@/types';
 import { Button } from '@/ui/button';
@@ -127,3 +127,4 @@ export function GameEditForm({
     </div>
   );
 }
+

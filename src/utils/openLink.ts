@@ -1,5 +1,6 @@
 import { open } from '@tauri-apps/plugin-shell';
-import { toast } from 'sonner';
+
+import { toast } from '@/utils/toast';
 
 export const openExternalLink = async (url: string): Promise<void> => {
   try {

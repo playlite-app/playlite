@@ -10,7 +10,7 @@ import {
   TrendingUp,
   WifiOff,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { Affinity, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
@@ -485,3 +485,4 @@ export default function Trending(props: TrendingProps) {
     </div>
   );
 }
+

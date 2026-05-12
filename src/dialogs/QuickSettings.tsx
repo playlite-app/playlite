@@ -1,6 +1,6 @@
 import { Bug, FileText, FolderOpen, RefreshCw, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { Button } from '@/ui/button';
 import {
@@ -154,3 +154,4 @@ export function QuickSettings({
     </Dialog>
   );
 }
+

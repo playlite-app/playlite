@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 import { useUI } from '@/contexts';
 import { getAppVersionInfo } from '@/services/updaterService';
@@ -162,3 +162,4 @@ export function useUpdateChecker(): VersionInfo {
     checkForUpdates,
   };
 }
+
