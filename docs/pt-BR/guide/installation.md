@@ -6,11 +6,11 @@ O Playlite já tem releases disponíveis no GitHub.
 
 Mais atual:
 
-- https://github.com/Alan-oliveir/game_manager/releases/tag/v1.2.0
+- https://github.com/playlite-app/playlite/releases/latest
 
 Ou veja todas as versões:
 
-- https://github.com/Alan-oliveir/game_manager/releases
+- https://github.com/playlite-app/playlite/releases
 
 ## Como instalar
 
@@ -36,4 +36,4 @@ Quando sair uma nova versão:
 
 Antes de atualizações ou mudanças grandes, use o fluxo:
 
-➡️ [Veja o guia completo de Backup e Restore](/guide/help#backup-e-restaurao-de-dados)
+➡️ [Veja o guia completo de Backup e Restore](/pt-BR/guide/help#backup-e-restaurao-de-dados)

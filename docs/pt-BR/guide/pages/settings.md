@@ -13,7 +13,7 @@ Conecte a sua conta para manter a sua biblioteca sincronizada.
 3. Use o botão **Importar** para baixar seus jogos.
 
 > **Nota:** As credenciais ficam salvas apenas no seu computador.
-> Para saber como obter essas chaves, veja o guia de [Primeiros Passos](/guide/getting-started).
+> Para saber como obter essas chaves, veja o guia de [Primeiros Passos](/pt-BR/guide/getting-started).
 
 ## Algoritmo de Recomendação
 
@@ -50,7 +50,7 @@ de máquina.
 - **Exportar:** Gera um arquivo com todos os seus jogos, notas e status.
 - **Importar:** Restaura sua biblioteca a partir de um arquivo salvo.
 
-➡️ [Veja o guia completo de Backup e Restore](/guide/help#backup-e-restaurao-de-dados)
+➡️ [Veja o guia completo de Backup e Restore](/pt-BR/guide/help#backup-e-restaurao-de-dados)
 
 ### Aramazenamento Local
 

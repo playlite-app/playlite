@@ -18,7 +18,7 @@ Antes de tudo, verifique os pontos abaixo:
 
 Para um passo a passo completo, veja o guia de importação da Steam:
 
-➡️ [Importando sua biblioteca Steam](/guide/getting-started#2-importando-sua-biblioteca-steam)
+➡️ [Importando sua biblioteca Steam](/pt-BR/guide/getting-started#2-importando-sua-biblioteca-steam)
 
 ## Metadados e Informações dos Jogos
 

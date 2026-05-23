@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: Baixar Agora
-      link: /guide/installation
+      link: /pt-BR/guide/installation
     - theme: alt
       text: Ver Funcionalidades
-      link: /guide/features
+      link: /pt-BR/guide/features
     - theme: alt
       text: Ver no GitHub
       link: https://github.com/Alan-oliveir/game_manager

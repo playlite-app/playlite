@@ -106,7 +106,7 @@ O sistema usa Machine Learning clássico (filtragem baseada em conteúdo).
 2. **Vetorização:** Converte preferências do usuário em vetores matemáticos.
 3. **Cálculo:** Aplica similaridade de cosseno ou heurísticas de peso (ex: Favorito = +50pts, Hora jogada = +2pts).
 
-Detalhes completos em: [Sistema de Recomendação](./recommendation-system.md).
+Detalhes completos em: [Sistema de Recomendação](recommendation-system.md).
 
 ## Frontend (React)
 
