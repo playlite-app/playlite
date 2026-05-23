@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
@@ -22,6 +22,7 @@ import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Button } from '@/ui/button';
 import { Separator } from '@/ui/separator';
+import { toast } from '@/utils/toast';
 
 import { openExternalLink } from '../utils/openLink';
 
@@ -30,6 +31,7 @@ interface WishlistProps {
 }
 
 export default function Wishlist({ searchTerm = '' }: WishlistProps) {
+  const { t } = useTranslation('wishlist');
   const {
     games,
     isLoading,
@@ -44,37 +46,35 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
 
   const handleRemoveClick = async (id: string, name: string) => {
     const confirmed = await confirm({
-      title: 'Remover da Lista de Desejos',
-      description: `Tem certeza que deseja remover ${name} da lista de desejos?`,
-      confirmText: 'Remover',
-      cancelText: 'Cancelar',
+      title: t('remove_from_wishlist_title'),
+      description: t('remove_from_wishlist_description', { name }),
+      confirmText: t('remove_button'),
+      cancelText: t('cancel_button'),
     });
 
     if (!confirmed) return;
 
     try {
       await removeGame(id);
-      toast.success(
-        `O jogo ${name} foi removido com sucesso da sua lista de desejos!`
-      );
+      toast.success(t('game_removed_success', { name }));
     } catch {
-      toast.error('Erro ao remover jogo.');
+      toast.error(t('remove_game_error'));
     }
   };
 
   const handleRefreshClick = async () => {
     try {
       await refreshPrices();
-      toast.success('Preços atualizados com sucesso!');
+      toast.success(t('prices_updated_success'));
     } catch {
-      toast.error('Erro ao atualizar preços.');
+      toast.error(t('update_prices_error'));
     }
   };
 
   // Função para importar via JSON (Steam ou ITAD)
   useEffect(() => {
     const unlisten = listen('wishlist_updated', () => {
-      toast.success('Capas atualizadas!');
+      toast.success(t('covers_updated'));
       refreshList();
     });
 
@@ -96,18 +96,18 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
       });
 
       if (selected) {
-        loadingToast = toast.loading('Importando lista...');
+        loadingToast = toast.loading(t('importing_list'));
         const count = await invoke<number>('import_wishlist', {
           filePath: selected,
         });
         toast.dismiss(loadingToast);
 
         if (count > 0) {
-          toast.success(`${count} jogos importados! Buscando capas...`);
+          toast.success(t('games_imported_success', { count }));
           refreshList();
           invoke('fetch_wishlist_covers').catch(console.error);
         } else {
-          toast.info('Nenhum jogo novo encontrado.');
+          toast.info(t('no_new_games_found'));
         }
       }
     } catch (error) {
@@ -117,7 +117,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
         toast.dismiss(loadingToast);
       }
 
-      toast.error('Erro na importação: ' + error);
+      toast.error(t('import_error', { error }));
     }
   };
 
@@ -135,16 +135,14 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
     return (
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center">
         <ShoppingCart className="mb-4 h-16 w-16 opacity-20" />
-        <h3 className="text-lg font-medium">Sua lista está vazia</h3>
-        <p className="mb-4 text-sm">
-          Você pode importar sua lista da Steam/ITAD ou adicionar manualmente.
-        </p>
+        <h3 className="text-lg font-medium">{t('empty_wishlist_title')}</h3>
+        <p className="mb-4 text-sm">{t('empty_wishlist_description')}</p>
         <div className="flex gap-2">
           <Button onClick={() => setShowAddModal(true)} variant="outline">
-            <Plus className="mr-2 h-4 w-4" /> Adicionar Manualmente
+            <Plus className="mr-2 h-4 w-4" /> {t('add_manually_button')}
           </Button>
           <Button onClick={handleImportJson} variant="outline">
-            <FileJson className="mr-2 h-4 w-4" /> Importar JSON
+            <FileJson className="mr-2 h-4 w-4" /> {t('import_json_button')}
           </Button>
         </div>
 
@@ -166,9 +164,10 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
             <ShoppingCart size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Lista de Desejos</h1>
+            <h1 className="text-2xl font-bold">{t('wishlist_title')}</h1>
             <p className="text-muted-foreground text-sm">
-              Monitorando {games.length} {games.length === 1 ? 'jogo' : 'jogos'}
+              {t('monitoring_label')} {games.length}{' '}
+              {games.length === 1 ? t('game_singular') : t('games_plural')}
             </p>
           </div>
         </div>
@@ -184,7 +183,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
             <RefreshCw
               className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
             />
-            {isRefreshing ? 'Buscando Ofertas...' : 'Atualizar Preços'}
+            {isRefreshing ? t('searching_offers') : t('update_prices_button')}
           </Button>
           <div className="flex-1 sm:flex-none" /> {/* Espaçador */}
           <Button
@@ -192,14 +191,14 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
             variant="secondary"
             className="flex-1 sm:flex-none"
           >
-            <Plus className="mr-2 h-4 w-4" /> Adicionar Jogo
+            <Plus className="mr-2 h-4 w-4" /> {t('add_game_button')}
           </Button>
           <Button
             onClick={handleImportJson}
             variant="secondary"
             className="flex-1 sm:flex-none"
           >
-            <FileJson className="mr-2 h-4 w-4" /> Importar Arquivo
+            <FileJson className="mr-2 h-4 w-4" /> {t('import_file_button')}
           </Button>
         </div>
       </div>
@@ -210,12 +209,12 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
       <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {filteredGames.length === 0 ? (
           <div className="text-muted-foreground col-span-full py-10 text-center">
-            Nenhum jogo encontrado para "{searchTerm}"
+            {t('no_games_found_for_search', { searchTerm })}
           </div>
         ) : (
           filteredGames.map(game => {
             // Formata preço (lógica inline sem hooks)
-            let priceDisplay = 'Aguardando...';
+            let priceDisplay = t('waiting_for_price');
 
             if (game.currentPrice !== null && game.currentPrice !== undefined) {
               const currencySymbol =
@@ -234,10 +233,10 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
                 ? `https://isthereanydeal.com/game/${game.itadId}/`
                 : null);
             const storeLabel = game.storePlatform
-              ? `Abrir em ${game.storePlatform}`
+              ? t('open_in_store', { store: game.storePlatform })
               : targetUrl
-                ? 'Ver na ITAD'
-                : 'Link indisponível';
+                ? t('view_on_itad')
+                : t('no_link_available');
 
             return (
               <StandardGameCard
@@ -253,7 +252,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
                       <span>{game.voucher}</span>
                     </div>
                   ) : game.onSale ? (
-                    'OFERTA!'
+                    t('deal_badge')
                   ) : undefined
                 }
                 actions={
@@ -266,9 +265,13 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
                         size={16}
                         onClick={() => {
                           navigator.clipboard.writeText(game.voucher || '');
-                          toast.success('Cupom copiado: ' + game.voucher);
+                          toast.success(
+                            t('coupon_copied', { coupon: game.voucher })
+                          );
                         }}
-                        tooltip={`Copiar: ${game.voucher}`}
+                        tooltip={t('copy_coupon_tooltip', {
+                          coupon: game.voucher,
+                        })}
                       />
                     )}
                     <ActionButton
@@ -276,7 +279,7 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
                       variant="destructive"
                       size={16}
                       onClick={() => handleRemoveClick(game.id, game.name)}
-                      tooltip="Remover"
+                      tooltip={t('remove_tooltip')}
                     />
                     <ActionButton
                       icon={ExternalLink}
@@ -303,4 +306,3 @@ export default function Wishlist({ searchTerm = '' }: WishlistProps) {
     </div>
   );
 }
-

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { avatarComponents } from '@/components/icons/avatars';
 import Profile from '@/dialogs/Profile';
@@ -17,6 +18,7 @@ export default function Sidebar({
   onSectionChange,
   games,
 }: SidebarProps) {
+  const { t } = useTranslation('common');
   const { profile, getInitial, getColorFromName } = useUserProfile();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -51,11 +53,11 @@ export default function Sidebar({
           <div className="flex items-center gap-3">
             <img
               src="/app-icon.png"
-              alt="Logo"
+              alt={t('sidebar_logo_alt')}
               className="h-8 w-8 shrink-0 object-contain"
             />
             <h1 className="text-sidebar-foreground hidden truncate text-xl font-bold lg:block">
-              Playlite
+              {t('sidebar_app_name')}
             </h1>
           </div>
         </div>
@@ -69,7 +71,7 @@ export default function Sidebar({
               <button
                 key={item.id}
                 onClick={() => onSectionChange(item.id)}
-                title={item.label}
+                title={t(`sidebar_${item.id}`)}
                 className={`flex w-full items-center justify-center gap-3 rounded-lg px-3 py-3 transition-all duration-200 lg:justify-start ${
                   activeSection === item.id
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -78,7 +80,7 @@ export default function Sidebar({
               >
                 <Icon size={22} />
                 <span className="hidden font-medium lg:block">
-                  {item.label}
+                  {t(`sidebar_${item.id}`)}
                 </span>
               </button>
             );
@@ -98,7 +100,10 @@ export default function Sidebar({
                   {profile.name}
                 </p>
                 <p className="text-muted-foreground truncate text-sm">
-                  {games.length} {games.length === 1 ? 'jogo' : 'jogos'}
+                  {games.length}{' '}
+                  {games.length === 1
+                    ? t('sidebar_game_singular')
+                    : t('sidebar_games_plural')}
                 </p>
               </div>
             </div>

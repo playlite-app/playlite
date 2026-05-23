@@ -2,9 +2,19 @@ import i18n, { type BackendModule } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 export const LOCALE_STORAGE_KEY = 'playlite-lang';
-export const DEFAULT_LANGUAGE = 'en';
+// Default language until OS detection is implemented via Tauri.
+// Future: use navigator.language or Tauri's os plugin to detect locale.
+export const DEFAULT_LANGUAGE = 'pt-BR';
 export const SUPPORTED_LANGUAGES = ['en', 'pt-BR'] as const;
-export const NAMESPACES = ['common', 'settings', 'library', 'updater'] as const;
+export const NAMESPACES = [
+  'common',
+  'settings',
+  'library',
+  'updater',
+  'wishlist',
+  'trending',
+  'playlist',
+] as const;
 
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 

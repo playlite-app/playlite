@@ -18,7 +18,7 @@ import {
   Upload,
   WandSparkles,
 } from 'lucide-react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import {
@@ -31,12 +31,14 @@ import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
 import { Slider } from '@/ui/slider';
 import { Switch } from '@/ui/toggle-switch';
+import { toast } from '@/utils/toast';
 
 interface SettingsProps {
   onLibraryUpdate: () => void;
 }
 
 export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
+  const { t } = useTranslation('settings');
   const {
     keys,
     setKeys,
@@ -83,10 +85,11 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
       {/* HEADER E STATUS */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Configurações</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t('header_title')}
+          </h2>
           <p className="text-muted-foreground mt-2">
-            Gerencie suas integrações, chaves de API, algoritmo de recomendação
-            e dados locais.
+            {t('header_description')}
           </p>
         </div>
 
@@ -97,31 +100,31 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
       {/* SEÇÃO 1: METADADOS */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">Metadados</h3>
+        <h3 className="text-lg font-semibold">{t('metadata_section')}</h3>
 
         {/* Configurações de API para tradução de descrições */}
         <SettingsRow
           icon={Sparkles}
-          title="Google Gemini"
-          description="Usado para traduzir descrições dos jogos para Português."
+          title={t('gemini_title')}
+          description={t('gemini_description')}
         >
           <div className="grid gap-2">
             <Input
               type="password"
-              placeholder="Gemini API Key"
+              placeholder={t('gemini_api_key_placeholder')}
               value={keys.geminiApiKey}
               onChange={e => setKeys({ ...keys, geminiApiKey: e.target.value })}
               className="bg-background/50"
             />
             <div className="text-muted-foreground flex items-center gap-1 text-xs">
-              <span>Não tem uma chave?</span>
+              <span>{t('no_key_question')}</span>
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-0.5 text-blue-400 hover:underline"
               >
-                Obter no Google AI Studio <ExternalLink size={10} />
+                {t('get_api_key_button')} <ExternalLink size={10} />
               </a>
             </div>
           </div>
@@ -130,12 +133,12 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
         {/* Configurações de API para metadados */}
         <SettingsRow
           icon={Search}
-          title="RAWG.io"
-          description="Usado como fonte de metadados, de jogos em alta e lançamentos próximos."
+          title={t('rawg_title')}
+          description={t('rawg_description')}
         >
           <Input
             type="password"
-            placeholder="RAWG API Key"
+            placeholder={t('rawg_api_key_placeholder')}
             value={keys.rawgApiKey}
             onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
             className="bg-background/50"
@@ -145,8 +148,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
         {/* Ações para enriquecer metadados e buscar capas */}
         <SettingsRow
           icon={Search}
-          title="Buscar Metadados"
-          description="Baixa capas e sinopses em segundo plano."
+          title={t('search_metadata_title')}
+          description={t('search_metadata_description')}
         >
           <div className="w-full space-y-2">
             <div className="flex gap-2">
@@ -163,12 +166,12 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 {loading.enriching ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Atualizando...
+                    {t('updating')}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Atualizar
+                    {t('update_button')}
                   </>
                 )}
               </Button>
@@ -182,17 +185,17 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                   loading.enriching ||
                   loading.fillingMissing
                 }
-                title="Busca apenas capas para jogos que estão sem imagem"
+                title={t('fetch_covers_tooltip')}
               >
                 {loading.fetchingCovers ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Buscando...
+                    {t('searching')}
                   </>
                 ) : (
                   <>
                     <ImageIcon className="mr-2 h-4 w-4" />
-                    Buscar Capas
+                    {t('fetch_covers_button')}
                   </>
                 )}
               </Button>
@@ -207,17 +210,17 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 loading.enriching ||
                 loading.fetchingCovers
               }
-              title="Preenche gêneros, descrição, tags e outros campos vazios consultando a RAWG ao vivo"
+              title={t('fill_missing_tooltip')}
             >
               {loading.fillingMissing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Preenchendo campos...
+                  {t('filling_fields')}
                 </>
               ) : (
                 <>
                   <WandSparkles className="mr-2 h-4 w-4" />
-                  Preencher Campos Vazios
+                  {t('fill_missing_fields_button')}
                 </>
               )}
             </Button>
@@ -227,7 +230,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
               loading.fillingMissing) &&
               progress && (
                 <div className="text-muted-foreground animate-pulse text-center text-xs">
-                  Processando: {progress.game} ({progress.current}/
+                  {t('processing')} {progress.game} ({progress.current}/
                   {progress.total})
                 </div>
               )}
@@ -238,14 +241,14 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
       {/* SEÇÃO 2: ALGORITMO DE RECOMENDAÇÃO */}
       <section className="space-y-4">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
-          Algoritmo de Recomendação
+          {t('recommendation_algorithm_section')}
         </h3>
 
         {/* Slider: Perfil vs Comunidade */}
         <SettingsRow
           icon={BrainCircuit}
-          title="Foco da Recomendação"
-          description="Ajuste o peso entre seu gosto pessoal (tags/gêneros) e o que é popular na comunidade."
+          title={t('recommendation_focus_title')}
+          description={t('recommendation_focus_description')}
         >
           <Slider
             min={0}
@@ -253,8 +256,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
             step={5}
             value={weights}
             onChange={handleWeightChange}
-            leftLabel={value => `Meu Perfil (${100 - value}%)`}
-            rightLabel={value => `Comunidade (${value}%)`}
+            leftLabel={value => `${t('my_profile_label')} (${100 - value}%)`}
+            rightLabel={value => `${t('community_label')} (${value}%)`}
             description={weightsDescription}
           />
         </SettingsRow>
@@ -262,8 +265,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
         {/* Slider: Age Decay */}
         <SettingsRow
           icon={History}
-          title="Fator Nostalgia"
-          description="Define o quanto jogos antigos são penalizados nas recomendações."
+          title={t('nostalgia_factor_title')}
+          description={t('nostalgia_factor_description')}
         >
           <Slider
             min={90}
@@ -271,33 +274,37 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
             step={1}
             value={decay}
             onChange={handleDecayChange}
-            leftLabel={() => 'Novidades (90%)'}
-            rightLabel={() => 'Clássicos (100%)'}
+            leftLabel={() => t('new_games_label')}
+            rightLabel={() => t('classics_label')}
             description={value =>
-              `Valor atual: ${value}%. ${decayDescription(value)}`
+              `${t('current_value')}: ${value}%. ${decayDescription(value)}`
             }
           />
         </SettingsRow>
 
         <SettingsRow
           icon={Sparkles}
-          title="Configurações de Séries"
-          description="Personalize como o algoritmo lida com sequências e franquias de jogos."
+          title={t('series_settings_title')}
+          description={t('series_settings_description')}
         >
           <div className="flex flex-col gap-4 pt-2">
             {/* Toggle Priorizar Séries */}
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Priorizar</span>
+              <span className="text-muted-foreground text-sm">
+                {t('prioritize_label')}
+              </span>
               <Switch
                 checked={config.favor_series}
                 onChange={handleSeriesToggle}
-                labelOff="Desativado"
-                labelOn="Ativado"
+                labelOff={t('disabled')}
+                labelOn={t('enabled')}
               />
             </div>
             {/* Select Diversidade de Séries */}
             <div className="flex items-center justify-between border-t border-white/5 pt-4">
-              <span className="text-muted-foreground text-sm">Limite</span>
+              <span className="text-muted-foreground text-sm">
+                {t('limit_label')}
+              </span>
               <select
                 value={config.series_limit}
                 onChange={async e => {
@@ -306,13 +313,13 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                     | 'moderate'
                     | 'aggressive';
                   await setSeriesLimit(value);
-                  toast.success('Limite de séries atualizado!');
+                  toast.success(t('series_limit_updated_toast'));
                 }}
                 className="bg-secondary text-secondary-foreground focus:ring-primary rounded-md border-none px-3 py-2 text-sm font-medium outline-none focus:ring-1"
               >
-                <option value="none">Sem limite</option>
-                <option value="moderate">Moderado (2 por série)</option>
-                <option value="aggressive">Agressivo (1 por série)</option>
+                <option value="none">{t('no_limit')}</option>
+                <option value="moderate">{t('moderate_limit')}</option>
+                <option value="aggressive">{t('aggressive_limit')}</option>
               </select>
             </div>
           </div>
@@ -320,8 +327,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
         <SettingsRow
           icon={ShieldAlert}
-          title="Filtrar Conteúdo Adulto"
-          description="Ocultar jogos com conteúdo adulto das recomendações."
+          title={t('filter_adult_title')}
+          description={t('filter_adult_description')}
         >
           <div className="flex justify-end">
             <Switch
@@ -330,32 +337,35 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 await toggleAdultFilter();
                 toast.success(
                   config.filter_adult_content
-                    ? 'Filtro de conteúdo adulto desativado'
-                    : 'Filtro de conteúdo adulto ativado'
+                    ? t('filter_adult_disabled_toast')
+                    : t('filter_adult_enabled_toast')
                 );
               }}
-              labelOff="Desativado"
-              labelOn="Ativado"
+              labelOff={t('disabled')}
+              labelOn={t('enabled')}
             />
           </div>
         </SettingsRow>
 
         <SettingsRow
           icon={Trash2}
-          title="Limpar Feedback"
-          description={`Restaurar ${ignoredIds.length} jogos marcados como "Não Útil".`}
+          title={t('clear_feedback_title')}
+          description={t('clear_feedback_description', {
+            count: ignoredIds.length,
+          })}
         >
           <Button
             variant="outline"
             onClick={() => {
               resetFeedback();
-              toast.success('Histórico de feedback limpo!');
+              toast.success(t('feedback_cleared_toast'));
             }}
             disabled={ignoredIds.length === 0}
             className="w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
           >
             <>
-              <Trash2 className="mr-2 h-4 w-4" /> Resetar Preferências
+              <Trash2 className="mr-2 h-4 w-4" />{' '}
+              {t('reset_preferences_button')}
             </>
           </Button>
         </SettingsRow>
@@ -363,12 +373,14 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
       {/* SEÇÃO 3: ZONA DE DADOS */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-red-500/80">Zona de Dados</h3>
+        <h3 className="text-lg font-semibold text-red-500/80">
+          {t('data_zone_section')}
+        </h3>
 
         <SettingsRow
           icon={Save}
-          title="Salvar Credenciais"
-          description="Armazena suas chaves localmente de forma encriptada."
+          title={t('save_credentials_title')}
+          description={t('save_credentials_description')}
         >
           <Button
             onClick={actions.saveKeys}
@@ -380,14 +392,14 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Salvar Chaves
+            {t('save_keys_button')}
           </Button>
         </SettingsRow>
 
         <SettingsRow
           icon={FileJson}
-          title="Gerenciar Backup"
-          description="Exporte ou restaure sua biblioteca completa (JSON). Backups automáticos são criados em atualizações importantes."
+          title={t('manage_backup_title')}
+          description={t('manage_backup_description')}
         >
           <div className="space-y-2">
             <div className="flex gap-2">
@@ -401,7 +413,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Download className="mr-2 h-4 w-4" /> Importar
+                    <Download className="mr-2 h-4 w-4" /> {t('import_button')}
                   </>
                 )}
               </Button>
@@ -415,21 +427,21 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <Upload className="mr-2 h-4 w-4" /> Exportar
+                    <Upload className="mr-2 h-4 w-4" /> {t('export_button')}
                   </>
                 )}
               </Button>
             </div>
             <div className="text-muted-foreground text-xs">
-              Backups automáticos são salvos em <code>app_data/backups/</code>
+              {t('backup_location_info')}
             </div>
           </div>
         </SettingsRow>
 
         <SettingsRow
           icon={Database}
-          title="Limpar Cache"
-          description="Remova dados expirados ou todo o cache para liberar espaço."
+          title={t('clear_cache_title')}
+          description={t('clear_cache_description')}
         >
           <div className="flex gap-2">
             <Button
@@ -442,7 +454,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
               ) : (
                 <RefreshCcw className="mr-2 h-4 w-4" />
               )}
-              Expirados
+              {t('expired_button')}
             </Button>
             <Button
               onClick={actions.clearAllCache}
@@ -454,15 +466,15 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              Tudo
+              {t('all_button')}
             </Button>
           </div>
         </SettingsRow>
 
         <SettingsRow
-          icon={HardDrive} // Importe de lucide-react
-          title="Armazenamento de Imagens"
-          description="Salve as capas no seu computador para visualizar offline. Ocupa espaço em disco"
+          icon={HardDrive}
+          title={t('image_storage_title')}
+          description={t('image_storage_description')}
         >
           <div className="flex flex-col gap-3 pt-2">
             {/* Toggle */}
@@ -470,8 +482,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
               <Switch
                 checked={saveLocally}
                 onChange={toggleSaveLocally}
-                labelOff="Desativado"
-                labelOn="Ativado"
+                labelOff={t('disabled')}
+                labelOn={t('enabled')}
               />
             </div>
 
@@ -483,7 +495,8 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 onClick={handleClearCache}
                 className="w-full text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600"
               >
-                <Trash2 size={12} className="mr-1" /> Excluir Imagens Salvas
+                <Trash2 size={12} className="mr-1" />{' '}
+                {t('delete_saved_images_button')}
               </Button>
             </div>
           </div>
@@ -492,10 +505,9 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
       {/* SEÇÃO 4: SOBRE O PLAYLITE */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">Sobre</h3>
+        <h3 className="text-lg font-semibold">{t('about_section')}</h3>
         <AboutPlaylite />
       </section>
     </div>
   );
 }
-

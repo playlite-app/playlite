@@ -10,7 +10,7 @@ import {
   TrendingUp,
   WifiOff,
 } from 'lucide-react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { Affinity, ErrorState } from '@/components';
 import { FreeGameCard } from '@/components/cards';
@@ -41,6 +41,7 @@ import {
 } from '@/ui/dropdown-menu';
 import { Separator } from '@/ui/separator';
 import { Skeleton } from '@/ui/skeleton';
+import { toast } from '@/utils/toast';
 
 import { openExternalLink } from '../utils/openLink';
 
@@ -72,6 +73,7 @@ const PLATFORM_OPTIONS = [
 ];
 
 export default function Trending(props: TrendingProps) {
+  const { t } = useTranslation('trending');
   const isOnline = useNetworkStatus();
 
   // Hooks customizados para gerenciar diferentes aspectos da página
@@ -136,12 +138,12 @@ export default function Trending(props: TrendingProps) {
   const handleWishlistClick = async (game: RawgGame) => {
     try {
       await addToWishlist(game);
-      toast.success(`${game.name} adicionado!`, {
-        description: 'O jogo já está na sua lista de desejos.',
+      toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
+        description: t('game_added_to_wishlist_description'),
       });
     } catch {
-      toast.error('Erro ao adicionar à lista', {
-        description: 'Verifique sua conexão e tente novamente.',
+      toast.error(t('add_to_wishlist_error_title'), {
+        description: t('add_to_wishlist_error_description'),
       });
     }
   };
@@ -165,9 +167,7 @@ export default function Trending(props: TrendingProps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center space-y-4">
         <Loader2 className="text-primary h-10 w-10 animate-spin" />
-        <p className="text-muted-foreground">
-          Consultando tendências mundiais...
-        </p>
+        <p className="text-muted-foreground">{t('checking_global_trends')}</p>
       </div>
     );
   }
@@ -184,9 +184,9 @@ export default function Trending(props: TrendingProps) {
         <div className="bg-muted/20 mb-4 rounded-full p-4">
           <Gamepad2 className="h-12 w-12 opacity-50" />
         </div>
-        <h3 className="text-lg font-medium">Nenhum jogo encontrado</h3>
+        <h3 className="text-lg font-medium">{t('no_games_found')}</h3>
         <Button variant="outline" className="mt-6" onClick={handleRetry}>
-          Recarregar
+          {t('reload_button')}
         </Button>
       </div>
     );
@@ -201,10 +201,7 @@ export default function Trending(props: TrendingProps) {
       {!isOnline && hasData && (
         <div className="flex items-center justify-center gap-2 border-b border-yellow-500/20 bg-yellow-500/10 px-6 py-2 text-xs font-medium text-yellow-600 dark:text-yellow-400">
           <WifiOff size={14} />
-          <span>
-            Modo Offline: Exibindo conteúdo salvo em cache. Algumas informações
-            podem estar desatualizadas.
-          </span>
+          <span>{t('offline_mode_banner')}</span>
         </div>
       )}
 
@@ -221,7 +218,7 @@ export default function Trending(props: TrendingProps) {
         onPrev={prevHero}
         badges={
           <div className="bg-gold-500/20 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
-            <Flame size={16} /> EM ALTA
+            <Flame size={16} /> {t('trending_badge')}
           </div>
         }
         actions={
@@ -235,7 +232,7 @@ export default function Trending(props: TrendingProps) {
                 size={18}
                 className={`text-red-500 ${isHeroInWishlist ? 'fill-current' : ''}`}
               />{' '}
-              Lista de Desejos
+              {t('wishlist_button')}
             </Button>
             <Button
               variant="outline"
@@ -244,7 +241,7 @@ export default function Trending(props: TrendingProps) {
                 openExternalLink(`https://rawg.io/games/${currentHero.id}`)
               }
             >
-              <ExternalLink size={18} /> Ver Detalhes
+              <ExternalLink size={18} /> {t('view_details_button')}
             </Button>
           </>
         }
@@ -255,7 +252,7 @@ export default function Trending(props: TrendingProps) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6">
           <div className="text-muted-foreground flex items-center gap-2">
             <Filter size={18} />
-            <span className="text-sm font-medium">Filtrar:</span>
+            <span className="text-sm font-medium">{t('filter_label')}:</span>
           </div>
 
           <select
@@ -263,7 +260,7 @@ export default function Trending(props: TrendingProps) {
             onChange={e => setSelectedGenre(e.target.value)}
             className="bg-secondary text-secondary-foreground focus:ring-primary cursor-pointer rounded-md border-none px-3 py-1.5 text-sm font-medium outline-none focus:ring-1"
           >
-            <option value="all">Todos os Gêneros</option>
+            <option value="all">{t('all_genres_option')}</option>
             {allGenres.map(g => (
               <option key={g} value={g}>
                 {g}
@@ -272,7 +269,7 @@ export default function Trending(props: TrendingProps) {
           </select>
 
           <div className="text-muted-foreground ml-auto hidden text-sm sm:block">
-            15 sugestões disponíveis
+            {t('suggestions_available')}
           </div>
         </div>
       </div>
@@ -287,10 +284,10 @@ export default function Trending(props: TrendingProps) {
             </div>
             <div>
               <h2 className="text-2xl font-bold tracking-tight">
-                Jogos Grátis
+                {t('free_games_section')}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Resgate ofertas por tempo limitado
+                {t('free_games_description')}
               </p>
             </div>
           </div>
@@ -304,7 +301,7 @@ export default function Trending(props: TrendingProps) {
                 className="w-40 gap-2 font-medium"
               >
                 <Filter size={16} />
-                Filtrar Lojas
+                {t('filter_stores_button')}
                 {selectedPlatforms.length < PLATFORM_OPTIONS.length && (
                   <span className="bg-primary text-primary-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
                     {selectedPlatforms.length}
@@ -313,7 +310,7 @@ export default function Trending(props: TrendingProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>Plataformas</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('platforms_label')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {PLATFORM_OPTIONS.map(platform => (
                 <DropdownMenuCheckboxItem
@@ -333,9 +330,9 @@ export default function Trending(props: TrendingProps) {
           <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
             <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />
             <p className="text-base font-medium">
-              Nenhum jogo encontrado com os filtros atuais
+              {t('no_games_with_filters')}
             </p>
-            <p className="mt-1 text-sm">Tente selecionar outras plataformas</p>
+            <p className="mt-1 text-sm">{t('try_other_platforms')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -364,7 +361,9 @@ export default function Trending(props: TrendingProps) {
           <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <TrendingUp size={20} />
           </div>
-          <h2 className="text-2xl font-bold">Mais Sugestões</h2>
+          <h2 className="text-2xl font-bold">
+            {t('more_suggestions_section')}
+          </h2>
         </div>
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -399,7 +398,7 @@ export default function Trending(props: TrendingProps) {
                       icon={Heart}
                       variant={isInWishlist ? 'glass-destructive' : 'glass'}
                       onClick={() => handleWishlistClick(game)}
-                      tooltip="Lista de Desejos"
+                      tooltip={t('wishlist_button')}
                     />
                     <ActionButton
                       icon={ExternalLink}
@@ -408,7 +407,7 @@ export default function Trending(props: TrendingProps) {
                       onClick={() =>
                         openExternalLink(`https://rawg.io/games/${game.id}`)
                       }
-                      tooltip="Ver Detalhes"
+                      tooltip={t('view_details_button')}
                     />
                   </>
                 }
@@ -424,7 +423,9 @@ export default function Trending(props: TrendingProps) {
               <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
                 <Clock size={20} />
               </div>
-              <h2 className="text-2xl font-bold">Lançamentos Aguardados</h2>
+              <h2 className="text-2xl font-bold">
+                {t('upcoming_releases_section')}
+              </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
@@ -442,8 +443,10 @@ export default function Trending(props: TrendingProps) {
                     coverUrl={game.backgroundImage}
                     subtitle={
                       game.released
-                        ? `Lança: ${new Date(game.released).toLocaleDateString()}`
-                        : 'Em breve'
+                        ? t('release_label') +
+                          ': ' +
+                          new Date(game.released).toLocaleDateString()
+                        : t('coming_soon')
                     }
                     badge={
                       badge ? (
@@ -462,7 +465,7 @@ export default function Trending(props: TrendingProps) {
                           icon={Heart}
                           variant={isInWishlist ? 'glass-destructive' : 'glass'}
                           onClick={() => handleWishlistClick(game)}
-                          tooltip="Lista de Desejos"
+                          tooltip={t('wishlist_button')}
                         />
                         <ActionButton
                           icon={ExternalLink}
@@ -471,7 +474,7 @@ export default function Trending(props: TrendingProps) {
                           onClick={() =>
                             openExternalLink(`https://rawg.io/games/${game.id}`)
                           }
-                          tooltip="Ver Detalhes"
+                          tooltip={t('view_details_button')}
                         />
                       </>
                     }
@@ -485,4 +488,3 @@ export default function Trending(props: TrendingProps) {
     </div>
   );
 }
-

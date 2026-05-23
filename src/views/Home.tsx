@@ -14,6 +14,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
@@ -43,6 +44,7 @@ interface HomeProps {
 }
 
 export default function Home(props: Readonly<HomeProps>) {
+  const { t } = useTranslation('common');
   const {
     stats,
     continuePlaying,
@@ -110,7 +112,7 @@ export default function Home(props: Readonly<HomeProps>) {
               onClick={() => props.onGameClick(game)}
               badge={
                 <Recommendation reason={game.reason}>
-                  <span>Recomendado</span>
+                  <span>{t('recommended_badge')}</span>
                 </Recommendation>
               }
               actions={
@@ -118,7 +120,7 @@ export default function Home(props: Readonly<HomeProps>) {
                   icon={Play}
                   variant="secondary"
                   onClick={() => launchGame(game)}
-                  tooltip="Jogar Agora"
+                  tooltip={t('play_now_tooltip')}
                 />
               }
             />
@@ -129,7 +131,7 @@ export default function Home(props: Readonly<HomeProps>) {
 
     return (
       <div className="border-border text-muted-foreground rounded-xl border border-dashed p-8 text-center">
-        <p>Tudo em dia! Nenhum jogo parado encontrado para o seu perfil.</p>
+        <p>{t('nothing_to_play_message')}</p>
       </div>
     );
   })();
@@ -160,17 +162,17 @@ export default function Home(props: Readonly<HomeProps>) {
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-400">
               {backlogRecommendations.some(g => g.id === currentHero.id) && (
                 <>
-                  <Sparkles size={14} /> SUGESTÃO
+                  <Sparkles size={14} /> {t('hero_suggestion_badge')}
                 </>
               )}
               {trending?.some(g => g.id === currentHero.id) && (
                 <>
-                  <TrendingUp size={14} /> TENDÊNCIA GLOBAL
+                  <TrendingUp size={14} /> {t('hero_trending_badge')}
                 </>
               )}
               {mostPlayed.some(g => g.id === currentHero.id) && (
                 <>
-                  <Trophy size={14} /> SEU CAMPEÃO
+                  <Trophy size={14} /> {t('hero_champion_badge')}
                 </>
               )}
             </div>
@@ -178,7 +180,8 @@ export default function Home(props: Readonly<HomeProps>) {
           actions={
             isLocalGame(currentHero) ? (
               <Button onClick={() => launchGame(currentHero)}>
-                <Play size={18} /> <p className="font-bold">Jogar Agora</p>
+                <Play size={18} />{' '}
+                <p className="font-bold">{t('play_now_button')}</p>
               </Button>
             ) : (
               <Button
@@ -188,7 +191,7 @@ export default function Home(props: Readonly<HomeProps>) {
                   openExternalLink(`https://rawg.io/games/${currentHero.id}`)
                 }
               >
-                <ExternalLink size={18} /> Ver Detalhes
+                <ExternalLink size={18} /> {t('view_details_button')}
               </Button>
             )
           }
@@ -203,28 +206,28 @@ export default function Home(props: Readonly<HomeProps>) {
           {/* StatCards */}
           <StatCard
             icon={<Library size={24} />}
-            label="Total de Jogos"
+            label={t('total_games_stat')}
             value={stats.totalGames}
             color="text-blue-500"
             bg="bg-blue-500/10"
           />
           <StatCard
             icon={<Clock size={24} />}
-            label="Tempo Jogado"
+            label={t('playtime_stat')}
             value={formatTime(stats.totalPlaytime)}
             color="text-purple-500"
             bg="bg-purple-500/10"
           />
           <StatCard
             icon={<Heart size={24} />}
-            label="Favoritos"
+            label={t('favorites_stat')}
             value={stats.totalFavorites}
             color="text-pink-500"
             bg="bg-pink-500/10"
           />
           <StatCard
             icon={<Trophy size={24} />}
-            label="Gênero Favorito"
+            label={t('favorite_genre_stat')}
             value={topGenres[0]?.[0] || '-'}
             color="text-yellow-500"
             bg="bg-yellow-500/10"
@@ -241,7 +244,9 @@ export default function Home(props: Readonly<HomeProps>) {
               <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
                 <Clock size={24} />
               </div>
-              <h2 className="text-2xl font-bold">Continue Jogando</h2>
+              <h2 className="text-2xl font-bold">
+                {t('continue_playing_section')}
+              </h2>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
               {continuePlaying.map(game => (
@@ -250,14 +255,14 @@ export default function Home(props: Readonly<HomeProps>) {
                   key={game.id}
                   title={game.name}
                   coverUrl={game.coverUrl}
-                  subtitle={`${formatTime(game.playtime)} jogadas`}
+                  subtitle={`${formatTime(game.playtime)} ${t('played_suffix')}`}
                   onClick={() => props.onGameClick(game)}
                   actions={
                     <ActionButton
                       icon={Play}
                       variant="secondary"
                       onClick={() => launchGame(game)}
-                      tooltip="Jogar Agora"
+                      tooltip={t('play_now_tooltip')}
                     />
                   }
                 />
@@ -274,7 +279,9 @@ export default function Home(props: Readonly<HomeProps>) {
                 <Dna size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Recomendados para você</h2>
+                <h2 className="text-2xl font-bold">
+                  {t('recommended_for_you_section')}
+                </h2>
               </div>
             </div>
           </div>
@@ -291,7 +298,7 @@ export default function Home(props: Readonly<HomeProps>) {
               </div>
               <div>
                 <h2 className="text-2xl font-bold">
-                  Jogadores como você gostaram
+                  {t('users_like_you_section')}
                 </h2>
               </div>
             </div>
@@ -307,7 +314,7 @@ export default function Home(props: Readonly<HomeProps>) {
                   onClick={() => props.onGameClick(game)}
                   badge={
                     <Recommendation reason={game.reason}>
-                      <span>Comunidade</span>
+                      <span>{t('community_badge')}</span>
                     </Recommendation>
                   }
                   actions={
@@ -315,7 +322,7 @@ export default function Home(props: Readonly<HomeProps>) {
                       icon={Play}
                       variant="secondary"
                       onClick={() => launchGame(game)}
-                      tooltip="Jogar Agora"
+                      tooltip={t('play_now_tooltip')}
                     />
                   }
                 />
@@ -329,14 +336,16 @@ export default function Home(props: Readonly<HomeProps>) {
           <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <ChartBar size={24} />
           </div>
-          <h2 className="text-2xl font-bold">Estatísticas</h2>
+          <h2 className="text-2xl font-bold">{t('statistics_section')}</h2>
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-8">
           {/* Mais Jogados Card */}
           <div className="bg-card border-border rounded-xl border p-6 lg:col-span-2">
             <div className="mb-3 flex items-center gap-2">
               <TrendingUp size={20} className="text-primary" />
-              <h2 className="text-lg font-semibold">Mais Jogados</h2>
+              <h2 className="text-lg font-semibold">
+                {t('most_played_section')}
+              </h2>
             </div>
             <Separator className={'mb-3'} />
             <div className="grid grid-cols-1 gap-4">
@@ -382,7 +391,9 @@ export default function Home(props: Readonly<HomeProps>) {
           <div className="bg-card border-border col-span-1 h-full rounded-xl border p-6">
             <div className="mb-3 flex items-center gap-2">
               <Gamepad2 size={20} className="text-primary" />
-              <h2 className="text-lg font-semibold">Gêneros + Jogados</h2>
+              <h2 className="text-lg font-semibold">
+                {t('genres_and_played_section')}
+              </h2>
             </div>
             <Separator className={'mb-3'} />
             <div className="space-y-4">
@@ -394,7 +405,7 @@ export default function Home(props: Readonly<HomeProps>) {
                     <div className="mb-1 flex justify-between text-xs">
                       <span className="font-medium">{genre}</span>
                       <span className="text-muted-foreground">
-                        {count} jogos
+                        {count} {t('games_suffix')}
                       </span>
                     </div>
                     <div className="bg-secondary h-2 overflow-hidden rounded-full">

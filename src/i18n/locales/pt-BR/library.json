@@ -1,1 +1,18 @@
-{}
+{
+  "game_added_to_playlist": "{{name}} adicionado à playlist!",
+  "no_games_found_search": "Nenhum jogo encontrado com os critérios de busca.",
+  "no_games_in_library": "Nenhum jogo na biblioteca. Adicione seu primeiro jogo!",
+  "my_library_title": "Minha Biblioteca",
+  "game_singular": "jogo",
+  "games_plural": "jogos",
+  "found_singular": "encontrado",
+  "found_plural": "encontrados",
+  "no_data_fallback": "Sem dados",
+  "remove_from_favorites_tooltip": "Remover dos Favoritos",
+  "add_to_favorites_tooltip": "Adicionar aos Favoritos",
+  "no_favorites_found_search": "Nenhum favorito encontrado com os critérios de busca.",
+  "add_games_to_favorites": "Adicione alguns jogos à sua lista de favoritos!",
+  "my_favorites_title": "Meus Favoritos",
+  "loved_singular": "amado",
+  "loved_plural": "amados"
+}

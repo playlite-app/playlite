@@ -1,9 +1,10 @@
 import { Heart, Library } from 'lucide-react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { ActionButton, GameActionsMenu } from '@/components/common';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types/game';
+import { toast } from '@/utils/toast';
 
 import StandardGameCard from '../components/cards/StandardGameCard';
 import { launchGame } from '../utils/launcher';
@@ -22,6 +23,7 @@ export default function Libraries({
   hideDuplicates,
   ...actions
 }: Readonly<LibraryProps>) {
+  const { t } = useTranslation('library');
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
   // Handler para adicionar à playlist com notificação
@@ -30,7 +32,7 @@ export default function Libraries({
     addToPlaylist(gameId);
 
     if (game) {
-      toast.success(`${game.name} adicionado à playlist!`);
+      toast.success(t('game_added_to_playlist', { name: game.name }));
     }
   };
 
@@ -47,9 +49,7 @@ export default function Libraries({
     return (
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center text-lg">
         <Library className="mb-4 h-16 w-16 opacity-20" />
-        {searchTerm
-          ? 'Nenhum jogo encontrado com os critérios de busca.'
-          : 'Nenhum jogo na biblioteca. Adicione seu primeiro jogo!'}
+        {searchTerm ? t('no_games_found_search') : t('no_games_in_library')}
       </div>
     );
   }
@@ -63,11 +63,15 @@ export default function Libraries({
             <Library size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Minha Biblioteca</h1>
+            <h1 className="text-2xl font-bold">{t('my_library_title')}</h1>
             <p className="text-muted-foreground text-sm">
-              {displayedGames.length} jogo
-              {displayedGames.length === 1 ? '' : 's'} encontrado
-              {displayedGames.length === 1 ? '' : 's'}
+              {displayedGames.length}{' '}
+              {displayedGames.length === 1
+                ? t('game_singular')
+                : t('games_plural')}{' '}
+              {displayedGames.length === 1
+                ? t('found_singular')
+                : t('found_plural')}
             </p>
           </div>
         </div>
@@ -79,7 +83,7 @@ export default function Libraries({
             const subtitle =
               [game.genres?.split(',')[0]?.trim(), game.developer]
                 .filter(Boolean)
-                .join(' • ') || 'Sem dados';
+                .join(' • ') || t('no_data_fallback');
 
             return (
               <div key={game.id} className="group relative">
@@ -99,8 +103,8 @@ export default function Libraries({
                         variant={game.favorite ? 'glass-destructive' : 'glass'}
                         tooltip={
                           game.favorite
-                            ? 'Remover dos Favoritos'
-                            : 'Adicionar aos Favoritos'
+                            ? t('remove_from_favorites_tooltip')
+                            : t('add_to_favorites_tooltip')
                         }
                         onClick={() => actions.onToggleFavorite(game.id)}
                       />
@@ -122,4 +126,3 @@ export default function Libraries({
     </div>
   );
 }
-

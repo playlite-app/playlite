@@ -1,11 +1,12 @@
 import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton, GameActionsMenu } from '@/components/common';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types';
+import { toast } from '@/utils/toast';
 
 import { launchGame } from '../utils/launcher';
 
@@ -23,6 +24,7 @@ export default function Favorites({
   hideDuplicates,
   ...actions
 }: Readonly<FavoritesProps>) {
+  const { t } = useTranslation('library');
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
   // Handler para adicionar à playlist com notificação
@@ -31,7 +33,7 @@ export default function Favorites({
     addToPlaylist(gameId);
 
     if (game) {
-      toast.success(`${game.name} adicionado à playlist!`);
+      toast.success(t('game_added_to_playlist', { name: game.name }));
     }
   };
 
@@ -50,8 +52,8 @@ export default function Favorites({
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center text-lg">
         <Heart className="mb-4 h-16 w-16 opacity-20" />
         {searchTerm
-          ? 'Nenhum favorito encontrado com os critérios de busca.'
-          : 'Adicione alguns jogos à sua lista de favoritos!'}
+          ? t('no_favorites_found_search')
+          : t('add_games_to_favorites')}
       </div>
     );
   }
@@ -65,11 +67,15 @@ export default function Favorites({
             <Heart size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Meus Favoritos</h1>
+            <h1 className="text-2xl font-bold">{t('my_favorites_title')}</h1>
             <p className="text-muted-foreground text-sm">
-              {displayedGames.length} jogo
-              {displayedGames.length === 1 ? '' : 's'} amado
-              {displayedGames.length === 1 ? '' : 's'}
+              {displayedGames.length}{' '}
+              {displayedGames.length === 1
+                ? t('game_singular')
+                : t('games_plural')}{' '}
+              {displayedGames.length === 1
+                ? t('loved_singular')
+                : t('loved_plural')}
             </p>
           </div>
         </div>
@@ -81,7 +87,7 @@ export default function Favorites({
             const subtitle =
               [game.genres?.split(',')[0]?.trim(), game.developer]
                 .filter(Boolean)
-                .join(' • ') || 'Sem dados';
+                .join(' • ') || t('no_data_fallback');
 
             return (
               <div key={game.id} className="group relative">
@@ -99,7 +105,7 @@ export default function Favorites({
                       <ActionButton
                         icon={Heart}
                         variant={game.favorite ? 'glass-destructive' : 'glass'}
-                        tooltip="Remover dos Favoritos"
+                        tooltip={t('remove_from_favorites_tooltip')}
                         onClick={() => actions.onToggleFavorite(game.id)}
                       />
                       <GameActionsMenu
@@ -120,4 +126,3 @@ export default function Favorites({
     </div>
   );
 }
-

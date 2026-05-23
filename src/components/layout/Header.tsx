@@ -1,5 +1,6 @@
 import { Copy, CopySlash, Eye, EyeOff, Gamepad2, Moon, Search, Settings, Store, Sun, } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
@@ -16,6 +17,8 @@ function AdultFilterToggle({
   hideAdult,
   onToggle,
 }: Readonly<AdultFilterToggleProps>) {
+  const { t } = useTranslation('common');
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -34,7 +37,9 @@ function AdultFilterToggle({
       </TooltipTrigger>
       <TooltipContent side="bottom">
         <p>
-          {hideAdult ? 'Conteúdo adulto oculto' : 'Ocultar conteúdo adulto'}
+          {hideAdult
+            ? t('header_adult_content_hidden_tooltip')
+            : t('header_hide_adult_content_tooltip')}
         </p>
       </TooltipContent>
     </Tooltip>
@@ -50,6 +55,8 @@ function DuplicatesFilterToggle({
   hideDuplicates,
   onToggle,
 }: Readonly<DuplicatesFilterToggleProps>) {
+  const { t } = useTranslation('common');
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -68,7 +75,9 @@ function DuplicatesFilterToggle({
       </TooltipTrigger>
       <TooltipContent side="bottom">
         <p>
-          {hideDuplicates ? 'Duplicatas ocultas' : 'Ocultar jogos duplicados'}
+          {hideDuplicates
+            ? t('header_duplicates_hidden_tooltip')
+            : t('header_hide_duplicate_games_tooltip')}
         </p>
       </TooltipContent>
     </Tooltip>
@@ -100,6 +109,8 @@ export default function Header({
   onCheckUpdates,
   onLibraryUpdate,
 }: Readonly<HeaderProps>) {
+  const { t } = useTranslation('common');
+
   const { isDark, toggleTheme } = useTheme();
   const { isSearchable, searchPlaceholder, searchAriaLabel } =
     useHeaderState(activeSection);
@@ -155,10 +166,12 @@ export default function Header({
           size="sm"
           variant="outline"
           className="shrink-0 px-3 md:px-4"
-          title="Adicionar Jogo"
+          title={t('header_add_game_title')}
         >
           <Gamepad2 size={18} />
-          <span className="ml-1 hidden md:inline">Adicionar</span>
+          <span className="ml-1 hidden md:inline">
+            {t('header_add_game_button')}
+          </span>
         </Button>
 
         {/* Botão de Configurar Lojas (Steam, Scanner, etc) */}
@@ -167,10 +180,12 @@ export default function Header({
           size="sm"
           variant="outline"
           className="shrink-0 px-3 md:px-4"
-          title="Configurar Lojas e Scanner"
+          title={t('header_store_settings_title')}
         >
           <Store size={18} />
-          <span className="ml-1 hidden md:inline">Plataformas</span>
+          <span className="ml-1 hidden md:inline">
+            {t('header_store_settings_button')}
+          </span>
         </Button>
 
         {/* Botão de Filtro Adulto (Só aparece em telas de listagem) */}
@@ -195,7 +210,7 @@ export default function Header({
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-foreground shrink-0"
-          title="Configurações Rápidas"
+          title={t('header_quick_settings_title')}
         >
           <Settings size={18} />
         </Button>
@@ -206,7 +221,7 @@ export default function Header({
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-foreground shrink-0"
-          title="Alternar tema"
+          title={t('header_toggle_theme_title')}
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </Button>

@@ -12,7 +12,7 @@ import {
   Sparkles,
   ThumbsDown,
 } from 'lucide-react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { Recommendation } from '@/components';
 import StandardGameCard from '@/components/cards/StandardGameCard';
@@ -20,6 +20,7 @@ import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
+import { toast } from '@/utils/toast';
 
 import PlaylistCard from '../components/cards/PlaylistCard';
 import { launchGame } from '../utils/launcher';
@@ -36,6 +37,8 @@ export default function Playlist({
   onGameClick,
   profileCache,
 }: Readonly<PlaylistProps>) {
+  const { t } = useTranslation('playlist');
+
   const {
     playlistGames,
     addToPlaylist,
@@ -66,15 +69,15 @@ export default function Playlist({
 
   const handleRemoveFromPlaylist = async (game: Game) => {
     const confirmed = await confirm({
-      title: 'Remover da Playlist',
-      description: `Deseja remover ${game.name} da sua fila de jogos?`,
-      confirmText: 'Remover',
-      cancelText: 'Cancelar',
+      title: t('remove_from_playlist_title'),
+      description: t('remove_from_playlist_description', { name: game.name }),
+      confirmText: t('remove_from_playlist_confirm_button'),
+      cancelText: t('remove_from_playlist_cancel_button'),
     });
 
     if (confirmed) {
       removeFromPlaylist(game.id);
-      toast.info(`${game.name} removido da fila.`);
+      toast.info(t('playlist_item_removed_toast', { name: game.name }));
     }
   };
 
@@ -100,10 +103,11 @@ export default function Playlist({
               <Gamepad2 size={24} className="lg:h-6 lg:w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold lg:text-2xl">Sua Playlist</h1>
+              <h1 className="text-xl font-bold lg:text-2xl">
+                {t('playlist_title')}
+              </h1>
               <p className="text-muted-foreground text-sm">
-                Organize sua próxima aventura. {playlistGames.length} jogos na
-                fila.
+                {t('playlist_description', { count: playlistGames.length })}
               </p>
             </div>
           </div>
@@ -158,10 +162,8 @@ export default function Playlist({
           ) : (
             <div className="text-muted-foreground flex h-full flex-col items-center justify-center opacity-60">
               <Gamepad2 className="mb-3 h-14 w-14 opacity-20 lg:mb-4 lg:h-16 lg:w-16" />
-              <p className="text-lg font-medium">Sua fila está vazia.</p>
-              <p className="text-sm">
-                Adicione jogos da biblioteca ou das sugestões.
-              </p>
+              <p className="text-lg font-medium">{t('empty_playlist_title')}</p>
+              <p className="text-sm">{t('empty_playlist_description')}</p>
             </div>
           )}
         </div>
@@ -177,10 +179,12 @@ export default function Playlist({
                 className="fill-purple-500/20 text-purple-500 lg:h-5 lg:w-5"
               />
             </div>
-            <h2 className="text-lg font-bold">Sugestões Inteligentes</h2>
+            <h2 className="text-lg font-bold">
+              {t('smart_suggestions_title')}
+            </h2>
           </div>
           <p className="text-muted-foreground text-sm">
-            Combinação do seu perfil + comunidade.
+            {t('smart_suggestions_description')}
           </p>
         </div>
 
@@ -189,7 +193,7 @@ export default function Playlist({
           {favoriteSeries.length > 0 && (
             <div className="mb-4 rounded-lg bg-purple-500/10 p-3">
               <h3 className="text-primary mb-2 text-xs font-bold">
-                Suas Séries Favoritas
+                {t('favorite_series_title')}
               </h3>
               <div className="flex flex-wrap gap-1.5">
                 {favoriteSeries.map(name => (
@@ -227,12 +231,16 @@ export default function Playlist({
                         onClick={e => {
                           e.stopPropagation();
                           addToPlaylist(game.id);
-                          toast.success(`${game.name} na fila!`);
+                          toast.success(
+                            t('added_to_playlist_toast', { name: game.name })
+                          );
                         }}
-                        title="Adicionar à fila"
+                        title={t('add_to_playlist_button_title')}
                       >
                         <PlusCircle size={14} />
-                        <span className="text-xs font-bold">Add</span>
+                        <span className="text-xs font-bold">
+                          {t('add_to_playlist_button_label')}
+                        </span>
                       </Button>
 
                       <Button
@@ -242,12 +250,13 @@ export default function Playlist({
                         onClick={e => {
                           e.stopPropagation();
                           markAsNotUseful(game.id);
-                          toast.info('Recomendação ocultada', {
-                            description:
-                              'Não recomendaremos este jogo novamente.',
+                          toast.info(t('recommendation_hidden_toast_title'), {
+                            description: t(
+                              'recommendation_hidden_toast_description'
+                            ),
                           });
                         }}
-                        title="Não tenho interesse (Ocultar)"
+                        title={t('hide_recommendation_button_title')}
                       >
                         <ThumbsDown size={14} />
                       </Button>
@@ -263,7 +272,7 @@ export default function Playlist({
           {suggestions.length > 0 && (
             <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
               <span className="text-muted-foreground text-xs">
-                Mostrando {suggestions.length} recomendações
+                {t('suggestions_count_text', { count: suggestions.length })}
               </span>
               <Button
                 variant="ghost"
@@ -277,7 +286,7 @@ export default function Playlist({
                 ) : (
                   <ChevronDown size={12} />
                 )}
-                Ver Mais
+                {t('load_more_button_text')}
               </Button>
             </div>
           )}
@@ -286,10 +295,10 @@ export default function Playlist({
           {suggestions.length === 0 && !loadingRecommendations && (
             <div className="space-y-2 py-10 text-center">
               <p className="text-muted-foreground text-sm">
-                Sem sugestões novas no momento.
+                {t('no_new_suggestions_text')}
               </p>
               <Button variant="link" size="sm" onClick={loadMore}>
-                Tentar carregar mais
+                {t('load_more_suggestions_button_text')}
               </Button>
             </div>
           )}
@@ -298,4 +307,3 @@ export default function Playlist({
     </div>
   );
 }
-
