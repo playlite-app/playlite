@@ -4,10 +4,6 @@ src-tauri
 
 # Frontend
 src
-dist
-public
-index.html
-vite.config.ts
 
 # Dependências
 node_modules
@@ -20,17 +16,3 @@ docs/.vitepress/dist
 .github
 .idea
 .vscode
-flatpak/
-linux/
-tsconfig.json
-tsconfig.node.json
-eslint.config.js
-components.json
-typedoc.json
-
-# Docs
-ADR.md
-ARCHITECTURE.md
-CHANGELOG.md
-CONTRIBUTING.md
-ROADMAP.md
