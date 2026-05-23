@@ -28,7 +28,7 @@ eslint.config.js
 components.json
 typedoc.json
 
-# Docs raiz (não são parte do VitePress)
+# Docs
 ADR.md
 ARCHITECTURE.md
 CHANGELOG.md
