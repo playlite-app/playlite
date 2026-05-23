@@ -16,6 +16,7 @@ pub mod database;
 mod errors;
 pub mod initialization;
 pub mod models;
+pub mod scrapers;
 mod secrets;
 mod security;
 pub mod services;
