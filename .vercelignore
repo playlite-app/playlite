@@ -1,0 +1,3 @@
+# .vercelignore
+node_modules
+docs/.vitepress/cache
