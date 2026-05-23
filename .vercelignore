@@ -1,6 +1,36 @@
-# Vercel ignored files
-node_modules
-docs/.vitepress/cache
-docs/.vitepress/dist
+# Rust/Tauri
 target
 src-tauri
+
+# Frontend
+src
+dist
+public
+index.html
+vite.config.ts
+
+# Dependências
+node_modules
+
+# Cache e build da doc
+docs/.vitepress/cache
+docs/.vitepress/dist
+
+# Configs desnecessárias
+.github
+.idea
+.vscode
+flatpak/
+linux/
+tsconfig.json
+tsconfig.node.json
+eslint.config.js
+components.json
+typedoc.json
+
+# Docs raiz (não são parte do VitePress)
+ADR.md
+ARCHITECTURE.md
+CHANGELOG.md
+CONTRIBUTING.md
+ROADMAP.md
