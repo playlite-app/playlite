@@ -1,3 +1,7 @@
-# .vercelignore
+# Vercel ignored files
+
 node_modules
 docs/.vitepress/cache
+docs/.vitepress/dist
+target
+src-tauri
