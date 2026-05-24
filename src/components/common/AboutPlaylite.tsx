@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import i18n from 'i18next';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -99,6 +100,27 @@ export function AboutPlaylite({
       >
         <div className="overflow-hidden">
           <div className="space-y-6 px-6 pb-6">
+            {/* Idioma */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">Idioma</h4>
+              <div className="bg-accent/30 flex items-center justify-between rounded-lg p-4 text-sm">
+                Selecione o idioma da interface:
+                <select
+                  className={
+                    'bg-background ml-2 rounded-md border px-2 py-1 text-sm focus:ring-1 focus:outline-none'
+                  }
+                  value={i18n.language}
+                  onChange={e => {
+                    const value = e.target.value as 'pt-BR' | 'en';
+                    void i18n.changeLanguage(value);
+                  }}
+                >
+                  <option value="pt-BR">Português (BR)</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+            </div>
+
             {/* Stack Técnica */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">Stack Técnica</h4>

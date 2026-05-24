@@ -1,4 +1,6 @@
-D:\PROJETOS\PLAYLITE\SRC
+D:\PROJETOS\PLAYLITE
+
+\SRC (Frontend)
 |   App.tsx
 |   index.css
 |   main.tsx
@@ -251,4 +253,103 @@ D:\PROJETOS\PLAYLITE\SRC
             SteamSettings.tsx
             UbisoftSettings.tsx
             WineSettings.tsx
-            
+
+\SRC-TAURI\SRC (Backend)
+|   commands.rs
+|   constants.rs
+|   crypto.rs
+|   database.rs
+|   errors.rs
+|   initialization.rs
+|   lib.rs
+|   main.rs
+|   models.rs
+|   scrapers.rs
+|   secrets.rs
+|   secrets.rs.example
+|   security.rs
+|   services.rs
+|   sources.rs
+|   utils.rs
+|
++---commands
+|   |   achievements.rs
+|   |   ai_translation.rs
+|   |   caches.rs
+|   |   games.rs
+|   |   metadata.rs
+|   |   plataforms.rs
+|   |   recommendation.rs
+|   |   settings.rs
+|   |   system.rs
+|   |   version.rs
+|   |   wishlist.rs
+|   |
+|   +---metadata
+|   |       covers.rs
+|   |       enrichment.rs
+|   |       get_metadata.rs
+|   |       refresh.rs
+|   |       search.rs
+|   |       shared.rs
+|   |
+|   \---recommendation
+|           analysis.rs
+|           core.rs
+|
++---data
+|       known_series.json
+|       tag_metadata.json
+|
++---database
+|       backup.rs
+|       configs.rs
+|       core.rs
+|       migrations.rs
+|
++---scrapers
+|       amazon_luna.rs
+|
++---services
+|   |   cache.rs
+|   |   cf_aggregator.rs
+|   |   images.rs
+|   |   integration.rs
+|   |   playtime.rs
+|   |   recommendation.rs
+|   |   tags.rs
+|   |
+|   +---integration
+|   |       gamerpower.rs
+|   |       gemini.rs
+|   |       itad.rs
+|   |       rawg.rs
+|   |       steamspy.rs
+|   |       steam_api.rs
+|   |
+|   \---recommendation
+|           analysis.rs
+|           core.rs
+|           filtering.rs
+|           profile.rs
+|           ranking.rs
+|           reports.rs
+|           scoring.rs
+|
++---sources
+|       epic.rs
+|       heroic.rs
+|       legacy.rs
+|       providers.rs
+|       scanner.rs
+|       steam.rs
+|       ubisoft.rs
+|
+\---utils
+        http_client.rs
+        logger.rs
+        oauth.rs
+        series.rs
+        status_logic.rs
+        tag_utils.rs
+
