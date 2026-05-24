@@ -20,5 +20,12 @@
   "suggestions_count_text": "Mostrando {{count}} recomendações",
   "load_more_button_text": "Ver Mais",
   "no_new_suggestions_text": "Sem sugestões novas no momento.",
-  "load_more_suggestions_button_text": "Tentar carregar mais"
+  "load_more_suggestions_button_text": "Tentar carregar mais",
+  "playlist_card_move_up_title": "Mover para cima",
+  "playlist_card_move_down_title": "Mover para baixo",
+  "playlist_card_default_genre": "Geral",
+  "playlist_card_playtime_text": "{{hours}}h",
+  "playlist_card_play_now_title": "Jogar Agora",
+  "playlist_card_play_button_label": "Play",
+  "playlist_card_remove_title": "Remover da fila"
 }

@@ -20,5 +20,12 @@
   "suggestions_count_text": "Showing {{count}} recommendations",
   "load_more_button_text": "Load More",
   "no_new_suggestions_text": "No new suggestions at the moment.",
-  "load_more_suggestions_button_text": "Try loading more"
+  "load_more_suggestions_button_text": "Try loading more",
+  "playlist_card_move_up_title": "Move up",
+  "playlist_card_move_down_title": "Move down",
+  "playlist_card_default_genre": "General",
+  "playlist_card_playtime_text": "{{hours}}h",
+  "playlist_card_play_now_title": "Play now",
+  "playlist_card_play_button_label": "Play",
+  "playlist_card_remove_title": "Remove from queue"
 }

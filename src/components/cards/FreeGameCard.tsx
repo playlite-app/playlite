@@ -1,4 +1,5 @@
 import { Calendar, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Affinity } from '@/components';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,8 @@ export function FreeGameCard({
   end_date: endDate,
   open_giveaway_url: url,
 }: Readonly<FreeGameCardProps>) {
+  const { t } = useTranslation('trending');
+
   const openLink = async () => {
     const { open } = await import('@tauri-apps/plugin-shell');
     open(url);
@@ -50,6 +53,15 @@ export function FreeGameCard({
       )
     : null;
 
+  const badgeLabel =
+    badge === 'SÉRIE FAVORITA'
+      ? t('free_game_card_badge_favorite_series')
+      : badge === 'TOP PICK'
+        ? t('free_game_card_badge_top_pick')
+        : badge === 'PARA VOCÊ'
+          ? t('free_game_card_badge_for_you')
+          : null;
+
   return (
     <div
       className={cn(
@@ -60,7 +72,7 @@ export function FreeGameCard({
       <button
         type="button"
         className="absolute inset-0 z-20"
-        aria-label={`Abrir giveaway: ${title}`}
+        aria-label={t('free_game_card_open_giveaway', { title })}
         onClick={() => {
           void openLink();
         }}
@@ -83,7 +95,7 @@ export function FreeGameCard({
           <div className="absolute top-3 left-3">
             <Affinity badge={badge}>
               <Badge className="bg-purple-600 font-bold text-white">
-                {badge}
+                {badgeLabel}
               </Badge>
             </Affinity>
           </div>
@@ -120,7 +132,9 @@ export function FreeGameCard({
               <span className="text-muted-foreground text-xs line-through">
                 {worth}
               </span>
-              <span className="text-xs font-bold text-green-500">100% OFF</span>
+              <span className="text-xs font-bold text-green-500">
+                {t('free_game_card_discount_label')}
+              </span>
             </div>
           )}
 
@@ -129,7 +143,9 @@ export function FreeGameCard({
             <div className="flex items-center gap-1 rounded-md bg-orange-500/10 px-2 py-0.5">
               <Calendar size={12} className="text-orange-500" />
               <span className="text-xs font-semibold text-orange-500">
-                {daysLeft && daysLeft <= 3 ? `${daysLeft}d` : formattedDate}
+                {daysLeft && daysLeft <= 3
+                  ? t('free_game_card_days_left_short', { count: daysLeft })
+                  : formattedDate}
               </span>
             </div>
           )}

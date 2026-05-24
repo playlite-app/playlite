@@ -19,5 +19,7 @@
   "game_actions_in_playlist": "In Playlist",
   "game_actions_add_to_playlist": "Add to Playlist",
   "game_actions_edit": "Edit",
-  "game_actions_delete": "Delete"
+  "game_actions_delete": "Delete",
+  "game_card_open_details_aria_label": "Open details for {{title}}",
+  "game_card_play_now_tooltip": "Play Now"
 }

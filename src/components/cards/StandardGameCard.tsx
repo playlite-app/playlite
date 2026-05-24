@@ -1,5 +1,6 @@
 import { ImageOff, Play } from 'lucide-react';
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ActionButton, CachedImage } from '@/components';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,7 @@ interface StandardGameCardProps {
 }
 
 /**
- * Card padrÃ£o para exibiÃ§Ã£o de jogos em grades (InÃ­cio, Biblioteca, Favoritos, Em Alta e Lista de Desejos).
+ * Card padrão para exibição de jogos em grades (Início, Biblioteca, Favoritos, Em Alta e Lista de Desejos).
  * Aspect ratio fixo 3:4 (capa vertical de jogo).
  *
  * Features:
@@ -43,6 +44,7 @@ export default function StandardGameCard({
   onPlay,
 }: Readonly<StandardGameCardProps>) {
   const [imageError, setImageError] = useState(false);
+  const { t } = useTranslation('library');
 
   return (
     <div
@@ -55,7 +57,7 @@ export default function StandardGameCard({
         <button
           type="button"
           className="absolute inset-0 z-20 cursor-pointer"
-          aria-label={`Abrir detalhes de ${title}`}
+          aria-label={t('game_card_open_details_aria_label', { title })}
           onClick={onClick}
         />
       )}
@@ -96,7 +98,7 @@ export default function StandardGameCard({
                 icon={Play}
                 variant="glass"
                 onClick={onPlay}
-                tooltip="Jogar Agora"
+                tooltip={t('game_card_play_now_tooltip')}
               />
             </div>
           )}

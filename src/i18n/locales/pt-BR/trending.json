@@ -22,5 +22,11 @@
   "more_suggestions_section": "Mais Sugestões",
   "upcoming_releases_section": "Lançamentos Aguardados",
   "release_label": "Lança",
-  "coming_soon": "Em breve"
+  "coming_soon": "Em breve",
+  "free_game_card_badge_favorite_series": "SÉRIE FAVORITA",
+  "free_game_card_badge_top_pick": "DESTAQUE",
+  "free_game_card_badge_for_you": "PARA VOCÊ",
+  "free_game_card_open_giveaway": "Abrir giveaway: {{title}}",
+  "free_game_card_discount_label": "100% OFF",
+  "free_game_card_days_left_short": "{{count}}d"
 }
