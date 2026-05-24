@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import i18n from 'i18next';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Github } from '@/components/icons';
 
@@ -37,6 +38,7 @@ interface AboutPlayliteProps {
 export function AboutPlaylite({
   className = '',
 }: Readonly<AboutPlayliteProps>) {
+  const { t } = useTranslation('settings');
   const [isExpanded, setIsExpanded] = useState(false);
   const [appVersion, setAppVersion] = useState('3.0.0');
 
@@ -69,17 +71,18 @@ export function AboutPlaylite({
           </div>
           <div>
             <h3 className="text-lg leading-none font-semibold tracking-tight">
-              Playlite
+              {t('settings.about_title')}
             </h3>
             <p className="text-muted-foreground mt-1.5 text-sm">
-              Gerenciador de biblioteca de jogos desktop com foco em uso{' '}
-              <em>local-first</em>, privacidade e recomendações inteligentes.
+              {t('settings.about_description_prefix')}
+              <em> {t('settings.about_description_emphasis')}</em>
+              {t('settings.about_description_suffix')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <p className="text-muted-foreground text-sm whitespace-nowrap">
-            Versão {appVersion}
+            {t('settings.about_version', { version: appVersion })}
           </p>
           <ChevronDown
             size={20}
@@ -102,9 +105,11 @@ export function AboutPlaylite({
           <div className="space-y-6 px-6 pb-6">
             {/* Idioma */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">Idioma</h4>
+              <h4 className="text-sm font-semibold">
+                {t('settings.about_language')}
+              </h4>
               <div className="bg-accent/30 flex items-center justify-between rounded-lg p-4 text-sm">
-                Selecione o idioma da interface:
+                {t('settings.about_select_language')}
                 <select
                   className={
                     'bg-background ml-2 rounded-md border px-2 py-1 text-sm focus:ring-1 focus:outline-none'
@@ -115,47 +120,57 @@ export function AboutPlaylite({
                     void i18n.changeLanguage(value);
                   }}
                 >
-                  <option value="pt-BR">Português (BR)</option>
-                  <option value="en">English</option>
+                  <option value="pt-BR">
+                    {t('settings.about_language_pt')}
+                  </option>
+                  <option value="en">{t('settings.about_language_en')}</option>
                 </select>
               </div>
             </div>
 
             {/* Stack Técnica */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">Stack Técnica</h4>
+              <h4 className="text-sm font-semibold">
+                {t('settings.about_tech_stack')}
+              </h4>
               <div className="bg-accent/30 space-y-2 rounded-lg p-4 text-sm">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-muted-foreground">Framework:</span>
+                  <span className="text-muted-foreground">
+                    {t('settings.about_label_framework')}
+                  </span>
                   <TechLink name="Tauri" url="https://tauri.app" />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-muted-foreground">Linguagens:</span>
+                  <span className="text-muted-foreground">
+                    {t('settings.about_label_languages')}
+                  </span>
                   <TechLink
                     name="Rust"
                     url="https://www.rust-lang.org"
-                    description="backend"
+                    description={t('settings.about_desc_backend')}
                   />
                   <span className="text-muted-foreground">•</span>
                   <TechLink
                     name="TypeScript"
                     url="https://www.typescriptlang.org"
-                    description="frontend"
+                    description={t('settings.about_desc_frontend')}
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    Biblioteca principal:
+                    {t('settings.about_label_main_library')}
                   </span>
                   <TechLink
                     name="React"
                     url="https://react.dev"
-                    description="frontend"
+                    description={t('settings.about_desc_frontend')}
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-muted-foreground">UI/UX:</span>
+                  <span className="text-muted-foreground">
+                    {t('settings.about_label_uiux')}
+                  </span>
                   <TechLink name="Tailwind CSS" url="https://tailwindcss.com" />
                   <span className="text-muted-foreground">•</span>
                   <TechLink name="shadcn/ui" url="https://ui.shadcn.com" />
@@ -163,7 +178,9 @@ export function AboutPlaylite({
                   <TechLink name="Lucide Icons" url="https://lucide.dev" />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-muted-foreground">Banco de dados:</span>
+                  <span className="text-muted-foreground">
+                    {t('settings.about_label_database')}
+                  </span>
                   <TechLink name="SQLite" url="https://sqlite.org/index.html" />
                 </div>
               </div>
@@ -172,14 +189,14 @@ export function AboutPlaylite({
             {/* APIs Externas */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">
-                APIs e Serviços Externos
+                {t('settings.about_apis_services')}
               </h4>
               <div className="bg-accent/30 grid gap-2 rounded-lg p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>Metadados de jogos:</p>
+                  <p>{t('settings.about_game_metadata')}</p>
                   <div className="flex-1">
                     <TechLink name="RAWG" url="https://rawg.io/apidocs" />{' '}
                     <span className="text-muted-foreground mt-0.5 text-xs">
@@ -196,7 +213,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>Preços e promoções:</p>
+                  <p>{t('settings.about_prices_promotions')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="IsThereAnyDeal"
@@ -208,7 +225,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>Estatísticas públicas:</p>
+                  <p>{t('settings.about_public_stats')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="SteamSpy"
@@ -220,7 +237,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>Jogos gratuitos:</p>
+                  <p>{t('settings.about_free_games')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="GamerPower"
@@ -232,7 +249,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>Tradução de descrição:</p>
+                  <p>{t('settings.about_description_translation')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="Gemini"
@@ -246,28 +263,30 @@ export function AboutPlaylite({
             {/* Dataset de Recomendações */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">
-                Dataset de Recomendações
+                {t('settings.about_recommendation_dataset')}
               </h4>
               <div className="bg-accent/30 rounded-lg p-4">
                 <div className="space-y-2.5 text-sm">
                   <p className="text-muted-foreground leading-relaxed">
-                    As recomendações são baseadas no dataset público{' '}
+                    {t('settings.about_recommendation_prefix')}
                     <span className="text-foreground font-semibold">
-                      Game Recommendations on Steam
-                    </span>{' '}
-                    por Anton Kozyriev.
+                      {t('settings.about_recommendation_dataset_name')}
+                    </span>
+                    {t('settings.about_recommendation_suffix')}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <TechLink
-                      name="Ver no Kaggle"
+                      name={t('settings.about_view_on_kaggle')}
                       url="https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam"
                     />
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">
-                      Licença: CC0 Public Domain
+                      {t('settings.about_license_cc0')}
                     </span>
                     <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">2023</span>
+                    <span className="text-muted-foreground">
+                      {t('settings.about_year')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -283,7 +302,7 @@ export function AboutPlaylite({
                   className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
                 >
                   <Github size={16} />
-                  <span>GitHub</span>
+                  <span>{t('settings.about_github')}</span>
                 </a>
                 <span className="text-muted-foreground">•</span>
                 <a
@@ -292,11 +311,11 @@ export function AboutPlaylite({
                   rel="noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Licença MIT
+                  {t('settings.about_license_mit')}
                 </a>
               </div>
               <p className="text-muted-foreground text-xs">
-                Desenvolvido por Alan de O. Gonçalves, 2025-2026.
+                {t('settings.about_developed_by')}
               </p>
             </div>
           </div>

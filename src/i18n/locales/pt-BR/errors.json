@@ -1,0 +1,17 @@
+{
+  "offline_title": "Você está offline",
+  "offline_desc": "A seção 'Em Alta' precisa de internet para buscar as novidades.",
+  "offline_action_label": "Ir para Minha Biblioteca",
+
+  "config_title": "Integração não configurada",
+  "config_desc": "Para ver jogos em alta, você precisa adicionar sua API Key da RAWG.",
+  "config_action_label": "Ir para Configurações",
+
+  "api_title": "Falha na conexão",
+  "api_desc": "O servidor da RAWG não respondeu corretamente.",
+
+  "generic_title": "Ops! Algo deu errado",
+  "generic_desc": "Ocorreu um erro inesperado.",
+
+  "retry_button": "Tentar Novamente"
+}

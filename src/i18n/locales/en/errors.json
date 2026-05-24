@@ -1,0 +1,17 @@
+{
+  "offline_title": "You are offline",
+  "offline_desc": "The Trending section requires an internet connection to fetch updates.",
+  "offline_action_label": "Go to My Library",
+
+  "config_title": "Integration not configured",
+  "config_desc": "To view trending games you need to add your RAWG API key.",
+  "config_action_label": "Go to Settings",
+
+  "api_title": "Connection failure",
+  "api_desc": "The RAWG server did not respond properly.",
+
+  "generic_title": "Oops! Something went wrong",
+  "generic_desc": "An unexpected error occurred.",
+
+  "retry_button": "Try Again"
+}

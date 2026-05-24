@@ -14,5 +14,10 @@
   "add_games_to_favorites": "Add some games to your favorites list!",
   "my_favorites_title": "My Favorites",
   "loved_singular": "loved",
-  "loved_plural": "loved"
+  "loved_plural": "loved",
+  "game_actions_more_options": "More Options",
+  "game_actions_in_playlist": "In Playlist",
+  "game_actions_add_to_playlist": "Add to Playlist",
+  "game_actions_edit": "Edit",
+  "game_actions_delete": "Delete"
 }

@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Medal, Trophy } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Skeleton } from '@/ui/skeleton';
 
@@ -14,6 +15,7 @@ interface Achievement {
 }
 
 export default function Achievements() {
+  const { t } = useTranslation('common');
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +40,7 @@ export default function Achievements() {
       <div className="space-y-3">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-bold">
           <Trophy className="text-yellow-500" size={20} />
-          Conquistas Recentes
+          {t('common.achievements_recent')}
         </h3>
 
         <div className="space-y-2">

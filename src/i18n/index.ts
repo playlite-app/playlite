@@ -13,6 +13,7 @@ export const NAMESPACES = [
   'wishlist',
   'trending',
   'playlist',
+  'errors',
 ] as const;
 
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];

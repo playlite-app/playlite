@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCcw, Settings, WifiOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 
@@ -17,35 +18,37 @@ export function ErrorState({
   onRetry,
   onAction,
 }: ErrorStateProps) {
+  const { t } = useTranslation('errors');
+
   const content = {
     offline: {
       icon: WifiOff,
-      title: 'Você está offline',
-      desc: "A seção 'Em Alta' precisa de internet para buscar as novidades.",
-      actionLabel: 'Ir para Minha Biblioteca',
+      title: t('errors.offline_title'),
+      desc: t('errors.offline_desc'),
+      actionLabel: t('errors.offline_action_label'),
       color: 'text-muted-foreground',
       bg: 'bg-muted',
     },
     config: {
       icon: Settings,
-      title: 'Integração não configurada',
-      desc: 'Para ver jogos em alta, você precisa adicionar sua API Key da RAWG.',
-      actionLabel: 'Ir para Configurações',
+      title: t('errors.config_title'),
+      desc: t('errors.config_desc'),
+      actionLabel: t('errors.config_action_label'),
       color: 'text-orange-500',
       bg: 'bg-orange-500/10',
     },
     api: {
       icon: AlertCircle,
-      title: 'Falha na conexão',
-      desc: message || 'O servidor da RAWG não respondeu corretamente.',
+      title: t('errors.api_title'),
+      desc: message ?? t('errors.api_desc'),
       actionLabel: null, // Sem ação de navegação, apenas retry
       color: 'text-red-500',
       bg: 'bg-red-500/10',
     },
     generic: {
       icon: AlertCircle,
-      title: 'Ops! Algo deu errado',
-      desc: message || 'Ocorreu um erro inesperado.',
+      title: t('errors.generic_title'),
+      desc: message ?? t('errors.generic_desc'),
       actionLabel: null,
       color: 'text-red-500',
       bg: 'bg-red-500/10',
@@ -77,7 +80,7 @@ export function ErrorState({
             variant={config.actionLabel ? 'outline' : 'default'}
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Tentar Novamente
+            {t('errors.retry_button')}
           </Button>
         )}
       </div>
