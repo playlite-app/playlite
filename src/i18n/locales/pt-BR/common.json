@@ -41,5 +41,19 @@
   "header_store_settings_button": "Plataformas",
   "header_quick_settings_title": "Configurações Rápidas",
   "header_toggle_theme_title": "Alternar tema",
-  "achievements_recent": "Conquistas Recentes"
+  "achievements_recent": "Conquistas Recentes",
+  "recommendation_tooltip_label_community": "Comunidade",
+  "recommendation_tooltip_label_series": "Série Favorita",
+  "recommendation_tooltip_label_genre": "Gênero",
+  "recommendation_tooltip_label_tag": "Tag",
+  "recommendation_tooltip_label_affinity_community": "Afinidade + Comunidade",
+  "recommendation_tooltip_label_profile": "Perfil",
+  "recommendation_tooltip_label_recommendation": "Recomendação",
+  "recommendation_tooltip_explanation_community": "Jogadores com gostos parecidos com o seu costumam gostar deste jogo.",
+  "recommendation_tooltip_explanation_series": "Você já demonstrou interesse por outros jogos desta série.",
+  "recommendation_tooltip_explanation_genre": "Este gênero aparece com frequência nos jogos que você mais joga.",
+  "recommendation_tooltip_explanation_tag": "Elementos específicos deste jogo combinam com seu estilo.",
+  "recommendation_tooltip_explanation_hybrid": "Combina afinidade do seu perfil com a popularidade na comunidade.",
+  "recommendation_tooltip_explanation_general": "Combina com seu perfil geral de jogador.",
+  "recommendation_tooltip_explanation_recommended": "Recomendado com base no seu perfil."
 }

@@ -1,5 +1,6 @@
 import { Sparkles, Trophy, Zap } from 'lucide-react';
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   Tooltip,
@@ -15,45 +16,45 @@ interface AffinityTooltipProps {
 }
 
 export function Affinity({ children, badge }: AffinityTooltipProps) {
+  const { t } = useTranslation('trending');
+
   const getBadgeMeta = (badgeType: string) => {
     switch (badgeType) {
       case 'SÉRIE FAVORITA':
         return {
           icon: Trophy,
-          label: 'Série Favorita',
+          label: t('affinity_badge_label_favorite_series'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
-          explanation:
-            'Você já demonstrou interesse por outros jogos desta série.',
-          description: 'Baseado no seu histórico de jogos da mesma franquia',
+          explanation: t('affinity_badge_explanation_favorite_series'),
+          description: t('affinity_badge_description_favorite_series'),
         };
       case 'TOP PICK':
         return {
           icon: Zap,
-          label: 'Top Pick',
+          label: t('affinity_badge_label_top_pick'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
-          explanation: 'Este jogo combina perfeitamente com suas preferências.',
-          description:
-            'Alta afinidade com gêneros, tags e estilo que você mais joga',
+          explanation: t('affinity_badge_explanation_top_pick'),
+          description: t('affinity_badge_description_top_pick'),
         };
       case 'PARA VOCÊ':
         return {
           icon: Sparkles,
-          label: 'Para Você',
+          label: t('affinity_badge_label_for_you'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
-          explanation: 'Este jogo tem boa compatibilidade com seu perfil.',
-          description: 'Elementos do jogo combinam com seu estilo de jogar',
+          explanation: t('affinity_badge_explanation_for_you'),
+          description: t('affinity_badge_description_for_you'),
         };
       default:
         return {
           icon: Sparkles,
-          label: 'Recomendado',
+          label: t('affinity_badge_label_recommended'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
-          explanation: 'Recomendado com base no seu perfil.',
-          description: 'Selecionado para você',
+          explanation: t('affinity_badge_explanation_recommended'),
+          description: t('affinity_badge_description_recommended'),
         };
     }
   };

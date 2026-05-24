@@ -1,5 +1,6 @@
 import { Dna, Gamepad2, Sparkles, Tag, Trophy, Users } from 'lucide-react';
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { RecommendationReason } from '@/types';
 import {
@@ -19,6 +20,8 @@ export function Recommendation({
   children,
   reason,
 }: RecommendationTooltipProps) {
+  const { t } = useTranslation('common');
+
   if (!reason) {
     return <>{children}</>;
   }
@@ -26,19 +29,19 @@ export function Recommendation({
   const getExplanation = (type: string) => {
     switch (type) {
       case 'community':
-        return 'Jogadores com gostos parecidos com o seu costumam gostar deste jogo.';
+        return t('recommendation_tooltip_explanation_community');
       case 'series':
-        return 'Você já demonstrou interesse por outros jogos desta série.';
+        return t('recommendation_tooltip_explanation_series');
       case 'genre':
-        return 'Este gênero aparece com frequência nos jogos que você mais joga.';
+        return t('recommendation_tooltip_explanation_genre');
       case 'tag':
-        return 'Elementos específicos deste jogo combinam com seu estilo.';
+        return t('recommendation_tooltip_explanation_tag');
       case 'hybrid':
-        return 'Combina afinidade do seu perfil com a popularidade na comunidade.';
+        return t('recommendation_tooltip_explanation_hybrid');
       case 'general':
-        return 'Combina com seu perfil geral de jogador.';
+        return t('recommendation_tooltip_explanation_general');
       default:
-        return 'Recomendado com base no seu perfil.';
+        return t('recommendation_tooltip_explanation_recommended');
     }
   };
 
@@ -47,49 +50,49 @@ export function Recommendation({
       case 'community':
         return {
           icon: Users,
-          label: 'Comunidade',
+          label: t('recommendation_tooltip_label_community'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       case 'series':
         return {
           icon: Trophy,
-          label: 'Série Favorita',
+          label: t('recommendation_tooltip_label_series'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       case 'genre':
         return {
           icon: Gamepad2,
-          label: 'Gênero',
+          label: t('recommendation_tooltip_label_genre'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       case 'tag':
         return {
           icon: Tag,
-          label: 'Tag',
+          label: t('recommendation_tooltip_label_tag'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       case 'hybrid':
         return {
           icon: Sparkles,
-          label: 'Afinidade + Comunidade',
+          label: t('recommendation_tooltip_label_affinity_community'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       case 'general':
         return {
           icon: Dna,
-          label: 'Perfil',
+          label: t('recommendation_tooltip_label_profile'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };
       default:
         return {
           icon: Sparkles,
-          label: 'Recomendação',
+          label: t('recommendation_tooltip_label_recommendation'),
           color: 'text-primary',
           bg: 'bg-purple-600/10',
         };

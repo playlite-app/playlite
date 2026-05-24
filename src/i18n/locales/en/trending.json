@@ -28,5 +28,17 @@
   "free_game_card_badge_for_you": "FOR YOU",
   "free_game_card_open_giveaway": "Open giveaway: {{title}}",
   "free_game_card_discount_label": "100% OFF",
-  "free_game_card_days_left_short": "{{count}}d"
+  "free_game_card_days_left_short": "{{count}}d",
+  "affinity_badge_label_favorite_series": "Favorite Series",
+  "affinity_badge_explanation_favorite_series": "You've shown interest in other games from this series.",
+  "affinity_badge_description_favorite_series": "Based on your play history with the same franchise",
+  "affinity_badge_label_top_pick": "Top Pick",
+  "affinity_badge_explanation_top_pick": "This game matches your preferences very well.",
+  "affinity_badge_description_top_pick": "High affinity with the genres, tags and playstyle you prefer",
+  "affinity_badge_label_for_you": "For You",
+  "affinity_badge_explanation_for_you": "This game is a good match for your profile.",
+  "affinity_badge_description_for_you": "Game elements match your play style",
+  "affinity_badge_label_recommended": "Recommended",
+  "affinity_badge_explanation_recommended": "Recommended based on your profile.",
+  "affinity_badge_description_recommended": "Selected for you"
 }

@@ -41,5 +41,19 @@
   "header_store_settings_button": "Platforms",
   "header_quick_settings_title": "Quick Settings",
   "header_toggle_theme_title": "Toggle theme",
-  "achievements_recent": "Recent Achievements"
+  "achievements_recent": "Recent Achievements",
+  "recommendation_tooltip_label_community": "Community",
+  "recommendation_tooltip_label_series": "Favorite Series",
+  "recommendation_tooltip_label_genre": "Genre",
+  "recommendation_tooltip_label_tag": "Tag",
+  "recommendation_tooltip_label_affinity_community": "Affinity + Community",
+  "recommendation_tooltip_label_profile": "Profile",
+  "recommendation_tooltip_label_recommendation": "Recommendation",
+  "recommendation_tooltip_explanation_community": "Players with tastes similar to yours tend to like this game.",
+  "recommendation_tooltip_explanation_series": "You've shown interest in other games from this series.",
+  "recommendation_tooltip_explanation_genre": "This genre frequently appears in the games you play most.",
+  "recommendation_tooltip_explanation_tag": "Specific elements of this game match your play style.",
+  "recommendation_tooltip_explanation_hybrid": "Combines your profile affinity with community popularity.",
+  "recommendation_tooltip_explanation_general": "Matches your overall player profile.",
+  "recommendation_tooltip_explanation_recommended": "Recommended based on your profile."
 }
