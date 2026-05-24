@@ -51,7 +51,7 @@ export function GameActionsMenu({
         <ActionButton
           icon={MoreVertical}
           variant="glass"
-          tooltip={t('library.game_actions_more_options')}
+          tooltip={t('game_actions_more_options')}
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -70,13 +70,13 @@ export function GameActionsMenu({
             <>
               <Check className="mr-2 h-4 w-4 text-green-500" />
               <span className="text-muted-foreground">
-                {t('library.game_actions_in_playlist')}
+                {t('game_actions_in_playlist')}
               </span>
             </>
           ) : (
             <>
               <ListPlus className="mr-2 h-4 w-4" />
-              <span>{t('library.game_actions_add_to_playlist')}</span>
+              <span>{t('game_actions_add_to_playlist')}</span>
             </>
           )}
         </DropdownMenuItem>
@@ -89,7 +89,7 @@ export function GameActionsMenu({
           }}
         >
           <Edit className="mr-2 h-4 w-4" />
-          <span>{t('library.game_actions_edit')}</span>
+          <span>{t('game_actions_edit')}</span>
         </DropdownMenuItem>
 
         {/* OPÇÃO: Excluir */}
@@ -101,7 +101,7 @@ export function GameActionsMenu({
           }}
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          <span>{t('library.game_actions_delete')}</span>
+          <span>{t('game_actions_delete')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

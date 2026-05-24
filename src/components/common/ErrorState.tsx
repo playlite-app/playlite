@@ -23,32 +23,32 @@ export function ErrorState({
   const content = {
     offline: {
       icon: WifiOff,
-      title: t('errors.offline_title'),
-      desc: t('errors.offline_desc'),
-      actionLabel: t('errors.offline_action_label'),
+      title: t('offline_title'),
+      desc: t('offline_desc'),
+      actionLabel: t('offline_action_label'),
       color: 'text-muted-foreground',
       bg: 'bg-muted',
     },
     config: {
       icon: Settings,
-      title: t('errors.config_title'),
-      desc: t('errors.config_desc'),
-      actionLabel: t('errors.config_action_label'),
+      title: t('config_title'),
+      desc: t('config_desc'),
+      actionLabel: t('config_action_label'),
       color: 'text-orange-500',
       bg: 'bg-orange-500/10',
     },
     api: {
       icon: AlertCircle,
-      title: t('errors.api_title'),
-      desc: message ?? t('errors.api_desc'),
+      title: t('api_title'),
+      desc: message ?? t('api_desc'),
       actionLabel: null, // Sem ação de navegação, apenas retry
       color: 'text-red-500',
       bg: 'bg-red-500/10',
     },
     generic: {
       icon: AlertCircle,
-      title: t('errors.generic_title'),
-      desc: message ?? t('errors.generic_desc'),
+      title: t('generic_title'),
+      desc: message ?? t('generic_desc'),
       actionLabel: null,
       color: 'text-red-500',
       bg: 'bg-red-500/10',
@@ -80,7 +80,7 @@ export function ErrorState({
             variant={config.actionLabel ? 'outline' : 'default'}
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
-            {t('errors.retry_button')}
+            {t('retry_button')}
           </Button>
         )}
       </div>

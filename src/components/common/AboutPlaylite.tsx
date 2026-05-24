@@ -71,18 +71,18 @@ export function AboutPlaylite({
           </div>
           <div>
             <h3 className="text-lg leading-none font-semibold tracking-tight">
-              {t('settings.about_title')}
+              {t('about_title')}
             </h3>
             <p className="text-muted-foreground mt-1.5 text-sm">
-              {t('settings.about_description_prefix')}
-              <em> {t('settings.about_description_emphasis')}</em>
-              {t('settings.about_description_suffix')}
+              {t('about_description_prefix')}
+              <em> {t('about_description_emphasis')}</em>
+              {t('about_description_suffix')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <p className="text-muted-foreground text-sm whitespace-nowrap">
-            {t('settings.about_version', { version: appVersion })}
+            {t('about_version', { version: appVersion })}
           </p>
           <ChevronDown
             size={20}
@@ -105,11 +105,9 @@ export function AboutPlaylite({
           <div className="space-y-6 px-6 pb-6">
             {/* Idioma */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">
-                {t('settings.about_language')}
-              </h4>
+              <h4 className="text-sm font-semibold">{t('about_language')}</h4>
               <div className="bg-accent/30 flex items-center justify-between rounded-lg p-4 text-sm">
-                {t('settings.about_select_language')}
+                {t('about_select_language')}
                 <select
                   className={
                     'bg-background ml-2 rounded-md border px-2 py-1 text-sm focus:ring-1 focus:outline-none'
@@ -120,56 +118,52 @@ export function AboutPlaylite({
                     void i18n.changeLanguage(value);
                   }}
                 >
-                  <option value="pt-BR">
-                    {t('settings.about_language_pt')}
-                  </option>
-                  <option value="en">{t('settings.about_language_en')}</option>
+                  <option value="pt-BR">{t('about_language_pt')}</option>
+                  <option value="en">{t('about_language_en')}</option>
                 </select>
               </div>
             </div>
 
             {/* Stack Técnica */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">
-                {t('settings.about_tech_stack')}
-              </h4>
+              <h4 className="text-sm font-semibold">{t('about_tech_stack')}</h4>
               <div className="bg-accent/30 space-y-2 rounded-lg p-4 text-sm">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    {t('settings.about_label_framework')}
+                    {t('about_label_framework')}
                   </span>
                   <TechLink name="Tauri" url="https://tauri.app" />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    {t('settings.about_label_languages')}
+                    {t('about_label_languages')}
                   </span>
                   <TechLink
                     name="Rust"
                     url="https://www.rust-lang.org"
-                    description={t('settings.about_desc_backend')}
+                    description={t('about_desc_backend')}
                   />
                   <span className="text-muted-foreground">•</span>
                   <TechLink
                     name="TypeScript"
                     url="https://www.typescriptlang.org"
-                    description={t('settings.about_desc_frontend')}
+                    description={t('about_desc_frontend')}
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    {t('settings.about_label_main_library')}
+                    {t('about_label_main_library')}
                   </span>
                   <TechLink
                     name="React"
                     url="https://react.dev"
-                    description={t('settings.about_desc_frontend')}
+                    description={t('about_desc_frontend')}
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    {t('settings.about_label_uiux')}
+                    {t('about_label_uiux')}
                   </span>
                   <TechLink name="Tailwind CSS" url="https://tailwindcss.com" />
                   <span className="text-muted-foreground">•</span>
@@ -179,7 +173,7 @@ export function AboutPlaylite({
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
-                    {t('settings.about_label_database')}
+                    {t('about_label_database')}
                   </span>
                   <TechLink name="SQLite" url="https://sqlite.org/index.html" />
                 </div>
@@ -188,15 +182,13 @@ export function AboutPlaylite({
 
             {/* APIs Externas */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">
-                {t('settings.about_apis_services')}
-              </h4>
+              <h4 className="text-sm font-semibold">{t('about_apis_services')}</h4>
               <div className="bg-accent/30 grid gap-2 rounded-lg p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>{t('settings.about_game_metadata')}</p>
+                  <p>{t('about_game_metadata')}</p>
                   <div className="flex-1">
                     <TechLink name="RAWG" url="https://rawg.io/apidocs" />{' '}
                     <span className="text-muted-foreground mt-0.5 text-xs">
@@ -213,7 +205,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>{t('settings.about_prices_promotions')}</p>
+                  <p>{t('about_prices_promotions')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="IsThereAnyDeal"
@@ -225,7 +217,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>{t('settings.about_public_stats')}</p>
+                  <p>{t('about_public_stats')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="SteamSpy"
@@ -237,7 +229,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>{t('settings.about_free_games')}</p>
+                  <p>{t('about_free_games')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="GamerPower"
@@ -249,7 +241,7 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
-                  <p>{t('settings.about_description_translation')}</p>
+                  <p>{t('about_description_translation')}</p>
                   <div className="flex-1">
                     <TechLink
                       name="Gemini"
@@ -263,29 +255,29 @@ export function AboutPlaylite({
             {/* Dataset de Recomendações */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">
-                {t('settings.about_recommendation_dataset')}
+                {t('about_recommendation_dataset')}
               </h4>
               <div className="bg-accent/30 rounded-lg p-4">
                 <div className="space-y-2.5 text-sm">
                   <p className="text-muted-foreground leading-relaxed">
-                    {t('settings.about_recommendation_prefix')}
+                    {t('about_recommendation_prefix')}
                     <span className="text-foreground font-semibold">
-                      {t('settings.about_recommendation_dataset_name')}
+                      {t('about_recommendation_dataset_name')}
                     </span>
-                    {t('settings.about_recommendation_suffix')}
+                    {t('about_recommendation_suffix')}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <TechLink
-                      name={t('settings.about_view_on_kaggle')}
+                      name={t('about_view_on_kaggle')}
                       url="https://www.kaggle.com/datasets/antonkozyriev/game-recommendations-on-steam"
                     />
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">
-                      {t('settings.about_license_cc0')}
+                      {t('about_license_cc0')}
                     </span>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">
-                      {t('settings.about_year')}
+                      {t('about_year')}
                     </span>
                   </div>
                 </div>
@@ -302,7 +294,7 @@ export function AboutPlaylite({
                   className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
                 >
                   <Github size={16} />
-                  <span>{t('settings.about_github')}</span>
+                  <span>{t('about_github')}</span>
                 </a>
                 <span className="text-muted-foreground">•</span>
                 <a
@@ -311,11 +303,11 @@ export function AboutPlaylite({
                   rel="noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('settings.about_license_mit')}
+                  {t('about_license_mit')}
                 </a>
               </div>
               <p className="text-muted-foreground text-xs">
-                {t('settings.about_developed_by')}
+                {t('about_developed_by')}
               </p>
             </div>
           </div>

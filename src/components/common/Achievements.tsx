@@ -40,7 +40,7 @@ export default function Achievements() {
       <div className="space-y-3">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-bold">
           <Trophy className="text-yellow-500" size={20} />
-          {t('common.achievements_recent')}
+          {t('achievements_recent')}
         </h3>
 
         <div className="space-y-2">
