@@ -32,5 +32,12 @@
   "deal_badge": "OFERTA!",
   "coupon_copied": "Cupom copiado: {{coupon}}",
   "copy_coupon_tooltip": "Copiar: {{coupon}}",
-  "remove_tooltip": "Remover"
+  "remove_tooltip": "Remover",
+  "add_wishlist_search_error": "Erro ao buscar jogos",
+  "add_wishlist_added_success": "Adicionado à lista!",
+  "add_wishlist_add_error": "Erro ao adicionar jogo",
+  "add_wishlist_title": "Adicionar à Lista de Desejos",
+  "add_wishlist_search_placeholder": "Nome do jogo...",
+  "add_wishlist_id_label": "ID:",
+  "add_wishlist_no_results_message": "Nenhum jogo encontrado."
 }

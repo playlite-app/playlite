@@ -1,5 +1,6 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { FileSearch, FolderOpen, Gamepad2, Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useGameForm } from '@/hooks';
 import { Game } from '@/types';
@@ -39,13 +40,14 @@ export default function AddGame({
     isOpen,
     gameToEdit
   );
+  const { t } = useTranslation('dialog');
 
   const handleSelectFolder = async () => {
     try {
       const selected = await open({
         directory: true,
         multiple: false,
-        title: 'Selecionar Pasta de Instalação',
+        title: t('add_game_select_install_folder_title'),
       });
 
       if (selected) {
@@ -60,10 +62,10 @@ export default function AddGame({
     try {
       const selected = await open({
         multiple: false,
-        title: 'Selecionar Executável',
+        title: t('add_game_select_executable_title'),
         filters: [
           {
-            name: 'Executável',
+            name: t('add_game_executable_filter_name'),
             extensions: ['exe'],
           },
         ],
@@ -90,57 +92,77 @@ export default function AddGame({
       <DialogContent className="custom-scrollbar max-h-[90vh] overflow-y-auto sm:max-w-150">
         <DialogHeader>
           <DialogTitle>
-            {gameToEdit ? 'Editar Jogo' : 'Adicionar Jogo Manual'}
+            {gameToEdit
+              ? t('add_game_edit_title')
+              : t('add_game_add_manual_title')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {/* === DADOS BÁSICOS === */}
           <div className="grid gap-2">
-            <Label htmlFor="name">Nome do Jogo *</Label>
+            <Label htmlFor="name">{t('add_game_name_label')}</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={e => handleChange('name', e.target.value)}
-              placeholder="Ex: Elden Ring"
+              placeholder={t('add_game_name_placeholder')}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="cover">Capa (URL)</Label>
+            <Label htmlFor="cover">{t('add_game_cover_label')}</Label>
             <Input
               id="cover"
               value={formData.coverUrl}
               onChange={e => handleChange('coverUrl', e.target.value)}
-              placeholder="https://..."
+              placeholder={t('add_game_cover_placeholder')}
             />
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div className="grid gap-2">
-              <Label>Plataforma</Label>
+              <Label>{t('add_game_platform_label')}</Label>
               <Select
                 value={formData.platform}
                 onValueChange={val => handleChange('platform', val)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={t('add_game_select_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Steam">Steam</SelectItem>
-                  <SelectItem value="Epic">Epic Games</SelectItem>
-                  <SelectItem value="GOG">GOG Galaxy</SelectItem>
-                  <SelectItem value="EA">EA</SelectItem>
-                  <SelectItem value="Ubisoft">Ubisoft</SelectItem>
-                  <SelectItem value="Battle.net">Battle.net</SelectItem>
-                  <SelectItem value="Amazon">Amazon Games</SelectItem>
-                  <SelectItem value="Indie">Indie</SelectItem>
-                  <SelectItem value="Outra">Outra</SelectItem>
+                  <SelectItem value="Steam">
+                    {t('add_game_platform_steam')}
+                  </SelectItem>
+                  <SelectItem value="Epic">
+                    {t('add_game_platform_epic_games')}
+                  </SelectItem>
+                  <SelectItem value="GOG">
+                    {t('add_game_platform_gog_galaxy')}
+                  </SelectItem>
+                  <SelectItem value="EA">
+                    {t('add_game_platform_ea')}
+                  </SelectItem>
+                  <SelectItem value="Ubisoft">
+                    {t('add_game_platform_ubisoft')}
+                  </SelectItem>
+                  <SelectItem value="Battle.net">
+                    {t('add_game_platform_battlenet')}
+                  </SelectItem>
+                  <SelectItem value="Amazon">
+                    {t('add_game_platform_amazon_games')}
+                  </SelectItem>
+                  <SelectItem value="Indie">
+                    {t('add_game_platform_indie')}
+                  </SelectItem>
+                  <SelectItem value="Outra">
+                    {t('add_game_platform_other')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Instalado</Label>
+              <Label>{t('add_game_installed_label')}</Label>
               <div className="border-input bg-background flex w-full items-center gap-2 rounded-md border px-3 py-2">
                 <input
                   type="checkbox"
@@ -150,12 +172,14 @@ export default function AddGame({
                   className="h-4 w-4 cursor-pointer"
                 />
                 <label htmlFor="installed" className="cursor-pointer text-sm">
-                  {formData.installed ? 'Sim' : 'Não'}
+                  {formData.installed
+                    ? t('add_game_installed_yes')
+                    : t('add_game_installed_no')}
                 </label>
               </div>
             </div>
             <div className="grid gap-2">
-              <Label>Confiança da Importação</Label>
+              <Label>{t('add_game_import_confidence_label')}</Label>
               <Select
                 value={formData.importConfidence || 'none'}
                 onValueChange={val =>
@@ -163,13 +187,23 @@ export default function AddGame({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Nenhuma" />
+                  <SelectValue
+                    placeholder={t('add_game_import_confidence_none')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  <SelectItem value="High">Alta</SelectItem>
-                  <SelectItem value="Medium">Média</SelectItem>
-                  <SelectItem value="Low">Baixa</SelectItem>
+                  <SelectItem value="none">
+                    {t('add_game_import_confidence_none')}
+                  </SelectItem>
+                  <SelectItem value="High">
+                    {t('add_game_import_confidence_high')}
+                  </SelectItem>
+                  <SelectItem value="Medium">
+                    {t('add_game_import_confidence_medium')}
+                  </SelectItem>
+                  <SelectItem value="Low">
+                    {t('add_game_import_confidence_low')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -179,24 +213,26 @@ export default function AddGame({
 
           {/* === EXECUÇÃO === */}
           <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
-            <Gamepad2 size={16} /> Configuração de Lançamento
+            <Gamepad2 size={16} /> {t('add_game_launch_configuration_section')}
           </h3>
 
           <div className="grid gap-2">
-            <Label htmlFor="installPath">Pasta de Instalação (Raiz)</Label>
+            <Label htmlFor="installPath">
+              {t('add_game_install_path_label')}
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="installPath"
                 value={formData.installPath}
                 onChange={e => handleChange('installPath', e.target.value)}
-                placeholder="C:\Games\MeuJogo\"
+                placeholder={t('add_game_install_path_placeholder')}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={handleSelectFolder}
-                title="Selecionar pasta"
+                title={t('add_game_select_folder_button_title')}
               >
                 <FolderOpen size={18} />
               </Button>
@@ -204,20 +240,22 @@ export default function AddGame({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="execPath">Caminho do Executável (.exe)</Label>
+            <Label htmlFor="execPath">
+              {t('add_game_executable_path_label')}
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="execPath"
                 value={formData.executablePath}
                 onChange={e => handleChange('executablePath', e.target.value)}
-                placeholder="C:\Games\MeuJogo\jogo.exe"
+                placeholder={t('add_game_executable_path_placeholder')}
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={handleSelectExecutable}
-                title="Selecionar executável"
+                title={t('add_game_select_executable_button_title')}
               >
                 <FileSearch size={18} />
               </Button>
@@ -225,12 +263,14 @@ export default function AddGame({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="launchArgs">Argumentos de Lançamento</Label>
+            <Label htmlFor="launchArgs">
+              {t('add_game_launch_args_label')}
+            </Label>
             <Input
               id="launchArgs"
               value={formData.launchArgs}
               onChange={e => handleChange('launchArgs', e.target.value)}
-              placeholder="Ex: -windowed -nointro"
+              placeholder={t('add_game_launch_args_placeholder')}
             />
           </div>
 
@@ -239,7 +279,7 @@ export default function AddGame({
           {/* === AVALIAÇÃO === */}
           <div className="grid grid-cols-3 items-end gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="playtime">Tempo Jogado (Horas)</Label>
+              <Label htmlFor="playtime">{t('add_game_playtime_label')}</Label>
               <Input
                 id="playtime"
                 type="number"
@@ -263,26 +303,36 @@ export default function AddGame({
             </div>
 
             <div className="grid gap-1">
-              <Label>Status</Label>
+              <Label>{t('add_game_status_label')}</Label>
               <Select
                 value={formData.status}
                 onValueChange={val => handleChange('status', val)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={t('add_game_select_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="playing">Jogando</SelectItem>
-                  <SelectItem value="backlog">Backlog</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="abandoned">Abandonado</SelectItem>
-                  <SelectItem value="plan_to_play">Pretendo Jogar</SelectItem>
+                  <SelectItem value="playing">
+                    {t('add_game_status_playing')}
+                  </SelectItem>
+                  <SelectItem value="backlog">
+                    {t('add_game_status_backlog')}
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    {t('add_game_status_completed')}
+                  </SelectItem>
+                  <SelectItem value="abandoned">
+                    {t('add_game_status_abandoned')}
+                  </SelectItem>
+                  <SelectItem value="plan_to_play">
+                    {t('add_game_status_plan_to_play')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid gap-1">
-              <Label>Sua Avaliação</Label>
+              <Label>{t('add_game_rating_label')}</Label>
               <div className="flex h-10 items-center gap-1">
                 {[1, 2, 3, 4, 5].map(star => (
                   <button
@@ -308,9 +358,9 @@ export default function AddGame({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {t('add_game_cancel_button')}
           </Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          <Button onClick={handleSave}>{t('add_game_save_button')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

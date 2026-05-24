@@ -32,5 +32,12 @@
   "deal_badge": "DEAL!",
   "coupon_copied": "Coupon copied: {{coupon}}",
   "copy_coupon_tooltip": "Copy: {{coupon}}",
-  "remove_tooltip": "Remove"
+  "remove_tooltip": "Remove",
+  "add_wishlist_search_error": "Error searching for games",
+  "add_wishlist_added_success": "Added to wishlist!",
+  "add_wishlist_add_error": "Error adding game",
+  "add_wishlist_title": "Add to Wishlist",
+  "add_wishlist_search_placeholder": "Game name...",
+  "add_wishlist_id_label": "ID:",
+  "add_wishlist_no_results_message": "No games found."
 }

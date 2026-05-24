@@ -6,6 +6,7 @@ export const DEFAULT_LANGUAGE = 'pt-BR';
 export const SUPPORTED_LANGUAGES = ['en', 'pt-BR'] as const;
 export const NAMESPACES = [
   'common',
+  'dialog',
   'settings',
   'library',
   'updater',

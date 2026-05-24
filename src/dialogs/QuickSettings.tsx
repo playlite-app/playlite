@@ -1,6 +1,6 @@
 import { Bug, FileText, FolderOpen, RefreshCw, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 import {
@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/ui/dialog';
 import { Separator } from '@/ui/separator';
+import { toast } from '@/utils/toast';
 
 interface QuickSettingsModalProps {
   open: boolean;
@@ -19,13 +20,13 @@ interface QuickSettingsModalProps {
   onGenerateReport: () => void;
   onCheckUpdates: () => void;
 }
-
 export function QuickSettings({
   open,
   onClose,
   onGenerateReport,
   onCheckUpdates,
 }: QuickSettingsModalProps) {
+  const { t } = useTranslation('settings');
   const [isChecking, setIsChecking] = useState(false);
 
   const handleCheckUpdates = async () => {
@@ -46,10 +47,10 @@ export function QuickSettings({
       const logsPath = await appLogDir();
 
       await invoke('open_folder', { path: logsPath });
-      toast.success('Pasta de logs aberta');
+      toast.success(t('quick_settings_logs_opened_success'));
     } catch (error) {
-      console.error('Erro ao abrir pasta de logs:', error);
-      toast.error('Não foi possível abrir a pasta de logs');
+      console.error(t('quick_settings_logs_open_error_log'), error);
+      toast.error(t('quick_settings_logs_opened_error'));
     }
   };
 
@@ -62,10 +63,10 @@ export function QuickSettings({
       const analysisPath = await join(appData, 'analysis');
 
       await invoke('open_folder', { path: analysisPath });
-      toast.success('Pasta de análises aberta');
+      toast.success(t('quick_settings_analysis_opened_success'));
     } catch (error) {
-      console.error('Erro ao abrir pasta de análises:', error);
-      toast.error('Não foi possível abrir a pasta de análises');
+      console.error(t('quick_settings_analysis_open_error_log'), error);
+      toast.error(t('quick_settings_analysis_opened_error'));
     }
   };
 
@@ -76,27 +77,29 @@ export function QuickSettings({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings size={20} />
-            Configurações Rápidas
+            {t('quick_settings_title')}
           </DialogTitle>
           <DialogDescription>
-            Acesso rápido a ferramentas e diagnósticos do sistema
+            {t('quick_settings_description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Análise de Sistema */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Sistema de Recomendações</h3>
+            <h3 className="text-sm font-medium">
+              {t('quick_settings_recommendations_section')}
+            </h3>
             <Button
               variant="outline"
               className="w-full justify-start gap-2"
               onClick={onGenerateReport}
             >
               <Bug size={16} />
-              Gerar Relatório de Análise
+              {t('quick_settings_generate_analysis_report_button')}
             </Button>
             <p className="text-muted-foreground text-xs">
-              Exporta estatísticas detalhadas do algoritmo de recomendação
+              {t('quick_settings_generate_analysis_report_description')}
             </p>
           </div>
 
@@ -104,7 +107,9 @@ export function QuickSettings({
 
           {/* Atualizações */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Atualizações</h3>
+            <h3 className="text-sm font-medium">
+              {t('quick_settings_updates_section')}
+            </h3>
             <Button
               variant="outline"
               className="w-full justify-start gap-2"
@@ -115,10 +120,12 @@ export function QuickSettings({
                 size={16}
                 className={isChecking ? 'animate-spin' : ''}
               />
-              {isChecking ? 'Verificando...' : 'Procurar Atualizações'}
+              {isChecking
+                ? t('quick_settings_checking_updates_button')
+                : t('quick_settings_check_updates_button')}
             </Button>
             <p className="text-muted-foreground text-xs">
-              Busca novas versões disponíveis no GitHub Releases
+              {t('quick_settings_updates_description')}
             </p>
           </div>
 
@@ -126,7 +133,9 @@ export function QuickSettings({
 
           {/* Logs e Análises */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Logs e Análises</h3>
+            <h3 className="text-sm font-medium">
+              {t('quick_settings_logs_section')}
+            </h3>
             <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
@@ -134,7 +143,7 @@ export function QuickSettings({
                 onClick={handleOpenLogsFolder}
               >
                 <FileText size={16} />
-                Abrir Pasta de Logs
+                {t('quick_settings_open_logs_folder_button')}
               </Button>
               <Button
                 variant="outline"
@@ -142,11 +151,11 @@ export function QuickSettings({
                 onClick={handleOpenAnalysisFolder}
               >
                 <FolderOpen size={16} />
-                Abrir Pasta de Análises
+                {t('quick_settings_open_analysis_folder_button')}
               </Button>
             </div>
             <p className="text-muted-foreground text-xs">
-              Logs do sistema e relatórios de recomendação exportados
+              {t('quick_settings_logs_description')}
             </p>
           </div>
         </div>
@@ -154,4 +163,3 @@ export function QuickSettings({
     </Dialog>
   );
 }
-

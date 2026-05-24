@@ -1,16 +1,12 @@
 import { ImageOff, Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { SearchResult, wishlistService } from '@/services/wishlistService';
 import { Button } from '@/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/dialog';
 import { Input } from '@/ui/input';
+import { toast } from '@/utils/toast';
 
 interface AddWishlistModalProps {
   isOpen: boolean;
@@ -23,6 +19,7 @@ export default function AddWishlist({
   onClose,
   onSuccess,
 }: AddWishlistModalProps) {
+  const { t } = useTranslation('wishlist');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,7 +34,7 @@ export default function AddWishlist({
       const data = await wishlistService.searchWishlistGame(query);
       setResults(data);
     } catch {
-      toast.error('Erro ao buscar jogos');
+      toast.error(t('add_wishlist_search_error'));
     } finally {
       setLoading(false);
     }
@@ -48,13 +45,13 @@ export default function AddWishlist({
 
     try {
       await wishlistService.addToWishlist(game);
-      toast.success('Adicionado à lista!');
+      toast.success(t('add_wishlist_added_success'));
       onSuccess();
       onClose();
       setResults([]);
       setQuery('');
     } catch {
-      toast.error('Erro ao adicionar jogo');
+      toast.error(t('add_wishlist_add_error'));
     } finally {
       setAddingId(null);
     }
@@ -64,12 +61,12 @@ export default function AddWishlist({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Adicionar à Lista de Desejos</DialogTitle>
+          <DialogTitle>{t('add_wishlist_title')}</DialogTitle>
         </DialogHeader>
 
         <div className="my-2 flex gap-2">
           <Input
-            placeholder="Nome do jogo..."
+            placeholder={t('add_wishlist_search_placeholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -108,7 +105,9 @@ export default function AddWishlist({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{game.name}</p>
-                <p className="text-muted-foreground text-xs">ID: {game.id}</p>
+                <p className="text-muted-foreground text-xs">
+                  {t('add_wishlist_id_label')} {game.id}
+                </p>
               </div>
               <Button
                 size="sm"
@@ -126,7 +125,7 @@ export default function AddWishlist({
           ))}
           {results.length === 0 && !loading && query && (
             <p className="text-muted-foreground py-4 text-center text-sm">
-              Nenhum jogo encontrado.
+              {t('add_wishlist_no_results_message')}
             </p>
           )}
         </div>
@@ -134,4 +133,3 @@ export default function AddWishlist({
     </Dialog>
   );
 }
-

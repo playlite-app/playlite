@@ -1,1 +1,15 @@
-{}
+{
+  "major_update_title": "Atualização Importante",
+  "major_update_updated_message": "Playlite foi atualizado",
+  "major_update_from_text": "de",
+  "major_update_to_text": "para",
+  "major_update_description": "Esta versão do Playlite trouxe mudanças estruturais importantes no banco de dados e melhorias de compatibilidade.",
+  "major_update_change_1": "Backup automático criado",
+  "major_update_change_2": "Dados migrados com segurança",
+  "major_update_change_3": "Sistema de versionamento ativo",
+  "major_update_data_safe_title": "Seus dados estão seguros!",
+  "major_update_data_safe_text_1": "Um backup foi criado automaticamente na pasta",
+  "major_update_backups_folder_name": "backups/",
+  "major_update_data_safe_text_2": "do diretório da aplicação.",
+  "major_update_continue_button": "Entendi, continuar"
+}
