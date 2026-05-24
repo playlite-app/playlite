@@ -1,5 +1,6 @@
 import { FolderOpen, Info, Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
@@ -14,6 +15,7 @@ interface LegacySettingsProps {
 export function LegacySettings({
   onLibraryUpdate,
 }: Readonly<LegacySettingsProps>) {
+  const { t } = useTranslation('plataforms');
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
@@ -23,8 +25,8 @@ export function LegacySettings({
     const { open } = await import('@tauri-apps/plugin-dialog');
     const selected = await open({
       multiple: false,
-      title: 'Selecione o arquivo app-state.json',
-      filters: [{ name: 'JSON', extensions: ['json'] }],
+      title: t('legacy_select_app_state_title'),
+      filters: [{ name: t('legacy_json_filter_name'), extensions: ['json'] }],
     });
 
     if (selected) setAppStatePath(selected);
@@ -36,10 +38,10 @@ export function LegacySettings({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Importação Legacy Games
+            {t('legacy_title')}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos adquiridos via Legacy Games Launcher.
+            {t('legacy_description')}
           </p>
         </div>
         {status.type && (
@@ -52,24 +54,28 @@ export function LegacySettings({
         {/* Detecção automática */}
         <SettingsRow
           icon={Info}
-          title="Detecção Automática"
-          description="O scanner localiza o arquivo de estado do launcher automaticamente."
+          title={t('legacy_auto_detection_title')}
+          description={t('legacy_auto_detection_description')}
         >
           <div className="bg-muted/30 space-y-2 rounded-md border p-3">
             <p className="text-muted-foreground text-xs leading-relaxed">
-              O Playlite lê o arquivo{' '}
-              <code className="text-primary/80">app-state.json</code> do Legacy
-              Games Launcher para detectar jogos adquiridos e instalados.
+              {t('legacy_auto_detection_note_prefix')}{' '}
+              <code className="text-primary/80">app-state.json</code>
+              {t('legacy_auto_detection_note_suffix')}
             </p>
             <ul className="text-muted-foreground space-y-1 text-xs">
               <li>
-                <strong className="text-foreground/70">Windows:</strong>{' '}
+                <strong className="text-foreground/70">
+                  {t('legacy_windows_label')}
+                </strong>{' '}
                 <code>
                   %APPDATA%\Roaming\legacy-games-launcher\app-state.json
                 </code>
               </li>
               <li>
-                <strong className="text-foreground/70">Linux (Wine):</strong>{' '}
+                <strong className="text-foreground/70">
+                  {t('legacy_linux_wine_label')}
+                </strong>{' '}
                 <code>
                   {'<wine_prefix>'}/drive_c/users/{'<USER>'}
                   /AppData/Roaming/legacy-games-launcher/
@@ -82,15 +88,16 @@ export function LegacySettings({
         {/* Nota Wine Linux */}
         <SettingsRow
           icon={Info}
-          title="Wine (Linux)"
-          description="No Linux, configure o Wine prefix na aba Wine para detectar a instalação."
+          title={t('legacy_wine_title')}
+          description={t('legacy_wine_description')}
         >
           <div className="bg-muted/30 rounded-md border p-3">
             <p className="text-muted-foreground text-xs leading-relaxed">
-              O Wine prefix configurado em{' '}
-              <strong className="text-foreground/70">Wine (Linux)</strong> é
-              usado automaticamente para localizar o launcher. Nenhuma
-              configuração adicional é necessária aqui.
+              {t('legacy_wine_note_prefix')}{' '}
+              <strong className="text-foreground/70">
+                {t('legacy_wine_linux_label')}
+              </strong>
+              {t('legacy_wine_note_suffix')}
             </p>
           </div>
         </SettingsRow>
@@ -98,15 +105,15 @@ export function LegacySettings({
         {/* Caminho manual (opcional) */}
         <SettingsRow
           icon={FolderOpen}
-          title="Caminho Manual (opcional)"
-          description="Se a detecção automática falhar, aponte diretamente para o app-state.json."
+          title={t('legacy_manual_path_title')}
+          description={t('legacy_manual_path_description')}
         >
           <div className="flex items-center gap-2">
             <Input
               type="text"
               value={appStatePath}
               onChange={e => setAppStatePath(e.target.value)}
-              placeholder="Ex: C:\Users\user\AppData\Roaming\legacy-games-launcher\app-state.json"
+              placeholder={t('legacy_manual_path_placeholder')}
               className="bg-background/50 font-mono text-xs"
             />
             <Button
@@ -116,24 +123,24 @@ export function LegacySettings({
               className="shrink-0 text-xs"
             >
               <FolderOpen className="mr-1 h-3 w-3" />
-              Procurar
+              {t('legacy_browse')}
             </Button>
           </div>
         </SettingsRow>
 
         {/* O que será importado */}
         <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
-          <h4 className="mb-2 text-sm font-semibold">O que será importado:</h4>
+          <h4 className="mb-2 text-sm font-semibold">
+            {t('legacy_imported_title')}
+          </h4>
           <ul className="text-muted-foreground space-y-1 text-xs">
-            <li>✓ Jogos adquiridos (compras e giveaways)</li>
-            <li>✓ Nome, capa e descrição do jogo</li>
-            <li>✓ Diretório de instalação e executável</li>
-            <li>✓ Status de instalação</li>
+            <li>{t('legacy_import_item_acquired')}</li>
+            <li>{t('legacy_import_item_metadata')}</li>
+            <li>{t('legacy_import_item_install')}</li>
+            <li>{t('legacy_import_item_status')}</li>
           </ul>
           <p className="text-muted-foreground mt-4 text-xs">
-            <strong>Nota:</strong> O Legacy Games Launcher deve estar instalado
-            e você deve ter feito login ao menos uma vez para que o arquivo de
-            estado exista.
+            {t('legacy_import_note')}
           </p>
         </div>
       </div>
@@ -141,7 +148,8 @@ export function LegacySettings({
       {/* Progress Indicator */}
       {loading.importingLegacy && progress && (
         <div className="text-muted-foreground animate-pulse rounded-lg bg-blue-500/10 p-3 text-center text-sm">
-          Importando: {progress.game} ({progress.current}/{progress.total})
+          {t('legacy_importing')}: {progress.game} ({progress.current}/
+          {progress.total})
         </div>
       )}
 
@@ -157,7 +165,9 @@ export function LegacySettings({
           ) : (
             <RefreshCw size={16} />
           )}
-          {loading.importingLegacy ? 'Importando...' : 'Importar Jogos Legacy'}
+          {loading.importingLegacy
+            ? t('legacy_importing_short')
+            : t('legacy_import_button')}
         </Button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { FolderOpen, Scan } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { SettingsRow } from '@/components/common';
 import { useScanner } from '@/hooks';
@@ -8,6 +9,7 @@ import { Separator } from '@/ui/separator';
 import { DiscoveriesList } from '@/windows';
 
 export function LocalScannerSettings() {
+  const { t } = useTranslation('plataforms');
   const {
     scanning,
     result,
@@ -22,11 +24,10 @@ export function LocalScannerSettings() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          Scanner de Importação Local
+          {t('scanner_title')}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Encontre e importe jogos instalados localmente fora das lojas
-          oficiais.
+          {t('scanner_description')}
         </p>
       </div>
       <Separator className="mt-5" />
@@ -35,14 +36,14 @@ export function LocalScannerSettings() {
         {/* Área de Controles */}
         <SettingsRow
           icon={FolderOpen}
-          title="Diretório de Varredura"
-          description="Selecione a pasta onde seus jogos estão instalados."
+          title={t('scanner_directory_title')}
+          description={t('scanner_directory_description')}
         >
           <div className="flex flex-col gap-3">
             {selectedFolder && (
               <div className="bg-muted/30 flex items-center gap-2 overflow-hidden rounded-md border p-2">
                 <span className="text-muted-foreground shrink-0 text-[10px] font-bold uppercase">
-                  Caminho:
+                  {t('scanner_path_label')}:
                 </span>
                 <code className="text-primary/80 truncate text-xs">
                   {selectedFolder}
@@ -56,7 +57,9 @@ export function LocalScannerSettings() {
                 className="hover:border-primary/50 flex-1 border-dashed"
               >
                 <FolderOpen className="mr-2 h-4 w-4" />
-                {selectedFolder ? 'Mudar Pasta' : 'Selecionar Pasta'}
+                {selectedFolder
+                  ? t('scanner_change_folder')
+                  : t('scanner_select_folder')}
               </Button>
               <Button
                 onClick={handleScan}
@@ -66,7 +69,7 @@ export function LocalScannerSettings() {
                 <Scan
                   className={cn('mr-2 h-4 w-4', scanning && 'animate-spin')}
                 />
-                {scanning ? 'Analisando...' : 'Iniciar Varredura'}
+                {scanning ? t('scanner_scanning') : t('scanner_start_scan')}
               </Button>
             </div>
           </div>
@@ -94,7 +97,7 @@ export function LocalScannerSettings() {
               </div>
               {result.success && result.discoveries.length > 0 && (
                 <Button onClick={handleAddAll} disabled={scanning} size="sm">
-                  Adicionar Todos
+                  {t('scanner_add_all')}
                 </Button>
               )}
             </div>
@@ -103,7 +106,7 @@ export function LocalScannerSettings() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
-                    Escolher Executáveis:
+                    {t('scanner_choose_executables')}
                   </h3>
                 </div>
                 <DiscoveriesList discoveries={result.discoveries} />
@@ -116,7 +119,7 @@ export function LocalScannerSettings() {
           <div className="border-border/40 flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
             <Scan className="text-muted-foreground/30 mb-4 h-12 w-12" />
             <p className="text-muted-foreground text-sm">
-              Selecione uma pasta e clique em "Iniciar Varredura" para começar.
+              {t('scanner_empty_state')}
             </p>
           </div>
         )}

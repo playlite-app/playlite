@@ -1,5 +1,6 @@
 import { FileText, FolderOpen, Gamepad2, Star } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { getBestExecutable } from '@/services/scannerService';
 import { GameDiscovery } from '@/types/scanner';
@@ -25,6 +26,7 @@ export function DiscoveriesList({
 }
 
 function GameDiscoveryCard({ discovery }: { discovery: GameDiscovery }) {
+  const { t } = useTranslation('plataforms');
   const [showModal, setShowModal] = useState(false);
   const bestExe = getBestExecutable(discovery);
 
@@ -50,12 +52,12 @@ function GameDiscoveryCard({ discovery }: { discovery: GameDiscovery }) {
                 </div>
                 <div className="flex items-center gap-1">
                   <FileText size={12} /> {discovery.executables.length}{' '}
-                  executáveis
+                  {t('discoveries_executables')}
                 </div>
                 {bestExe && (
                   <div className="flex items-center gap-1 text-yellow-500/80">
                     <Star size={12} className="fill-yellow-500/10" />
-                    Sugestão: {bestExe.filename}
+                    {t('discoveries_suggestion')}: {bestExe.filename}
                   </div>
                 )}
               </div>
@@ -66,7 +68,7 @@ function GameDiscoveryCard({ discovery }: { discovery: GameDiscovery }) {
               onClick={() => setShowModal(true)}
               className="shrink-0"
             >
-              Selecionar
+              {t('discoveries_select')}
             </Button>
           </div>
         </CardContent>

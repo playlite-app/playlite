@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Cpu, FileText, HardDrive, MousePointer2, Star } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { formatFileSize } from '@/services/scannerService';
 import { ExecutableCandidate, GameDiscovery } from '@/types/scanner';
@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/ui/table';
+import { toast } from '@/utils/toast';
 
 interface Props {
   open: boolean;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export function ExecutableSelection({ open, onClose, discovery }: Props) {
+  const { t } = useTranslation('plataforms');
   const [isSaving, setIsSaving] = useState(false);
   const handleSelect = async (exe: ExecutableCandidate) => {
     setIsSaving(true);
@@ -41,11 +43,13 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
         executablePath: exe.path,
         basePath: discovery.base_path,
       });
-      toast.success(`${discovery.suggested_name} adicionado à biblioteca!`);
+      toast.success(
+        t('executable_added_to_library', { name: discovery.suggested_name })
+      );
       onClose();
     } catch (error) {
       toast.error(
-        typeof error === 'string' ? error : 'Falha ao salvar jogo no banco.'
+        typeof error === 'string' ? error : t('executable_save_failed')
       );
       console.error('Erro ao adicionar jogo:', error);
     } finally {
@@ -66,7 +70,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
                 {discovery.suggested_name}
               </DialogTitle>
               <DialogDescription className="text-sm">
-                Selecione o executável principal para gerenciar o jogo.
+                {t('executable_dialog_description')}
               </DialogDescription>
             </div>
           </div>
@@ -77,16 +81,16 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
             <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-md">
               <TableRow className="border-none hover:bg-transparent">
                 <TableHead className="text-muted-foreground/80 h-12 pl-8 text-sm font-bold tracking-widest uppercase">
-                  Executável / Caminho
+                  {t('executable_table_executable_path')}
                 </TableHead>
                 <TableHead className="text-muted-foreground/80 h-12 text-sm font-bold tracking-widest uppercase">
-                  Tamanho
+                  {t('executable_table_size')}
                 </TableHead>
                 <TableHead className="text-muted-foreground/80 h-12 text-sm font-bold tracking-widest uppercase">
-                  Arquitetura
+                  {t('executable_table_architecture')}
                 </TableHead>
                 <TableHead className="text-muted-foreground/80 h-12 pr-8 text-right text-sm font-bold tracking-widest uppercase">
-                  Ação
+                  {t('executable_table_action')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -110,7 +114,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
                                 variant="outline"
                                 className="border-primary/30 text-primary ml-2 h-4 text-xs font-black uppercase"
                               >
-                                Sugestão
+                                {t('executable_suggestion')}
                               </Badge>
                             )}
                           </span>
@@ -147,7 +151,9 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
                         className="h-8 font-bold"
                       >
                         <MousePointer2 size={14} className="mr-2" />
-                        {isSaving ? 'Salvando...' : 'Selecionar'}
+                        {isSaving
+                          ? t('executable_saving')
+                          : t('executable_select')}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -157,11 +163,9 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
         </div>
 
         <div className="bg-muted/5 text-muted-foreground border-t p-3 px-8 text-xs italic opacity-70">
-          Dica: Arquivos recomendados geralmente possuem o ícone do jogo e maior
-          pontuação interna.
+          {t('executable_tip')}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

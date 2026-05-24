@@ -1,4 +1,5 @@
 import { FolderOpen, Globe, Loader2, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
@@ -13,6 +14,7 @@ interface SteamSettingsProps {
 export function SteamSettings({
   onLibraryUpdate,
 }: Readonly<SteamSettingsProps>) {
+  const { t } = useTranslation('plataforms');
   const { steamConfig, setSteamConfig, loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
@@ -22,10 +24,10 @@ export function SteamSettings({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Credenciais e Importação
+            {t('steam_title')}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Gerencie como o Playlite interage com sua biblioteca Steam.
+            {t('steam_description')}
           </p>
         </div>
         {status.type && (
@@ -38,8 +40,8 @@ export function SteamSettings({
         {/* Credenciais da API */}
         <SettingsRow
           icon={Globe}
-          title="Credenciais da API"
-          description="Necessário para importar sua biblioteca completa e conquistas."
+          title={t('steam_api_credentials_title')}
+          description={t('steam_api_credentials_description')}
         >
           <div className="flex flex-col gap-2">
             <Input
@@ -48,7 +50,7 @@ export function SteamSettings({
               onChange={e =>
                 setSteamConfig(prev => ({ ...prev, steamId: e.target.value }))
               }
-              placeholder="Steam ID (765611...)"
+              placeholder={t('steam_id_placeholder')}
               className="bg-background/50"
             />
             <Input
@@ -60,7 +62,7 @@ export function SteamSettings({
                   steamApiKey: e.target.value,
                 }))
               }
-              placeholder="API Key da Steam"
+              placeholder={t('steam_api_key_placeholder')}
               className="bg-background/50"
             />
           </div>
@@ -69,12 +71,12 @@ export function SteamSettings({
         {/* Diretório de Instalação */}
         <SettingsRow
           icon={FolderOpen}
-          title="Diretório de Instalação"
-          description="Local onde os arquivos .acf e executáveis estão localizados."
+          title={t('steam_install_dir_title')}
+          description={t('steam_install_dir_description')}
         >
           <div className="flex items-center gap-2">
             <code className="text-muted-foreground bg-secondary/50 flex-1 rounded-md border p-2 text-[10px]">
-              {steamConfig.steamRoot || 'Nenhum diretório selecionado'}
+              {steamConfig.steamRoot || t('steam_no_directory_selected')}
             </code>
             <Button
               variant="outline"
@@ -83,7 +85,7 @@ export function SteamSettings({
               className="text-xs"
             >
               <FolderOpen className="mr-1 h-3 w-3" />
-              Alterar
+              {t('steam_change')}
             </Button>
           </div>
         </SettingsRow>
@@ -92,7 +94,8 @@ export function SteamSettings({
       {/* Progress Indicator */}
       {loading.importingSteam && progress && (
         <div className="text-muted-foreground animate-pulse rounded-lg bg-blue-500/10 p-3 text-center text-sm">
-          Importando: {progress.game} ({progress.current}/{progress.total})
+          {t('steam_importing')}: {progress.game} ({progress.current}/
+          {progress.total})
         </div>
       )}
 
@@ -107,7 +110,7 @@ export function SteamSettings({
           {loading.saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Salvar Credenciais'
+            t('steam_save_credentials')
           )}
         </Button>
         <Button
@@ -120,7 +123,7 @@ export function SteamSettings({
           ) : (
             <RefreshCw size={16} />
           )}
-          Salvar e Importar
+          {t('steam_save_and_import')}
         </Button>
       </div>
     </div>

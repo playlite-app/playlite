@@ -1,4 +1,5 @@
 import { FolderOpen, Info, Loader2, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
@@ -12,6 +13,7 @@ interface EpicGamesSettingsProps {
 export function EpicGamesSettings({
   onLibraryUpdate,
 }: Readonly<EpicGamesSettingsProps>) {
+  const { t } = useTranslation('plataforms');
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
@@ -21,11 +23,10 @@ export function EpicGamesSettings({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Importação de Jogos Epic Games
+            {t('epic_title')}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos instalados via Epic Games Launcher (Windows e Linux
-            via Wine).
+            {t('epic_description')}
           </p>
         </div>
         {status.type && (
@@ -38,23 +39,25 @@ export function EpicGamesSettings({
         {/* Info sobre Detecção Automática */}
         <SettingsRow
           icon={FolderOpen}
-          title="Detecção Automática"
-          description="O Playlite detecta automaticamente os manifestos do Epic Games Launcher."
+          title={t('epic_auto_detection_title')}
+          description={t('epic_auto_detection_description')}
         >
           <div className="bg-muted/30 space-y-2 rounded-md border p-3">
             <p className="text-muted-foreground text-xs font-medium">
-              Caminhos verificados:
+              {t('epic_checked_paths')}
             </p>
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs">
-                <span className="text-primary/60 font-semibold">Windows:</span>
+                <span className="text-primary/60 font-semibold">
+                  {t('epic_windows_label')}
+                </span>
               </p>
               <code className="text-primary/80 block pl-2 text-xs">
                 C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
               </code>
               <p className="text-muted-foreground pt-1 text-xs">
                 <span className="text-primary/60 font-semibold">
-                  Linux (Wine):
+                  {t('epic_linux_wine_label')}
                 </span>
               </p>
               <code className="text-primary/80 block pl-2 text-xs">
@@ -62,8 +65,7 @@ export function EpicGamesSettings({
               </code>
             </div>
             <p className="text-muted-foreground mt-2 text-xs">
-              O scanner lê os arquivos <code>.item</code> que contêm informações
-              sobre os jogos instalados (nome, caminho, executável).
+              {t('epic_scanner_item_files')}
             </p>
           </div>
         </SettingsRow>
@@ -71,33 +73,37 @@ export function EpicGamesSettings({
         {/* Nota Wine */}
         <SettingsRow
           icon={Info}
-          title="Wine (Linux)"
-          description="No Linux, configure o Wine prefix na aba Wine para detectar a instalação."
+          title={t('epic_wine_title')}
+          description={t('epic_wine_description')}
         >
           <div className="bg-muted/30 rounded-md border p-3">
             <p className="text-muted-foreground text-xs leading-relaxed">
-              O diretório de manifestos é resolvido automaticamente a partir do{' '}
-              <strong className="text-foreground/70">Wine prefix</strong>{' '}
-              configurado na aba{' '}
-              <strong className="text-foreground/70">Wine (Linux)</strong>.
-              Nenhuma configuração adicional é necessária aqui.
+              {t('epic_wine_note_prefix')}{' '}
+              <strong className="text-foreground/70">
+                {t('epic_wine_prefix_label')}
+              </strong>{' '}
+              {t('epic_wine_note_middle')}{' '}
+              <strong className="text-foreground/70">
+                {t('epic_wine_linux_label')}
+              </strong>
+              .{t('epic_wine_note_suffix')}
             </p>
           </div>
         </SettingsRow>
 
         {/* Info sobre o que será importado */}
         <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
-          <h4 className="mb-2 text-sm font-semibold">O que será importado:</h4>
+          <h4 className="mb-2 text-sm font-semibold">
+            {t('epic_imported_title')}
+          </h4>
           <ul className="text-muted-foreground space-y-1 text-xs">
-            <li>✓ Nome do jogo</li>
-            <li>✓ Diretório de instalação</li>
-            <li>✓ Executável de lançamento</li>
-            <li>✓ Status de instalação</li>
+            <li>{t('epic_import_item_name')}</li>
+            <li>{t('epic_import_item_install_dir')}</li>
+            <li>{t('epic_import_item_executable')}</li>
+            <li>{t('epic_import_item_status')}</li>
           </ul>
           <p className="text-muted-foreground mt-4 text-xs">
-            <strong>Nota:</strong> Certifique-se de que o Epic Games Launcher
-            está instalado e você tem jogos instalados. Apenas jogos detectados
-            nos manifestos serão importados.
+            {t('epic_import_note')}
           </p>
         </div>
       </div>
@@ -105,7 +111,8 @@ export function EpicGamesSettings({
       {/* Progress Indicator */}
       {loading.importingEpic && progress && (
         <div className="text-muted-foreground animate-pulse rounded-lg bg-blue-500/10 p-3 text-center text-sm">
-          Importando: {progress.game} ({progress.current}/{progress.total})
+          {t('epic_importing')}: {progress.game} ({progress.current}/
+          {progress.total})
         </div>
       )}
 
@@ -121,7 +128,9 @@ export function EpicGamesSettings({
           ) : (
             <RefreshCw size={16} />
           )}
-          {loading.importingEpic ? 'Importando...' : 'Importar Jogos Epic'}
+          {loading.importingEpic
+            ? t('epic_importing_short')
+            : t('epic_import_button')}
         </Button>
       </div>
     </div>

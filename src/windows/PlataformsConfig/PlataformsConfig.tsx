@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Settings2, Wine } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Epic, Heroic, Legacy, Steam, Ubisoft } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
@@ -33,17 +34,48 @@ export default function PlataformsConfig({
   onClose: () => void;
   onLibraryUpdate?: () => void;
 }>) {
+  const { t } = useTranslation('plataforms');
   const [activeStore, setActiveStore] = useState<SourceProvider>('steam');
 
   const stores = [
-    { id: 'steam', name: 'Steam', Icon: Steam, connected: true },
-    { id: 'epic', name: 'Epic Games', Icon: Epic, connected: true },
-    { id: 'heroic', name: 'Heroic', Icon: Heroic, connected: true },
-    { id: 'ubisoft', name: 'Ubisoft', Icon: Ubisoft, connected: true },
-    { id: 'legacy', name: 'Legacy Games', Icon: Legacy, connected: true },
-    { id: 'gog', name: 'GOG', Icon: AlertCircle, connected: false },
-    { id: 'local', name: 'Scanner Local', Icon: Settings2, connected: true },
-    { id: 'wine', name: 'Wine (Linux)', Icon: Wine, connected: true },
+    {
+      id: 'steam',
+      name: t('config_store_steam'),
+      Icon: Steam,
+      connected: true,
+    },
+    { id: 'epic', name: t('config_store_epic'), Icon: Epic, connected: true },
+    {
+      id: 'heroic',
+      name: t('config_store_heroic'),
+      Icon: Heroic,
+      connected: true,
+    },
+    {
+      id: 'ubisoft',
+      name: t('config_store_ubisoft'),
+      Icon: Ubisoft,
+      connected: true,
+    },
+    {
+      id: 'legacy',
+      name: t('config_store_legacy'),
+      Icon: Legacy,
+      connected: true,
+    },
+    {
+      id: 'gog',
+      name: t('config_store_gog'),
+      Icon: AlertCircle,
+      connected: false,
+    },
+    {
+      id: 'local',
+      name: t('config_store_local'),
+      Icon: Settings2,
+      connected: true,
+    },
+    { id: 'wine', name: t('config_store_wine'), Icon: Wine, connected: true },
   ];
 
   return (
@@ -52,7 +84,7 @@ export default function PlataformsConfig({
         {/* Sidebar */}
         <aside className="border-border/40 bg-secondary/10 w-64 border-r p-6">
           <h2 className="text-muted-foreground mb-6 text-xs font-bold tracking-widest uppercase">
-            Fontes de Jogos
+            {t('config_sources_title')}
           </h2>
           <nav className="space-y-1">
             {stores.map(store => {
@@ -108,7 +140,9 @@ export default function PlataformsConfig({
           {activeStore === 'gog' && (
             <div className="flex h-full flex-col items-center justify-center opacity-30">
               <AlertCircle size={48} className="mb-4" />
-              <p className="text-lg font-medium">Integração em breve</p>
+              <p className="text-lg font-medium">
+                {t('config_integration_soon')}
+              </p>
             </div>
           )}
         </main>

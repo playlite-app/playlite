@@ -6,6 +6,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
@@ -20,6 +21,7 @@ interface HeroicSettingsProps {
 export function HeroicSettings({
   onLibraryUpdate,
 }: Readonly<HeroicSettingsProps>) {
+  const { t } = useTranslation('plataforms');
   const { loading, status, progress, actions } =
     useStoresConfig(onLibraryUpdate);
 
@@ -30,7 +32,7 @@ export function HeroicSettings({
     const selected = await open({
       directory: true,
       multiple: false,
-      title: 'Selecione o diretório de configuração do Heroic',
+      title: t('heroic_select_config_dir_title'),
     });
 
     if (selected) setConfigPath(selected);
@@ -42,11 +44,10 @@ export function HeroicSettings({
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Importação Heroic Games Launcher
+            {t('heroic_title')}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Importe jogos instalados via Heroic Games Launcher (Linux e
-            Windows).
+            {t('heroic_description')}
           </p>
         </div>
         {status.type && (
@@ -59,17 +60,17 @@ export function HeroicSettings({
         {/* Detecção automática */}
         <SettingsRow
           icon={FolderOpen}
-          title="Detecção Automática"
-          description="O Playlite detecta automaticamente o diretório de configuração do Heroic."
+          title={t('heroic_auto_detection_title')}
+          description={t('heroic_auto_detection_description')}
         >
           <div className="bg-muted/30 space-y-2 rounded-md border p-3">
             <p className="text-muted-foreground text-xs font-medium">
-              Caminhos verificados:
+              {t('heroic_checked_paths')}
             </p>
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs">
                 <span className="text-primary/60 font-semibold">
-                  Linux (nativo):
+                  {t('heroic_linux_native_label')}
                 </span>
               </p>
               <code className="text-primary/80 block pl-2 text-xs">
@@ -77,14 +78,16 @@ export function HeroicSettings({
               </code>
               <p className="text-muted-foreground pt-1 text-xs">
                 <span className="text-primary/60 font-semibold">
-                  Linux (Flatpak):
+                  {t('heroic_linux_flatpak_label')}
                 </span>
               </p>
               <code className="text-primary/80 block pl-2 text-xs">
                 ~/.var/app/com.heroicgameslauncher.hgl/config/heroic
               </code>
               <p className="text-muted-foreground pt-1 text-xs">
-                <span className="text-primary/60 font-semibold">Windows:</span>
+                <span className="text-primary/60 font-semibold">
+                  {t('heroic_windows_label')}
+                </span>
               </p>
               <code className="text-primary/80 block pl-2 text-xs">
                 %APPDATA%\heroic
@@ -96,8 +99,8 @@ export function HeroicSettings({
         {/* Diretório manual (opcional) */}
         <SettingsRow
           icon={Info}
-          title="Diretório Personalizado (opcional)"
-          description="Informe manualmente o diretório de configuração caso a detecção automática não funcione."
+          title={t('heroic_custom_dir_title')}
+          description={t('heroic_custom_dir_description')}
         >
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -105,7 +108,7 @@ export function HeroicSettings({
                 type="text"
                 value={configPath}
                 onChange={e => setConfigPath(e.target.value)}
-                placeholder="Deixe vazio para detecção automática"
+                placeholder={t('heroic_custom_dir_placeholder')}
                 className="bg-background/50 font-mono text-xs"
               />
               <Button
@@ -115,7 +118,7 @@ export function HeroicSettings({
                 className="shrink-0 text-xs"
               >
                 <FolderOpen className="mr-1 h-3 w-3" />
-                Procurar
+                {t('heroic_browse')}
               </Button>
             </div>
             {configPath && (
@@ -129,13 +132,13 @@ export function HeroicSettings({
         {/* Plataformas suportadas */}
         <div className="border-white-500/20 bg-muted/20 rounded-lg border p-4">
           <h4 className="mb-2 text-sm font-semibold">
-            Plataformas suportadas via Heroic:
+            {t('heroic_supported_platforms_title')}
           </h4>
           <ul className="text-muted-foreground space-y-1 text-xs">
-            <li>✓ Epic Games Store</li>
-            <li>✓ GOG Galaxy</li>
-            <li>✓ Amazon Games</li>
-            <li>✓ Sideloaded games (jogos manuais)</li>
+            <li>{t('heroic_supported_epic')}</li>
+            <li>{t('heroic_supported_gog')}</li>
+            <li>{t('heroic_supported_amazon')}</li>
+            <li>{t('heroic_supported_sideloaded')}</li>
           </ul>
         </div>
 
@@ -144,18 +147,22 @@ export function HeroicSettings({
           <TriangleAlert size={16} className="mt-0.5 shrink-0 text-amber-400" />
           <div className="space-y-1">
             <p className="text-sm font-medium text-amber-400">
-              Atenção: Possível duplicação de jogos
+              {t('heroic_duplicate_warning_title')}
             </p>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Se você importar jogos via Heroic{' '}
-              <strong className="text-foreground/80">e</strong> também via o
-              launcher nativo correspondente (Epic, GOG, etc.), os mesmos
-              títulos aparecerão{' '}
-              <strong className="text-foreground/80">duas vezes</strong> na
-              biblioteca — uma entrada por plataforma (ex.:{' '}
-              <code>"Heroic"</code> e <code>"Epic Games"</code>). Isso é
-              esperado: cada entrada representa uma instalação ou plataforma
-              distinta.
+              {t('heroic_duplicate_warning_prefix')}{' '}
+              <strong className="text-foreground/80">{t('heroic_and')}</strong>
+              {t('heroic_duplicate_warning_connector')}
+              {t('heroic_duplicate_warning_middle_a')}
+              {t('heroic_duplicate_warning_middle_b')}{' '}
+              <strong className="text-foreground/80">
+                {t('heroic_twice')}
+              </strong>
+              {t('heroic_duplicate_warning_library')}
+              {t('heroic_duplicate_warning_middle_c')}
+              <code>"Heroic"</code> <strong>{t('heroic_and')}</strong>{' '}
+              <code>"Epic Games"</code>){t('heroic_duplicate_warning_expected')}
+              {t('heroic_duplicate_warning_suffix')}
             </p>
           </div>
         </div>
@@ -164,7 +171,8 @@ export function HeroicSettings({
       {/* Progress Indicator */}
       {loading.importingHeroic && progress && (
         <div className="text-muted-foreground animate-pulse rounded-lg bg-purple-500/10 p-3 text-center text-sm">
-          Importando: {progress.game} ({progress.current}/{progress.total})
+          {t('heroic_importing')}: {progress.game} ({progress.current}/
+          {progress.total})
         </div>
       )}
 
@@ -180,7 +188,9 @@ export function HeroicSettings({
           ) : (
             <RefreshCw size={16} />
           )}
-          {loading.importingHeroic ? 'Importando...' : 'Importar Jogos Heroic'}
+          {loading.importingHeroic
+            ? t('heroic_importing_short')
+            : t('heroic_import_button')}
         </Button>
       </div>
     </div>
