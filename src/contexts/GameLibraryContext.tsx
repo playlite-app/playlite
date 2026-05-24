@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { librariesService } from '@/services/librariesService';
 import { Game } from '@/types';
@@ -30,6 +31,7 @@ export function GameLibraryProvider({
 }: Readonly<{ children: ReactNode }>) {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslation('library');
 
   // Carrega jogos na montagem
   useEffect(() => {
@@ -99,11 +101,11 @@ export function GameLibraryProvider({
       if (editId || data.id) {
         const gamePayload = buildServiceGame(data, editId ?? data.id);
         await librariesService.updateGame(gamePayload);
-        toast.success('Jogo atualizado!');
+        toast.success(t('context_game_updated'));
       } else {
         const gamePayload = buildServiceGame(data);
         await librariesService.addGame(gamePayload);
-        toast.success('Jogo adicionado!');
+        toast.success(t('context_game_added'));
       }
 
       await refreshGames();
@@ -129,7 +131,7 @@ export function GameLibraryProvider({
       await refreshGames();
     } catch (error) {
       console.error('Erro ao favoritar:', error);
-      toast.error('Erro ao favoritar jogo');
+      toast.error(t('context_favorite_error'));
     }
   };
 

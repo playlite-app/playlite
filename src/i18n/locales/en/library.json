@@ -21,5 +21,9 @@
   "game_actions_edit": "Edit",
   "game_actions_delete": "Delete",
   "game_card_open_details_aria_label": "Open details for {{title}}",
-  "game_card_play_now_tooltip": "Play Now"
+  "game_card_play_now_tooltip": "Play Now",
+  "context_load_error": "Failed to load library",
+  "context_game_updated": "Game updated!",
+  "context_game_added": "Game added!",
+  "context_favorite_error": "Failed to favorite game"
 }
