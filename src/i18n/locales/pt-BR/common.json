@@ -55,5 +55,9 @@
   "recommendation_tooltip_explanation_tag": "Elementos específicos deste jogo combinam com seu estilo.",
   "recommendation_tooltip_explanation_hybrid": "Combina afinidade do seu perfil com a popularidade na comunidade.",
   "recommendation_tooltip_explanation_general": "Combina com seu perfil geral de jogador.",
-  "recommendation_tooltip_explanation_recommended": "Recomendado com base no seu perfil."
+  "recommendation_tooltip_explanation_recommended": "Recomendado com base no seu perfil.",
+  "confirm_dialog_title": "Você tem certeza?",
+  "confirm_dialog_description": "Esta ação não pode ser desfeita.",
+  "confirm_dialog_cancel": "Cancelar",
+  "confirm_dialog_confirm": "Confirmar"
 }

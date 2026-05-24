@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ export function ConfirmProvider({
   const [resolvePromise, setResolvePromise] = useState<
     ((value: boolean) => void) | null
   >(null);
+  const { t } = useTranslation('common');
 
   const confirm = useCallback((opts: ConfirmOptions) => {
     setOptions(opts);
@@ -70,15 +72,15 @@ export function ConfirmProvider({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {options?.title || 'Você tem certeza?'}
+              {options?.title || t('confirm_dialog_title')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {options?.description || 'Esta ação não pode ser desfeita.'}
+              {options?.description || t('confirm_dialog_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancel}>
-              {options?.cancelText || 'Cancelar'}
+              {options?.cancelText || t('confirm_dialog_cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
@@ -89,7 +91,7 @@ export function ConfirmProvider({
                   : ''
               }
             >
-              {options?.confirmText || 'Confirmar'}
+              {options?.confirmText || t('confirm_dialog_confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

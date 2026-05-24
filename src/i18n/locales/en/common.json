@@ -55,5 +55,9 @@
   "recommendation_tooltip_explanation_tag": "Specific elements of this game match your play style.",
   "recommendation_tooltip_explanation_hybrid": "Combines your profile affinity with community popularity.",
   "recommendation_tooltip_explanation_general": "Matches your overall player profile.",
-  "recommendation_tooltip_explanation_recommended": "Recommended based on your profile."
+  "recommendation_tooltip_explanation_recommended": "Recommended based on your profile.",
+  "confirm_dialog_title": "Are you sure?",
+  "confirm_dialog_description": "This action cannot be undone.",
+  "confirm_dialog_cancel": "Cancel",
+  "confirm_dialog_confirm": "Confirm"
 }
