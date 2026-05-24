@@ -13,5 +13,30 @@
   "generic_title": "Ops! Algo deu errado",
   "generic_desc": "Ocorreu um erro inesperado.",
 
-  "retry_button": "Tentar Novamente"
+  "retry_button": "Tentar Novamente",
+
+  "error_msg_dialog_save_permission": "Permissão necessária para salvar arquivos.",
+  "error_msg_dialog_open_permission": "Permissão necessária para abrir arquivos.",
+  "error_msg_backup_export_failed": "Não foi possível exportar o backup. Tente novamente.",
+  "error_msg_backup_import_failed": "Não foi possível importar o backup. Verifique se o arquivo está correto.",
+  "error_msg_backup_invalid_file": "Arquivo inválido. Selecione um backup válido do Playlite.",
+  "error_msg_backup_incompatible_version": "Versão do backup não é compatível com esta versão do app.",
+  "error_msg_mutex_lock": "Tente novamente em alguns segundos.",
+  "error_msg_file_not_found": "Arquivo não encontrado.",
+  "error_msg_steam_keys_required": "Preencha e salve as chaves da Steam primeiro.",
+  "error_msg_save_error": "Erro ao salvar",
+  "error_msg_render_hooks_error": "Erro interno de compilação (Conflito de Hooks).",
+  "error_msg_render_function_error": "Erro de lógica: Uma função inválida foi chamada.",
+  "error_msg_render_variable_error": "Erro de referência: Variável não definida.",
+  "error_msg_render_generic_error": "Ocorreu um erro inesperado na interface.",
+  "error_msg_database_error": "Houve um problema ao salvar no disco local.",
+  "error_msg_network_error": "Verifique sua conexão com a internet.",
+  "error_msg_launcher_not_found": "Launcher não instalado ou localização incorreta. Verifique se está instalado ou informe o diretório manualmente.",
+  "error_msg_launcher_no_games": "Nenhum jogo encontrado. Certifique-se de ter jogos instalados.",
+  "error_msg_launcher_invalid_path": "Diretório informado não contém uma instalação válida do launcher.",
+  "error_msg_launcher_config_unreadable": "Não foi possível ler os arquivos de configuração do launcher.",
+  "error_msg_cancelled": "CANCELLED",
+  "error_msg_error_accessing_file": "Erro ao acessar arquivo: {{message}}",
+  "error_msg_error_processing_data": "Erro ao processar dados: {{message}}",
+  "error_msg_permission_denied_launcher": "Permissão negada ao acessar os arquivos do launcher."
 }

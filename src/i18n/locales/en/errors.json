@@ -13,5 +13,30 @@
   "generic_title": "Oops! Something went wrong",
   "generic_desc": "An unexpected error occurred.",
 
-  "retry_button": "Try Again"
+  "retry_button": "Try Again",
+
+  "error_msg_dialog_save_permission": "Permission required to save files.",
+  "error_msg_dialog_open_permission": "Permission required to open files.",
+  "error_msg_backup_export_failed": "Failed to export backup. Please try again.",
+  "error_msg_backup_import_failed": "Failed to import backup. Check the file and try again.",
+  "error_msg_backup_invalid_file": "Invalid file. Please select a valid Playlite backup.",
+  "error_msg_backup_incompatible_version": "Backup version is not compatible with this app version.",
+  "error_msg_mutex_lock": "Please try again in a few seconds.",
+  "error_msg_file_not_found": "File not found.",
+  "error_msg_steam_keys_required": "Please fill and save your Steam keys first.",
+  "error_msg_save_error": "Error saving",
+  "error_msg_render_hooks_error": "Internal rendering error (Hooks conflict).",
+  "error_msg_render_function_error": "Logic error: an invalid function was called.",
+  "error_msg_render_variable_error": "Reference error: undefined variable.",
+  "error_msg_render_generic_error": "An unexpected error occurred in the UI.",
+  "error_msg_database_error": "There was a problem saving to local disk.",
+  "error_msg_network_error": "Check your internet connection.",
+  "error_msg_launcher_not_found": "Launcher not installed or incorrect location. Ensure it is installed or provide the directory manually.",
+  "error_msg_launcher_no_games": "No games found. Make sure you have installed games.",
+  "error_msg_launcher_invalid_path": "The provided directory does not contain a valid launcher installation.",
+  "error_msg_launcher_config_unreadable": "Unable to read the launcher's configuration files.",
+  "error_msg_cancelled": "CANCELLED",
+  "error_msg_error_accessing_file": "Error accessing file: {{message}}",
+  "error_msg_error_processing_data": "Error processing data: {{message}}",
+  "error_msg_permission_denied_launcher": "Permission denied when accessing launcher files."
 }

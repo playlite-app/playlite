@@ -7,10 +7,10 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { toast } from '@/utils/toast';
 
 import { librariesService } from '@/services/librariesService';
 import { Game } from '@/types';
+import { toast } from '@/utils/toast';
 
 interface GameLibraryContextType {
   games: Game[];
@@ -162,4 +162,3 @@ export function useGameLibrary() {
 
   return context;
 }
-

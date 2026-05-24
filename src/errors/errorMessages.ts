@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { isAppError } from '@/types/errors';
 
 /**
@@ -6,50 +7,43 @@ import { isAppError } from '@/types/errors';
  */
 export const ERROR_MESSAGES = {
   // Erros de diálogo/permissões
-  DIALOG_SAVE_PERMISSION: 'Permissão necessária para salvar arquivos.',
-  DIALOG_OPEN_PERMISSION: 'Permissão necessária para abrir arquivos.',
+  DIALOG_SAVE_PERMISSION: i18n.t('error_msg_dialog_save_permission'),
+  DIALOG_OPEN_PERMISSION: i18n.t('error_msg_dialog_open_permission'),
 
   // Erros de backup
-  BACKUP_EXPORT_FAILED: 'Não foi possível exportar o backup. Tente novamente.',
-  BACKUP_IMPORT_FAILED:
-    'Não foi possível importar o backup. Verifique se o arquivo está correto.',
-  BACKUP_INVALID_FILE:
-    'Arquivo inválido. Selecione um backup válido do Playlite.',
-  BACKUP_INCOMPATIBLE_VERSION:
-    'Versão do backup não é compatível com esta versão do app.',
+  BACKUP_EXPORT_FAILED: i18n.t('error_msg_backup_export_failed'),
+  BACKUP_IMPORT_FAILED: i18n.t('error_msg_backup_import_failed'),
+  BACKUP_INVALID_FILE: i18n.t('error_msg_backup_invalid_file'),
+  BACKUP_INCOMPATIBLE_VERSION: i18n.t('error_msg_backup_incompatible_version'),
 
   // Erros de sistema
-  MUTEX_LOCK_ERROR: 'Tente novamente em alguns segundos.',
-  FILE_NOT_FOUND: 'Arquivo não encontrado.',
+  MUTEX_LOCK_ERROR: i18n.t('error_msg_mutex_lock'),
+  FILE_NOT_FOUND: i18n.t('error_msg_file_not_found'),
 
   // Erros de settings
-  STEAM_KEYS_REQUIRED: 'Preencha e salve as chaves da Steam primeiro.',
-  SAVE_ERROR: 'Erro ao salvar',
+  STEAM_KEYS_REQUIRED: i18n.t('error_msg_steam_keys_required'),
+  SAVE_ERROR: i18n.t('error_msg_save_error'),
 
   // Erros de Renderização (React)
-  RENDER_HOOKS_ERROR: 'Erro interno de compilação (Conflito de Hooks).',
-  RENDER_FUNCTION_ERROR: 'Erro de lógica: Uma função inválida foi chamada.',
-  RENDER_VARIABLE_ERROR: 'Erro de referência: Variável não definida.',
-  RENDER_GENERIC_ERROR: 'Ocorreu um erro inesperado na interface.',
+  RENDER_HOOKS_ERROR: i18n.t('error_msg_render_hooks_error'),
+  RENDER_FUNCTION_ERROR: i18n.t('error_msg_render_function_error'),
+  RENDER_VARIABLE_ERROR: i18n.t('error_msg_render_variable_error'),
+  RENDER_GENERIC_ERROR: i18n.t('error_msg_render_generic_error'),
 
   // Erros de banco de dados
-  DatabaseError: 'Houve um problema ao salvar no disco local.',
+  DatabaseError: i18n.t('error_msg_database_error'),
 
   // Erros de rede
-  NetworkError: 'Verifique sua conexão com a internet.',
+  NetworkError: i18n.t('error_msg_network_error'),
 
   // Erros de plataformas/launchers
-  LAUNCHER_NOT_FOUND:
-    'Launcher não instalado ou localização incorreta. Verifique se está instalado ou informe o diretório manualmente.',
-  LAUNCHER_NO_GAMES:
-    'Nenhum jogo encontrado. Certifique-se de ter jogos instalados.',
-  LAUNCHER_INVALID_PATH:
-    'Diretório informado não contém uma instalação válida do launcher.',
-  LAUNCHER_CONFIG_UNREADABLE:
-    'Não foi possível ler os arquivos de configuração do launcher.',
+  LAUNCHER_NOT_FOUND: i18n.t('error_msg_launcher_not_found'),
+  LAUNCHER_NO_GAMES: i18n.t('error_msg_launcher_no_games'),
+  LAUNCHER_INVALID_PATH: i18n.t('error_msg_launcher_invalid_path'),
+  LAUNCHER_CONFIG_UNREADABLE: i18n.t('error_msg_launcher_config_unreadable'),
 
   // Operações canceladas
-  CANCELLED: 'CANCELLED', // Erro especial que não deve ser mostrado ao usuário
+  CANCELLED: i18n.t('error_msg_cancelled'), // Erro especial que não deve ser mostrado ao usuário
 } as const;
 
 /**
@@ -82,7 +76,9 @@ function parseBackupAppError(error: { type: string; message: string }): string {
         return ERROR_MESSAGES.FILE_NOT_FOUND;
       }
 
-      return `Erro ao acessar arquivo: ${error.message}`;
+      return i18n.t('error_msg_error_accessing_file', {
+        message: String(error.message),
+      });
 
     case 'DatabaseError':
       return ERROR_MESSAGES.DatabaseError;
@@ -94,7 +90,9 @@ function parseBackupAppError(error: { type: string; message: string }): string {
       return ERROR_MESSAGES.MUTEX_LOCK_ERROR;
 
     case 'SerializationError':
-      return `Erro ao processar dados: ${error.message}`;
+      return i18n.t('error_msg_error_processing_data', {
+        message: String(error.message),
+      });
 
     case 'AlreadyExists':
     case 'NotFound':
@@ -171,7 +169,7 @@ function parsePlatformIoError(message: string): string {
   }
 
   if (msg.includes('permission denied') || msg.includes('access is denied')) {
-    return `Permissão negada ao acessar os arquivos do launcher.`;
+    return i18n.t('error_msg_permission_denied_launcher');
   }
 
   return ERROR_MESSAGES.LAUNCHER_CONFIG_UNREADABLE;
