@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { GameDetails } from '@/types';
 import { Button } from '@/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Textarea } from '@/ui/textarea';
 import { handleBackendError } from '@/utils/errorHandler';
+import { toast } from '@/utils/toast';
 
 interface GameEditFormProps {
   gameId: string;
@@ -23,6 +24,7 @@ export function GameEditForm({
   onCancel,
   onSuccess,
 }: GameEditFormProps) {
+  const { t } = useTranslation('game_detail');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     description: details.descriptionPtbr || details.descriptionRaw || '',
@@ -44,12 +46,12 @@ export function GameEditForm({
           released: formData.released,
         },
       });
-      toast.success('Detalhes atualizados com sucesso!');
+      toast.success(t('edit_form_success'));
       onSuccess();
     } catch (error) {
       // Detecta se é um AppError, formata a mensagem e mostra o toast
       handleBackendError(error, {
-        defaultMessage: 'Não foi possível salvar as alterações.',
+        defaultMessage: t('edit_form_save_error'),
       });
     } finally {
       setLoading(false);
@@ -62,7 +64,7 @@ export function GameEditForm({
         {/* Developer & Publisher */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="dev">Desenvolvedor</Label>
+            <Label htmlFor="dev">{t('edit_form_label_developer')}</Label>
             <Input
               id="dev"
               value={formData.developer}
@@ -72,7 +74,7 @@ export function GameEditForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pub">Publicadora</Label>
+            <Label htmlFor="pub">{t('edit_form_label_publisher')}</Label>
             <Input
               id="pub"
               value={formData.publisher}
@@ -85,7 +87,7 @@ export function GameEditForm({
 
         {/* Data de Lançamento */}
         <div className="space-y-2">
-          <Label htmlFor="released">Data de Lançamento (YYYY-MM-DD)</Label>
+          <Label htmlFor="released">{t('edit_form_label_released')}</Label>
           <Input
             id="released"
             type="date"
@@ -98,7 +100,7 @@ export function GameEditForm({
 
         {/* Descrição */}
         <div className="space-y-2">
-          <Label htmlFor="desc">Descrição / Sinopse</Label>
+          <Label htmlFor="desc">{t('edit_form_label_description')}</Label>
           <Textarea
             id="desc"
             className="min-h-75 font-mono text-sm leading-relaxed"
@@ -113,7 +115,7 @@ export function GameEditForm({
       {/* Botões de Ação */}
       <div className="flex items-center justify-end gap-3 border-t pt-4">
         <Button variant="ghost" onClick={onCancel} disabled={loading}>
-          <X className="mr-2 h-4 w-4" /> Cancelar
+          <X className="mr-2 h-4 w-4" /> {t('edit_form_cancel')}
         </Button>
         <Button onClick={handleSave} disabled={loading}>
           {loading ? (
@@ -121,10 +123,9 @@ export function GameEditForm({
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
-          Salvar Alterações
+          {t('edit_form_save')}
         </Button>
       </div>
     </div>
   );
 }
-

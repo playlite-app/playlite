@@ -1,4 +1,5 @@
 import { ImageOff, Pencil, Star, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Game } from '@/types';
 import { Badge } from '@/ui/badge';
@@ -16,6 +17,8 @@ export function GameHeader({
   onEditToggle,
   isEditing,
 }: GameHeaderProps) {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="bg-muted relative h-44 w-full shrink-0 overflow-hidden">
       {/* --- GRUPO DE AÇÕES (Topo Direito) --- */}
@@ -27,7 +30,7 @@ export function GameHeader({
               ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
               : 'bg-black/40 text-white hover:bg-black/70'
           }`}
-          title={isEditing ? 'Cancelar Edição' : 'Editar Detalhes'}
+          title={isEditing ? t('header_cancel_edit') : t('header_edit_details')}
         >
           <Pencil size={18} />
         </button>
@@ -35,7 +38,7 @@ export function GameHeader({
         <button
           onClick={onClose}
           className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md transition-all hover:bg-black/70"
-          title="Fechar"
+          title={t('header_close')}
         >
           <X size={18} />
         </button>
@@ -82,7 +85,7 @@ export function GameHeader({
 
             {game.installed && (
               <Badge className="border-green-500/30 bg-green-500/20 px-3 py-1 text-sm font-semibold text-green-300 backdrop-blur-md">
-                Instalado
+                {t('header_installed')}
               </Badge>
             )}
 

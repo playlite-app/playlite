@@ -132,25 +132,6 @@ export type SteamReviewSummary =
   | 'Overwhelmingly Negative'
   | 'No user reviews';
 
-export const steamReviewMap: Record<SteamReviewSummary, string> = {
-  'Overwhelmingly Positive': 'Extremamente positivas',
-  'Very Positive': 'Muito positivas',
-  Positive: 'Positivas',
-  'Mostly Positive': 'Ligeiramente positivas',
-  Mixed: 'Mistas',
-  'Mostly Negative': 'Ligeiramente negativas',
-  Negative: 'Negativas',
-  'Very Negative': 'Muito negativas',
-  'Overwhelmingly Negative': 'Extremamente negativas',
-  'No user reviews': 'Sem análises de usuários',
-};
-
-export function traduzirSteamReview(label?: SteamReviewSummary): string {
-  if (!label) return 'Sem classificação';
-
-  return steamReviewMap[label];
-}
-
 export interface GamePlatformLink {
   id: string;
   platform: string;

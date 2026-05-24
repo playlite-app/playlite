@@ -1,13 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
 import { Languages, Loader2, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 import { GameDetails } from '@/types/game';
 import { Button } from '@/ui/button';
 import { ScrollArea } from '@/ui/scroll-area';
 import { Skeleton } from '@/ui/skeleton';
+import { toast } from '@/utils/toast';
 
 interface GameDescriptionProps {
   gameId: string;
@@ -22,6 +23,7 @@ export function GameDescription({
   loading,
   onDescriptionUpdate,
 }: GameDescriptionProps) {
+  const { t } = useTranslation('game_detail');
   // Estado local para controlar qual idioma está sendo exibido
   const [activeLang, setActiveLang] = useState<'en' | 'pt'>('en');
   // Estado local para a tradução (inicia com o que veio do banco, mas pode ser atualizado)
@@ -55,7 +57,7 @@ export function GameDescription({
   if (!details) {
     return (
       <div className="text-muted-foreground flex h-40 items-center justify-center">
-        Selecione um jogo para ver os detalhes.
+        {t('description_select_game')}
       </div>
     );
   }
@@ -78,7 +80,7 @@ export function GameDescription({
 
       // Cenário B: Precisamos traduzir (Chamar Rust)
       if (!details.descriptionRaw) {
-        toast.error('Não há texto original para traduzir.');
+        toast.error(t('description_no_original_text'));
 
         return;
       }
@@ -93,12 +95,12 @@ export function GameDescription({
 
         setLocalPtBr(translatedText);
         setActiveLang('pt');
-        toast.success('Descrição traduzida com sucesso!');
+        toast.success(t('description_translated_success'));
 
         if (onDescriptionUpdate) onDescriptionUpdate(translatedText);
       } catch (error) {
         console.error('Erro na tradução:', error);
-        toast.error('Falha ao traduzir descrição.');
+        toast.error(t('description_translate_failed'));
       } finally {
         setIsTranslating(false);
       }
@@ -109,13 +111,15 @@ export function GameDescription({
   const textToShow =
     activeLang === 'pt' && localPtBr
       ? localPtBr
-      : details.descriptionRaw || 'Sem descrição disponível.';
+      : details.descriptionRaw || t('description_no_description');
 
   return (
     <div className="flex h-full flex-col pr-4">
       {/* CABEÇALHO: Título + Toggle */}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Sobre o Jogo</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t('description_header_title')}
+        </h2>
 
         {/* Toggle de Idioma */}
         {details.descriptionRaw && (
@@ -131,7 +135,7 @@ export function GameDescription({
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              EN
+              {t('description_lang_en')}
             </Button>
             <Button
               variant="ghost"
@@ -152,7 +156,9 @@ export function GameDescription({
               ) : (
                 <Languages size={10} />
               )}
-              {isTranslating ? 'Gerando...' : 'PT-BR'}
+              {isTranslating
+                ? t('description_generating')
+                : t('description_lang_pt')}
             </Button>
           </div>
         )}
@@ -169,4 +175,3 @@ export function GameDescription({
     </div>
   );
 }
-

@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Star,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/button';
 
@@ -14,18 +15,20 @@ interface GameLinksProps {
   links?: Record<string, string>;
 }
 
-const LINK_CONFIG: Record<string, { label: string; icon: LucideIcon }> = {
-  website: { label: 'Site Oficial', icon: Globe },
-  steam: { label: 'Steam', icon: ShoppingCart },
-  epic: { label: 'Epic Games', icon: ShoppingCart },
-  gog: { label: 'GOG.com', icon: ShoppingCart },
-  reddit: { label: 'Reddit', icon: MessageSquare },
-  metacritic: { label: 'Metacritic', icon: Star },
-  rawg: { label: 'RAWG', icon: BookOpen },
-  pcgamingwiki: { label: 'Wiki', icon: BookOpen },
+const LINK_CONFIG: Record<string, { labelKey: string; icon: LucideIcon }> = {
+  website: { labelKey: 'links_website', icon: Globe },
+  steam: { labelKey: 'links_steam', icon: ShoppingCart },
+  epic: { labelKey: 'links_epic', icon: ShoppingCart },
+  gog: { labelKey: 'links_gog', icon: ShoppingCart },
+  reddit: { labelKey: 'links_reddit', icon: MessageSquare },
+  metacritic: { labelKey: 'links_metacritic', icon: Star },
+  rawg: { labelKey: 'links_rawg', icon: BookOpen },
+  pcgamingwiki: { labelKey: 'links_pcgamingwiki', icon: BookOpen },
 };
 
 export function GameLinks({ links }: Readonly<GameLinksProps>) {
+  const { t } = useTranslation('game_detail');
+
   // Verifica se o objeto existe e se tem chaves
   if (!links || Object.keys(links).length === 0) return null;
 
@@ -39,12 +42,12 @@ export function GameLinks({ links }: Readonly<GameLinksProps>) {
   return (
     <div className="space-y-3">
       <h3 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
-        Links Externos
+        {t('links_heading')}
       </h3>
       <div className="grid grid-cols-2 gap-3">
         {validLinks.map(([key, url]) => {
           const config = LINK_CONFIG[key.toLowerCase()] || {
-            label: key,
+            labelKey: undefined,
             icon: ExternalLink,
           };
           const Icon = config.icon;
@@ -59,7 +62,9 @@ export function GameLinks({ links }: Readonly<GameLinksProps>) {
             >
               <a href={url} target="_blank" rel="noreferrer">
                 <Icon size={14} className="mr-2 opacity-70" />
-                <span className="truncate capitalize">{config.label}</span>
+                <span className="truncate capitalize">
+                  {config.labelKey ? t(config.labelKey) : key}
+                </span>
               </a>
             </Button>
           );

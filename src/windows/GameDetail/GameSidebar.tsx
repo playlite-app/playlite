@@ -12,15 +12,14 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Game, GameDetails, GamePlatformLink, GameTag } from '@/types/game';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { formatTime } from '@/utils/formatTime';
 import { getPlaytimeCategory } from '@/utils/playtime';
-
-import { GameLinks } from './GameLinks';
-import { SteamReviewBadge } from './SteamReviewBadge';
+import { GameLinks, SteamReviewBadge } from '@/windows';
 
 interface GameSidebarProps {
   game: Game;
@@ -35,6 +34,7 @@ export function GameSidebar({
   siblings,
   onSwitchGame,
 }: GameSidebarProps) {
+  const { t } = useTranslation('game_detail');
   // Lógica para renderizar as tags categorizadas
   const renderTags = () => {
     if (!details?.tags) return null;
@@ -57,12 +57,12 @@ export function GameSidebar({
       );
 
       const order = ['mode', 'narrative', 'theme', 'gameplay', 'meta'];
-      const labels: Record<string, string> = {
-        mode: 'Modo',
-        narrative: 'Narrativa',
-        theme: 'Tema',
-        gameplay: 'Gameplay',
-        meta: 'Info',
+      const labelKeys: Record<string, string> = {
+        mode: 'tags_mode',
+        narrative: 'tags_narrative',
+        theme: 'tags_theme',
+        gameplay: 'tags_gameplay',
+        meta: 'tags_meta',
       };
 
       return (
@@ -75,7 +75,7 @@ export function GameSidebar({
             return (
               <div key={cat} className="space-y-1.5">
                 <span className="text-muted-foreground/70 pl-1 text-[10px] font-bold tracking-widest uppercase">
-                  {labels[cat] || cat}
+                  {t(labelKeys[cat] || cat)}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {tags.map(tag => (
@@ -113,7 +113,7 @@ export function GameSidebar({
       {(details?.isAdult || details?.adultTags) && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-400">
           <div className="mb-1 flex items-center gap-2 font-bold">
-            <AlertTriangle size={16} /> Conteúdo +18
+            <AlertTriangle size={16} /> {t('sidebar_adult_content_title')}
           </div>
           {details?.adultTags && (
             <p className="text-sm opacity-80">
@@ -128,13 +128,13 @@ export function GameSidebar({
       {/* 1. DADOS DO USUÁRIO */}
       <div className="space-y-4">
         <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
-          <Trophy size={18} className="text-primary" /> Seus Dados
+          <Trophy size={18} className="text-primary" /> {t('sidebar_your_data')}
         </h3>
         <div className="grid grid-cols-2 gap-4">
           {/* Card 1: Tempo Real Jogado */}
           <div className="bg-card rounded-lg border px-4 py-2 shadow-sm">
             <span className="text-muted-foreground mb-1 block text-[11px] font-semibold uppercase">
-              Jogado
+              {t('sidebar_played')}
             </span>
             <div className="flex items-center gap-2 font-mono text-base font-bold">
               <Clock size={18} className="text-muted-foreground/70" />
@@ -145,11 +145,13 @@ export function GameSidebar({
           {/* Card 2: Status */}
           <div className="bg-card rounded-lg border px-4 py-2 shadow-sm">
             <span className="text-muted-foreground mb-1 block text-[11px] font-semibold uppercase">
-              Status
+              {t('sidebar_status')}
             </span>
             <div className="flex items-center gap-2 text-base font-medium">
               <TrendingUp size={18} className="text-muted-foreground/70" />
-              {game.playtime === 0 ? 'Backlog' : 'Jogando'}
+              {game.playtime === 0
+                ? t('sidebar_backlog')
+                : t('sidebar_playing')}
             </div>
           </div>
         </div>
@@ -159,7 +161,7 @@ export function GameSidebar({
       {(details?.steamReviewLabel || details?.criticScore) && (
         <div className="space-y-4">
           <h3 className="text-muted-foreground flex items-center gap-2 text-sm font-bold tracking-wider uppercase">
-            <Star size={18} /> Avaliação
+            <Star size={18} /> {t('sidebar_reviews_heading')}
           </h3>
 
           <SteamReviewBadge
@@ -173,30 +175,38 @@ export function GameSidebar({
       {/* 3. DETALHES TÉCNICOS */}
       <div className="space-y-1.5">
         <h3 className="text-muted-foreground flex items-center gap-2 pb-2 text-sm font-bold tracking-wider uppercase">
-          <ListCheck size={18} /> Detalhes
+          <ListCheck size={18} /> {t('sidebar_details_heading')}
         </h3>
 
         <DetailRow
           icon={Building2}
-          label="Dev e Pub"
+          label={t('sidebar_dev_pub')}
           value={`${details?.developer}, ${details?.publisher}`}
         />
 
         {details?.releaseDate && (
           <DetailRow
             icon={Calendar}
-            label="Lançamento"
+            label={t('sidebar_release')}
             value={new Date(details.releaseDate).toLocaleDateString('pt-BR')}
           />
         )}
 
-        <DetailRow icon={Gamepad2} label="Gênero" value={game.genres} />
+        <DetailRow
+          icon={Gamepad2}
+          label={t('sidebar_genre')}
+          value={game.genres}
+        />
 
-        <DetailRow icon={TrendingUp} label="Série" value={details?.series} />
+        <DetailRow
+          icon={TrendingUp}
+          label={t('sidebar_series')}
+          value={details?.series}
+        />
 
         <DetailRow
           icon={Star}
-          label="Metacritic"
+          label={t('sidebar_metacritic')}
           value={
             details?.criticScore ? details.criticScore.toString() : undefined
           }
@@ -205,17 +215,21 @@ export function GameSidebar({
         {details?.esrbRating && (
           <DetailRow
             icon={Trophy}
-            label="Classificação"
+            label={t('sidebar_classification')}
             value={`ESRB ${details.esrbRating}`}
           />
         )}
 
-        <DetailRow icon={Users} label="Modo" value={gameModes ?? undefined} />
+        <DetailRow
+          icon={Users}
+          label={t('sidebar_mode')}
+          value={gameModes ?? undefined}
+        />
 
         {details?.estimatedPlaytime && details.estimatedPlaytime > 0 && (
           <DetailRow
             icon={Clock}
-            label="Duração"
+            label={t('sidebar_duration')}
             value={getPlaytimeCategory(details.estimatedPlaytime).label} // Ex: "Longo (30h - 80h)"
           />
         )}
@@ -228,7 +242,7 @@ export function GameSidebar({
       {details?.tags && (
         <div className="space-y-3">
           <h3 className="text-muted-foreground flex items-center gap-1 text-sm font-bold tracking-wider uppercase">
-            <Tag size={18} /> Características
+            <Tag size={18} /> {t('sidebar_features')}
           </h3>
           {renderTags()}
         </div>
@@ -238,7 +252,7 @@ export function GameSidebar({
       {siblings.length > 0 && (
         <div className="border-border/40 space-y-2 border-t pt-4">
           <span className="text-muted-foreground text-sm font-medium">
-            Outras Versões:
+            {t('sidebar_other_versions')}
           </span>
           <div className="flex flex-wrap gap-2">
             {siblings.map(sib => (
