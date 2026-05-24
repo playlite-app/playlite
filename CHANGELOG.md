@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.0] - 2026-05-24
+
+### Added
+
+- Full internationalization (i18n) support using i18next and react-i18next
+- Brazilian Portuguese (pt-BR) and English (en) language support
+- Automatic language detection based on operating system locale
+- Language selector in Settings → About section
+- User language preference persisted across sessions via localStorage
+- 11 translation namespaces covering all UI strings: common, settings, library, playlist, trending, wishlist, errors,
+  dialog, updater, game_detail, plataforms
+- 630 translation keys mapped across all views, components, dialogs, and windows
+- Translation documentation and guidelines for users and contributors
+
+### Improved
+
+- Steam review labels now fully translated via i18n instead of hardcoded map
+- Error messages in non-React modules migrated to i18n instance
+- Confirmation dialog fallback strings internationalized
+- Architecture ready for additional languages — only locale JSON files required
+
 ## [3.3.1] - 2026-05-11
 
 ### Added
