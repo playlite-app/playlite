@@ -1,6 +1,7 @@
 {
   "header_title": "Configurações",
   "header_description": "Gerencie suas integrações, chaves de API, algoritmo de recomendação e dados locais.",
+  "subscriptions_section": "Assinaturas",
   "metadata_section": "Metadados",
   "gemini_title": "Google Gemini",
   "gemini_description": "Usado para traduzir descrições dos jogos para Português.",

@@ -1,20 +1,19 @@
-import { invoke } from '@tauri-apps/api/core';
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  ExternalLink,
-  Gamepad2,
-} from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {invoke} from '@tauri-apps/api/core';
+import {AlertCircle, ChevronLeft, ChevronRight, Clock, ExternalLink, Gamepad2,} from 'lucide-react';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 
-import { LunaGame } from '@/types/subscriptions';
-import { Button } from '@/ui/button';
-import { openExternalLink } from '@/utils/openLink';
+import {LunaGame} from '@/types/subscriptions';
+import {Button} from '@/ui/button';
+import {openExternalLink} from '@/utils/openLink';
+
+type TranslationFn = (key: string, options?: Record<string, unknown>) => string;
 
 // Helpers
-function formatExpiry(isoDate: string | null): {
+function formatExpiry(
+  isoDate: string | null,
+  t: TranslationFn
+): {
   label: string;
   urgent: boolean;
 } {
@@ -25,25 +24,48 @@ function formatExpiry(isoDate: string | null): {
     (date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
-  if (diffDays <= 0) return { label: 'Expira hoje', urgent: true };
+  if (diffDays <= 0) {
+    return { label: t('prime_expiry_today'), urgent: true };
+  }
 
-  if (diffDays === 1) return { label: 'Expira amanhã', urgent: true };
+  if (diffDays === 1) {
+    return { label: t('prime_expiry_tomorrow'), urgent: true };
+  }
 
   if (diffDays <= 3)
-    return { label: `Expira em ${diffDays} dias`, urgent: true };
+    return {
+      label: t('prime_expiry_in_days', { count: diffDays }),
+      urgent: true,
+    };
 
   if (diffDays <= 7)
-    return { label: `Expira em ${diffDays} dias`, urgent: false };
+    return {
+      label: t('prime_expiry_in_days', { count: diffDays }),
+      urgent: false,
+    };
 
   return {
-    label: `Expira em ${date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`,
+    label: t('prime_expiry_on_date', {
+      date: date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+      }),
+    }),
     urgent: false,
   };
 }
 
 // Slide individual para cada jogo, exibindo detalhes e botão de resgate
-function PrimeSlide({ game, active }: { game: LunaGame; active: boolean }) {
-  const expiry = formatExpiry(game.end_time);
+function PrimeSlide({
+  game,
+  active,
+  t,
+}: {
+  game: LunaGame;
+  active: boolean;
+  t: TranslationFn;
+}) {
+  const expiry = formatExpiry(game.end_time, t);
 
   return (
     <div
@@ -75,7 +97,7 @@ function PrimeSlide({ game, active }: { game: LunaGame; active: boolean }) {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-bold tracking-wider text-orange-400 uppercase">
               <Gamepad2 size={11} />
-              Destaque Prime
+              {t('prime_featured_badge')}
             </span>
           </div>
 
@@ -99,7 +121,7 @@ function PrimeSlide({ game, active }: { game: LunaGame; active: boolean }) {
               variant="outline"
             >
               <ExternalLink size={15} />
-              Ver Detalhes
+              {t('prime_claim_button')}
             </Button>
           </div>
 
@@ -116,26 +138,13 @@ function PrimeSlide({ game, active }: { game: LunaGame; active: boolean }) {
           )}
         </div>
       </div>
-
-      {/* Título e expiração abaixo do card (rodapé discreto) */}
-      <div className="mt-3 flex items-center justify-between px-1">
-        <div>
-          <p className="text-sm font-semibold text-white/80">{game.title}</p>
-          {expiry.label && (
-            <p
-              className={`text-xs ${expiry.urgent ? 'text-red-400' : 'text-white/40'}`}
-            >
-              {expiry.label}.
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
 
 // Componente principal da seção Prime Gaming, responsável por buscar os dados e gerenciar o carrossel
 export function PrimeGamingSection() {
+  const { t } = useTranslation('subscription');
   const [games, setGames] = useState<LunaGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -198,7 +207,7 @@ export function PrimeGamingSection() {
   if (loading) {
     return (
       <section>
-        <SectionHeader count={0} loading />
+        <SectionHeader count={0} loading t={t} />
         <div className="h-70 animate-pulse rounded-2xl bg-white/5" />
       </section>
     );
@@ -208,7 +217,7 @@ export function PrimeGamingSection() {
 
   return (
     <section>
-      <SectionHeader count={games.length} />
+      <SectionHeader count={games.length} t={t} />
 
       {/* Carrossel */}
       <div
@@ -223,6 +232,7 @@ export function PrimeGamingSection() {
               key={game.title}
               game={game}
               active={i === currentIndex}
+              t={t}
             />
           ))}
         </div>
@@ -234,7 +244,7 @@ export function PrimeGamingSection() {
               type="button"
               onClick={prev}
               className="absolute top-35 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
-              aria-label="Anterior"
+              aria-label={t('prime_previous_slide_aria_label')}
             >
               <ChevronLeft size={20} />
             </button>
@@ -242,7 +252,7 @@ export function PrimeGamingSection() {
               type="button"
               onClick={next}
               className="absolute top-35 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
-              aria-label="Próximo"
+              aria-label={t('prime_next_slide_aria_label')}
             >
               <ChevronRight size={20} />
             </button>
@@ -262,7 +272,7 @@ export function PrimeGamingSection() {
                     ? 'w-6 bg-purple-400'
                     : 'w-2 bg-white/20 hover:bg-white/40'
                 }`}
-                aria-label={`Ir para slide ${i + 1}`}
+                aria-label={t('prime_go_to_slide_aria_label', { slide: i + 1 })}
               />
             ))}
           </div>
@@ -276,9 +286,11 @@ export function PrimeGamingSection() {
 function SectionHeader({
   count,
   loading = false,
+  t,
 }: {
   count: number;
   loading?: boolean;
+  t: TranslationFn;
 }) {
   return (
     <div className="mb-5 flex items-center justify-between">
@@ -287,10 +299,10 @@ function SectionHeader({
           <Gamepad2 size={22} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold">Prime Gaming</h2>
+          <h2 className="text-2xl font-bold">{t('prime_section_title')}</h2>
           {!loading && count > 0 && (
             <p className="text-muted-foreground text-sm">
-              {count} jogos disponíveis para resgate
+              {t('prime_available_games_count', { count })}
             </p>
           )}
         </div>
@@ -303,7 +315,7 @@ function SectionHeader({
         onClick={() => openExternalLink('https://gaming.amazon.com/home')}
       >
         <ExternalLink size={13} />
-        Ver todos
+        {t('prime_view_all_button')}
       </Button>
     </div>
   );

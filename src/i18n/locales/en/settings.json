@@ -1,6 +1,7 @@
 {
   "header_title": "Settings",
   "header_description": "Manage your integrations, API keys, recommendation algorithm and local data.",
+  "subscriptions_section": "Subscriptions",
   "metadata_section": "Metadata",
   "gemini_title": "Google Gemini",
   "gemini_description": "Used to translate game descriptions to Portuguese.",

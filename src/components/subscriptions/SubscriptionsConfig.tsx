@@ -7,10 +7,12 @@ import {
   Save,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ServiceId, SUBSCRIPTION_SERVICES } from '@/types';
 import { Button } from '@/ui/button';
 import { Switch } from '@/ui/toggle-switch';
+import { openExternalLink } from '@/utils/openLink';
 import { toast } from '@/utils/toast';
 
 // Componente principal de configuração das assinaturas
@@ -21,6 +23,7 @@ interface SubscriptionsConfigProps {
 export function SubscriptionsConfig({
   className = '',
 }: Readonly<SubscriptionsConfigProps>) {
+  const { t } = useTranslation('subscription');
   const [isExpanded, setIsExpanded] = useState(false);
   const [enabledServices, setEnabledServices] = useState<ServiceId[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,9 +59,9 @@ export function SubscriptionsConfig({
       await invoke('save_subscription_settings', {
         services: enabledServices,
       });
-      toast.success('Assinaturas salvas com sucesso');
+      toast.success(t('config_save_success_toast'));
     } catch {
-      toast.error('Erro ao salvar assinaturas');
+      toast.error(t('config_save_error_toast'));
     } finally {
       setSaving(false);
     }
@@ -80,20 +83,20 @@ export function SubscriptionsConfig({
           </div>
           <div>
             <h3 className="text-lg leading-none font-semibold tracking-tight">
-              Serviços
+              {t('config_title')}
             </h3>
             <p className="text-muted-foreground mt-1.5 text-sm">
               {loading ? (
-                'Carregando...'
+                t('config_loading_text')
               ) : activeNames.length > 0 ? (
                 <>
-                  Ativos:{' '}
+                  {t('config_active_prefix')}{' '}
                   <span className="text-foreground font-medium">
                     {activeNames.join(', ')}
                   </span>
                 </>
               ) : (
-                'Nenhum serviço selecionado'
+                t('config_no_services_selected')
               )}
             </p>
           </div>
@@ -106,13 +109,13 @@ export function SubscriptionsConfig({
               {activeNames.slice(0, 3).map(name => (
                 <span
                   key={name}
-                  className="rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/50"
+                  className="bg-secondary-foreground/5 text-secondary-foreground rounded-full border px-2 py-0.5 text-xs"
                 >
                   {name}
                 </span>
               ))}
               {activeNames.length > 3 && (
-                <span className="text-muted-foreground text-xs">
+                <span className="text-secondary-foreground text-xs">
                   +{activeNames.length - 3}
                 </span>
               )}
@@ -169,7 +172,7 @@ export function SubscriptionsConfig({
                               {service.name}
                             </p>
                             <p className="text-muted-foreground mt-0.5 text-xs">
-                              {service.description}
+                              {t(`service_${service.id}_description`)}
                             </p>
                           </div>
                         </div>
@@ -180,17 +183,24 @@ export function SubscriptionsConfig({
                             href={service.url}
                             target="_blank"
                             rel="noreferrer"
-                            onClick={e => e.stopPropagation()}
+                            onClick={e => {
+                              // Prevent the parent button click and default navigation
+                              e.stopPropagation();
+                              e.preventDefault();
+                              openExternalLink(service.url);
+                            }}
                             className="text-muted-foreground hover:text-foreground transition-colors"
-                            title={`Abrir ${service.name}`}
+                            title={t('config_open_service_title', {
+                              service: service.name,
+                            })}
                           >
                             <ExternalLink size={13} />
                           </a>
                           <Switch
                             checked={isEnabled}
                             onChange={() => toggleService(service.id)}
-                            labelOff="Não"
-                            labelOn="Sim"
+                            labelOff={t('config_no_label')}
+                            labelOn={t('config_yes_label')}
                           />
                         </div>
                       </button>
@@ -202,9 +212,10 @@ export function SubscriptionsConfig({
                 {showEaWarning && (
                   <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 px-4 py-3">
                     <p className="text-xs text-yellow-400">
-                      ⚠️ O <strong>EA Play</strong> já está incluído no{' '}
-                      <strong>Game Pass PC</strong>. Os jogos aparecerão apenas
-                      uma vez na Home.
+                      {t('config_ea_play_warning', {
+                        ea_play: 'EA Play',
+                        game_pass_pc: 'Game Pass PC',
+                      })}
                     </p>
                   </div>
                 )}
@@ -221,7 +232,7 @@ export function SubscriptionsConfig({
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    Salvar Assinaturas
+                    {t('config_save_button')}
                   </Button>
                 </div>
               </>

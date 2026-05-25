@@ -48,7 +48,7 @@ export const SUBSCRIPTION_SERVICES = [
     id: 'ubisoft_plus',
     name: 'Ubisoft+',
     description: 'Catálogo completo de jogos da Ubisoft',
-    url: 'https://www.ubisoft.com/pt-br/ubisoft-plus',
+    url: 'https://store.ubisoft.com/ofertas/ubisoftplus',
     color: 'text-blue-400',
     activeBg: 'bg-blue-500/10',
     activeBorder: 'border-blue-500/40',

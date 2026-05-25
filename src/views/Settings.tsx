@@ -101,7 +101,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
       {/* SEÇÃO 1: ASSINATURAS */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">Assinaturas</h3>
+        <h3 className="text-lg font-semibold">{t('subscriptions_section')}</h3>
         <SubscriptionsConfig />
       </section>
 
