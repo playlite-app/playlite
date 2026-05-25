@@ -8,6 +8,7 @@
  * - icons/          - SVG icons
  * - tooltips/       - Recommendation related
  * - wrappers/       - HOCs and wrappers
+ * - subscriptions/  - Prime Game, Game Pass PC, etc
  */
 
 // Layout
@@ -27,3 +28,6 @@ export * from './icons';
 
 // Wrappers
 export * from './wrappers';
+
+// Subscriptions
+export * from './subscriptions';

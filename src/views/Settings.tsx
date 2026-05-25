@@ -100,8 +100,10 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
       <Separator />
 
       {/* SEÇÃO 1: ASSINATURAS */}
-      <h3 className="mb-4 text-lg font-semibold">Assinaturas</h3>
-      <SubscriptionsConfig />
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">Assinaturas</h3>
+        <SubscriptionsConfig />
+      </section>
 
       {/* SEÇÃO 2: METADADOS */}
       <section className="space-y-4">
