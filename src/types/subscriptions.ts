@@ -6,6 +6,23 @@ export interface LunaGame {
   end_time: string | null;
 }
 
+export interface GamePassGame {
+  store_id: string;
+  title: string;
+  description: string | null;
+  image_poster: string | null;
+  image_hero: string | null;
+  image_tile?: string | null;
+  categories: string[];
+  developer?: string | null;
+  publisher?: string | null;
+  review_score?: number | null;
+  review_count?: number | null;
+  is_ea_play: boolean;
+  store_url: string;
+  original_release_date?: string | null;
+}
+
 // Definição dos serviços
 export const SUBSCRIPTION_SERVICES = [
   {

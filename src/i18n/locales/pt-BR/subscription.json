@@ -26,5 +26,16 @@
   "service_game_pass_pc_description": "Catálogo de jogos para PC da Microsoft",
   "service_ea_play_description": "Biblioteca de jogos da EA (incluído no Game Pass)",
   "service_humble_choice_description": "Seleção mensal de jogos para manter",
-  "service_ubisoft_plus_description": "Catálogo completo de jogos da Ubisoft"
+  "service_ubisoft_plus_description": "Catálogo completo de jogos da Ubisoft",
+  "gamepass_section_title": "Game Pass",
+  "gamepass_available_games_count": "{{count}} jogos disponíveis",
+  "gamepass_view_all_button": "Ver catálogo",
+  "gamepass_featured_badge": "Destaque Game Pass",
+  "gamepass_view_store": "Abrir na loja",
+  "gamepass_released": "Lançamento: {{date}}",
+  "gamepass_developer": "Desenvolvedor",
+  "gamepass_score": "Avaliação",
+  "gamepass_previous_slide_aria_label": "Anterior",
+  "gamepass_next_slide_aria_label": "Próximo",
+  "gamepass_go_to_slide_aria_label": "Ir para slide {{slide}}"
 }

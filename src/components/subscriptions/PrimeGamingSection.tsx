@@ -1,11 +1,11 @@
-import {invoke} from '@tauri-apps/api/core';
-import {AlertCircle, ChevronLeft, ChevronRight, Clock, ExternalLink, Gamepad2,} from 'lucide-react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {useTranslation} from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
+import { AlertCircle, ChevronLeft, ChevronRight, Clock, ExternalLink, Gamepad2, } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import {LunaGame} from '@/types/subscriptions';
-import {Button} from '@/ui/button';
-import {openExternalLink} from '@/utils/openLink';
+import { LunaGame } from '@/types/subscriptions';
+import { Button } from '@/ui/button';
+import { openExternalLink } from '@/utils/openLink';
 
 type TranslationFn = (key: string, options?: Record<string, unknown>) => string;
 
@@ -226,7 +226,7 @@ export function PrimeGamingSection() {
         onMouseLeave={resumeAutoplay}
       >
         {/* Área dos slides — altura fixa */}
-        <div className="relative h-75 overflow-hidden">
+        <div className="relative h-80 overflow-hidden">
           {slides.map((game, i) => (
             <PrimeSlide
               key={game.title}
@@ -243,7 +243,7 @@ export function PrimeGamingSection() {
             <button
               type="button"
               onClick={prev}
-              className="absolute top-35 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="absolute top-40 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
               aria-label={t('prime_previous_slide_aria_label')}
             >
               <ChevronLeft size={20} />
@@ -251,7 +251,7 @@ export function PrimeGamingSection() {
             <button
               type="button"
               onClick={next}
-              className="absolute top-35 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="absolute top-40 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
               aria-label={t('prime_next_slide_aria_label')}
             >
               <ChevronRight size={20} />
@@ -269,8 +269,8 @@ export function PrimeGamingSection() {
                 onClick={() => goTo(i)}
                 className={`h-1 rounded-full transition-all duration-300 ${
                   i === currentIndex
-                    ? 'w-6 bg-purple-400'
-                    : 'w-2 bg-white/20 hover:bg-white/40'
+                    ? 'bg-muted-foreground w-6'
+                    : 'bg-muted-foreground/20 hover:muted-foreground/40 w-2'
                 }`}
                 aria-label={t('prime_go_to_slide_aria_label', { slide: i + 1 })}
               />

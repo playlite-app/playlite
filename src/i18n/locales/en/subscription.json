@@ -26,5 +26,16 @@
   "service_game_pass_pc_description": "Microsoft PC games catalog",
   "service_ea_play_description": "EA game library (included with Game Pass)",
   "service_humble_choice_description": "Monthly selection of games to keep",
-  "service_ubisoft_plus_description": "Full Ubisoft games catalog"
+  "service_ubisoft_plus_description": "Full Ubisoft games catalog",
+  "gamepass_section_title": "Game Pass",
+  "gamepass_available_games_count": "{{count}} games available",
+  "gamepass_view_all_button": "View catalog",
+  "gamepass_featured_badge": "Game Pass Spotlight",
+  "gamepass_view_store": "Open in store",
+  "gamepass_released": "Released: {{date}}",
+  "gamepass_developer": "Developer",
+  "gamepass_score": "Score",
+  "gamepass_previous_slide_aria_label": "Previous",
+  "gamepass_next_slide_aria_label": "Next",
+  "gamepass_go_to_slide_aria_label": "Go to slide {{slide}}"
 }
