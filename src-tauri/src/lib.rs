@@ -159,7 +159,11 @@ pub fn run() {
             // Comandos de Imagem
             services::images::cache_cover_image,
             services::images::check_local_cover,
-            services::images::clear_cover_cache
+            services::images::clear_cover_cache,
+            // Comandos de Subscricoes
+            commands::subscriptions::get_amazon_luna_catalog,
+            commands::subscriptions::get_subscription_settings,
+            commands::subscriptions::save_subscription_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

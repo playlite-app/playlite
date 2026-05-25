@@ -20,6 +20,18 @@ export function ErrorState({
 }: ErrorStateProps) {
   const { t } = useTranslation('errors');
 
+  // Helper to translate a message key if it's available in the `errors` namespace.
+  // If `message` is already a human-readable string (not a key), leave it as-is.
+  const translateMessageIfKey = (msg?: string) => {
+    if (!msg) return undefined;
+
+    const translated = t(msg);
+
+    // If translation exists in the `errors` namespace, `t(msg)` will return
+    // a different string than the key. Otherwise, it returns the key itself.
+    return translated !== msg ? translated : msg;
+  };
+
   const content = {
     offline: {
       icon: WifiOff,
@@ -40,7 +52,7 @@ export function ErrorState({
     api: {
       icon: AlertCircle,
       title: t('api_title'),
-      desc: message ?? t('api_desc'),
+      desc: translateMessageIfKey(message) ?? t('api_desc'),
       actionLabel: null, // Sem ação de navegação, apenas retry
       color: 'text-red-500',
       bg: 'bg-red-500/10',
@@ -48,7 +60,7 @@ export function ErrorState({
     generic: {
       icon: AlertCircle,
       title: t('generic_title'),
-      desc: message ?? t('generic_desc'),
+      desc: translateMessageIfKey(message) ?? t('generic_desc'),
       actionLabel: null,
       color: 'text-red-500',
       bg: 'bg-red-500/10',

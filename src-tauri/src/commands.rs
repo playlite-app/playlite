@@ -12,6 +12,7 @@
 //! - `plataforms`: Comandos para gerenciar plataformas de jogos.
 //! - `tooltips`: Sistema completo de recomendação v4.0 (core + análise).
 //! - `settings`: Comandos para gerenciar configurações e segredos do usuário.
+//! - `subscriptions`: Comandos para gerenciar assinaturas de serviços de jogos e buscar catálogos.
 //! - `system`: Comandos para interagir com o sistema (abrir pastas, arquivos, etc).
 //! - `version`: Comandos para gerenciar informações de versão da aplicação.
 //! - `wishlist`: Comandos para gerenciar a lista de desejos com 'tracking' de preços.
@@ -24,6 +25,7 @@ pub mod metadata;
 pub mod plataforms;
 pub mod recommendation;
 pub mod settings;
+pub mod subscriptions;
 pub mod system;
 pub mod version;
 pub mod wishlist;

@@ -20,9 +20,7 @@ pub struct LunaGame {
     pub claim_url: String,
     pub end_time: Option<String>,
 }
-
 pub async fn fetch_amazon_luna_catalog() -> Result<Vec<LunaGame>, String> {
-    // Jar compartilha cookies automaticamente entre requests
     let jar = Arc::new(Jar::default());
     let client = Client::builder()
         .cookie_provider(jar)
@@ -30,7 +28,6 @@ pub async fn fetch_amazon_luna_catalog() -> Result<Vec<LunaGame>, String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    // GET para obter cookies de sessão + csrf token
     let html = client
         .get("https://luna.amazon.com/claims/home")
         .send()
@@ -40,17 +37,18 @@ pub async fn fetch_amazon_luna_catalog() -> Result<Vec<LunaGame>, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    // Extrai o csrf-token do input hidden
-    let document = Html::parse_document(&html);
-    let selector = Selector::parse("input[name='csrf-key']").map_err(|e| e.to_string())?;
-    let csrf_token = document
-        .select(&selector)
-        .next()
-        .and_then(|el| el.value().attr("value"))
-        .ok_or("csrf-key não encontrado")?
-        .to_string();
+    let csrf_token = {
+        let document = Html::parse_document(&html);
+        let selector = Selector::parse("input[name='csrf-key']").map_err(|e| e.to_string())?;
+        document
+            .select(&selector)
+            .next()
+            .and_then(|el| el.value().attr("value"))
+            .ok_or("csrf-key não encontrado")?
+            .to_string() // .to_string() move o valor para fora do escopo
+    };
 
-    // POST GraphQL com cookies automáticos + csrf token
+    // Payload GraphQL mínimo para solicitar os campos usados no parsing abaixo.
     let payload = serde_json::json!({
         "extensions": {},
         "operationName": "OffersContext_Offers_And_Items",

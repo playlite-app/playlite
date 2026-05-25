@@ -189,6 +189,16 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
 
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS subscription_settings (
+        service TEXT PRIMARY KEY,   -- 'prime_gaming', 'game_pass', etc.
+        enabled BOOLEAN DEFAULT 0,
+        last_synced TEXT            -- ISO timestamp do último fetch
+    )",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+
     // Índices
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",

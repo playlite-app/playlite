@@ -68,6 +68,8 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
         CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("playtime_") {
         CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60
+    } else if cache_key.starts_with("amazon_luna") {
+        24 * 60 * 60 // 24 horas
     } else {
         CACHE_DEFAULT_TTL_DAYS * 24 * 60 * 60 // default 7 dias
     }

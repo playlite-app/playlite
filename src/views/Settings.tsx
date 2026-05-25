@@ -1,9 +1,11 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   BrainCircuit,
   Database,
   Download,
   ExternalLink,
   FileJson,
+  Gamepad2,
   HardDrive,
   History,
   ImageIcon,
@@ -18,20 +20,71 @@ import {
   Upload,
   WandSparkles,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
-import {
-  useRecommendation,
-  useRecommendationSliders,
-  useSettings,
-} from '@/hooks';
+import { useRecommendation, useRecommendationSliders, useSettings, } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
 import { Slider } from '@/ui/slider';
 import { Switch } from '@/ui/toggle-switch';
 import { toast } from '@/utils/toast';
+
+// Definição dos serviços disponíveis
+const SUBSCRIPTION_SERVICES = [
+  {
+    id: 'prime_gaming',
+    name: 'Prime Gaming',
+    description: 'Jogos gratuitos mensais incluídos no Amazon Prime',
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/20',
+    activeBorder: 'border-orange-500/60',
+    activeBg: 'bg-orange-500/15',
+  },
+  {
+    id: 'game_pass_pc',
+    name: 'Game Pass PC',
+    description: 'Catálogo de jogos para PC da Microsoft',
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/20',
+    activeBorder: 'border-green-500/60',
+    activeBg: 'bg-green-500/15',
+  },
+  {
+    id: 'ea_play',
+    name: 'EA Play',
+    description: 'Biblioteca de jogos da EA (incluído no Game Pass)',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/20',
+    activeBorder: 'border-red-500/60',
+    activeBg: 'bg-red-500/15',
+  },
+  {
+    id: 'humble_choice',
+    name: 'Humble Choice',
+    description: 'Seleção mensal de jogos para manter',
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-500/10',
+    border: 'border-cyan-500/20',
+    activeBorder: 'border-cyan-500/60',
+    activeBg: 'bg-cyan-500/15',
+  },
+  {
+    id: 'ubisoft_plus',
+    name: 'Ubisoft+',
+    description: 'Catálogo completo de jogos da Ubisoft',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/20',
+    activeBorder: 'border-blue-500/60',
+    activeBg: 'bg-blue-500/15',
+  },
+] as const;
 
 interface SettingsProps {
   onLibraryUpdate: () => void;
@@ -72,6 +125,40 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
     decayDescription,
   } = useRecommendationSliders(config, updateConfig);
 
+  // Estado das assinaturas
+  const [enabledServices, setEnabledServices] = useState<string[]>([]);
+  const [savingServices, setSavingServices] = useState(false);
+
+  // Aviso de EA Play incluso no Game Pass
+  const showEaPlayWarning =
+    enabledServices.includes('game_pass_pc') &&
+    enabledServices.includes('ea_play');
+
+  useEffect(() => {
+    invoke<string[]>('get_subscription_settings')
+      .then(setEnabledServices)
+      .catch(() => setEnabledServices([]));
+  }, []);
+
+  const toggleService = (id: string) => {
+    setEnabledServices(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
+
+  const handleSaveServices = async () => {
+    setSavingServices(true);
+
+    try {
+      await invoke('save_subscription_settings', { services: enabledServices });
+      toast.success('Assinaturas salvas com sucesso');
+    } catch {
+      toast.error('Erro ao salvar assinaturas');
+    } finally {
+      setSavingServices(false);
+    }
+  };
+
   if (loading.initial) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -98,7 +185,80 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
 
       <Separator />
 
-      {/* SEÇÃO 1: METADADOS */}
+      {/* SEÇÃO 1: ASSINATURAS */}
+      <section className="space-y-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+          Serviços de Assinatura
+        </h3>
+
+        <SettingsRow
+          icon={Gamepad2}
+          title="Minhas Assinaturas"
+          description="Marque os serviços que você assina para ver os jogos disponíveis na Home"
+        >
+          <div className="w-full space-y-3">
+            {SUBSCRIPTION_SERVICES.map(service => {
+              const isEnabled = enabledServices.includes(service.id);
+
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => toggleService(service.id)}
+                  className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition-all duration-200 ${
+                    isEnabled
+                      ? `${service.activeBg} ${service.activeBorder}`
+                      : `bg-background/30 ${service.border} hover:bg-background/60`
+                  }`}
+                >
+                  <div>
+                    <p
+                      className={`text-sm font-medium ${isEnabled ? service.color : 'text-foreground'}`}
+                    >
+                      {service.name}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      {service.description}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isEnabled}
+                    onChange={() => toggleService(service.id)}
+                    labelOff="Não"
+                    labelOn="Sim"
+                  />
+                </button>
+              );
+            })}
+
+            {/* Aviso EA Play + Game Pass */}
+            {showEaPlayWarning && (
+              <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 px-4 py-3">
+                <p className="text-xs text-yellow-400">
+                  ⚠️ O <strong>EA Play</strong> já está incluído no{' '}
+                  <strong>Game Pass PC</strong>. Os jogos aparecerão apenas uma
+                  vez na Home.
+                </p>
+              </div>
+            )}
+
+            <Button
+              onClick={handleSaveServices}
+              disabled={savingServices}
+              className="w-full bg-orange-600 text-white hover:bg-orange-700"
+            >
+              {savingServices ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Salvar Assinaturas
+            </Button>
+          </div>
+        </SettingsRow>
+      </section>
+
+      {/* SEÇÃO 2: METADADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">{t('metadata_section')}</h3>
 
@@ -238,7 +398,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 2: ALGORITMO DE RECOMENDAÇÃO */}
+      {/* SEÇÃO 3: ALGORITMO DE RECOMENDAÇÃO */}
       <section className="space-y-4">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
           {t('recommendation_algorithm_section')}
@@ -371,7 +531,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
         </SettingsRow>
       </section>
 
-      {/* SEÇÃO 3: ZONA DE DADOS */}
+      {/* SEÇÃO 4: ZONA DE DADOS */}
       <section className="space-y-4">
         <h3 className="text-lg font-semibold text-red-500/80">
           {t('data_zone_section')}
