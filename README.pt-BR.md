@@ -126,7 +126,7 @@ npm run tauri build
 
 - Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
 - Arquitetura do projeto: [`ARCHITECTURE.md`](ARCHITECTURE.md)
-- Documentação online (VitePress): https://playlite.vercel.app/
+- Documentação online (VitePress): https://playlite.vercel.app/pt-BR
 - Atualizações do projeto: [`CHANGELOG.md`](CHANGELOG.md)
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
 
