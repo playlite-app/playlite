@@ -6,6 +6,7 @@
 //!
 //! **Módulos:**
 //!
+//! - `gamebrain`: Integração com a API GameBrain.
 //! - `gamerpower`: Integração com a API GamerPower para busca de jogos grátis.
 //! - `gemini`: Integração com a API Gemini para funcionalidade de tradução com IA.
 //! - `itad`: Integração com a API IsThereAnyDeal para 'tracking' de preços e ofertas.
@@ -13,6 +14,7 @@
 //! - `steam`: Integração com a API Steam para obter detalhes e conquistas dos jogos.
 //! - `steamspy`: Integração com a API SteamSpy para estatísticas de jogos (median playtime).
 
+pub mod gamebrain;
 pub mod gamerpower;
 pub mod gemini;
 pub mod itad;

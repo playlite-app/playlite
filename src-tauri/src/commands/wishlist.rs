@@ -10,6 +10,7 @@ use crate::constants::{
 use crate::database::{self, AppState};
 use crate::errors::AppError;
 use crate::models::WishlistGame;
+use crate::services::integration::gamebrain::{self, GameBrainSearchParams};
 use crate::services::integration::{itad, rawg};
 use chrono::NaiveDate;
 use rusqlite::{params, Connection};
@@ -327,6 +328,42 @@ pub async fn search_wishlist_game(
             id: g.id.to_string(),
             name: g.name,
             cover_url: g.background_image,
+        })
+        .collect())
+}
+
+/// Busca jogos por características/descrição via GameBrain para adicionar à Wishlist.
+///
+/// Diferente de `search_wishlist_game` (que busca pelo nome exato na RAWG),
+/// este comando aceita descrições livres como "medieval strategy games" ou
+/// "RPG cooperativo parecido com Skyrim" e retorna sugestões semânticas.
+///
+/// Retorna o mesmo `SearchResult` do comando RAWG para manter
+/// compatibilidade com o frontend existente.
+#[tauri::command]
+pub async fn search_wishlist_game_by_features(
+    app: AppHandle,
+    query: String,
+) -> Result<Vec<SearchResult>, AppError> {
+    let results = gamebrain::search_pc_games_by_features(
+        &app,
+        &query,
+        GameBrainSearchParams {
+            sort: Some(gamebrain::GameBrainSort::Rating),
+            sort_order: Some(gamebrain::GameBrainSortOrder::Desc),
+            limit: Some(20),
+            ..Default::default()
+        },
+    )
+    .await
+    .map_err(AppError::NetworkError)?;
+
+    Ok(results
+        .into_iter()
+        .map(|g| SearchResult {
+            id: g.id,
+            name: g.name,
+            cover_url: g.cover_url,
         })
         .collect())
 }

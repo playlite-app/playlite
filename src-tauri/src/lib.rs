@@ -103,6 +103,7 @@ pub fn run() {
             commands::games::update_game_details,
             // Comandos da Lista de Desejos
             commands::wishlist::search_wishlist_game,
+            commands::wishlist::search_wishlist_game_by_features,
             commands::wishlist::add_to_wishlist,
             commands::wishlist::get_wishlist,
             commands::wishlist::remove_from_wishlist,

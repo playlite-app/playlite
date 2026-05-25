@@ -24,6 +24,7 @@ export default function AddWishlist({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<'name' | 'features'>('name');
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -31,7 +32,10 @@ export default function AddWishlist({
     setLoading(true);
 
     try {
-      const data = await wishlistService.searchWishlistGame(query);
+      const data =
+        searchMode === 'name'
+          ? await wishlistService.searchWishlistGame(query)
+          : await wishlistService.searchWishlistGameByFeatures(query);
       setResults(data);
     } catch {
       toast.error(t('add_wishlist_search_error'));
@@ -65,8 +69,39 @@ export default function AddWishlist({
         </DialogHeader>
 
         <div className="my-2 flex gap-2">
+          <div className="mb-2 flex gap-1 rounded-lg border p-1">
+            <Button
+              size="sm"
+              variant={searchMode === 'name' ? 'default' : 'ghost'}
+              className="flex-1"
+              onClick={() => {
+                setSearchMode('name');
+                setResults([]);
+              }}
+            >
+              {t('add_wishlist_mode_name')}
+            </Button>
+            <Button
+              size="sm"
+              variant={searchMode === 'features' ? 'default' : 'ghost'}
+              className="flex-1"
+              onClick={() => {
+                setSearchMode('features');
+                setResults([]);
+              }}
+            >
+              {t('add_wishlist_mode_features')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
           <Input
-            placeholder={t('add_wishlist_search_placeholder')}
+            placeholder={
+              searchMode === 'name'
+                ? t('add_wishlist_search_placeholder')
+                : t('add_wishlist_features_placeholder')
+            }
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}

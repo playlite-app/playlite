@@ -47,6 +47,15 @@ export const wishlistService = {
   },
 
   /**
+   * Busca jogos por características para adicionar à wishlist.
+   * Usa API GameBrain para obter lista de jogos.
+   *
+   * @param query
+   */
+  searchWishlistGameByFeatures: (query: string) =>
+    invoke<SearchResult[]>('search_wishlist_game_by_features', { query }),
+
+  /**
    * Adiciona um jogo à wishlist baseado num resultado de busca.
    * O ITAD ID será buscado automaticamente quando refresh_prices for chamado.
    *

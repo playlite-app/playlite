@@ -39,5 +39,8 @@
   "add_wishlist_title": "Adicionar à Lista de Desejos",
   "add_wishlist_search_placeholder": "Nome do jogo...",
   "add_wishlist_id_label": "ID:",
-  "add_wishlist_no_results_message": "Nenhum jogo encontrado."
+  "add_wishlist_no_results_message": "Nenhum jogo encontrado.",
+  "add_wishlist_mode_name": "Por nome",
+  "add_wishlist_mode_features": "Por características",
+  "add_wishlist_features_placeholder": "Ex: medieval strategy games"
 }
