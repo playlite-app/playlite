@@ -14,6 +14,7 @@ export interface KeysBatch {
   steamApiKey: string;
   rawgApiKey: string;
   geminiApiKey?: string;
+  gamebrainApiKey?: string;
 }
 
 export interface ImportSummary {

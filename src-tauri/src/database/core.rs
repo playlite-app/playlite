@@ -371,5 +371,6 @@ pub fn list_supported_keys() -> Vec<&'static str> {
         "steam_api_key",
         "rawg_api_key",
         "gemini_api_key",
+        "gamebrain_api_key",
     ]
 }

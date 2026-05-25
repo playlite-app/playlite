@@ -4,6 +4,7 @@ import {
   Download,
   ExternalLink,
   FileJson,
+  Gamepad2,
   HardDrive,
   History,
   ImageIcon,
@@ -132,6 +133,41 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
                 className="flex items-center gap-0.5 text-blue-400 hover:underline"
               >
                 {t('get_api_key_button')} <ExternalLink size={10} />
+              </a>
+            </div>
+          </div>
+        </SettingsRow>
+
+        {/* Configurações de API para descoberta e busca semântica */}
+        <SettingsRow
+          icon={Gamepad2}
+          title="GameBrain"
+          description={t('gamebrain_description')}
+        >
+          <div className="grid gap-2">
+            <Input
+              type="password"
+              placeholder="Cole sua chave da API GameBrain"
+              value={keys.gamebrainApiKey}
+              onChange={e =>
+                setKeys({
+                  ...keys,
+                  gamebrainApiKey: e.target.value,
+                })
+              }
+              className="bg-background/50"
+            />
+
+            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+              <span>{t('no_key_question')}</span>
+
+              <a
+                href="https://gamebrain.co/api"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-0.5 text-blue-400 hover:underline"
+              >
+                {t('get_api_key_button_gamebrain')} <ExternalLink size={10} />
               </a>
             </div>
           </div>

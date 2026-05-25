@@ -23,6 +23,8 @@ pub struct KeysBatch {
     pub rawg_api_key: String,
     #[serde(rename = "geminiApiKey")]
     pub gemini_api_key: String,
+    #[serde(rename = "gamebrainApiKey")]
+    pub gamebrain_api_key: String,
 }
 
 /// Recupera todos os secrets configurados em lote.
@@ -36,6 +38,7 @@ pub fn get_secrets(app: AppHandle) -> Result<KeysBatch, AppError> {
         steam_api_key: database::get_secret(&app, "steam_api_key")?,
         rawg_api_key: database::get_secret(&app, "rawg_api_key")?,
         gemini_api_key: database::get_secret(&app, "gemini_api_key")?,
+        gamebrain_api_key: database::get_secret(&app, "gamebrain_api_key")?,
     })
 }
 
@@ -50,6 +53,7 @@ pub fn set_secrets(
     steam_api_key: Option<String>,
     rawg_api_key: Option<String>,
     gemini_api_key: Option<String>,
+    gamebrain_api_key: Option<String>,
 ) -> Result<(), AppError> {
     // Helper para salvar ou deletar baseado no valor
     let save_or_delete = |key: &str, value: Option<String>| -> Result<(), AppError> {
@@ -68,6 +72,7 @@ pub fn set_secrets(
     save_or_delete("steam_api_key", steam_api_key)?;
     save_or_delete("rawg_api_key", rawg_api_key)?;
     save_or_delete("gemini_api_key", gemini_api_key)?;
+    save_or_delete("gamebrain_api_key", gamebrain_api_key)?;
 
     Ok(())
 }

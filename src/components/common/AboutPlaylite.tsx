@@ -243,6 +243,15 @@ export function AboutPlaylite({
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
                   </span>
+                  <p>{t('about_search_discover_games')}</p>
+                  <div className="flex-1">
+                    <TechLink name="GameBrain" url="https://gamebrain.co/" />
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5 text-xs">
+                    •
+                  </span>
                   <p>{t('about_description_translation')}</p>
                   <div className="flex-1">
                     <TechLink

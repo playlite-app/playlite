@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
-import { toast } from '@/utils/toast';
 
 import { ERROR_MESSAGES } from '@/errors/errorMessages';
 import { settingsService } from '@/services/settingsService';
+import { toast } from '@/utils/toast';
 
 /**
  * Hook para gerenciar as configurações do aplicativo, incluindo chaves de API,
@@ -18,6 +18,7 @@ export function useSettings(onLibraryUpdate: () => void) {
   const [keys, setKeys] = useState({
     rawgApiKey: '',
     geminiApiKey: '',
+    gamebrainApiKey: '',
   });
 
   const [loading, setLoading] = useState({
@@ -67,6 +68,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         setKeys({
           rawgApiKey: data.rawgApiKey || '',
           geminiApiKey: data.geminiApiKey || '',
+          gamebrainApiKey: data.gamebrainApiKey || '',
         });
       })
       .catch(e => console.error('Erro ao carregar settings', e))
@@ -86,6 +88,7 @@ export function useSettings(onLibraryUpdate: () => void) {
         steamApiKey: currentSecrets.steamApiKey || null,
         rawgApiKey: keys.rawgApiKey.trim() || null,
         geminiApiKey: keys.geminiApiKey.trim() || null,
+        gamebrainApiKey: keys.gamebrainApiKey.trim() || null,
       });
       setStatus({
         type: 'success',
@@ -401,4 +404,3 @@ export function useSettings(onLibraryUpdate: () => void) {
     },
   };
 }
-

@@ -25,6 +25,7 @@ export const settingsService = {
     steamApiKey: string | null;
     rawgApiKey: string | null;
     geminiApiKey: string | null;
+    gamebrainApiKey: string | null;
   }): Promise<void> => {
     await invoke('set_secrets', keys);
   },
