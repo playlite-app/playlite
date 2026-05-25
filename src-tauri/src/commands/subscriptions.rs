@@ -2,12 +2,18 @@
 
 use crate::database::AppState;
 use crate::scrapers::amazon_luna::LunaGame;
+use crate::scrapers::game_pass::GamePassGame;
 use crate::services::subscriptions;
 use tauri::State;
 
 #[tauri::command]
 pub async fn get_amazon_luna_catalog(state: State<'_, AppState>) -> Result<Vec<LunaGame>, String> {
     subscriptions::get_amazon_luna_games(&state).await
+}
+
+#[tauri::command]
+pub async fn get_game_pass_catalog(state: State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
+    subscriptions::get_game_pass_games(&state).await
 }
 
 #[tauri::command]

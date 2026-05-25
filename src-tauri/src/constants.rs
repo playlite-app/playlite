@@ -65,6 +65,7 @@ pub const RAWG_REQUISITIONS_PER_BATCH: u32 = 20;
 pub const RAWG_SEARCH_PAGE_SIZE: u32 = 10;
 pub const RAWG_TRENDING_PAGE_SIZE: u32 = 20;
 pub const RAWG_UPCOMING_PAGE_SIZE: u32 = 10;
+pub const GAME_PASS_BATCH_SIZE: usize = 20;
 
 // === TIMEOUTS DE REQUISIÇÕES HTTP (em segundos) ===
 pub const HTTP_REQUEST_TIMEOUT_SECS: u64 = 30;

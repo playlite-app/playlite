@@ -3,6 +3,7 @@
 use crate::database::AppState;
 use crate::scrapers::amazon_luna::fetch_amazon_luna_catalog;
 use crate::scrapers::amazon_luna::LunaGame;
+use crate::scrapers::game_pass::{fetch_game_pass_pc_catalog, GamePassGame};
 use crate::services::cache;
 use rusqlite::params;
 use tauri::State;
@@ -31,7 +32,29 @@ pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<Lu
     Ok(games)
 }
 
-/// Retorna os serviços que o usuário marcou como assinante
+/// Retorna catálogo do Game Pass PC (do cache ou scraping)
+pub async fn get_game_pass_games(state: &State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
+    let cached = {
+        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        cache::get_cached_api_data(&conn, "game_pass", "catalog")
+    };
+
+    if let Some(cached) = cached {
+        if let Ok(games) = serde_json::from_str::<Vec<GamePassGame>>(&cached) {
+            return Ok(games);
+        }
+    }
+
+    let games = fetch_game_pass_pc_catalog(false).await?;
+
+    {
+        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
+        cache::save_cached_api_data(&conn, "game_pass", "catalog", &payload)?;
+    }
+
+    Ok(games)
+}
 pub fn get_enabled_services(state: &State<'_, AppState>) -> Result<Vec<String>, String> {
     let conn = state.library_db.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn

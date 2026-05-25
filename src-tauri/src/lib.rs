@@ -162,6 +162,7 @@ pub fn run() {
             services::images::clear_cover_cache,
             // Comandos de Subscricoes
             commands::subscriptions::get_amazon_luna_catalog,
+            commands::subscriptions::get_game_pass_catalog,
             commands::subscriptions::get_subscription_settings,
             commands::subscriptions::save_subscription_settings
         ])
