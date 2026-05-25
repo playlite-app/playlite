@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   ChartBar,
   Clock,
@@ -14,12 +15,14 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero';
+import { PrimeGamingSection } from '@/components/subscriptions/PrimeGamingSection';
 import { Recommendation } from '@/components/tooltips';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
@@ -56,6 +59,15 @@ export default function Home(props: Readonly<HomeProps>) {
     trending,
     loadingRecommendations,
   } = useHome(props);
+
+  // Estado dos serviços habilitados
+  const [enabledServices, setEnabledServices] = useState<string[]>([]);
+
+  useEffect(() => {
+    invoke<string[]>('get_subscription_settings')
+      .then(setEnabledServices)
+      .catch(() => setEnabledServices([]));
+  }, []);
 
   // Lógica do Hero usando useHeroCarousel
   const heroSlides = [
@@ -235,6 +247,9 @@ export default function Home(props: Readonly<HomeProps>) {
         </div>
         {/* Achievements Component */}
         <Achievements />
+
+        {/* Seção: Prime Gaming — renderiza somente se habilitado */}
+        {enabledServices.includes('prime_gaming') && <PrimeGamingSection />}
 
         {/* Seção: Continue Jogando */}
         {continuePlaying.length > 0 && (

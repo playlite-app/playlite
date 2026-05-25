@@ -182,7 +182,9 @@ export function AboutPlaylite({
 
             {/* APIs Externas */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">{t('about_apis_services')}</h4>
+              <h4 className="text-sm font-semibold">
+                {t('about_apis_services')}
+              </h4>
               <div className="bg-accent/30 grid gap-2 rounded-lg p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
