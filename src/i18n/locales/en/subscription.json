@@ -37,5 +37,16 @@
   "gamepass_score": "Score",
   "gamepass_previous_slide_aria_label": "Previous",
   "gamepass_next_slide_aria_label": "Next",
-  "gamepass_go_to_slide_aria_label": "Go to slide {{slide}}"
+  "gamepass_go_to_slide_aria_label": "Go to slide {{slide}}",
+  "eaplay_section_title": "EA Play",
+  "eaplay_available_games_count": "{{count}} games available",
+  "eaplay_featured_badge": "EA Play",
+  "eaplay_view_store": "Open in store",
+  "eaplay_released": "Released: {{date}}",
+  "eaplay_developer": "Developer",
+  "eaplay_score": "Score",
+  "eaplay_view_all_button": "View catalog",
+  "eaplay_previous_slide_aria_label": "Previous",
+  "eaplay_next_slide_aria_label": "Next",
+  "eaplay_go_to_slide_aria_label": "Go to slide {{slide}}"
 }

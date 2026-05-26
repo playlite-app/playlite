@@ -22,10 +22,8 @@ import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero';
-import {
-  GamePassSection,
-  PrimeGamingSection,
-} from '@/components/subscriptions';
+import { GamePassSection, PrimeGamingSection, } from '@/components/subscriptions';
+import { EAPlaySection } from '@/components/subscriptions/EAPlaySection.tsx';
 import { Recommendation } from '@/components/tooltips';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
@@ -256,6 +254,10 @@ export default function Home(props: Readonly<HomeProps>) {
 
         {/* Seção: Game Pass — renderiza somente se habilitado */}
         {enabledServices.includes('game_pass_pc') && <GamePassSection />}
+
+        {/* Seção: EA Play — renderiza somente se habilitado e Game Pass desabilitado */}
+        {enabledServices.includes('ea_play') &&
+          !enabledServices.includes('game_pass_pc') && <EAPlaySection />}
 
         {/* Seção: Continue Jogando */}
         {continuePlaying.length > 0 && (

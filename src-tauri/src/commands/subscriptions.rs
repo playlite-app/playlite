@@ -12,8 +12,16 @@ pub async fn get_amazon_luna_catalog(state: State<'_, AppState>) -> Result<Vec<L
 }
 
 #[tauri::command]
-pub async fn get_game_pass_catalog(state: State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
-    subscriptions::get_game_pass_games(&state).await
+pub async fn get_game_pass_catalog(
+    state: State<'_, AppState>,
+    exclude_ea_play: bool,
+) -> Result<Vec<GamePassGame>, String> {
+    subscriptions::get_game_pass_games(&state, exclude_ea_play).await
+}
+
+#[tauri::command]
+pub async fn get_ea_play_catalog(state: State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
+    subscriptions::get_ea_play_games(&state).await
 }
 
 #[tauri::command]

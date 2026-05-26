@@ -2,6 +2,7 @@
 //! Each platform has its own submodule that implements the specific scraping logic for that platform.
 
 pub mod amazon_luna;
+mod ea_play;
 pub mod game_pass;
 
 pub use amazon_luna::{fetch_amazon_luna_catalog, LunaGame};
