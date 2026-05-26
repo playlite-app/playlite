@@ -18,6 +18,7 @@
 //! https://api.gamebrain.co/
 
 use crate::database;
+use crate::services::integration::gemini;
 use crate::utils::http_client::HTTP_CLIENT;
 
 use serde::{Deserialize, Serialize};
@@ -254,6 +255,24 @@ pub async fn search_games_by_features(
         return Ok(vec![]);
     }
 
+    // Traduz a query para inglês se necessário.
+    // Falha silenciosa: se a tradução falhar, usa a query original.
+    let english_query = match database::get_secret(app, "gemini_api_key") {
+        Ok(gemini_key) if !gemini_key.trim().is_empty() => {
+            gemini::translate_query_to_english(&gemini_key, cleaned_query)
+                .await
+                .unwrap_or_else(|_| cleaned_query.to_string())
+        }
+        // Se não tiver chave do Gemini configurada, usa a query como está
+        _ => cleaned_query.to_string(),
+    };
+
+    tracing::debug!(
+        "GameBrain search => original='{}' translated='{}'",
+        cleaned_query,
+        english_query
+    );
+
     let url = "https://api.gamebrain.co/v1/games";
 
     tracing::debug!(
@@ -268,7 +287,7 @@ pub async fn search_games_by_features(
     let mut request = HTTP_CLIENT
         .get(url)
         .header("x-api-key", api_key)
-        .query(&[("query", cleaned_query)]);
+        .query(&[("query", english_query.as_str())]);
 
     // Filtros: serializa o Vec como JSON compacto e passa como query param.
     // Formato esperado pela API:

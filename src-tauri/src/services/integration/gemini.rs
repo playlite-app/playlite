@@ -39,6 +39,9 @@ struct Part {
     text: String,
 }
 
+/// Traduz para português as descrições dos jogos
+///
+/// Mantém termos técnicos de jogos em inglês se forem comumente usados por gamers brasileiros.
 pub async fn translate_text(api_key: &str, text: &str) -> Result<String, String> {
     info!("Iniciando tradução no Gemini (Modelo 2.5)...");
 
@@ -121,4 +124,72 @@ pub async fn translate_text(api_key: &str, text: &str) -> Result<String, String>
 
     error!("Resposta Gemini inesperada: {:?}", data);
     Err("A IA não retornou nenhuma tradução válida.".to_string())
+}
+
+/// Traduz uma query de busca para inglês, se necessário.
+///
+/// Usado para normalizar buscas antes de enviar para APIs que só
+/// funcionam bem com termos em inglês (ex: GameBrain).
+///
+/// Se o texto já estiver em inglês, o modelo retorna sem alterações.
+pub async fn translate_query_to_english(api_key: &str, text: &str) -> Result<String, String> {
+    info!("Traduzindo query para inglês via Gemini...");
+
+    let url = format!("{}?key={}", GEMINI_API_URL, api_key);
+
+    let prompt = format!(
+        "If the following search query is not in English, translate it to English. \
+        If it is already in English, return it exactly as-is. \
+        Output ONLY the translated query, no explanations or punctuation:\n\n{}",
+        text
+    );
+
+    let body = json!({
+        "contents": [{
+            "parts": [{ "text": prompt }]
+        }]
+    });
+
+    let res = HTTP_CLIENT
+        .post(&url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Erro de rede Gemini: {}", e))?;
+
+    if !res.status().is_success() {
+        let status = res.status();
+        let error_body = res.text().await.unwrap_or_default();
+        error!(
+            "Erro API Gemini ao traduzir query ({}): {}",
+            status, error_body
+        );
+        // Falha silenciosa: usa a query original para não bloquear a busca
+        return Ok(text.to_string());
+    }
+
+    let data: GeminiResponse = res
+        .json()
+        .await
+        .map_err(|e| format!("Erro ao ler JSON Gemini: {}", e))?;
+
+    let translated = data
+        .candidates
+        .as_ref()
+        .and_then(|c| c.first())
+        .and_then(|c| c.content.as_ref())
+        .and_then(|c| c.parts.first())
+        .map(|p| p.text.trim().to_string());
+
+    match translated {
+        Some(t) if !t.is_empty() => {
+            info!("Query traduzida: '{}' -> '{}'", text, t);
+            Ok(t)
+        }
+        // Falha silenciosa: se Gemini não retornar nada, usa a query original
+        _ => {
+            error!("Gemini não retornou tradução para a query, usando original.");
+            Ok(text.to_string())
+        }
+    }
 }
