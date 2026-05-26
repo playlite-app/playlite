@@ -2,7 +2,9 @@
 
 use crate::database::AppState;
 use crate::scrapers::amazon_luna::{fetch_amazon_luna_catalog, LunaGame};
+use crate::scrapers::ea_play::fetch_ea_play_catalog;
 use crate::scrapers::game_pass::{fetch_game_pass_pc_catalog, GamePassGame};
+use crate::scrapers::ubisoft_plus::{fetch_ubisoft_plus_catalog, UbisoftGame};
 use crate::services::cache;
 use rusqlite::params;
 use tauri::State;
@@ -32,8 +34,10 @@ pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<Lu
 }
 
 // Chave de cache separada que guarda o catálogo completo (com EA Play incluso)
-const GAME_PASS_FULL_CACHE_KEY: &str = "catalog_full";
+const GAME_PASS_FULL_CACHE_KEY: &str = "catalog_game_pass_full";
 const GAME_PASS_CACHE_SOURCE: &str = "game_pass_pc";
+const UBISOFT_PLUS_CACHE_KEY: &str = "catalog_ubisoft_plus";
+const UBISOFT_PLUS_CACHE_SOURCE: &str = "ubisoft_plus";
 
 /// Retorna catálogo do Game Pass PC (do cache ou scraping)
 /// Se exclude_ea_play = true, filtra jogos EA Play do resultado
@@ -82,7 +86,7 @@ pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<GamePa
     let all_games: Vec<GamePassGame> = if let Some(data) = cached {
         serde_json::from_str(&data).unwrap_or_default()
     } else {
-        let games = fetch_game_pass_pc_catalog(false).await?;
+        let games = fetch_ea_play_catalog().await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
         cache::save_cached_api_data(
@@ -94,7 +98,38 @@ pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<GamePa
         games
     };
 
-    Ok(all_games.into_iter().filter(|g| g.is_ea_play).collect())
+    Ok(all_games)
+}
+
+/// Retorna catálogo do Ubisoft+ (do cache ou scraping)
+pub async fn get_ubisoft_plus_games(
+    state: &State<'_, AppState>,
+) -> Result<Vec<UbisoftGame>, String> {
+    let cached = {
+        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        cache::get_cached_api_data(&conn, UBISOFT_PLUS_CACHE_SOURCE, UBISOFT_PLUS_CACHE_KEY)
+    };
+
+    if let Some(cached) = cached {
+        if let Ok(games) = serde_json::from_str::<Vec<UbisoftGame>>(&cached) {
+            return Ok(games);
+        }
+    }
+
+    let games = fetch_ubisoft_plus_catalog().await?;
+
+    {
+        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
+        cache::save_cached_api_data(
+            &conn,
+            UBISOFT_PLUS_CACHE_SOURCE,
+            UBISOFT_PLUS_CACHE_KEY,
+            &payload,
+        )?;
+    }
+
+    Ok(games)
 }
 
 pub fn get_enabled_services(state: &State<'_, AppState>) -> Result<Vec<String>, String> {
