@@ -20,7 +20,7 @@
   "config_yes_label": "Yes",
   "config_save_success_toast": "Subscriptions saved successfully",
   "config_save_error_toast": "Error saving subscriptions",
-  "config_ea_play_warning": "⚠️ {{ea_play}} is already included in {{game_pass_pc}}. The games will appear only once on Home.",
+  "config_ea_play_warning": "⚠️ {{ea_play}} is already included in {{game_pass_pc}}.",
   "config_save_button": "Save Subscriptions",
   "service_prime_gaming_description": "Monthly free games included with Amazon Prime",
   "service_game_pass_pc_description": "Microsoft PC games catalog",

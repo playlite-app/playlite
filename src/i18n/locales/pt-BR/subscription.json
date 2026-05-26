@@ -20,7 +20,7 @@
   "config_yes_label": "Sim",
   "config_save_success_toast": "Assinaturas salvas com sucesso",
   "config_save_error_toast": "Erro ao salvar assinaturas",
-  "config_ea_play_warning": "⚠️ O {{ea_play}} já está incluído no {{game_pass_pc}}. Os jogos aparecerão apenas uma vez na Home.",
+  "config_ea_play_warning": "⚠️ O {{ea_play}} já está incluído no {{game_pass_pc}}.",
   "config_save_button": "Salvar Assinaturas",
   "service_prime_gaming_description": "Jogos gratuitos mensais incluídos no Amazon Prime",
   "service_game_pass_pc_description": "Catálogo de jogos para PC da Microsoft",
