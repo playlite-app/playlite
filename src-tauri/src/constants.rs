@@ -92,6 +92,14 @@ pub const CACHE_STEAM_REVIEWS_TTL_DAYS: i64 = 7;
 pub const CACHE_STEAM_PLAYTIME_TTL_DAYS: i64 = 15;
 pub const CACHE_DEFAULT_TTL_DAYS: i64 = 7;
 
+// === CHAVES DE CACHE DE ASSINATURAS ===
+pub const AMAZON_LUNA_CACHE_SOURCE: &str = "amazon_luna";
+pub const AMAZON_LUNA_CACHE_KEY: &str = "catalog_amazon_luna";
+pub const GAME_PASS_CACHE_SOURCE: &str = "game_pass_pc";
+pub const GAME_PASS_FULL_CACHE_KEY: &str = "catalog_game_pass_full";
+pub const UBISOFT_PLUS_CACHE_SOURCE: &str = "ubisoft_plus";
+pub const UBISOFT_PLUS_CACHE_KEY: &str = "catalog_ubisoft_plus";
+
 // === NOMES DE ARQUIVOS E CONFIGURAÇÕES DE BANCO DE DADOS ===
 pub const DB_FILENAME_LIBRARY: &str = "library.db";
 pub const DB_FILENAME_SECRETS: &str = "secrets.db";

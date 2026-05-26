@@ -258,11 +258,16 @@ export default function Home(props: Readonly<HomeProps>) {
         {enabledServices.includes('prime_gaming') && <PrimeGamingSection />}
 
         {/* Seção: Game Pass — renderiza somente se habilitado */}
-        {enabledServices.includes('game_pass_pc') && <GamePassSection />}
+        {enabledServices.includes('game_pass_pc') && (
+          <GamePassSection
+            excludeEaPlay={enabledServices.includes('ea_play')}
+          />
+        )}
 
-        {/* Seção: EA Play — renderiza somente se habilitado e Game Pass desabilitado */}
-        {enabledServices.includes('ea_play') &&
-          !enabledServices.includes('game_pass_pc') && <EAPlaySection />}
+        {/* Seção: EA Play — renderiza quando habilitado. Quando ambos (Game Pass + EA Play)
+            estiverem ativos, o GamePassSection exclui os títulos EA Play para evitar duplicatas,
+            portanto aqui mostramos sempre a seção do EA Play quando o usuário a habilitar. */}
+        {enabledServices.includes('ea_play') && <EAPlaySection />}
 
         {/* Seção: Ubisoft+ — renderiza somente se habilitado */}
         {enabledServices.includes('ubisoft_plus') && <UbisoftPlusSection />}

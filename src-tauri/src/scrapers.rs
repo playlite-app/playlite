@@ -5,11 +5,9 @@
 //!
 //! - Amazon Luna
 //! - Game Pass PC
-//! - EA Play
 //! - Ubisoft+
 
 pub mod amazon_luna;
-pub mod ea_play;
 pub mod game_pass;
 pub mod ubisoft_plus;
 

@@ -130,7 +130,13 @@ function GamePassSlide({
   );
 }
 
-export function GamePassSection() {
+interface GamePassSectionProps {
+  excludeEaPlay?: boolean;
+}
+
+export function GamePassSection({
+  excludeEaPlay = false,
+}: Readonly<GamePassSectionProps>) {
   const { t } = useTranslation('subscription');
   const [games, setGames] = useState<GamePassGame[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,30 +144,22 @@ export function GamePassSection() {
   const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // fixed larger height to avoid clipping of descriptions
 
-  // Fetch enabled services to decide EA Play filtering
   useEffect(() => {
-    let enabled: string[] = [];
-    invoke<string[]>('get_subscription_settings')
-      .then(s => (enabled = s))
-      .catch(() => (enabled = []))
-      .finally(async () => {
-        try {
-          const data = await invoke<GamePassGame[]>('get_game_pass_catalog', {
-            excludeEaPlay: enabled.includes('ea_play'),
-          });
-          // If user has EA Play enabled, filter EA Play entries to avoid duplicates
-          const filtered = enabled.includes('ea_play')
-            ? data.filter(g => !g.is_ea_play)
-            : data;
-          // Limit to up to 5 highlighted games, but keep full list in state
-          setGames(filtered);
-        } catch {
-          setGames([]);
-        } finally {
-          setLoading(false);
-        }
-      });
-  }, []);
+    const loadCatalog = async () => {
+      try {
+        const data = await invoke<GamePassGame[]>('get_game_pass_catalog', {
+          excludeEaPlay,
+        });
+        setGames(data);
+      } catch {
+        setGames([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCatalog();
+  }, [excludeEaPlay]);
 
   const slides = games.slice(0, Math.min(games.length, 5));
 
@@ -193,7 +191,7 @@ export function GamePassSection() {
   const resumeAutoplay = () => {
     if (slides.length <= 1) return;
 
-    autoplayRef.current = setInterval(next, 6000);
+    autoplayRef.current = setInterval(next, 3000);
   };
 
   if (loading) {
