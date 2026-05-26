@@ -49,6 +49,17 @@
   "eaplay_previous_slide_aria_label": "Previous",
   "eaplay_next_slide_aria_label": "Next",
   "eaplay_go_to_slide_aria_label": "Go to slide {{slide}}",
+  "ubisoft_section_title": "Ubisoft+",
+  "ubisoft_available_games_count": "{{count}} games available",
+  "ubisoft_view_all_button": "View catalog",
+  "ubisoft_featured_badge": "Ubisoft+ Spotlight",
+  "ubisoft_view_store": "Open in store",
+  "ubisoft_released": "Released: {{date}}",
+  "ubisoft_edition": "Edition: {{edition}}",
+  "ubisoft_genre": "Genre: {{genre}}",
+  "ubisoft_previous_slide_aria_label": "Previous",
+  "ubisoft_next_slide_aria_label": "Next",
+  "ubisoft_go_to_slide_aria_label": "Go to slide {{slide}}",
   "humble_choice_description": "See the games added monthly to the Humble Choice library and claim the available titles.",
   "humble_choice_button": "Open official website"
 }

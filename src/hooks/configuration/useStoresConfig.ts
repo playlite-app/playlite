@@ -1,10 +1,10 @@
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from '@/utils/toast';
 
 import { parsePlatformError } from '@/errors/errorMessages';
 import { platformsService } from '@/services/plataformsService';
 import { settingsService } from '@/services/settingsService';
+import { toast } from '@/utils/toast';
 
 /**
  * Hook para gerenciar configurações das lojas (Steam, Epic, Heroic, Ubisoft).
@@ -78,6 +78,7 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
         steamApiKey: steamConfig.steamApiKey.trim() || null,
         rawgApiKey: currentSecrets.rawgApiKey || null,
         geminiApiKey: currentSecrets.geminiApiKey || null,
+        gamebrainApiKey: currentSecrets.gamebrainApiKey || null,
       });
 
       setStatus({
@@ -325,4 +326,3 @@ export function useStoresConfig(onLibraryUpdate?: () => void) {
     },
   };
 }
-

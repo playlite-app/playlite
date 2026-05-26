@@ -23,6 +23,17 @@ export interface GamePassGame {
   original_release_date?: string | null;
 }
 
+export interface UbisoftGame {
+  title: string;
+  short_title: string | null;
+  edition: string | null;
+  genre: string | null;
+  image_url: string | null;
+  store_url: string;
+  release_date: string | null;
+  streaming_platforms: string[];
+}
+
 // Definição dos serviços
 export const SUBSCRIPTION_SERVICES = [
   {

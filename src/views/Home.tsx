@@ -22,7 +22,12 @@ import StandardGameCard from '@/components/cards/StandardGameCard';
 import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero';
-import { EAPlaySection, GamePassSection, PrimeGamingSection, } from '@/components/subscriptions';
+import {
+  EAPlaySection,
+  GamePassSection,
+  PrimeGamingSection,
+  UbisoftPlusSection,
+} from '@/components/subscriptions';
 import HumbleChoiceSection from '@/components/subscriptions/HumbleChoiceSection.tsx';
 import { Recommendation } from '@/components/tooltips';
 import { useHeroCarousel, useHome } from '@/hooks';
@@ -258,6 +263,9 @@ export default function Home(props: Readonly<HomeProps>) {
         {/* Seção: EA Play — renderiza somente se habilitado e Game Pass desabilitado */}
         {enabledServices.includes('ea_play') &&
           !enabledServices.includes('game_pass_pc') && <EAPlaySection />}
+
+        {/* Seção: Ubisoft+ — renderiza somente se habilitado */}
+        {enabledServices.includes('ubisoft_plus') && <UbisoftPlusSection />}
 
         {/* Seção: Humble Choice — renderiza somente se habilitado */}
         {enabledServices.includes('humble_choice') && <HumbleChoiceSection />}
