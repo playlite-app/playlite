@@ -1,5 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
-import { AlertCircle, ChevronLeft, ChevronRight, Clock, ExternalLink, Gamepad2, } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  ExternalLink,
+  Gamepad2,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

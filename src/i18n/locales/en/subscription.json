@@ -48,5 +48,7 @@
   "eaplay_view_all_button": "View catalog",
   "eaplay_previous_slide_aria_label": "Previous",
   "eaplay_next_slide_aria_label": "Next",
-  "eaplay_go_to_slide_aria_label": "Go to slide {{slide}}"
+  "eaplay_go_to_slide_aria_label": "Go to slide {{slide}}",
+  "humble_choice_description": "See the games added monthly to the Humble Choice library and claim the available titles.",
+  "humble_choice_button": "Open official website"
 }

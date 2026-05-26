@@ -190,7 +190,7 @@ export function EAPlaySection() {
       <section>
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
+            <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
               <Gamepad2 size={22} />
             </div>
             <div>
@@ -212,7 +212,7 @@ export function EAPlaySection() {
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
+          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <Gamepad2 size={22} />
           </div>
           <div>
@@ -284,7 +284,7 @@ export function EAPlaySection() {
                 onClick={() => goTo(i)}
                 className={`h-1 rounded-full transition-all duration-300 ${
                   i === currentIndex
-                    ? 'w-6 bg-red-400'
+                    ? 'bg-muted-foreground w-6'
                     : 'bg-muted-foreground/20 hover:bg-muted-foreground/40 w-2'
                 }`}
                 aria-label={t('eaplay_go_to_slide_aria_label', {
