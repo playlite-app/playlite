@@ -13,6 +13,7 @@ use tauri::State;
 pub struct DetailedCacheStats {
     pub total: i32,
     pub rawg_searches: i32,
+    pub gamebrain_entries: i32,
     pub steam_store: i32,
     pub steam_reviews: i32,
     pub steam_playtime: i32,
@@ -56,6 +57,15 @@ pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheS
         )
         .unwrap_or(0);
 
+    let gamebrain: i32 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM api_cache
+             WHERE source = 'gamebrain'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
     let store: i32 = conn
         .query_row(
             "SELECT COUNT(*) FROM api_cache
@@ -88,6 +98,7 @@ pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheS
     Ok(DetailedCacheStats {
         total,
         rawg_searches: rawg,
+        gamebrain_entries: gamebrain,
         steam_store: store,
         steam_reviews: reviews,
         steam_playtime: playtime,

@@ -5,8 +5,9 @@
 
 use crate::database;
 use crate::errors::AppError;
+use crate::services::integration::gamebrain::SimilarGame;
 use crate::services::integration::gamerpower::{self, Giveaway};
-use crate::services::integration::rawg;
+use crate::services::integration::{gamebrain, rawg};
 use tauri::AppHandle;
 
 /// Busca detalhes de um jogo na RAWG
@@ -45,4 +46,14 @@ pub async fn get_active_giveaways(app: AppHandle) -> Result<Vec<Giveaway>, AppEr
     gamerpower::fetch_giveaways(&app)
         .await
         .map_err(AppError::NetworkError)
+}
+
+/// Busca jogos similares usando a API do GameBrain
+#[tauri::command]
+pub async fn get_similar_games(
+    app: AppHandle,
+    game_id: String,
+    game_name: String,
+) -> Result<Vec<SimilarGame>, String> {
+    gamebrain::fetch_similar_games(&app, &game_id, &game_name, Some(12)).await
 }
