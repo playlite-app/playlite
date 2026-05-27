@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { GameEditForm } from '@/dialogs';
 import { Game, GameDetails, GamePlatformLink } from '@/types/game';
-import { GameDescription, GameHeader, GameSidebar } from '@/windows';
+import { GameHeader, GameSidebar } from '@/windows';
+import { GameContentTabs } from '@/windows/GameDetail/GameWindowTabs.tsx';
 
 interface GameDetailsModalProps {
   isOpen: boolean;
@@ -77,21 +78,23 @@ export default function GameDetail({
 
         {/* Coluna 2: Conteúdo Principal (Expandido em modo edição) */}
         <div
-          className={`bg-background custom-scrollbar overflow-y-auto p-6 lg:p-10 ${isEditing ? 'lg:col-span-12' : 'lg:col-span-8'}`}
+          className={`bg-background overflow-hidden ${isEditing ? 'lg:col-span-12' : 'lg:col-span-8'}`}
         >
-          {/* Lógica de troca: view e edit */}
           {isEditing && currentDetails ? (
-            <GameEditForm
-              gameId={game.id}
-              details={currentDetails}
-              onCancel={() => setIsEditing(false)}
-              onSuccess={handleEditSuccess}
-            />
+            <div className="custom-scrollbar h-full overflow-y-auto p-6 lg:p-10">
+              <GameEditForm
+                gameId={game.id}
+                details={currentDetails}
+                onCancel={() => setIsEditing(false)}
+                onSuccess={handleEditSuccess}
+              />
+            </div>
           ) : (
-            <GameDescription
+            <GameContentTabs
               gameId={game.id}
               details={currentDetails}
               loading={loading}
+              isEditing={isEditing}
               onDescriptionUpdate={translated =>
                 setCurrentDetails(prev =>
                   prev ? { ...prev, descriptionPtbr: translated } : null

@@ -143,3 +143,12 @@ export interface GameActions {
   onDeleteGame: (id: string) => void;
   onEditGame: (game: Game) => void;
 }
+
+// Tipo das abas disponíveis
+export type GameTab = 'description' | 'discovery' | 'media' | 'extras';
+
+export interface Tab {
+  id: GameTab;
+  label: string;
+  icon: React.ReactNode;
+}
