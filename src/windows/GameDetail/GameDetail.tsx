@@ -91,7 +91,7 @@ export default function GameDetail({
             </div>
           ) : (
             <GameContentTabs
-              gameId={game.id}
+              game={game}
               details={currentDetails}
               loading={loading}
               isEditing={isEditing}

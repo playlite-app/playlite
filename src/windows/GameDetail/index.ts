@@ -1,6 +1,7 @@
 export * from './AgeRatingBadge';
 export * from './GameDescription';
 export * from './GameDetail';
+export * from './GameDiscovery';
 export * from './GameEditForm';
 export * from './GameHeader';
 export * from './GameLinks';

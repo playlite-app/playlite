@@ -296,6 +296,49 @@ fn save_cached_json<T: Serialize>(
     })
 }
 
+fn take_similar_limit(results: Vec<SimilarGame>, requested_limit: u32) -> Vec<SimilarGame> {
+    results.into_iter().take(requested_limit as usize).collect()
+}
+
+fn read_stale_gamebrain_id(
+    app: &AppHandle,
+    id_cache_key: &str,
+    playlite_game_id: &str,
+) -> Result<Option<u64>, String> {
+    let stale_id = read_cached_json::<u64>(app, "gamebrain", id_cache_key, true)?;
+
+    if let Some(id) = stale_id {
+        tracing::debug!(
+            "GameBrain ID fallback para cache antigo => game_id='{}' gamebrain_id={}",
+            playlite_game_id,
+            id
+        );
+    }
+
+    Ok(stale_id)
+}
+
+fn read_stale_similar_games(
+    app: &AppHandle,
+    similar_cache_key: &str,
+    gamebrain_id: u64,
+    requested_limit: u32,
+) -> Result<Option<Vec<SimilarGame>>, String> {
+    let stale_results =
+        read_cached_json::<Vec<SimilarGame>>(app, "gamebrain", similar_cache_key, true)?;
+
+    if let Some(results) = stale_results {
+        tracing::debug!(
+            "GameBrain similar stale cache fallback => gamebrain_id={}",
+            gamebrain_id
+        );
+
+        return Ok(Some(take_similar_limit(results, requested_limit)));
+    }
+
+    Ok(None)
+}
+
 /// Extrai um ID numérico de um serde_json::Value.
 ///
 /// A GameBrain retorna IDs ora como número, ora como string.
@@ -402,9 +445,7 @@ async fn resolve_gamebrain_id(api_key: &str, game_name: &str) -> Result<Option<u
 
 /// Busca jogos por descrição/características.
 ///
-/// Exemplos:
-/// - "RPG medieval"
-/// - "Co-op zombie survival"
+/// Exemplos: "RPG medieval" / "Co-op zombie survival"
 ///
 /// - Use `params` para aplicar filtros e ordenação.
 /// - Para uma busca simples sem filtros: `GameBrainSearchParams::default()`.
@@ -638,13 +679,8 @@ pub async fn fetch_similar_games(
                 }
                 Ok(None) => {
                     if let Some(stale_id) =
-                        read_cached_json::<u64>(app, "gamebrain", &id_cache_key, true)?
+                        read_stale_gamebrain_id(app, &id_cache_key, playlite_game_id)?
                     {
-                        tracing::debug!(
-                            "GameBrain ID fallback para cache antigo => game_id='{}' gamebrain_id={}",
-                            playlite_game_id,
-                            stale_id
-                        );
                         stale_id
                     } else {
                         return Err(format!("Jogo '{}' não encontrado na GameBrain", game_name));
@@ -652,13 +688,8 @@ pub async fn fetch_similar_games(
                 }
                 Err(err) => {
                     if let Some(stale_id) =
-                        read_cached_json::<u64>(app, "gamebrain", &id_cache_key, true)?
+                        read_stale_gamebrain_id(app, &id_cache_key, playlite_game_id)?
                     {
-                        tracing::debug!(
-                            "GameBrain ID fallback para cache antigo => game_id='{}' gamebrain_id={}",
-                            playlite_game_id,
-                            stale_id
-                        );
                         stale_id
                     } else {
                         return Err(err);
@@ -678,11 +709,7 @@ pub async fn fetch_similar_games(
             "GameBrain similar cache hit => gamebrain_id={}",
             gamebrain_id
         );
-        let results = cached_results
-            .into_iter()
-            .take(requested_limit as usize)
-            .collect();
-        return Ok(results);
+        return Ok(take_similar_limit(cached_results, requested_limit));
     }
 
     // Cache miss: chama a API
@@ -706,16 +733,9 @@ pub async fn fetch_similar_games(
         Ok(response) => response,
         Err(err) => {
             if let Some(cached_results) =
-                read_cached_json::<Vec<SimilarGame>>(app, "gamebrain", &similar_cache_key, true)?
+                read_stale_similar_games(app, &similar_cache_key, gamebrain_id, requested_limit)?
             {
-                tracing::debug!(
-                    "GameBrain similar stale cache fallback => gamebrain_id={}",
-                    gamebrain_id
-                );
-                return Ok(cached_results
-                    .into_iter()
-                    .take(requested_limit as usize)
-                    .collect());
+                return Ok(cached_results);
             }
 
             return Err(err);
@@ -732,16 +752,9 @@ pub async fn fetch_similar_games(
             body
         );
         if let Some(cached_results) =
-            read_cached_json::<Vec<SimilarGame>>(app, "gamebrain", &similar_cache_key, true)?
+            read_stale_similar_games(app, &similar_cache_key, gamebrain_id, requested_limit)?
         {
-            tracing::debug!(
-                "GameBrain similar stale cache fallback => gamebrain_id={}",
-                gamebrain_id
-            );
-            return Ok(cached_results
-                .into_iter()
-                .take(requested_limit as usize)
-                .collect());
+            return Ok(cached_results);
         }
 
         return Err(format!("Erro GameBrain similar: {}", status));
@@ -751,16 +764,9 @@ pub async fn fetch_similar_games(
         Ok(text) => text,
         Err(err) => {
             if let Some(cached_results) =
-                read_cached_json::<Vec<SimilarGame>>(app, "gamebrain", &similar_cache_key, true)?
+                read_stale_similar_games(app, &similar_cache_key, gamebrain_id, requested_limit)?
             {
-                tracing::debug!(
-                    "GameBrain similar stale cache fallback => gamebrain_id={}",
-                    gamebrain_id
-                );
-                return Ok(cached_results
-                    .into_iter()
-                    .take(requested_limit as usize)
-                    .collect());
+                return Ok(cached_results);
             }
 
             return Err(err.to_string());
@@ -773,16 +779,9 @@ pub async fn fetch_similar_games(
         Err(e) => {
             tracing::error!("GameBrain similar JSON parse error: {}", e);
             if let Some(cached_results) =
-                read_cached_json::<Vec<SimilarGame>>(app, "gamebrain", &similar_cache_key, true)?
+                read_stale_similar_games(app, &similar_cache_key, gamebrain_id, requested_limit)?
             {
-                tracing::debug!(
-                    "GameBrain similar stale cache fallback => gamebrain_id={}",
-                    gamebrain_id
-                );
-                return Ok(cached_results
-                    .into_iter()
-                    .take(requested_limit as usize)
-                    .collect());
+                return Ok(cached_results);
             }
 
             return Err(format!("Erro JSON GameBrain similar: {}", e));
@@ -820,5 +819,5 @@ pub async fn fetch_similar_games(
     // Salva no cache persistente antes de retornar
     let _ = save_cached_json(app, "gamebrain", &similar_cache_key, &results);
 
-    Ok(results.into_iter().take(requested_limit as usize).collect())
+    Ok(take_similar_limit(results, requested_limit))
 }

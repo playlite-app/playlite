@@ -1,8 +1,8 @@
 import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { GameDetails, GameTab, Tab } from '@/types/game';
-import { GameDescription } from '@/windows';
+import { Game, GameDetails, GameTab, Tab } from '@/types/game';
+import { GameDescription, GameDiscovery } from '@/windows';
 
 // === COMPONENTE DE ABAS ===
 
@@ -50,33 +50,6 @@ export function GameTabs({ activeTab, onTabChange }: GameTabsProps) {
 
 interface PlaceholderProps {
   gameId: string;
-}
-
-/**
- * Placeholder — src/windows/game/GameDiscovery.tsx
- *
- * Conteúdo futuro:
- * - Jogos similares via GameBrain
- * - Cards com cover, rating, link para a GameWindow
- */
-export function GameDiscovery({ gameId }: PlaceholderProps) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-      <div className="bg-muted rounded-full p-4">
-        <Compass />
-      </div>
-      <p className="text-foreground text-sm font-medium">Descoberta</p>
-      <p className="text-muted-foreground max-w-xs text-xs">
-        Jogos similares via GameBrain — em breve.
-      </p>
-      {/* Debug: confirma que o gameId chegou */}
-      {process.env.NODE_ENV === 'development' && (
-        <code className="bg-muted text-muted-foreground mt-2 rounded px-2 py-1 text-xs">
-          gameId: {gameId}
-        </code>
-      )}
-    </div>
-  );
 }
 
 /**
@@ -134,7 +107,7 @@ export function GameExtras({ gameId }: PlaceholderProps) {
 // Este é o que entra no GameDetail.tsx no lugar do bloco atual da Coluna 2.
 
 interface GameContentTabsProps {
-  gameId: string;
+  game: Game;
   details: GameDetails | null;
   loading: boolean;
   isEditing: boolean;
@@ -145,7 +118,7 @@ interface GameContentTabsProps {
 }
 
 export function GameContentTabs({
-  gameId,
+  game,
   details,
   loading,
   isEditing,
@@ -156,7 +129,7 @@ export function GameContentTabs({
   // Reset para Descrição quando abrir um novo jogo
   useEffect(() => {
     setActiveTab('description');
-  }, [gameId]);
+  }, [game.id]);
 
   // Quando entrar em modo edição, força a aba Descrição
   useEffect(() => {
@@ -174,17 +147,19 @@ export function GameContentTabs({
       <div className="custom-scrollbar flex-1 overflow-y-auto p-6 lg:p-10">
         {activeTab === 'description' && (
           <GameDescription
-            gameId={gameId}
+            gameId={game.id}
             details={details}
             loading={loading}
             onDescriptionUpdate={onDescriptionUpdate}
           />
         )}
         {activeTab === 'discovery' && !isEditing && (
-          <GameDiscovery gameId={gameId} />
+          <GameDiscovery game={game} />
         )}
-        {activeTab === 'media' && !isEditing && <GameMedia gameId={gameId} />}
-        {activeTab === 'extras' && !isEditing && <GameExtras gameId={gameId} />}
+        {activeTab === 'media' && !isEditing && <GameMedia gameId={game.id} />}
+        {activeTab === 'extras' && !isEditing && (
+          <GameExtras gameId={game.id} />
+        )}
       </div>
     </div>
   );
