@@ -83,13 +83,14 @@ fn parse_game_pass_products(
 
 pub async fn fetch_game_pass_pc_catalog(
     exclude_ea_play: bool,
+    language: &str,
 ) -> Result<Vec<GamePassGame>, String> {
     let client = Client::new();
 
     // Etapa 1 — lista de IDs
     let url = format!(
-        "https://catalog.gamepass.com/sigls/v2?id={}&language=pt-br&market=BR",
-        GAME_PASS_PC_SIGL
+        "https://catalog.gamepass.com/sigls/v2?id={}&language={}&market=BR",
+        GAME_PASS_PC_SIGL, language
     );
 
     let sigls: Vec<serde_json::Value> = client
@@ -114,7 +115,10 @@ pub async fn fetch_game_pass_pc_catalog(
         let body = serde_json::json!({ "Products": chunk });
 
         let response: serde_json::Value = client
-            .post("https://catalog.gamepass.com/products?market=BR&language=pt-BR&hydration=MobileDetailsForConsole")
+            .post(&format!(
+                "https://catalog.gamepass.com/products?market=BR&language={}&hydration=MobileDetailsForConsole",
+                language
+            ))
             .header("Content-Type", "application/json")
             .json(&body)
             .send()

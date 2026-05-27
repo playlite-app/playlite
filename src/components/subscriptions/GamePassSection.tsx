@@ -137,7 +137,7 @@ interface GamePassSectionProps {
 export function GamePassSection({
   excludeEaPlay = false,
 }: Readonly<GamePassSectionProps>) {
-  const { t } = useTranslation('subscription');
+  const { t, i18n } = useTranslation('subscription');
   const [games, setGames] = useState<GamePassGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -149,6 +149,7 @@ export function GamePassSection({
       try {
         const data = await invoke<GamePassGame[]>('get_game_pass_catalog', {
           excludeEaPlay,
+          lang: i18n.language,
         });
         setGames(data);
       } catch {
@@ -159,7 +160,7 @@ export function GamePassSection({
     };
 
     loadCatalog();
-  }, [excludeEaPlay]);
+  }, [excludeEaPlay, i18n.language]);
 
   const slides = games.slice(0, Math.min(games.length, 5));
 

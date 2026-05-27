@@ -151,7 +151,7 @@ function PrimeSlide({
 
 // Componente principal da seção Prime Gaming, responsável por buscar os dados e gerenciar o carrossel
 export function PrimeGamingSection() {
-  const { t } = useTranslation('subscription');
+  const { t, i18n } = useTranslation('subscription');
   const [games, setGames] = useState<LunaGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -159,7 +159,9 @@ export function PrimeGamingSection() {
 
   // Busca o catálogo via Tauri
   useEffect(() => {
-    invoke<LunaGame[]>('get_amazon_luna_catalog')
+    invoke<LunaGame[]>('get_amazon_luna_catalog', {
+      lang: i18n.language,
+    })
       .then(data => {
         // Prioriza jogos que expiram mais cedo no topo do carrossel
         const sorted = [...data].sort((a, b) => {
@@ -175,7 +177,7 @@ export function PrimeGamingSection() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [i18n.language]);
 
   // Slides visíveis: jogo que expira primeiro + próximos em destaque
   const slides = games.slice(0, Math.min(games.length, 5));

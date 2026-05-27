@@ -9,21 +9,28 @@ use crate::services::subscriptions;
 use tauri::State;
 
 #[tauri::command]
-pub async fn get_amazon_luna_catalog(state: State<'_, AppState>) -> Result<Vec<LunaGame>, String> {
-    subscriptions::get_amazon_luna_games(&state).await
+pub async fn get_amazon_luna_catalog(
+    state: State<'_, AppState>,
+    lang: String,
+) -> Result<Vec<LunaGame>, String> {
+    subscriptions::get_amazon_luna_games(&state, &lang).await
 }
 
 #[tauri::command]
 pub async fn get_game_pass_catalog(
     state: State<'_, AppState>,
     exclude_ea_play: bool,
+    lang: String,
 ) -> Result<Vec<GamePassGame>, String> {
-    subscriptions::get_game_pass_games(&state, exclude_ea_play).await
+    subscriptions::get_game_pass_games(&state, exclude_ea_play, &lang).await
 }
 
 #[tauri::command]
-pub async fn get_ea_play_catalog(state: State<'_, AppState>) -> Result<Vec<EAPlayGame>, String> {
-    subscriptions::get_ea_play_games(&state).await
+pub async fn get_ea_play_catalog(
+    state: State<'_, AppState>,
+    lang: String,
+) -> Result<Vec<EAPlayGame>, String> {
+    subscriptions::get_ea_play_games(&state, &lang).await
 }
 
 #[tauri::command]

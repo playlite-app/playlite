@@ -135,26 +135,33 @@ function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
 
 // Componente principal
 export function EAPlaySection() {
-  const { t } = useTranslation('subscription');
+  const { t, i18n } = useTranslation('subscription');
   const [games, setGames] = useState<EAPlayGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    invoke<EAPlayGame[]>('get_ea_play_catalog')
+    setLoading(true);
+    invoke<EAPlayGame[]>('get_ea_play_catalog', {
+      lang: i18n.language,
+    })
       .then(data => {
         // Debug: imprime contagem retornada e alguns store_ids para inspeção
         try {
-          // eslint-disable-next-line no-console
-          console.log('EA Play: frontend received', data.length, 'games',
-            data.slice(0, 5).map(g => g.store_id));
+          console.log(
+            'EA Play: frontend received',
+            data.length,
+            'games',
+            data.slice(0, 5).map(g => g.store_id)
+          );
         } catch {}
+
         setGames(data);
       })
       .catch(() => setGames([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [i18n.language]);
 
   const slides = games.slice(0, Math.min(games.length, 5));
 

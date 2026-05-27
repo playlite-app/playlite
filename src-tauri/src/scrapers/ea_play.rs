@@ -31,7 +31,7 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
     let mut kept = 0usize;
     let mut skipped_type = 0usize;
     let mut skipped_platform = 0usize;
-    let mut skipped_other = 0usize;
+    let skipped_other = 0usize;
     let mut skipped_samples: Vec<(String, String)> = Vec::new();
 
     for (store_id, product) in products {
@@ -120,13 +120,13 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
     games
 }
 
-pub async fn fetch_ea_play_catalog() -> Result<Vec<EAPlayGame>, String> {
+pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, String> {
     let client = Client::new();
 
     // Etapa 1 — lista de IDs
     let url = format!(
-        "https://catalog.gamepass.com/sigls/v2?id={}&language=pt-br&market=BR",
-        EA_PLAY_SIGL
+        "https://catalog.gamepass.com/sigls/v2?id={}&language={}&market=BR",
+        EA_PLAY_SIGL, language
     );
 
     let sigls: Vec<serde_json::Value> = client
@@ -153,7 +153,10 @@ pub async fn fetch_ea_play_catalog() -> Result<Vec<EAPlayGame>, String> {
         let body = serde_json::json!({ "Products": chunk });
 
         let response: serde_json::Value = client
-            .post("https://catalog.gamepass.com/products?market=BR&language=pt-BR&hydration=MobileDetailsForConsole")
+            .post(&format!(
+                "https://catalog.gamepass.com/products?market=BR&language={}&hydration=MobileDetailsForConsole",
+                language
+            ))
             .header("Content-Type", "application/json")
             .json(&body)
             .send()

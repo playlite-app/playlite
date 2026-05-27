@@ -20,7 +20,7 @@ pub struct LunaGame {
     pub claim_url: String,
     pub end_time: Option<String>,
 }
-pub async fn fetch_amazon_luna_catalog() -> Result<Vec<LunaGame>, String> {
+pub async fn fetch_amazon_luna_catalog(language: &str) -> Result<Vec<LunaGame>, String> {
     let jar = Arc::new(Jar::default());
     let client = Client::builder()
         .cookie_provider(jar)
@@ -62,6 +62,7 @@ pub async fn fetch_amazon_luna_catalog() -> Result<Vec<LunaGame>, String> {
         .header("Client-Id", "CarboniteApp")
         .header("Origin", "https://luna.amazon.com")
         .header("Referer", "https://luna.amazon.com/claims/home")
+        .header("prime-gaming-language", language)
         .header("csrf-token", csrf_token)
         .json(&payload)
         .send()

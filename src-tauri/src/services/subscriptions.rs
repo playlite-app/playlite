@@ -14,11 +14,46 @@ use crate::services::cache;
 use rusqlite::params;
 use tauri::State;
 
+/// Normaliza tags de idioma para formato padrão (ex: pt -> pt-BR, en -> en-US)
+fn normalize_lang_tag(lang: &str) -> String {
+    let lower = lang.to_lowercase();
+    if lower.starts_with("pt") {
+        "pt-BR".to_string()
+    } else if lower.starts_with("en") {
+        "en-US".to_string()
+    } else {
+        "en-US".to_string() // fallback
+    }
+}
+
+/// Mapeia idioma para o header prime-gaming-language (Amazon Luna)
+fn amazon_luna_lang_tag(lang: &str) -> String {
+    let normalized = normalize_lang_tag(lang);
+    if normalized.starts_with("pt") {
+        "pt-PT".to_string() // Amazon Luna usa pt-PT, não pt-BR
+    } else {
+        "en-US".to_string()
+    }
+}
+
+/// Constrói chave de cache specific a idioma
+fn catalog_cache_key(base_key: &str, lang: &str) -> String {
+    let normalized = normalize_lang_tag(lang);
+    format!("{}_{}", base_key, normalized)
+}
+
 /// Retorna catálogo do Amazon Luna (do cache ou scraping)
-pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<LunaGame>, String> {
+pub async fn get_amazon_luna_games(
+    state: &State<'_, AppState>,
+    lang: &str,
+) -> Result<Vec<LunaGame>, String> {
+    let _normalized_lang = normalize_lang_tag(lang);
+    let cache_key = catalog_cache_key(AMAZON_LUNA_CACHE_KEY, lang);
+    let luna_lang = amazon_luna_lang_tag(lang);
+
     let cached = {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::get_cached_api_data(&conn, AMAZON_LUNA_CACHE_SOURCE, AMAZON_LUNA_CACHE_KEY)
+        cache::get_cached_api_data(&conn, AMAZON_LUNA_CACHE_SOURCE, &cache_key)
     };
 
     if let Some(cached) = cached {
@@ -27,7 +62,7 @@ pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<Lu
         }
     }
 
-    let games = fetch_amazon_luna_catalog().await?;
+    let games = fetch_amazon_luna_catalog(&luna_lang).await?;
 
     {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
@@ -35,7 +70,7 @@ pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<Lu
         cache::save_cached_api_data(
             &conn,
             AMAZON_LUNA_CACHE_SOURCE,
-            AMAZON_LUNA_CACHE_KEY,
+            &cache_key,
             &payload,
         )?;
     }
@@ -48,24 +83,28 @@ pub async fn get_amazon_luna_games(state: &State<'_, AppState>) -> Result<Vec<Lu
 pub async fn get_game_pass_games(
     state: &State<'_, AppState>,
     exclude_ea_play: bool,
+    lang: &str,
 ) -> Result<Vec<GamePassGame>, String> {
+    let normalized_lang = normalize_lang_tag(lang);
+    let cache_key = catalog_cache_key(GAME_PASS_FULL_CACHE_KEY, lang);
+
     // Tenta cache primeiro — sempre armazena o catálogo COMPLETO
     let cached = {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::get_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, GAME_PASS_FULL_CACHE_KEY)
+        cache::get_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, &cache_key)
     };
 
     let all_games: Vec<GamePassGame> = if let Some(data) = cached {
         serde_json::from_str(&data).unwrap_or_default()
     } else {
         // Cache miss — busca catálogo completo (`exclude_ea_play = false`).
-        let games = fetch_game_pass_pc_catalog(false).await?;
+        let games = fetch_game_pass_pc_catalog(false, &normalized_lang).await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
         cache::save_cached_api_data(
             &conn,
             GAME_PASS_CACHE_SOURCE,
-            GAME_PASS_FULL_CACHE_KEY,
+            &cache_key,
             &payload,
         )?;
         games
@@ -80,19 +119,25 @@ pub async fn get_game_pass_games(
 }
 
 /// Retorna catálogo do EA Play
-pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<EAPlayGame>, String> {
+pub async fn get_ea_play_games(
+    state: &State<'_, AppState>,
+    lang: &str,
+) -> Result<Vec<EAPlayGame>, String> {
+    let normalized_lang = normalize_lang_tag(lang);
+    let cache_key = catalog_cache_key(EA_PLAY_CACHE_KEY, lang);
+
     let cached = {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::get_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, EA_PLAY_CACHE_KEY)
+        cache::get_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, &cache_key)
     };
 
     let all_games: Vec<EAPlayGame> = if let Some(data) = cached {
         serde_json::from_str(&data).unwrap_or_default()
     } else {
-        let games = fetch_ea_play_catalog().await?;
+        let games = fetch_ea_play_catalog(&normalized_lang).await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::save_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, EA_PLAY_CACHE_KEY, &payload)?;
+        cache::save_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, &cache_key, &payload)?;
         games
     };
 
