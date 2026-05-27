@@ -1,4 +1,4 @@
-// src-tauri/src/scrapers/game_pass.rs
+//! Scraper - Game Pass PC
 
 use crate::constants::GAME_PASS_BATCH_SIZE;
 use reqwest::Client;

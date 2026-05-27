@@ -32,7 +32,8 @@ function UbisoftSlide({
   active: boolean;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
-  const title = game.short_title || game.title;
+  // Preferência: short_title (sem edição no nome) → title como fallback
+  const title = game.short_title ?? game.title;
 
   return (
     <div
@@ -57,35 +58,35 @@ function UbisoftSlide({
         </div>
 
         <div className="flex flex-1 flex-col justify-center gap-5 px-10 py-8">
-          <div className="flex items-center gap-2">
+          {/* Badges de topo: Ubisoft+, gênero e +18 */}
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold tracking-wider text-blue-300 uppercase">
               <Gamepad2 size={11} />
               {t('ubisoft_featured_badge', { defaultValue: 'Ubisoft+' })}
             </span>
+
+            {game.genre && (
+              <span className="inline-flex items-center rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold text-purple-300">
+                {game.genre}
+              </span>
+            )}
+
+            {game.adult && (
+              <span className="inline-flex items-center rounded-full bg-red-500/20 px-3 py-1 text-xs font-bold text-red-400">
+                +18
+              </span>
+            )}
           </div>
 
           <h3 className="text-3xl leading-tight font-extrabold tracking-tight text-white">
             {title}
           </h3>
 
-          {(game.edition || game.genre) && (
-            <div className="flex flex-wrap gap-2">
-              {game.edition && (
-                <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/60">
-                  {t('ubisoft_edition', {
-                    defaultValue: game.edition,
-                    edition: game.edition,
-                  })}
-                </span>
-              )}
-              {game.genre && (
-                <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/60">
-                  {t('ubisoft_genre', {
-                    defaultValue: game.genre,
-                    genre: game.genre,
-                  })}
-                </span>
-              )}
+          {game.edition && (
+            <div>
+              <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/60">
+                {game.edition}
+              </span>
             </div>
           )}
 
@@ -112,14 +113,24 @@ function UbisoftSlide({
               {t('ubisoft_view_store', { defaultValue: 'Abrir na loja' })}
             </Button>
 
-            {game.release_date && (
-              <div className="text-sm text-white/40">
-                {t('ubisoft_released', {
-                  defaultValue: `Lançamento: ${formatRelease(game.release_date)}`,
-                  date: formatRelease(game.release_date),
-                })}
-              </div>
-            )}
+            <div className="flex flex-col gap-0.5 text-sm text-white/40">
+              {game.release_date && (
+                <span>
+                  {t('ubisoft_released', {
+                    defaultValue: `Lançamento: ${formatRelease(game.release_date)}`,
+                    date: formatRelease(game.release_date),
+                  })}
+                </span>
+              )}
+              {game.subscription_expiration_date && (
+                <span className="text-amber-400/70">
+                  {t('ubisoft_expires', {
+                    defaultValue: `Disponível até: ${formatRelease(game.subscription_expiration_date)}`,
+                    date: formatRelease(game.subscription_expiration_date),
+                  })}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -156,7 +167,7 @@ export function UbisoftPlusSection() {
   useEffect(() => {
     if (slides.length <= 1) return;
 
-    autoplayRef.current = setInterval(next, 6000);
+    autoplayRef.current = setInterval(next, 3000);
 
     return () => {
       if (autoplayRef.current) clearInterval(autoplayRef.current);
@@ -170,7 +181,7 @@ export function UbisoftPlusSection() {
   const resumeAutoplay = () => {
     if (slides.length <= 1) return;
 
-    autoplayRef.current = setInterval(next, 6000);
+    autoplayRef.current = setInterval(next, 3000);
   };
 
   if (loading) {

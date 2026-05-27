@@ -32,6 +32,10 @@ pub struct UbisoftGame {
     pub image_url: Option<String>,
     pub store_url: String,
     pub release_date: Option<String>,
+    /// Data em que o jogo sai do catálogo Ubisoft+, se informada.
+    pub subscription_expiration_date: Option<String>,
+    /// `true` quando o jogo é classificado como adulto (+18).
+    pub adult: bool,
     /// Plataformas além de PC disponíveis via streaming (ex.: "luna", "xbox").
     pub streaming_platforms: Vec<String>,
 }
@@ -44,17 +48,24 @@ struct AlgoliaResponse {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct AlgoliaHit {
     title: Option<String>,
+    // A API retorna snake_case; sem rename_all, os campos Rust batem direto.
     short_title: Option<String>,
     #[serde(rename = "Edition")]
     edition: Option<String>,
     #[serde(rename = "Genre")]
     genre: Option<String>,
+    // BUG CORRIGIDO: rename_all = "camelCase" convertia este campo para "imageLink",
+    // que não existe na resposta — por isso a imagem nunca chegava.
     image_link: Option<String>,
     id: Option<String>,
     release_date: Option<String>,
+    /// String vazia quando não há expiração definida.
+    #[serde(rename = "subscriptionExpirationDate")]
+    subscription_expiration_date: Option<String>,
+    /// "TRUE" | "FALSE" como string (padrão da API Algolia da Ubisoft).
+    adult: Option<String>,
     #[serde(default, rename = "anywherePlatforms")]
     anywhere_platforms: Vec<String>,
 }
@@ -132,6 +143,10 @@ pub async fn fetch_ubisoft_plus_catalog() -> Result<Vec<UbisoftGame>, String> {
                 image_url: hit.image_link,
                 store_url,
                 release_date: hit.release_date,
+                subscription_expiration_date: hit
+                    .subscription_expiration_date
+                    .filter(|s| !s.is_empty()),
+                adult: hit.adult.as_deref() == Some("TRUE"),
                 streaming_platforms: hit.anywhere_platforms,
             })
         })

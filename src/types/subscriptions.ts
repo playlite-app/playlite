@@ -31,6 +31,8 @@ export interface UbisoftGame {
   image_url: string | null;
   store_url: string;
   release_date: string | null;
+  subscription_expiration_date: string | null;
+  adult: boolean;
   streaming_platforms: string[];
 }
 
