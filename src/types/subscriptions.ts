@@ -23,6 +23,20 @@ export interface GamePassGame {
   original_release_date?: string | null;
 }
 
+export interface EAPlayGame {
+  store_id: string;
+  title: string;
+  description: string | null;
+  image_poster: string | null;
+  image_hero: string | null;
+  categories: string[];
+  developer?: string | null;
+  store_url: string;
+  original_release_date?: string | null;
+  review_score?: number | null;
+  review_count?: number | null;
+}
+
 export interface UbisoftGame {
   title: string;
   short_title: string | null;

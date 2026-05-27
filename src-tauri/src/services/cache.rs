@@ -71,6 +71,7 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
     } else if cache_key.starts_with("catalog_amazon_luna")
         || cache_key.starts_with("catalog_game_pass_full")
         || cache_key.starts_with("catalog_ubisoft_plus")
+        || cache_key.starts_with("catalog_ea_play")
     {
         24 * 60 * 60 // 24 horas
     } else {

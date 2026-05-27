@@ -2,6 +2,7 @@
 
 use crate::database::AppState;
 use crate::scrapers::amazon_luna::LunaGame;
+use crate::scrapers::ea_play::EAPlayGame;
 use crate::scrapers::game_pass::GamePassGame;
 use crate::scrapers::ubisoft_plus::UbisoftGame;
 use crate::services::subscriptions;
@@ -21,7 +22,7 @@ pub async fn get_game_pass_catalog(
 }
 
 #[tauri::command]
-pub async fn get_ea_play_catalog(state: State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
+pub async fn get_ea_play_catalog(state: State<'_, AppState>) -> Result<Vec<EAPlayGame>, String> {
     subscriptions::get_ea_play_games(&state).await
 }
 

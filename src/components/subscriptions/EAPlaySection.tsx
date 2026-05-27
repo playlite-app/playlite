@@ -3,7 +3,7 @@ import { ArrowRight, ExternalLink, Gamepad2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { GamePassGame } from '@/types/subscriptions';
+import { EAPlayGame } from '@/types/subscriptions';
 import { Button } from '@/ui/button';
 import { openExternalLink } from '@/utils/openLink';
 
@@ -25,13 +25,7 @@ function formatRelease(dateIso?: string | null) {
 }
 
 // Slide individual do EA Play
-function EAPlaySlide({
-  game,
-  active,
-}: {
-  game: GamePassGame;
-  active: boolean;
-}) {
+function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
   const { t } = useTranslation('subscription');
 
   return (
@@ -142,13 +136,13 @@ function EAPlaySlide({
 // Componente principal
 export function EAPlaySection() {
   const { t } = useTranslation('subscription');
-  const [games, setGames] = useState<GamePassGame[]>([]);
+  const [games, setGames] = useState<EAPlayGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    invoke<GamePassGame[]>('get_ea_play_catalog')
+    invoke<EAPlayGame[]>('get_ea_play_catalog')
       .then(data => setGames(data))
       .catch(() => setGames([]))
       .finally(() => setLoading(false));
@@ -169,7 +163,7 @@ export function EAPlaySection() {
   useEffect(() => {
     if (slides.length <= 1) return;
 
-    autoplayRef.current = setInterval(next, 6000);
+    autoplayRef.current = setInterval(next, 3000);
 
     return () => {
       if (autoplayRef.current) clearInterval(autoplayRef.current);
@@ -182,7 +176,7 @@ export function EAPlaySection() {
   const resumeAutoplay = () => {
     if (slides.length <= 1) return;
 
-    autoplayRef.current = setInterval(next, 6000);
+    autoplayRef.current = setInterval(next, 3000);
   };
 
   if (loading) {

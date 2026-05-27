@@ -1,13 +1,15 @@
 //! Modulo para buscar games de serviços de assinatura e gerenciar quais serviços o usuário assina.
 
 use crate::constants::{
-    AMAZON_LUNA_CACHE_KEY, AMAZON_LUNA_CACHE_SOURCE, GAME_PASS_CACHE_SOURCE,
-    GAME_PASS_FULL_CACHE_KEY, UBISOFT_PLUS_CACHE_KEY, UBISOFT_PLUS_CACHE_SOURCE,
+    AMAZON_LUNA_CACHE_KEY, AMAZON_LUNA_CACHE_SOURCE, EA_PLAY_CACHE_KEY, EA_PLAY_CACHE_SOURCE,
+    GAME_PASS_CACHE_SOURCE, GAME_PASS_FULL_CACHE_KEY, UBISOFT_PLUS_CACHE_KEY,
+    UBISOFT_PLUS_CACHE_SOURCE,
 };
 use crate::database::AppState;
 use crate::scrapers::amazon_luna::{fetch_amazon_luna_catalog, LunaGame};
 use crate::scrapers::game_pass::{fetch_game_pass_pc_catalog, GamePassGame};
 use crate::scrapers::ubisoft_plus::{fetch_ubisoft_plus_catalog, UbisoftGame};
+use crate::scrapers::{fetch_ea_play_catalog, EAPlayGame};
 use crate::services::cache;
 use rusqlite::params;
 use tauri::State;
@@ -47,7 +49,7 @@ pub async fn get_game_pass_games(
     state: &State<'_, AppState>,
     exclude_ea_play: bool,
 ) -> Result<Vec<GamePassGame>, String> {
-    // Tenta cache primeiro — sempre armazena o catálogo COMPLETO (com EA Play)
+    // Tenta cache primeiro — sempre armazena o catálogo COMPLETO
     let cached = {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
         cache::get_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, GAME_PASS_FULL_CACHE_KEY)
@@ -77,31 +79,24 @@ pub async fn get_game_pass_games(
     }
 }
 
-/// Retorna catálogo do EA Play (subconjunto do Game Pass, mesmo cache)
-pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<GamePassGame>, String> {
-    // Reutiliza exatamente o mesmo cache do Game Pass — zero chamadas extras à API
+/// Retorna catálogo do EA Play
+pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<EAPlayGame>, String> {
     let cached = {
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::get_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, GAME_PASS_FULL_CACHE_KEY)
+        cache::get_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, EA_PLAY_CACHE_KEY)
     };
 
-    let all_games: Vec<GamePassGame> = if let Some(data) = cached {
+    let all_games: Vec<EAPlayGame> = if let Some(data) = cached {
         serde_json::from_str(&data).unwrap_or_default()
     } else {
-        // Cache miss — busca catálogo completo (`exclude_ea_play = false`).
-        let games = fetch_game_pass_pc_catalog(false).await?;
+        let games = fetch_ea_play_catalog().await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
         let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::save_cached_api_data(
-            &conn,
-            GAME_PASS_CACHE_SOURCE,
-            GAME_PASS_FULL_CACHE_KEY,
-            &payload,
-        )?;
+        cache::save_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, EA_PLAY_CACHE_KEY, &payload)?;
         games
     };
 
-    Ok(all_games.into_iter().filter(|g| g.is_ea_play).collect())
+    Ok(all_games)
 }
 
 /// Retorna catálogo do Ubisoft+ (do cache ou scraping)

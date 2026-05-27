@@ -95,6 +95,8 @@ pub const CACHE_DEFAULT_TTL_DAYS: i64 = 7;
 // === CHAVES DE CACHE DE ASSINATURAS ===
 pub const AMAZON_LUNA_CACHE_SOURCE: &str = "amazon_luna";
 pub const AMAZON_LUNA_CACHE_KEY: &str = "catalog_amazon_luna";
+pub const EA_PLAY_CACHE_SOURCE: &str = "ea_play";
+pub const EA_PLAY_CACHE_KEY: &str = "catalog_ea_play";
 pub const GAME_PASS_CACHE_SOURCE: &str = "game_pass_pc";
 pub const GAME_PASS_FULL_CACHE_KEY: &str = "catalog_game_pass_full";
 pub const UBISOFT_PLUS_CACHE_SOURCE: &str = "ubisoft_plus";
