@@ -143,7 +143,15 @@ export function EAPlaySection() {
 
   useEffect(() => {
     invoke<EAPlayGame[]>('get_ea_play_catalog')
-      .then(data => setGames(data))
+      .then(data => {
+        // Debug: imprime contagem retornada e alguns store_ids para inspeção
+        try {
+          // eslint-disable-next-line no-console
+          console.log('EA Play: frontend received', data.length, 'games',
+            data.slice(0, 5).map(g => g.store_id));
+        } catch {}
+        setGames(data);
+      })
       .catch(() => setGames([]))
       .finally(() => setLoading(false));
   }, []);

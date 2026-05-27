@@ -96,6 +96,10 @@ pub async fn get_ea_play_games(state: &State<'_, AppState>) -> Result<Vec<EAPlay
         games
     };
 
+    // Log quantos jogos serão retornados para o frontend — ajuda a detectar
+    // se a perda de itens ocorre antes do envio ao cliente.
+    log::info!("EA Play: service returning {} games", all_games.len());
+
     Ok(all_games)
 }
 
