@@ -147,16 +147,6 @@ export function EAPlaySection() {
       lang: i18n.language,
     })
       .then(data => {
-        // Debug: imprime contagem retornada e alguns store_ids para inspeção
-        try {
-          console.log(
-            'EA Play: frontend received',
-            data.length,
-            'games',
-            data.slice(0, 5).map(g => g.store_id)
-          );
-        } catch {}
-
         setGames(data);
       })
       .catch(() => setGames([]))

@@ -141,9 +141,6 @@ pub async fn get_ea_play_games(
         games
     };
 
-    // Log quantos jogos serão retornados para o frontend — ajuda a detectar
-    // se a perda de itens ocorre antes do envio ao cliente.
-    log::info!("EA Play: service returning {} games", all_games.len());
 
     Ok(all_games)
 }

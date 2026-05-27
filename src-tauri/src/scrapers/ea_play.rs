@@ -3,7 +3,6 @@
 use crate::constants::GAME_PASS_BATCH_SIZE;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use log::info;
 
 // IDs dos catálogos
 const EA_PLAY_SIGL: &str = "b8900d09-a491-44cc-916e-32b5acae621b";
@@ -27,23 +26,11 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
         return games;
     };
 
-    let mut total = 0usize;
-    let mut kept = 0usize;
-    let mut skipped_type = 0usize;
-    let mut skipped_platform = 0usize;
-    let skipped_other = 0usize;
-    let mut skipped_samples: Vec<(String, String)> = Vec::new();
 
     for (store_id, product) in products {
-        total += 1;
-
         // Filtra não-jogos
         let product_type = product["ProductType"].as_str().unwrap_or("");
         if product_type != "Game" {
-            skipped_type += 1;
-            if skipped_samples.len() < 5 {
-                skipped_samples.push((store_id.clone(), format!("type={}", product_type)));
-            }
             continue;
         }
 
@@ -73,10 +60,6 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
             });
 
             if !has_pc {
-                skipped_platform += 1;
-                if skipped_samples.len() < 5 {
-                    skipped_samples.push((store_id.clone(), format!("platforms={:?}", platforms)));
-                }
                 continue;
             }
         }
@@ -104,18 +87,8 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
         };
 
         games.push(game);
-        kept += 1;
     }
 
-    info!(
-        "EA Play: parse stats total={} kept={} skipped_type={} skipped_platform={} skipped_other={} samples={:?}",
-        total,
-        kept,
-        skipped_type,
-        skipped_platform,
-        skipped_other,
-        skipped_samples
-    );
 
     games
 }
@@ -138,7 +111,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
         .await
         .map_err(|e| e.to_string())?;
 
-    info!("EA Play: sigls returned {} entries", sigls.len());
 
     // Extrai apenas os IDs (pula o primeiro objeto que é metadata do catálogo)
     let ids: Vec<String> = sigls
@@ -166,12 +138,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
             .await
             .map_err(|e| e.to_string())?;
 
-        // Log para diagnosticar quantos products o endpoint retornou
-        if let Some(obj) = response["Products"].as_object() {
-            info!("EA Play: requested {} ids, products returned {}", chunk.len(), obj.len());
-        } else {
-            info!("EA Play: requested {} ids, products returned an unexpected shape", chunk.len());
-        }
 
         games.extend(parse_ea_play_products(&response["Products"]));
 
@@ -181,7 +147,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
         }
     }
 
-    info!("EA Play: total parsed games {}", games.len());
 
     Ok(games)
 }
