@@ -26,42 +26,11 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
         return games;
     };
 
-
     for (store_id, product) in products {
         // Filtra não-jogos
         let product_type = product["ProductType"].as_str().unwrap_or("");
         if product_type != "Game" {
             continue;
-        }
-
-        // Confirma que roda no PC — se o campo estiver ausente ou vazio, NÃO filtra
-        // Alguns responses podem usar objetos para AllowedPlatforms em vez de strings,
-        // então aceitamos ambos formatos.
-        let mut platforms: Vec<String> = Vec::new();
-        if let Some(arr) = product["AllowedPlatforms"].as_array() {
-            for v in arr {
-                if let Some(s) = v.as_str() {
-                    platforms.push(s.to_string());
-                } else if let Some(obj) = v.as_object() {
-                    if let Some(n) = obj.get("Name").and_then(|n| n.as_str()) {
-                        platforms.push(n.to_string());
-                    } else if let Some(n) = obj.get("Platform").and_then(|n| n.as_str()) {
-                        platforms.push(n.to_string());
-                    }
-                }
-            }
-        }
-
-        if !platforms.is_empty() {
-            // aceita variações como "Windows", "Windows.Desktop", "PC" ou "desktop"
-            let has_pc = platforms.iter().any(|p| {
-                let s = p.to_lowercase();
-                s.contains("windows") || s.contains("pc") || s.contains("desktop")
-            });
-
-            if !has_pc {
-                continue;
-            }
         }
 
         // Categories
@@ -78,8 +47,12 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
         let game = EAPlayGame {
             store_id: store_id.clone(),
             title: product["ProductTitle"].as_str().unwrap_or("?").to_string(),
-            description: product["ProductDescription"].as_str().map(|s| s.to_string()),
-            image_poster: product["ImagePoster"]["URI"].as_str().map(|s| s.to_string()),
+            description: product["ProductDescription"]
+                .as_str()
+                .map(|s| s.to_string()),
+            image_poster: product["ImagePoster"]["URI"]
+                .as_str()
+                .map(|s| s.to_string()),
             image_hero: product["ImageHero"]["URI"].as_str().map(|s| s.to_string()),
             categories,
             developer: product["DeveloperName"].as_str().map(|s| s.to_string()),
@@ -88,7 +61,6 @@ fn parse_ea_play_products(products: &serde_json::Value) -> Vec<EAPlayGame> {
 
         games.push(game);
     }
-
 
     games
 }
@@ -110,7 +82,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
         .json()
         .await
         .map_err(|e| e.to_string())?;
-
 
     // Extrai apenas os IDs (pula o primeiro objeto que é metadata do catálogo)
     let ids: Vec<String> = sigls
@@ -138,7 +109,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
             .await
             .map_err(|e| e.to_string())?;
 
-
         games.extend(parse_ea_play_products(&response["Products"]));
 
         // Delay entre batches para não sobrecarregar
@@ -146,7 +116,6 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
             tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
         }
     }
-
 
     Ok(games)
 }
