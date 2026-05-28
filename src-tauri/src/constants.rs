@@ -66,6 +66,7 @@ pub const RAWG_SEARCH_PAGE_SIZE: u32 = 10;
 pub const RAWG_TRENDING_PAGE_SIZE: u32 = 20;
 pub const RAWG_UPCOMING_PAGE_SIZE: u32 = 10;
 pub const GAME_PASS_BATCH_SIZE: usize = 20;
+pub const GAMEBRAIN_SIMILAR_REQUEST_LIMIT: u32 = 12;
 
 // === TIMEOUTS DE REQUISIÇÕES HTTP (em segundos) ===
 pub const HTTP_REQUEST_TIMEOUT_SECS: u64 = 30;
@@ -89,6 +90,7 @@ pub const CACHE_RAWG_GAME_TTL_DAYS: i64 = 30;
 pub const CACHE_RAWG_LIST_TTL_DAYS: i64 = 1; // Trending/Upcoming/Giveaways
 pub const CACHE_GAMEBRAIN_ID_TTL_DAYS: i64 = 30;
 pub const CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS: i64 = 30;
+pub const CACHE_GAMEBRAIN_MEDIA_TTL_DAYS: i64 = 30;
 pub const CACHE_STEAM_STORE_TTL_DAYS: i64 = 30;
 pub const CACHE_STEAM_REVIEWS_TTL_DAYS: i64 = 7;
 pub const CACHE_STEAM_PLAYTIME_TTL_DAYS: i64 = 15;

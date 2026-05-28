@@ -5,6 +5,7 @@ export * from './GameDiscovery';
 export * from './GameEditForm';
 export * from './GameHeader';
 export * from './GameLinks';
+export * from './GameMedia';
 export * from './GameSidebar';
 export * from './GameWindowTabs';
 export * from './SteamReviewBadge';

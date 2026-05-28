@@ -5,7 +5,7 @@
 
 use crate::database;
 use crate::errors::AppError;
-use crate::services::integration::gamebrain::SimilarGame;
+use crate::services::integration::gamebrain::{GameMedia, SimilarGame};
 use crate::services::integration::gamerpower::{self, Giveaway};
 use crate::services::integration::{gamebrain, rawg};
 use tauri::AppHandle;
@@ -56,4 +56,14 @@ pub async fn get_similar_games(
     game_name: String,
 ) -> Result<Vec<SimilarGame>, String> {
     gamebrain::fetch_similar_games(&app, &game_id, &game_name, Some(12)).await
+}
+
+/// Busca midia de jogos (screenshots, trailers) usando a API do GameBrain
+#[tauri::command]
+pub async fn get_game_media(
+    app: AppHandle,
+    game_id: String,
+    game_name: String,
+) -> Result<GameMedia, String> {
+    gamebrain::fetch_game_media(&app, &game_id, &game_name).await
 }

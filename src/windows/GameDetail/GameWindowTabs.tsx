@@ -2,7 +2,7 @@ import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Game, GameDetails, GameTab, Tab } from '@/types/game';
-import { GameDescription, GameDiscovery } from '@/windows';
+import { GameDescription, GameDiscovery, GameMedia } from '@/windows';
 
 // === COMPONENTE DE ABAS ===
 
@@ -48,34 +48,8 @@ export function GameTabs({ activeTab, onTabChange }: GameTabsProps) {
 // === PLACEHOLDERS DAS NOVAS VIEWS ===
 // Mova cada um para seu próprio arquivo quando implementar o conteúdo real.
 
-interface PlaceholderProps {
+interface ExtrasPlaceholderProps {
   gameId: string;
-}
-
-/**
- * Placeholder — src/windows/game/GameMedia.tsx
- *
- * Conteúdo futuro:
- * - Galeria de screenshots
- * - Player de trailers
- */
-export function GameMedia({ gameId }: PlaceholderProps) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-      <div className="bg-muted rounded-full p-4">
-        <Play />
-      </div>
-      <p className="text-foreground text-sm font-medium">Mídia</p>
-      <p className="text-muted-foreground max-w-xs text-xs">
-        Screenshots e trailers via GameBrain — em breve.
-      </p>
-      {process.env.NODE_ENV === 'development' && (
-        <code className="bg-muted text-muted-foreground mt-2 rounded px-2 py-1 text-xs">
-          gameId: {gameId}
-        </code>
-      )}
-    </div>
-  );
 }
 
 /**
@@ -84,7 +58,7 @@ export function GameMedia({ gameId }: PlaceholderProps) {
  * Conteúdo futuro:
  * - Dados do PCGamingWiki (localização de saves, suporte a mods, etc.)
  */
-export function GameExtras({ gameId }: PlaceholderProps) {
+export function GameExtras({ gameId }: ExtrasPlaceholderProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
       <div className="bg-muted rounded-full p-4">
@@ -156,7 +130,7 @@ export function GameContentTabs({
         {activeTab === 'discovery' && !isEditing && (
           <GameDiscovery game={game} />
         )}
-        {activeTab === 'media' && !isEditing && <GameMedia gameId={game.id} />}
+        {activeTab === 'media' && !isEditing && <GameMedia game={game} />}
         {activeTab === 'extras' && !isEditing && (
           <GameExtras gameId={game.id} />
         )}

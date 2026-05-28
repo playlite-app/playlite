@@ -130,6 +130,7 @@ pub fn run() {
             commands::metadata::search::fetch_game_details,
             commands::metadata::search::get_active_giveaways,
             commands::metadata::search::get_similar_games,
+            commands::metadata::search::get_game_media,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,

@@ -4,9 +4,9 @@
 //! reduzindo chamadas desnecessárias e melhorando performance.
 
 use crate::constants::{
-    CACHE_DEFAULT_TTL_DAYS, CACHE_GAMEBRAIN_ID_TTL_DAYS, CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS,
-    CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS,
-    CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
+    CACHE_DEFAULT_TTL_DAYS, CACHE_GAMEBRAIN_ID_TTL_DAYS, CACHE_GAMEBRAIN_MEDIA_TTL_DAYS,
+    CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS, CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS,
+    CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
 };
 use crate::errors::AppError;
 use rusqlite::{params, Connection};
@@ -67,6 +67,9 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
     }
     if cache_key.starts_with("gamebrain_similar:") {
         return CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS * 24 * 60 * 60;
+    }
+    if cache_key.starts_with("gamebrain_media:") {
+        return CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60;
     }
     if cache_key.starts_with("rawg_") {
         CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60
@@ -153,6 +156,7 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
     let rawg_cutoff = now - (CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_id_cutoff = now - (CACHE_GAMEBRAIN_ID_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_similar_cutoff = now - (CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS * 24 * 60 * 60);
+    let gamebrain_media_cutoff = now - (CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60);
     let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
     let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
     let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
@@ -163,6 +167,7 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
              WHERE (source = 'rawg' AND external_id LIKE 'search_%' AND updated_at < ?1)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_id:%' AND updated_at < ?2)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_similar:%' AND updated_at < ?3)
+                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?N)
                 OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?4)
                 OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?5)
                 OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?6)",
@@ -170,6 +175,7 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
                 rawg_cutoff,
                 gamebrain_id_cutoff,
                 gamebrain_similar_cutoff,
+                gamebrain_media_cutoff,
                 store_cutoff,
                 reviews_cutoff,
                 playtime_cutoff,
@@ -232,6 +238,7 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
     let rawg_cutoff = now - (CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_id_cutoff = now - (CACHE_GAMEBRAIN_ID_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_similar_cutoff = now - (CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS * 24 * 60 * 60);
+    let gamebrain_media_cutoff = now - (CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60);
     let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
     let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
     let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
@@ -242,6 +249,7 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
              WHERE (source = 'rawg' AND external_id LIKE 'search_%' AND updated_at < ?1)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_id:%' AND updated_at < ?2)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_similar:%' AND updated_at < ?3)
+                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?N)
                 OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?4)
                 OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?5)
                 OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?6)",
@@ -249,6 +257,7 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
                 rawg_cutoff,
                 gamebrain_id_cutoff,
                 gamebrain_similar_cutoff,
+                gamebrain_media_cutoff,
                 store_cutoff,
                 reviews_cutoff,
                 playtime_cutoff,
