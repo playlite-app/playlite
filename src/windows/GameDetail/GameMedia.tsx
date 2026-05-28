@@ -420,19 +420,6 @@ export function GameMedia({ game }: GameMediaProps) {
             />
           ))}
         </div>
-
-        {/* Atribuição */}
-        <p className="text-muted-foreground/60 text-center text-xs">
-          Mídia por{' '}
-          <a
-            href="https://gamebrain.co"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-muted-foreground underline underline-offset-2"
-          >
-            GameBrain
-          </a>
-        </p>
       </div>
     </>
   );

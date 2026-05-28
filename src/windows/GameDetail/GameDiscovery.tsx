@@ -1,8 +1,8 @@
-import { invoke } from '@tauri-apps/api/core';
-import { ExternalLink, Frown, Loader2, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {invoke} from '@tauri-apps/api/core';
+import {ExternalLink, Frown, Loader2, Star} from 'lucide-react';
+import {useEffect, useState} from 'react';
 
-import { Game } from '@/types/game';
+import {Game} from '@/types/game';
 
 // Espelha SimilarGame do backend (gamebrain.rs)
 interface SimilarGame {
@@ -243,18 +243,6 @@ export function GameDiscovery({ game }: GameDiscoveryProps) {
           <SimilarGameCard key={similar.id} game={similar} />
         ))}
       </div>
-
-      <p className="text-muted-foreground/60 text-center text-xs">
-        Dados de similaridade por{' '}
-        <a
-          href="https://gamebrain.co"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-muted-foreground underline underline-offset-2"
-        >
-          GameBrain
-        </a>
-      </p>
     </div>
   );
 }

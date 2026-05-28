@@ -45,9 +45,6 @@ export function GameTabs({ activeTab, onTabChange }: GameTabsProps) {
   );
 }
 
-// === PLACEHOLDERS DAS NOVAS VIEWS ===
-// Mova cada um para seu próprio arquivo quando implementar o conteúdo real.
-
 interface ExtrasPlaceholderProps {
   gameId: string;
 }
@@ -78,7 +75,6 @@ export function GameExtras({ gameId }: ExtrasPlaceholderProps) {
 }
 
 // === COMPONENTE ORQUESTRADOR ===
-// Este é o que entra no GameDetail.tsx no lugar do bloco atual da Coluna 2.
 
 interface GameContentTabsProps {
   game: Game;
@@ -86,9 +82,6 @@ interface GameContentTabsProps {
   loading: boolean;
   isEditing: boolean;
   onDescriptionUpdate: (translated: string) => void;
-  // Importar GameEditForm no GameDetail e passar como prop evita
-  // acoplamento circular. Alternativa: renderizar o form no próprio GameDetail
-  // e só montar este componente quando !isEditing.
 }
 
 export function GameContentTabs({
