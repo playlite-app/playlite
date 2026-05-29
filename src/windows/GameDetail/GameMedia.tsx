@@ -1,15 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Maximize2,
-  Meh,
-  Play,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, Meh, Play, WifiOff, X, } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useNetworkStatus } from '@/hooks';
 import { Game } from '@/types/game';
 
 // === TIPOS ===
@@ -299,6 +292,28 @@ function MediaError({
   );
 }
 
+function MediaOffline() {
+  return (
+    <div className="flex h-64 flex-col items-center justify-center gap-4 text-center">
+      <div className="bg-muted/40 rounded-full p-4">
+        <WifiOff className="text-muted-foreground h-8 w-8" />
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-foreground text-sm font-medium">
+          Sem conexão com a internet
+        </p>
+
+        <p className="text-muted-foreground max-w-sm text-xs leading-relaxed">
+          Não é possível carregar screenshots e trailers offline.
+          <br />
+          Conecte-se a uma rede e tente novamente.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // === COMPONENTE PRINCIPAL ===
 
 export function GameMedia({ game }: GameMediaProps) {
@@ -310,6 +325,7 @@ export function GameMedia({ game }: GameMediaProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
+  const isOnline = useNetworkStatus();
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -339,8 +355,10 @@ export function GameMedia({ game }: GameMediaProps) {
   }, [game.id]);
 
   useEffect(() => {
-    if (status === 'idle') load();
-  }, [status, load]);
+    if (status === 'idle' && isOnline) {
+      load();
+    }
+  }, [status, load, isOnline]);
 
   // Scroll automático da thumbnail ativa para o centro
   useEffect(() => {
@@ -374,6 +392,8 @@ export function GameMedia({ game }: GameMediaProps) {
 
     return () => window.removeEventListener('keydown', handler);
   }, [status, activeIndex, queue.length]);
+
+  if (!isOnline) return <MediaOffline />;
 
   if (status === 'loading') return <MediaLoading />;
 
