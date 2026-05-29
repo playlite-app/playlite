@@ -71,8 +71,8 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
         {/* Fallback sem imagem */}
         {!coverSrc && !hasTrailer && (
           <div className="from-secondary/50 via-muted to-background flex h-full w-full flex-col items-center justify-center bg-linear-to-br p-4 text-center">
-            <ImageOff className="mb-3 h-10 w-10 opacity-20" />
-            <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
+            <ImageOff className="mb-3 h-10 w-10 opacity-30" />
+            <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest wrap-break-word uppercase">
               {game.name}
             </span>
           </div>

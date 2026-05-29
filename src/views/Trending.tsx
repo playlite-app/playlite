@@ -100,6 +100,7 @@ export default function Trending(props: TrendingProps) {
     loading: giveawaysLoading,
     selectedPlatforms,
     togglePlatform,
+    shouldShowGiveawaysSection,
   } = useGiveaways(profile, {
     cachedGiveaways: props.giveawaysCache,
     setCachedGiveaways: props.setGiveawaysCache,
@@ -276,85 +277,89 @@ export default function Trending(props: TrendingProps) {
 
       {/* 3. Container Principal de Conteúdo (Jogos Grátis) */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Header da Seção + Filtro de Loja */}
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-purple-500/10 bg-linear-to-br to-purple-600 p-2.5 text-white shadow-lg">
-              <Gift size={20} />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                {t('free_games_section')}
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                {t('free_games_description')}
-              </p>
-            </div>
-          </div>
+        {shouldShowGiveawaysSection && (
+          <>
+            {/* Header da Seção + Filtro de Loja */}
+            <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-purple-500/10 bg-linear-to-br to-purple-600 p-2.5 text-white shadow-lg">
+                  <Gift size={20} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    {t('free_games_section')}
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {t('free_games_description')}
+                  </p>
+                </div>
+              </div>
 
-          {/* Botão de Filtro */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-40 gap-2 font-medium"
-              >
-                <Filter size={16} />
-                {t('filter_stores_button')}
-                {selectedPlatforms.length < PLATFORM_OPTIONS.length && (
-                  <span className="bg-primary text-primary-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
-                    {selectedPlatforms.length}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>{t('platforms_label')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {PLATFORM_OPTIONS.map(platform => (
-                <DropdownMenuCheckboxItem
-                  key={platform.id}
-                  checked={selectedPlatforms.includes(platform.id)}
-                  onCheckedChange={() => togglePlatform(platform.id)}
-                >
-                  {platform.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              {/* Botão de Filtro */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-40 gap-2 font-medium"
+                  >
+                    <Filter size={16} />
+                    {t('filter_stores_button')}
+                    {selectedPlatforms.length < PLATFORM_OPTIONS.length && (
+                      <span className="bg-primary text-primary-foreground ml-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
+                        {selectedPlatforms.length}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuLabel>{t('platforms_label')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {PLATFORM_OPTIONS.map(platform => (
+                    <DropdownMenuCheckboxItem
+                      key={platform.id}
+                      checked={selectedPlatforms.includes(platform.id)}
+                      onCheckedChange={() => togglePlatform(platform.id)}
+                    >
+                      {platform.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-        {/* Grid de Jogos Grátis */}
-        {filteredGiveaways.length === 0 && !giveawaysLoading ? (
-          <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
-            <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />
-            <p className="text-base font-medium">
-              {t('no_games_with_filters')}
-            </p>
-            <p className="mt-1 text-sm">{t('try_other_platforms')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {giveawaysLoading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="aspect-video w-full rounded-lg" />
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))
-              : filteredGiveaways.map((game: GiveawayWithAffinity) => (
-                  <FreeGameCard
-                    key={game.id}
-                    {...game}
-                    badge={game.affinityData.badge}
-                  />
-                ))}
-          </div>
+            {/* Grid de Jogos Grátis */}
+            {filteredGiveaways.length === 0 && !giveawaysLoading ? (
+              <div className="text-muted-foreground rounded-lg border border-dashed py-12 text-center">
+                <Gift className="mx-auto mb-3 h-12 w-12 opacity-20" />
+                <p className="text-base font-medium">
+                  {t('no_games_with_filters')}
+                </p>
+                <p className="mt-1 text-sm">{t('try_other_platforms')}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {giveawaysLoading
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="space-y-3">
+                        <Skeleton className="aspect-video w-full rounded-lg" />
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    ))
+                  : filteredGiveaways.map((game: GiveawayWithAffinity) => (
+                      <FreeGameCard
+                        key={game.id}
+                        {...game}
+                        badge={game.affinityData.badge}
+                      />
+                    ))}
+              </div>
+            )}
+
+            <Separator className="mt-8" />
+          </>
         )}
-
-        <Separator className="mt-8" />
 
         {/* 4. Mais Sugestões (Trending Grid) */}
         <div className="mb-6 flex items-center gap-2 pt-8">

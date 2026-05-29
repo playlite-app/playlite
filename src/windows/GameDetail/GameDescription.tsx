@@ -167,7 +167,7 @@ export function GameDescription({
       {/* CONTEÚDO */}
       <ScrollArea className="-mr-4 flex-1 pr-4">
         <div className="text-foreground/90 pb-8 text-sm leading-relaxed transition-opacity duration-300 lg:text-base">
-          <p className="font-light whitespace-pre-line text-gray-300">
+          <p className="text-secondary-foreground font-light whitespace-pre-line">
             {textToShow}
           </p>
         </div>

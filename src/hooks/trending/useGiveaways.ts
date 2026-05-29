@@ -43,8 +43,13 @@ export function useGiveaways(
   profile: UserPreferenceVector | null,
   options?: UseGiveawaysOptions
 ) {
+  const cachedFetchedAt = options?.cachedFetchedAt ?? null;
+  const cachedGiveawaysFresh = Boolean(
+    cachedFetchedAt && Date.now() - cachedFetchedAt < GIVEAWAYS_TTL_MS
+  );
+
   const [giveaways, setGiveaways] = useState<Giveaway[]>(
-    options?.cachedGiveaways ?? []
+    cachedGiveawaysFresh ? (options?.cachedGiveaways ?? []) : []
   );
   const [loading, setLoading] = useState(true);
 
@@ -70,26 +75,36 @@ export function useGiveaways(
   }, [selectedPlatforms]);
 
   useEffect(() => {
-    if (options?.cachedGiveaways?.length) {
+    if (cachedGiveawaysFresh && options?.cachedGiveaways?.length) {
       setGiveaways(options.cachedGiveaways);
+
+      return;
     }
-  }, [options?.cachedGiveaways]);
+
+    if (!isOnline && !cachedGiveawaysFresh) {
+      setGiveaways([]);
+    }
+  }, [cachedGiveawaysFresh, isOnline, options?.cachedGiveaways]);
 
   // Busca dados (O backend retorna Cache se estiver offline)
   useEffect(() => {
     const loadData = async () => {
       const now = Date.now();
       const cacheFresh =
-        options?.cachedFetchedAt &&
-        now - options.cachedFetchedAt < GIVEAWAYS_TTL_MS;
+        cachedFetchedAt && now - cachedFetchedAt < GIVEAWAYS_TTL_MS;
 
-      if (!isOnline && (options?.cachedGiveaways?.length ?? 0) > 0) {
+      if (!isOnline && !cacheFresh) {
+        setGiveaways([]);
         setLoading(false);
 
         return;
       }
 
       if (cacheFresh) {
+        if (options?.cachedGiveaways?.length) {
+          setGiveaways(options.cachedGiveaways);
+        }
+
         setLoading(false);
 
         return;
@@ -109,13 +124,13 @@ export function useGiveaways(
     loadData();
   }, [
     isOnline,
-    options?.cachedFetchedAt,
+    cachedFetchedAt,
     options?.cachedGiveaways?.length,
     options?.setCachedGiveaways,
     options?.setCachedFetchedAt,
   ]);
 
-  // Lógica de Filtragem: Plataforma + Validade (Novo)
+  // Lógica de Filtragem: Plataforma + Validade
   const filteredGiveaways = useMemo<GiveawayWithAffinity[]>(() => {
     const now = new Date();
 
@@ -155,5 +170,6 @@ export function useGiveaways(
     loading,
     selectedPlatforms,
     togglePlatform,
+    shouldShowGiveawaysSection: isOnline || cachedGiveawaysFresh,
   };
 }

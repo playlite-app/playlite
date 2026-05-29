@@ -2,11 +2,14 @@
 //!
 //! Executa sem travar a UI e falha silenciosamente em caso de erro.
 
-use crate::constants::{BACKGROUND_TASK_INTERVAL_SECS, STARTUP_DELAY_SECS};
+use crate::constants::{
+    BACKGROUND_TASK_INTERVAL_SECS, GAMERPOWER_CACHE_SOURCE, GAMERPOWER_LIST_ACTIVE_CACHE_KEY,
+    STARTUP_DELAY_SECS,
+};
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::services::cache;
-use crate::services::integration::{itad, steam_api};
+use crate::services::integration::{gamerpower, itad, steam_api};
 use lazy_static::lazy_static;
 use rusqlite::params;
 use std::sync::Arc;
@@ -56,7 +59,14 @@ pub async fn check_and_refresh_background(app: AppHandle) -> Result<(), AppError
             warn!("Falha ao atualizar reviews: {}", e);
         }
 
-        // 2. Atualizar Preços da Wishlist (Se cache > 3 dias)
+        // 2. Atualizar GamerPower (Se cache expirou)
+        sleep(Duration::from_secs(BACKGROUND_TASK_INTERVAL_SECS)).await;
+
+        if let Err(e) = refresh_gamerpower_background(&app_clone, &state).await {
+            warn!("Falha ao atualizar GamerPower: {}", e);
+        }
+
+        // 3. Atualizar Preços da Wishlist (Se cache > 3 dias)
         sleep(Duration::from_secs(BACKGROUND_TASK_INTERVAL_SECS)).await;
 
         if let Err(e) = refresh_wishlist_prices_background(&app_clone, &state).await {
@@ -162,6 +172,34 @@ async fn refresh_steam_reviews_background(
     }
 
     Ok(())
+}
+
+/// Atualiza o cache do GamerPower apenas quando o cache estiver expirado.
+async fn refresh_gamerpower_background(
+    app: &AppHandle,
+    state: &State<'_, AppState>,
+) -> Result<(), String> {
+    let should_refresh = {
+        let cache_conn = state.cache_db.lock().map_err(|_| "Falha DB Cache Lock")?;
+        cache::get_cached_api_data(&cache_conn, GAMERPOWER_CACHE_SOURCE, GAMERPOWER_LIST_ACTIVE_CACHE_KEY)
+            .is_none()
+    };
+
+    if !should_refresh {
+        return Ok(());
+    }
+
+    match gamerpower::fetch_giveaways(app).await {
+        Ok(_) => {
+            info!("Cache GamerPower atualizado em background");
+            let _ = app.emit("gamerpower_refresh_complete", ());
+            Ok(())
+        }
+        Err(e) => {
+            warn!("Falha ao atualizar GamerPower em background: {}", e);
+            Err(e)
+        }
+    }
 }
 
 /// Atualiza preços da Wishlist se o cache expirou

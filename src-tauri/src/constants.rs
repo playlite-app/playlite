@@ -94,11 +94,18 @@ pub const CACHE_GAMEBRAIN_MEDIA_TTL_DAYS: i64 = 30;
 pub const CACHE_STEAM_STORE_TTL_DAYS: i64 = 30;
 pub const CACHE_STEAM_REVIEWS_TTL_DAYS: i64 = 7;
 pub const CACHE_STEAM_PLAYTIME_TTL_DAYS: i64 = 15;
+pub const CACHE_AMAZON_LUNA_TTL_DAYS: i64 = 1;
+pub const CACHE_GAMERPOWER_TTL_DAYS: i64 = 1;
+pub const CACHE_GAME_PASS_FULL_TTL_DAYS: i64 = 15;
+pub const CACHE_UBISOFT_PLUS_TTL_DAYS: i64 = 30;
+pub const CACHE_EA_PLAY_TTL_DAYS: i64 = 30;
 pub const CACHE_DEFAULT_TTL_DAYS: i64 = 7;
 
 // === CHAVES DE CACHE DE ASSINATURAS ===
 pub const AMAZON_LUNA_CACHE_SOURCE: &str = "amazon_luna";
 pub const AMAZON_LUNA_CACHE_KEY: &str = "catalog_amazon_luna";
+pub const GAMERPOWER_CACHE_SOURCE: &str = "gamerpower";
+pub const GAMERPOWER_LIST_ACTIVE_CACHE_KEY: &str = "gamerpower_list_active";
 pub const EA_PLAY_CACHE_SOURCE: &str = "ea_play";
 pub const EA_PLAY_CACHE_KEY: &str = "catalog_ea_play";
 pub const GAME_PASS_CACHE_SOURCE: &str = "game_pass_pc";

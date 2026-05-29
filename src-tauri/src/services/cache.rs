@@ -4,9 +4,11 @@
 //! reduzindo chamadas desnecessárias e melhorando performance.
 
 use crate::constants::{
-    CACHE_DEFAULT_TTL_DAYS, CACHE_GAMEBRAIN_ID_TTL_DAYS, CACHE_GAMEBRAIN_MEDIA_TTL_DAYS,
-    CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS, CACHE_RAWG_GAME_TTL_DAYS, CACHE_RAWG_LIST_TTL_DAYS,
-    CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS, CACHE_STEAM_STORE_TTL_DAYS,
+    CACHE_AMAZON_LUNA_TTL_DAYS, CACHE_DEFAULT_TTL_DAYS, CACHE_EA_PLAY_TTL_DAYS,
+    CACHE_GAMEBRAIN_ID_TTL_DAYS, CACHE_GAMEBRAIN_MEDIA_TTL_DAYS, CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS,
+    CACHE_GAMERPOWER_TTL_DAYS, CACHE_GAME_PASS_FULL_TTL_DAYS, CACHE_RAWG_GAME_TTL_DAYS,
+    CACHE_RAWG_LIST_TTL_DAYS, CACHE_STEAM_PLAYTIME_TTL_DAYS, CACHE_STEAM_REVIEWS_TTL_DAYS,
+    CACHE_STEAM_STORE_TTL_DAYS, CACHE_UBISOFT_PLUS_TTL_DAYS,
 };
 use crate::errors::AppError;
 use rusqlite::{params, Connection};
@@ -71,6 +73,21 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
     if cache_key.starts_with("gamebrain_media:") {
         return CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60;
     }
+    if cache_key.starts_with("catalog_amazon_luna") {
+        return CACHE_AMAZON_LUNA_TTL_DAYS * 24 * 60 * 60;
+    }
+    if cache_key.starts_with("gamerpower_list_active") {
+        return CACHE_GAMERPOWER_TTL_DAYS * 24 * 60 * 60;
+    }
+    if cache_key.starts_with("catalog_game_pass_full") {
+        return CACHE_GAME_PASS_FULL_TTL_DAYS * 24 * 60 * 60;
+    }
+    if cache_key.starts_with("catalog_ubisoft_plus") {
+        return CACHE_UBISOFT_PLUS_TTL_DAYS * 24 * 60 * 60;
+    }
+    if cache_key.starts_with("catalog_ea_play") {
+        return CACHE_EA_PLAY_TTL_DAYS * 24 * 60 * 60;
+    }
     if cache_key.starts_with("rawg_") {
         CACHE_RAWG_GAME_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("store_") {
@@ -79,12 +96,6 @@ fn get_ttl_for_cache_type(cache_key: &str) -> i64 {
         CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60
     } else if cache_key.starts_with("playtime_") {
         CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60
-    } else if cache_key.starts_with("catalog_amazon_luna")
-        || cache_key.starts_with("catalog_game_pass_full")
-        || cache_key.starts_with("catalog_ubisoft_plus")
-        || cache_key.starts_with("catalog_ea_play")
-    {
-        24 * 60 * 60 // 24 horas
     } else {
         CACHE_DEFAULT_TTL_DAYS * 24 * 60 * 60 // default 7 dias
     }
@@ -157,6 +168,11 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
     let gamebrain_id_cutoff = now - (CACHE_GAMEBRAIN_ID_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_similar_cutoff = now - (CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_media_cutoff = now - (CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60);
+    let amazon_luna_cutoff = now - (CACHE_AMAZON_LUNA_TTL_DAYS * 24 * 60 * 60);
+    let gamerpower_cutoff = now - (CACHE_GAMERPOWER_TTL_DAYS * 24 * 60 * 60);
+    let game_pass_full_cutoff = now - (CACHE_GAME_PASS_FULL_TTL_DAYS * 24 * 60 * 60);
+    let ubisoft_plus_cutoff = now - (CACHE_UBISOFT_PLUS_TTL_DAYS * 24 * 60 * 60);
+    let ea_play_cutoff = now - (CACHE_EA_PLAY_TTL_DAYS * 24 * 60 * 60);
     let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
     let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
     let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
@@ -167,15 +183,25 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
              WHERE (source = 'rawg' AND external_id LIKE 'search_%' AND updated_at < ?1)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_id:%' AND updated_at < ?2)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_similar:%' AND updated_at < ?3)
-                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?N)
-                OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?4)
-                OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?5)
-                OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?6)",
+                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?4)
+                OR (source = 'amazon_luna' AND external_id LIKE 'catalog_amazon_luna%' AND updated_at < ?5)
+                OR (source = 'gamerpower' AND external_id LIKE 'gamerpower_list_active%' AND updated_at < ?6)
+                OR (source = 'game_pass_pc' AND external_id LIKE 'catalog_game_pass_full%' AND updated_at < ?7)
+                OR (source = 'ubisoft_plus' AND external_id LIKE 'catalog_ubisoft_plus%' AND updated_at < ?8)
+                OR (source = 'ea_play' AND external_id LIKE 'catalog_ea_play%' AND updated_at < ?9)
+                OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?10)
+                OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?11)
+                OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?12)",
             params![
                 rawg_cutoff,
                 gamebrain_id_cutoff,
                 gamebrain_similar_cutoff,
                 gamebrain_media_cutoff,
+                amazon_luna_cutoff,
+                gamerpower_cutoff,
+                game_pass_full_cutoff,
+                ubisoft_plus_cutoff,
+                ea_play_cutoff,
                 store_cutoff,
                 reviews_cutoff,
                 playtime_cutoff,
@@ -194,6 +220,10 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
 ///
 /// Retorna Some(payload) se existir, independente da data.
 pub fn get_stale_api_data(conn: &Connection, source: &str, external_id: &str) -> Option<String> {
+    if source == "gamerpower" {
+        return None;
+    }
+
     let result: Result<String, rusqlite::Error> = conn.query_row(
         "SELECT payload FROM api_cache
          WHERE source = ?1 AND external_id = ?2",
@@ -239,6 +269,11 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
     let gamebrain_id_cutoff = now - (CACHE_GAMEBRAIN_ID_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_similar_cutoff = now - (CACHE_GAMEBRAIN_SIMILAR_TTL_DAYS * 24 * 60 * 60);
     let gamebrain_media_cutoff = now - (CACHE_GAMEBRAIN_MEDIA_TTL_DAYS * 24 * 60 * 60);
+    let amazon_luna_cutoff = now - (CACHE_AMAZON_LUNA_TTL_DAYS * 24 * 60 * 60);
+    let gamerpower_cutoff = now - (CACHE_GAMERPOWER_TTL_DAYS * 24 * 60 * 60);
+    let game_pass_full_cutoff = now - (CACHE_GAME_PASS_FULL_TTL_DAYS * 24 * 60 * 60);
+    let ubisoft_plus_cutoff = now - (CACHE_UBISOFT_PLUS_TTL_DAYS * 24 * 60 * 60);
+    let ea_play_cutoff = now - (CACHE_EA_PLAY_TTL_DAYS * 24 * 60 * 60);
     let store_cutoff = now - (CACHE_STEAM_STORE_TTL_DAYS * 24 * 60 * 60);
     let reviews_cutoff = now - (CACHE_STEAM_REVIEWS_TTL_DAYS * 24 * 60 * 60);
     let playtime_cutoff = now - (CACHE_STEAM_PLAYTIME_TTL_DAYS * 24 * 60 * 60);
@@ -249,15 +284,25 @@ pub fn get_cache_stats(conn: &Connection) -> Result<CacheStats, String> {
              WHERE (source = 'rawg' AND external_id LIKE 'search_%' AND updated_at < ?1)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_id:%' AND updated_at < ?2)
                 OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_similar:%' AND updated_at < ?3)
-                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?N)
-                OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?4)
-                OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?5)
-                OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?6)",
+                OR (source = 'gamebrain' AND external_id LIKE 'gamebrain_media:%' AND updated_at < ?4)
+                OR (source = 'amazon_luna' AND external_id LIKE 'catalog_amazon_luna%' AND updated_at < ?5)
+                OR (source = 'gamerpower' AND external_id LIKE 'gamerpower_list_active%' AND updated_at < ?6)
+                OR (source = 'game_pass_pc' AND external_id LIKE 'catalog_game_pass_full%' AND updated_at < ?7)
+                OR (source = 'ubisoft_plus' AND external_id LIKE 'catalog_ubisoft_plus%' AND updated_at < ?8)
+                OR (source = 'ea_play' AND external_id LIKE 'catalog_ea_play%' AND updated_at < ?9)
+                OR (source = 'steam' AND external_id LIKE 'store_%' AND updated_at < ?10)
+                OR (source = 'steam' AND external_id LIKE 'reviews_%' AND updated_at < ?11)
+                OR (source = 'steam' AND external_id LIKE 'playtime_%' AND updated_at < ?12)",
             params![
                 rawg_cutoff,
                 gamebrain_id_cutoff,
                 gamebrain_similar_cutoff,
                 gamebrain_media_cutoff,
+                amazon_luna_cutoff,
+                gamerpower_cutoff,
+                game_pass_full_cutoff,
+                ubisoft_plus_cutoff,
+                ea_play_cutoff,
                 store_cutoff,
                 reviews_cutoff,
                 playtime_cutoff,
