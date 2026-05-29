@@ -220,10 +220,6 @@ pub fn cleanup_expired_cache(conn: &Connection) -> Result<usize, String> {
 ///
 /// Retorna Some(payload) se existir, independente da data.
 pub fn get_stale_api_data(conn: &Connection, source: &str, external_id: &str) -> Option<String> {
-    if source == "gamerpower" {
-        return None;
-    }
-
     let result: Result<String, rusqlite::Error> = conn.query_row(
         "SELECT payload FROM api_cache
          WHERE source = ?1 AND external_id = ?2",
