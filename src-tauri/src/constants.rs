@@ -107,7 +107,7 @@ pub const UBISOFT_PLUS_CACHE_SOURCE: &str = "ubisoft_plus";
 pub const UBISOFT_PLUS_CACHE_KEY: &str = "catalog_ubisoft_plus";
 
 // === NOMES DE ARQUIVOS E CONFIGURAÇÕES DE BANCO DE DADOS ===
-pub const DB_FILENAME_LIBRARY: &str = "library.db";
+pub const DB_FILENAME_LIBRARY: &str = "games.db";
 pub const DB_FILENAME_SECRETS: &str = "secrets.db";
-pub const DB_FILENAME_METADATA: &str = "metadata.db";
+pub const DB_FILENAME_METADATA: &str = "cache.db";
 pub const DB_JOURNAL_MODE: &str = "WAL";

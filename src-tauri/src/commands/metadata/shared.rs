@@ -16,6 +16,21 @@ pub struct EnrichProgress {
     pub status: String,
 }
 
+const RAWG_NOT_FOUND_MARKER: &str = "__RAWG_NOT_FOUND__";
+
+fn rawg_cache_key(name: &str) -> String {
+    format!("search_{}", name.to_lowercase())
+}
+
+pub(in crate::commands::metadata) fn rawg_not_found_cached(
+    name: &str,
+    cache_conn: &rusqlite::Connection,
+) -> bool {
+    let cache_key = rawg_cache_key(name);
+    cache::get_cached_api_data(cache_conn, "rawg", &cache_key)
+        .is_some_and(|cached| cached == RAWG_NOT_FOUND_MARKER)
+}
+
 // === FUNÇÕES COMPARTILHADAS ===
 
 /// Busca metadados RAWG com cache
@@ -49,10 +64,13 @@ async fn fetch_rawg_metadata_inner(
     cache_conn: &rusqlite::Connection,
     bypass_cache: bool,
 ) -> Option<rawg::GameDetails> {
-    let cache_key = format!("search_{}", name.to_lowercase());
+    let cache_key = rawg_cache_key(name);
 
     if !bypass_cache {
         if let Some(cached) = cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
+            if cached == RAWG_NOT_FOUND_MARKER {
+                return None;
+            }
             if let Ok(details) = serde_json::from_str::<rawg::GameDetails>(&cached) {
                 return Some(details);
             }
@@ -70,9 +88,25 @@ async fn fetch_rawg_metadata_inner(
                         }
                         Some(details)
                     }
-                    Err(_) => None,
+                    Err(err) => {
+                        if err.contains("não encontrado") || err.contains("404") {
+                            let _ = cache::save_cached_api_data(
+                                cache_conn,
+                                "rawg",
+                                &cache_key,
+                                RAWG_NOT_FOUND_MARKER,
+                            );
+                        }
+                        None
+                    }
                 }
             } else {
+                let _ = cache::save_cached_api_data(
+                    cache_conn,
+                    "rawg",
+                    &cache_key,
+                    RAWG_NOT_FOUND_MARKER,
+                );
                 None
             }
         }

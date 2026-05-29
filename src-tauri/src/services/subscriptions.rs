@@ -179,7 +179,7 @@ pub async fn get_ubisoft_plus_games(
 pub fn get_enabled_services(state: &State<'_, AppState>) -> Result<Vec<String>, String> {
     let conn = state.library_db.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
-        .prepare("SELECT service FROM subscription_settings WHERE enabled = 1")
+        .prepare("SELECT service FROM subscriptions WHERE enabled = 1")
         .map_err(|e| e.to_string())?;
 
     let services = stmt
@@ -199,13 +199,13 @@ pub fn set_enabled_services(
     let conn = state.library_db.lock().map_err(|e| e.to_string())?;
 
     // Reseta todos para disabled
-    conn.execute("UPDATE subscription_settings SET enabled = 0", [])
+    conn.execute("UPDATE subscriptions SET enabled = 0", [])
         .map_err(|e| e.to_string())?;
 
     // Habilita os selecionados (upsert)
     for service in services {
         conn.execute(
-            "INSERT INTO subscription_settings (service, enabled)
+            "INSERT INTO subscriptions (service, enabled)
              VALUES (?1, 1)
              ON CONFLICT(service) DO UPDATE SET enabled = 1",
             params![service],

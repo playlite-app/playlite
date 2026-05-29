@@ -24,6 +24,22 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
 
+const ENRICH_SKIP_SOURCE: &str = "enrich";
+
+fn enrich_skip_key(game_id: &str) -> String {
+    format!("skip_{}", game_id)
+}
+
+fn is_enrich_skipped(game_id: &str, cache_conn: &rusqlite::Connection) -> bool {
+    let key = enrich_skip_key(game_id);
+    cache::get_stale_api_data(cache_conn, ENRICH_SKIP_SOURCE, &key).is_some()
+}
+
+fn mark_enrich_skipped(game_id: &str, cache_conn: &rusqlite::Connection) {
+    let key = enrich_skip_key(game_id);
+    let _ = cache::save_cached_api_data(cache_conn, ENRICH_SKIP_SOURCE, &key, "1");
+}
+
 // === ESTRUTURAS DE DADOS ===
 
 #[derive(serde::Serialize)]
@@ -156,7 +172,7 @@ async fn enrich_game_metadata(
     platform: &str,
     platform_game_id: Option<String>,
     cache_conn: &rusqlite::Connection,
-) -> (ProcessedGameDetails, Vec<String>) {
+) -> (ProcessedGameDetails, Vec<String>, bool) {
     let series_name = series::infer_series(name);
     let mut details = ProcessedGameDetails {
         game_id: game_id.to_string(),
@@ -185,6 +201,7 @@ async fn enrich_game_metadata(
 
     let mut links_map: HashMap<String, String> = HashMap::new();
     let mut found_raw_tags: Vec<String> = Vec::new();
+    let mut rawg_found = false;
 
     // 1. Estratégia de Steam ID
     let mut target_steam_id = if platform.to_lowercase() == "steam" {
@@ -195,6 +212,7 @@ async fn enrich_game_metadata(
 
     // 2. Busca na RAWG (com cache)
     if let Some(rawg_det) = fetch_rawg_metadata(api_key, name, cache_conn).await {
+        rawg_found = true;
         found_raw_tags = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
 
         let raw_tag_slugs: Vec<String> = rawg_det.tags.iter().map(|t| t.slug.clone()).collect();
@@ -306,7 +324,7 @@ async fn enrich_game_metadata(
         details.external_links = serde_json::to_string(&links_map).ok();
     }
 
-    (details, found_raw_tags)
+    (details, found_raw_tags, rawg_found)
 }
 
 // === PERSISTÊNCIA ===
@@ -418,7 +436,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
         loop {
             // 1. Busca batch de jogos
-            let games_to_update: Vec<(String, String, String, Option<String>)> = {
+            let mut games_to_update: Vec<(String, String, String, Option<String>)> = {
                 let conn = match state.library_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
@@ -426,9 +444,9 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 let mut stmt = conn
                     .prepare(
                         // Inclui jogos sem nenhuma entrada em game_details
-                        // E também jogos da Legacy Games que já têm description_raw
-                        // do catálogo da loja, mas ainda não foram enriquecidos pela
-                        // RAWG (identificados pela ausência de genres/developer/tags).
+                        // E também jogos da Legacy Games que já têm description_raw da
+                        // loja, mas ainda não foram enriquecidos pela RAWG (identificados
+                        // pela ausência de genres/developer/tags).
                         "SELECT g.id, g.name, g.platform, g.platform_game_id
                          FROM games g
                          LEFT JOIN game_details gd ON g.id = gd.game_id
@@ -455,6 +473,36 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 break;
             }
 
+            let skipped_rawg_miss = {
+                let cache_conn = match state.metadata_db.lock() {
+                    Ok(c) => c,
+                    Err(_) => break,
+                };
+                let before = games_to_update.len();
+                games_to_update
+                    .retain(|(_, name, _, _)| !super::shared::rawg_not_found_cached(name, &cache_conn));
+                before - games_to_update.len()
+            };
+
+            let skipped_enrich = {
+                let cache_conn = match state.metadata_db.lock() {
+                    Ok(c) => c,
+                    Err(_) => break,
+                };
+                let before = games_to_update.len();
+                games_to_update
+                    .retain(|(game_id, _, _, _)| !is_enrich_skipped(game_id, &cache_conn));
+                before - games_to_update.len()
+            };
+
+            if games_to_update.is_empty() {
+                info!(
+                    "Nenhum jogo elegível para enriquecer (RAWG miss: {}, skip: {}).",
+                    skipped_rawg_miss, skipped_enrich
+                );
+                break;
+            }
+
             let total_in_batch = games_to_update.len();
 
             // 2. Processa batch - coleta todos os dados primeiro
@@ -474,7 +522,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                 );
 
                 // Processa metadados com cache
-                let (processed_data, raw_tags) = {
+                let (processed_data, raw_tags, rawg_found) = {
                     let cache_conn = match state.metadata_db.lock() {
                         Ok(c) => c,
                         Err(_) => continue,
@@ -497,6 +545,17 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                     });
                     result
                 };
+
+                let should_skip = !rawg_found
+                    || (processed_data.genres.is_empty()
+                        && processed_data.developer.is_none()
+                        && processed_data.tags.is_empty());
+
+                if should_skip {
+                    if let Ok(cache_conn) = state.metadata_db.lock() {
+                        mark_enrich_skipped(&game_id, &cache_conn);
+                    }
+                }
 
                 // Coleta tags da sessão
                 for tag in raw_tags {

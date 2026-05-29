@@ -94,7 +94,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
     metadata_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| {
-            AppError::DatabaseWalConfigError("metadata.db".to_string(), e.to_string()).to_string()
+            AppError::DatabaseWalConfigError("cache.db".to_string(), e.to_string()).to_string()
         })?;
 
     // Inicializa schema do cache
@@ -190,7 +190,7 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
     .map_err(|e| e.to_string())?;
 
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS subscription_settings (
+        "CREATE TABLE IF NOT EXISTS subscriptions (
         service TEXT PRIMARY KEY,   -- 'prime_gaming', 'game_pass', etc.
         enabled BOOLEAN DEFAULT 0,
         last_synced TEXT            -- ISO timestamp do último fetch
