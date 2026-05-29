@@ -28,7 +28,7 @@ fn with_metadata_cache_conn<T>(
 ) -> Result<T, String> {
     let state = app.state::<AppState>();
     let conn = state
-        .metadata_db
+        .cache_db
         .lock()
         .map_err(|_| "Falha ao acessar o cache persistente do GameBrain".to_string())?;
 
@@ -69,7 +69,10 @@ pub(super) fn save_cached_json<T: Serialize>(
     })
 }
 
-pub(super) fn take_similar_limit(results: Vec<SimilarGame>, requested_limit: u32) -> Vec<SimilarGame> {
+pub(super) fn take_similar_limit(
+    results: Vec<SimilarGame>,
+    requested_limit: u32,
+) -> Vec<SimilarGame> {
     results.into_iter().take(requested_limit as usize).collect()
 }
 
@@ -111,4 +114,3 @@ pub(super) fn read_stale_similar_games(
 
     Ok(None)
 }
-

@@ -22,9 +22,9 @@ use tauri::{AppHandle, Manager};
 
 /// Define o estado global da aplicação com ambas as conexões
 pub struct AppState {
-    pub library_db: Mutex<Connection>,
+    pub games_db: Mutex<Connection>,
     pub secrets_db: Mutex<Connection>,
-    pub metadata_db: Mutex<Connection>,
+    pub cache_db: Mutex<Connection>,
 }
 
 pub const SCHEMA_VERSION: u32 = 3;
@@ -64,18 +64,18 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
     // Conexão para library.db
     let library_path = app_data_dir.join(DB_FILENAME_LIBRARY);
-    let library_conn = Connection::open(&library_path)
+    let games_conn = Connection::open(&library_path)
         .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_LIBRARY, e))?;
 
-    library_conn
+    games_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| format!("Erro ao configurar WAL no library.db: {}", e))?;
 
     // Executa migrations
-    crate::database::migrations::run_migrations(app, &library_conn)?;
+    crate::database::migrations::run_migrations(app, &games_conn)?;
 
     // Cria schema completo
-    create_schema(&library_conn)?;
+    create_schema(&games_conn)?;
 
     // Conexão para secrets.db
     let secrets_path = app_data_dir.join(DB_FILENAME_SECRETS);
@@ -88,22 +88,22 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
     // Conexão para metadata.db (cache)
     let metadata_path = app_data_dir.join(DB_FILENAME_METADATA);
-    let metadata_conn = Connection::open(&metadata_path)
+    let cache_conn = Connection::open(&metadata_path)
         .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_METADATA, e))?;
 
-    metadata_conn
+    cache_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| {
             AppError::DatabaseWalConfigError("cache.db".to_string(), e.to_string()).to_string()
         })?;
 
     // Inicializa schema do cache
-    crate::services::cache::initialize_cache_db(&metadata_conn)?;
+    crate::services::cache::initialize_cache_db(&cache_conn)?;
 
     Ok(AppState {
-        library_db: Mutex::new(library_conn),
+        games_db: Mutex::new(games_conn),
         secrets_db: Mutex::new(secrets_conn),
-        metadata_db: Mutex::new(metadata_conn),
+        cache_db: Mutex::new(cache_conn),
     })
 }
 
@@ -234,9 +234,9 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
 #[tauri::command]
 pub fn init_db(app: AppHandle, state: State<AppState>) -> Result<String, String> {
     let conn = state
-        .library_db
+        .games_db
         .lock()
-        .map_err(|_| "Falha ao bloquear mutex do library_db")?;
+        .map_err(|_| "Falha ao bloquear mutex do games_db")?;
 
     let current_version = current_schema_version(&conn).unwrap_or(0) as i32;
     let expected_version = expected_schema_version(&app) as i32;

@@ -133,7 +133,7 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
         loop {
             // 1. Seleciona jogos com ao menos um campo de metadados vazio, excluindo os que já foram tentados nesta sessão.
             let games_to_fill: Vec<(String, String, String, Option<String>)> = {
-                let conn = match state.library_db.lock() {
+                let conn = match state.games_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
                 };
@@ -225,7 +225,7 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
                 );
 
                 let (processed_data, raw_tags) = {
-                    let cache_conn = match state.metadata_db.lock() {
+                    let cache_conn = match state.cache_db.lock() {
                         Ok(c) => c,
                         Err(_) => continue,
                     };
@@ -416,7 +416,7 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
 
             // 3. Persiste o batch numa única transação
             // save_game_details usa COALESCE → nunca sobrescreve campos existentes
-            if let Ok(mut conn) = state.library_db.lock() {
+            if let Ok(mut conn) = state.games_db.lock() {
                 match conn.transaction() {
                     Ok(tx) => {
                         let mut success_count = 0;

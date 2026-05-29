@@ -35,7 +35,7 @@ pub fn get_app_version_info(app: AppHandle) -> Result<AppSystemInfo, AppError> {
     let schema_version = database::configs::get_stored_schema_version(&app)?;
 
     let state: State<AppState> = app.state();
-    let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Busca configurações genéricas
     let install_date = database::configs::get_config(&conn, "install_date")?;

@@ -203,7 +203,7 @@ pub async fn fetch_trending_games(app: &AppHandle, api_key: &str) -> Result<Vec<
                 let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
 
                 // Sucesso: Salva no Cache (Fire & Forget)
-                if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+                if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
                     if let Ok(json) = serde_json::to_string(&data.results) {
                         let _ = cache::save_cached_api_data(&conn, "rawg", cache_key, &json);
                     }
@@ -218,7 +218,7 @@ pub async fn fetch_trending_games(app: &AppHandle, api_key: &str) -> Result<Vec<
     }
 
     // 2. FALLBACK: Tenta buscar Cache Offline ("Stale")
-    if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+    if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
         if let Some(payload) = cache::get_stale_api_data(&conn, "rawg", cache_key) {
             if let Ok(cached_games) = serde_json::from_str::<Vec<RawgGame>>(&payload) {
                 return Ok(cached_games);
@@ -251,7 +251,7 @@ pub async fn fetch_upcoming_games(app: &AppHandle, api_key: &str) -> Result<Vec<
             let data: RawgResponse = res.json().await.map_err(|e| e.to_string())?;
 
             // Sucesso: Salva no Cache
-            if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+            if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
                 if let Ok(json) = serde_json::to_string(&data.results) {
                     let _ = cache::save_cached_api_data(&conn, "rawg", cache_key, &json);
                 }
@@ -262,7 +262,7 @@ pub async fn fetch_upcoming_games(app: &AppHandle, api_key: &str) -> Result<Vec<
     }
 
     // 2. FALLBACK: Cache Offline
-    if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+    if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
         if let Some(payload) = cache::get_stale_api_data(&conn, "rawg", cache_key) {
             if let Ok(cached_games) = serde_json::from_str::<Vec<RawgGame>>(&payload) {
                 return Ok(cached_games);

@@ -36,7 +36,7 @@ pub struct BackupData {
 ///
 /// Retorna tupla com (games, game_details, wishlist_game, schema_version)
 fn fetch_backup_data(state: &State<AppState>) -> Result<BackupDataTuple, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     // Inicia transação READ para consistência
     conn.execute("BEGIN TRANSACTION", [])?;
@@ -77,9 +77,9 @@ pub async fn export_database(
     fs::write(file_path, json)?;
 
     // Atualiza timestamp do último backup manual
-    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let cache_conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
     let now = Utc::now().to_rfc3339();
-    database::configs::set_config(&metadata_conn, "last_backup_at", &now)?;
+    database::configs::set_config(&cache_conn, "last_backup_at", &now)?;
 
     Ok(())
 }
@@ -151,9 +151,9 @@ pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<P
     fs::write(&backup_path, json)?;
 
     // Atualiza timestamp do último backup automático
-    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let cache_conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
     let now = Utc::now().to_rfc3339();
-    database::configs::set_config(&metadata_conn, "last_auto_backup_at", &now)?;
+    database::configs::set_config(&cache_conn, "last_auto_backup_at", &now)?;
 
     tracing::info!("Backup automático criado: {:?}", backup_path);
     Ok(backup_path)
@@ -184,7 +184,7 @@ pub async fn import_database(
         )));
     }
 
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     // Transação única para todas as operações
     conn.execute("BEGIN IMMEDIATE TRANSACTION", [])?;

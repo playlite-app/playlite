@@ -23,18 +23,18 @@ pub fn initialize_app(app: &AppHandle) -> Result<(), AppError> {
     let current_version = app.package_info().version.to_string();
     let previous_version = database::configs::get_stored_app_version(app)?;
 
-    // Obtém acesso ao metadata_db para configurações
+    // Obtém acesso ao cache_db para configurações
     let state: tauri::State<database::AppState> = app.state();
-    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let cache_conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Verifica se é primeira instalação
-    if database::configs::get_config(&metadata_conn, "install_date")?.is_none() {
+    if database::configs::get_config(&cache_conn, "install_date")?.is_none() {
         let now = Utc::now().to_rfc3339();
-        database::configs::set_config(&metadata_conn, "install_date", &now)?;
+        database::configs::set_config(&cache_conn, "install_date", &now)?;
         tracing::info!("Primeira execução detectada. Data salva: {}", now);
     }
 
-    drop(metadata_conn);
+    drop(cache_conn);
 
     tracing::info!(
         "Inicializando app - Versão anterior: {}, Atual: {}",
@@ -71,7 +71,7 @@ fn handle_version_update(
 
     // 2. Migração de schema
     let state: tauri::State<database::AppState> = app.state();
-    let lib_conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+    let lib_conn = state.games_db.lock().map_err(|_| AppError::MutexError)?;
     database::migrations::run_migrations(app, &lib_conn)?;
     drop(lib_conn);
 
@@ -93,8 +93,8 @@ fn handle_version_update(
 /// Atualiza timestamp de última atualização
 fn update_last_updated_timestamp(app: &AppHandle) -> Result<(), AppError> {
     let state: tauri::State<database::AppState> = app.state();
-    let metadata_conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let cache_conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
     let now = Utc::now().to_rfc3339();
-    database::configs::set_config(&metadata_conn, "last_updated_at", &now)?;
+    database::configs::set_config(&cache_conn, "last_updated_at", &now)?;
     Ok(())
 }

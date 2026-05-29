@@ -163,7 +163,7 @@ fn load_user_settings(app_handle: &tauri::AppHandle) -> UserSettings {
 }
 
 fn fetch_all_games_with_details(state: &AppState) -> Result<Vec<GameWithDetails>, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let mut stmt = conn.prepare(
         "SELECT
@@ -280,3 +280,4 @@ fn format_recommendations(
         })
         .collect()
 }
+

@@ -52,7 +52,7 @@ pub async fn get_amazon_luna_games(
     let luna_lang = amazon_luna_lang_tag(lang);
 
     let cached = {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         cache::get_cached_api_data(&conn, AMAZON_LUNA_CACHE_SOURCE, &cache_key)
     };
 
@@ -65,14 +65,9 @@ pub async fn get_amazon_luna_games(
     let games = fetch_amazon_luna_catalog(&luna_lang).await?;
 
     {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
-        cache::save_cached_api_data(
-            &conn,
-            AMAZON_LUNA_CACHE_SOURCE,
-            &cache_key,
-            &payload,
-        )?;
+        cache::save_cached_api_data(&conn, AMAZON_LUNA_CACHE_SOURCE, &cache_key, &payload)?;
     }
 
     Ok(games)
@@ -90,7 +85,7 @@ pub async fn get_game_pass_games(
 
     // Tenta cache primeiro — sempre armazena o catálogo COMPLETO
     let cached = {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         cache::get_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, &cache_key)
     };
 
@@ -100,13 +95,8 @@ pub async fn get_game_pass_games(
         // Cache miss — busca catálogo completo (`exclude_ea_play = false`).
         let games = fetch_game_pass_pc_catalog(false, &normalized_lang).await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
-        cache::save_cached_api_data(
-            &conn,
-            GAME_PASS_CACHE_SOURCE,
-            &cache_key,
-            &payload,
-        )?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
+        cache::save_cached_api_data(&conn, GAME_PASS_CACHE_SOURCE, &cache_key, &payload)?;
         games
     };
 
@@ -127,7 +117,7 @@ pub async fn get_ea_play_games(
     let cache_key = catalog_cache_key(EA_PLAY_CACHE_KEY, lang);
 
     let cached = {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         cache::get_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, &cache_key)
     };
 
@@ -136,11 +126,10 @@ pub async fn get_ea_play_games(
     } else {
         let games = fetch_ea_play_catalog(&normalized_lang).await?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         cache::save_cached_api_data(&conn, EA_PLAY_CACHE_SOURCE, &cache_key, &payload)?;
         games
     };
-
 
     Ok(all_games)
 }
@@ -150,7 +139,7 @@ pub async fn get_ubisoft_plus_games(
     state: &State<'_, AppState>,
 ) -> Result<Vec<UbisoftGame>, String> {
     let cached = {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         cache::get_cached_api_data(&conn, UBISOFT_PLUS_CACHE_SOURCE, UBISOFT_PLUS_CACHE_KEY)
     };
 
@@ -163,7 +152,7 @@ pub async fn get_ubisoft_plus_games(
     let games = fetch_ubisoft_plus_catalog().await?;
 
     {
-        let conn = state.metadata_db.lock().map_err(|e| e.to_string())?;
+        let conn = state.cache_db.lock().map_err(|e| e.to_string())?;
         let payload = serde_json::to_string(&games).map_err(|e| e.to_string())?;
         cache::save_cached_api_data(
             &conn,
@@ -177,7 +166,7 @@ pub async fn get_ubisoft_plus_games(
 }
 
 pub fn get_enabled_services(state: &State<'_, AppState>) -> Result<Vec<String>, String> {
-    let conn = state.library_db.lock().map_err(|e| e.to_string())?;
+    let conn = state.games_db.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare("SELECT service FROM subscriptions WHERE enabled = 1")
         .map_err(|e| e.to_string())?;
@@ -196,7 +185,7 @@ pub fn set_enabled_services(
     state: &State<'_, AppState>,
     services: Vec<String>,
 ) -> Result<(), String> {
-    let conn = state.library_db.lock().map_err(|e| e.to_string())?;
+    let conn = state.games_db.lock().map_err(|e| e.to_string())?;
 
     // Reseta todos para disabled
     conn.execute("UPDATE subscriptions SET enabled = 0", [])

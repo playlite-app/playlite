@@ -126,7 +126,7 @@ fn validate_input(game: &GameInput) -> Result<(), AppError> {
 pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), AppError> {
     validate_input(&game)?;
 
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     // Verifica duplicidade
     let exists: bool = conn.query_row(
@@ -192,7 +192,7 @@ pub fn add_game(state: State<AppState>, game: GameInput) -> Result<(), AppError>
 pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), AppError> {
     validate_input(&game)?;
 
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     conn.execute(
         "UPDATE games SET
@@ -235,7 +235,7 @@ pub fn update_game(state: State<AppState>, game: GameInput) -> Result<(), AppErr
 /// Inclui todos os campos, inclusive o status de favorito.
 #[tauri::command]
 pub fn get_games(state: State<AppState>) -> Result<Vec<models::Game>, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let mut stmt = conn
         .prepare(
@@ -289,7 +289,7 @@ pub fn get_library_game_details(
     state: State<AppState>,
     game_id: String,
 ) -> Result<Option<models::GameDetails>, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let mut stmt = conn.prepare(
         "SELECT
@@ -350,7 +350,7 @@ pub fn get_library_game_details(
 /// **Nota:** Esta operação é idempotente e não retorna erro se o ‘ID’ não existir.
 #[tauri::command]
 pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     conn.execute(
         "UPDATE games SET favorite = NOT favorite WHERE id = ?1",
@@ -367,7 +367,7 @@ pub fn toggle_favorite(state: State<AppState>, id: String) -> Result<(), AppErro
 /// A lista de status possíveis inclui "completed", "playing", "backlog" e "abandoned".
 #[tauri::command]
 pub fn set_game_status(state: State<AppState>, id: String, status: String) -> Result<(), AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
     conn.execute(
         "UPDATE games SET status = ?1 WHERE id = ?2",
         params![status, id],
@@ -386,7 +386,7 @@ pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Resul
         return Err(AppError::ValidationError("Rating inválido".to_string()));
     }
 
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     // Se rating for 0, remove a avaliação (NULL)
     let val = if rating == 0 { None } else { Some(rating) };
@@ -403,7 +403,7 @@ pub fn set_game_rating(state: State<AppState>, id: String, rating: i32) -> Resul
 /// **Nota:** Esta ação é irreversível e exclui todos os dados relacionados ao jogo.
 #[tauri::command]
 pub fn delete_game(state: State<AppState>, id: String) -> Result<(), AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     conn.execute("DELETE FROM games WHERE id = ?1", params![id])?;
 
@@ -420,7 +420,7 @@ pub fn update_game_details(
     state: State<AppState>,
     payload: UpdateGameDetailsInput,
 ) -> Result<(), AppError> {
-    let conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.games_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Verifica o estado atual do jogo no banco
     let current_state: Option<(Option<String>, Option<String>)> = conn

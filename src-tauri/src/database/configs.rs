@@ -56,7 +56,7 @@ pub fn get_config(conn: &Connection, key: &str) -> Result<Option<String>, AppErr
 /// Armazena a versão atual da aplicação no banco de metadados
 pub fn store_app_version(app: &AppHandle, version: &str) -> Result<(), AppError> {
     let state: State<AppState> = app.state();
-    let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     ensure_config_table(&conn)?;
 
@@ -71,7 +71,7 @@ pub fn store_app_version(app: &AppHandle, version: &str) -> Result<(), AppError>
 /// Obtém a versão armazenada da aplicação do banco de metadados
 pub fn get_stored_app_version(app: &AppHandle) -> Result<String, AppError> {
     let state: State<AppState> = app.state();
-    let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     ensure_config_table(&conn)?;
 
@@ -91,7 +91,7 @@ pub fn get_stored_app_version(app: &AppHandle) -> Result<String, AppError> {
 /// Armazena a versão do schema no banco de metadados
 pub fn store_schema_version(app: &AppHandle, schema_version: u32) -> Result<(), AppError> {
     let state: State<AppState> = app.state();
-    let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     ensure_config_table(&conn)?;
 
@@ -106,7 +106,7 @@ pub fn store_schema_version(app: &AppHandle, schema_version: u32) -> Result<(), 
 /// Obtém a versão do schema armazenada do banco de metadados
 pub fn get_stored_schema_version(app: &AppHandle) -> Result<u32, AppError> {
     let state: State<AppState> = app.state();
-    let conn = state.metadata_db.lock().map_err(|_| AppError::MutexError)?;
+    let conn = state.cache_db.lock().map_err(|_| AppError::MutexError)?;
 
     ensure_config_table(&conn)?;
 

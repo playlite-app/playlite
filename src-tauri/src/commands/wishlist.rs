@@ -217,7 +217,7 @@ pub async fn import_wishlist(
 
     // 3. Salva no banco
     {
-        let mut conn = state.library_db.lock()?;
+        let mut conn = state.games_db.lock()?;
         let tx = conn.transaction()?;
 
         for game in games {
@@ -246,7 +246,7 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), AppError> {
 
         // A. Busca quais jogos estão sem capa
         let missing_covers: Vec<(String, String)> = {
-            let conn = state.library_db.lock().unwrap();
+            let conn = state.games_db.lock().unwrap();
             let mut stmt = conn
                 .prepare("SELECT id, name FROM wishlist WHERE cover_url IS NULL OR cover_url = ''")
                 .unwrap();
@@ -271,7 +271,7 @@ pub async fn fetch_wishlist_covers(app: AppHandle) -> Result<(), AppError> {
                     if let Some(first_match) = results.iter().find(|g| g.background_image.is_some())
                     {
                         if let Some(cover) = &first_match.background_image {
-                            if let Ok(conn) = state.library_db.lock() {
+                            if let Ok(conn) = state.games_db.lock() {
                                 if conn
                                     .execute(
                                         "UPDATE wishlist SET cover_url = ?1 WHERE id = ?2",
@@ -395,7 +395,7 @@ pub fn add_to_wishlist(
         added_at: Some(chrono::Utc::now().to_rfc3339()),
     };
 
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     insert_game_internal(&conn, &game)?;
 
@@ -405,7 +405,7 @@ pub fn add_to_wishlist(
 /// Remove um jogo da lista de desejos.
 #[tauri::command]
 pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     conn.execute("DELETE FROM wishlist WHERE id = ?1", params![id])?;
 
@@ -415,7 +415,7 @@ pub fn remove_from_wishlist(state: State<AppState>, id: String) -> Result<String
 /// Recupera todos os jogos da lista de desejos.
 #[tauri::command]
 pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let mut stmt = conn
         .prepare("SELECT id, name, cover_url, store_url, store_platform, current_price, normal_price, lowest_price, currency, on_sale, voucher, added_at, itad_id FROM wishlist ORDER BY added_at DESC")?;
@@ -446,7 +446,7 @@ pub fn get_wishlist(state: State<AppState>) -> Result<Vec<WishlistGame>, AppErro
 /// Verifica se um jogo está na lista de desejos.
 #[tauri::command]
 pub fn check_wishlist_status(state: State<AppState>, id: String) -> Result<bool, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let count: i32 = conn
         .query_row(
@@ -467,7 +467,7 @@ pub async fn refresh_prices(
 ) -> Result<String, AppError> {
     // 1. Busca todos os jogos da Wishlist local
     let games_to_check: Vec<(String, String, Option<String>)> = {
-        let conn = state.library_db.lock()?;
+        let conn = state.games_db.lock()?;
         let mut stmt = conn.prepare("SELECT id, name, itad_id FROM wishlist")?;
         let rows = stmt.query_map([], |row| {
             Ok((
@@ -498,7 +498,7 @@ pub async fn refresh_prices(
                 match itad::find_game_id(&name).await {
                     Ok(found_id) => {
                         // Salva no banco para cachear e não buscar na próxima vez
-                        let conn = state.library_db.lock()?;
+                        let conn = state.games_db.lock()?;
                         let _ = conn.execute(
                             "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
                             params![&found_id, &local_id],
@@ -528,7 +528,7 @@ pub async fn refresh_prices(
     let mut updated_count = 0;
 
     // 4. Atualiza o banco com os preços novos
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     for game_data in overviews {
         if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {

@@ -151,7 +151,7 @@ fn fetch_games_with_details(
     _games: &[crate::models::Game],
     state: &State<AppState>,
 ) -> Result<Vec<GameWithDetails>, AppError> {
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     let mut stmt = conn.prepare(
         "SELECT
@@ -271,3 +271,4 @@ fn log_success(
     tracing::info!("  TXT:  {:?}", txt_path);
     tracing::info!("  CSV:  {:?}", csv_path);
 }
+

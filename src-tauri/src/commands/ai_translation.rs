@@ -42,7 +42,7 @@ pub async fn translate_description(
 
     // 3. Salva a tradução no banco para não gastar cota depois
     let state: State<AppState> = app.state();
-    let conn = state.library_db.lock()?;
+    let conn = state.games_db.lock()?;
 
     conn.execute(
         "UPDATE game_details SET description_ptbr = ?1 WHERE game_id = ?2",

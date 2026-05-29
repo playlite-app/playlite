@@ -80,7 +80,7 @@ async fn refresh_steam_reviews_background(
 ) -> Result<(), String> {
     // A. Ler IDs da Steam do banco (Leitura rápida)
     let steam_games: Vec<(u32, String)> = {
-        let conn = state.library_db.lock().map_err(|_| "Falha DB Lock")?;
+        let conn = state.games_db.lock().map_err(|_| "Falha DB Lock")?;
 
         conn.prepare("SELECT platform_game_id, name FROM games WHERE platform = 'Steam'")
             .and_then(|mut stmt| {
@@ -106,7 +106,7 @@ async fn refresh_steam_reviews_background(
     // B. Iterar jogos
     for (app_id, _title) in steam_games {
         let should_update = {
-            match state.metadata_db.lock() {
+            match state.cache_db.lock() {
                 Ok(cache_conn) => {
                     let cache_key = format!("reviews_{}", app_id);
                     // Verifica se o cache expirou
@@ -124,7 +124,7 @@ async fn refresh_steam_reviews_background(
                     // D. Sucesso? Atualiza Library DB e Metadata Cache
                     {
                         // 1. Salva no Cache (para não buscar de novo por 7 dias)
-                        if let Ok(cache_conn) = state.metadata_db.lock() {
+                        if let Ok(cache_conn) = state.cache_db.lock() {
                             let cache_key = format!("reviews_{}", app_id);
                             if let Ok(json) = serde_json::to_string(&summary) {
                                 let _ = cache::save_cached_api_data(
@@ -171,7 +171,7 @@ async fn refresh_wishlist_prices_background(
 ) -> Result<(), String> {
     // A. Ler Wishlist com itad_id
     let wishlist_items: Vec<(String, String, Option<String>)> = {
-        let conn = state.library_db.lock().map_err(|_| "Falha DB")?;
+        let conn = state.games_db.lock().map_err(|_| "Falha DB")?;
 
         conn.prepare("SELECT id, name, itad_id FROM wishlist")
             .and_then(|mut stmt| {
@@ -204,7 +204,7 @@ async fn refresh_wishlist_prices_background(
                 match itad::find_game_id(&name).await {
                     Ok(found_id) => {
                         // Salva no banco para cachear
-                        let conn = state.library_db.lock().unwrap();
+                        let conn = state.games_db.lock().unwrap();
                         let _ = conn.execute(
                             "UPDATE wishlist SET itad_id = ?1 WHERE id = ?2",
                             params![&found_id, &local_id],
@@ -220,7 +220,7 @@ async fn refresh_wishlist_prices_background(
 
         // Verifica Cache
         let should_update = {
-            let cache_conn = state.metadata_db.lock().unwrap();
+            let cache_conn = state.cache_db.lock().unwrap();
             let cache_key = format!("price_{}", itad_id);
             // Se não existe em cache ou expirou, precisa atualizar
             cache::get_cached_api_data(&cache_conn, "itad", &cache_key).is_none()
@@ -252,7 +252,7 @@ async fn refresh_wishlist_prices_background(
         if let Some((local_id, _game_name)) = game_map.get(&game_data.id) {
             // Salva no cache como um JSON simplificado
             {
-                if let Ok(cache_conn) = state.metadata_db.lock() {
+                if let Ok(cache_conn) = state.cache_db.lock() {
                     let cache_key = format!("price_{}", game_data.id);
 
                     // Cria um JSON manual com os dados relevantes
@@ -279,7 +279,7 @@ async fn refresh_wishlist_prices_background(
                     deal.price
                 };
 
-                if let Ok(conn) = state.library_db.lock() {
+                if let Ok(conn) = state.games_db.lock() {
                     match conn.execute(
                         "UPDATE wishlist SET
                             current_price = ?1,

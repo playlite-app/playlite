@@ -29,7 +29,6 @@ const ENRICH_SKIP_SOURCE: &str = "enrich";
 fn enrich_skip_key(game_id: &str) -> String {
     format!("skip_{}", game_id)
 }
-
 fn is_enrich_skipped(game_id: &str, cache_conn: &rusqlite::Connection) -> bool {
     let key = enrich_skip_key(game_id);
     cache::get_stale_api_data(cache_conn, ENRICH_SKIP_SOURCE, &key).is_some()
@@ -430,14 +429,14 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
         // Limpeza de cache expirado no início
         {
-            let cache_conn = state.metadata_db.lock().unwrap();
+            let cache_conn = state.cache_db.lock().unwrap();
             let _ = cache::cleanup_expired_cache(&cache_conn);
         }
 
         loop {
             // 1. Busca batch de jogos
             let mut games_to_update: Vec<(String, String, String, Option<String>)> = {
-                let conn = match state.library_db.lock() {
+                let conn = match state.games_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
                 };
@@ -474,18 +473,19 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
             }
 
             let skipped_rawg_miss = {
-                let cache_conn = match state.metadata_db.lock() {
+                let cache_conn = match state.cache_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
                 };
                 let before = games_to_update.len();
-                games_to_update
-                    .retain(|(_, name, _, _)| !super::shared::rawg_not_found_cached(name, &cache_conn));
+                games_to_update.retain(|(_, name, _, _)| {
+                    !super::shared::rawg_not_found_cached(name, &cache_conn)
+                });
                 before - games_to_update.len()
             };
 
             let skipped_enrich = {
-                let cache_conn = match state.metadata_db.lock() {
+                let cache_conn = match state.cache_db.lock() {
                     Ok(c) => c,
                     Err(_) => break,
                 };
@@ -523,7 +523,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
                 // Processa metadados com cache
                 let (processed_data, raw_tags, rawg_found) = {
-                    let cache_conn = match state.metadata_db.lock() {
+                    let cache_conn = match state.cache_db.lock() {
                         Ok(c) => c,
                         Err(_) => continue,
                     };
@@ -552,7 +552,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
                         && processed_data.tags.is_empty());
 
                 if should_skip {
-                    if let Ok(cache_conn) = state.metadata_db.lock() {
+                    if let Ok(cache_conn) = state.cache_db.lock() {
                         mark_enrich_skipped(&game_id, &cache_conn);
                     }
                 }
@@ -568,7 +568,7 @@ pub async fn update_metadata(app: AppHandle) -> Result<(), AppError> {
 
             // 3. Salva todos os resultados do batch numa única transação
             {
-                if let Ok(mut conn) = state.library_db.lock() {
+                if let Ok(mut conn) = state.games_db.lock() {
                     match conn.transaction() {
                         Ok(tx) => {
                             let mut success_count = 0;

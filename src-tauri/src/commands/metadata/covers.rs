@@ -32,7 +32,7 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), AppError> {
         let mut total_failed = 0;
 
         let games_without_cover: Vec<(String, String)> = {
-            let conn = state.library_db.lock().unwrap();
+            let conn = state.games_db.lock().unwrap();
             let mut stmt = conn
                 .prepare("SELECT id, name FROM games WHERE cover_url IS NULL OR cover_url = ''")
                 .unwrap();
@@ -61,7 +61,7 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), AppError> {
 
                 // Busca com cache usando block_in_place
                 let img_url = {
-                    let cache_conn = state.metadata_db.lock().unwrap();
+                    let cache_conn = state.cache_db.lock().unwrap();
                     let result = tokio::task::block_in_place(|| {
                         let rt = tokio::runtime::Handle::current();
                         rt.block_on(async {
@@ -74,7 +74,7 @@ pub async fn fetch_missing_covers(app: AppHandle) -> Result<(), AppError> {
                 };
 
                 if let Some(img) = img_url {
-                    let conn = state.library_db.lock().unwrap();
+                    let conn = state.games_db.lock().unwrap();
                     if conn
                         .execute(
                             "UPDATE games SET cover_url = ?1 WHERE id = ?2",

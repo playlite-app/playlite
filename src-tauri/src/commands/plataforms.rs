@@ -43,7 +43,7 @@ async fn persist_source_games(
     state: &AppState,
     games: Vec<crate::sources::providers::SourceGame>,
 ) -> Result<(u32, u32), AppError> {
-    let mut conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+    let mut conn = state.games_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Inicia uma transação única para todo o lote
     let tx = conn
@@ -387,7 +387,7 @@ async fn persist_legacy_games(
     state: &AppState,
     games: Vec<crate::sources::legacy::LegacyGame>,
 ) -> Result<(u32, u32), AppError> {
-    let mut conn = state.library_db.lock().map_err(|_| AppError::MutexError)?;
+    let mut conn = state.games_db.lock().map_err(|_| AppError::MutexError)?;
     let tx = conn
         .transaction()
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;

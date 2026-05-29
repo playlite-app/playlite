@@ -23,7 +23,7 @@ pub struct DetailedCacheStats {
 /// Remove entradas expiradas do cache
 #[tauri::command]
 pub fn cleanup_cache(state: State<AppState>) -> Result<String, AppError> {
-    let conn = state.metadata_db.lock()?;
+    let conn = state.cache_db.lock()?;
 
     let deleted = cache::cleanup_expired_cache(&conn).map_err(AppError::DatabaseError)?;
 
@@ -33,7 +33,7 @@ pub fn cleanup_cache(state: State<AppState>) -> Result<String, AppError> {
 /// Limpa TODO o cache (use com cuidado)
 #[tauri::command]
 pub fn clear_all_cache(state: State<AppState>) -> Result<String, AppError> {
-    let conn = state.metadata_db.lock()?;
+    let conn = state.cache_db.lock()?;
 
     let deleted = conn.execute("DELETE FROM api_cache", [])?;
 
@@ -42,7 +42,7 @@ pub fn clear_all_cache(state: State<AppState>) -> Result<String, AppError> {
 
 #[tauri::command]
 pub fn get_detailed_cache_stats(state: State<AppState>) -> Result<DetailedCacheStats, AppError> {
-    let conn = state.metadata_db.lock()?;
+    let conn = state.cache_db.lock()?;
 
     let total: i32 = conn
         .query_row("SELECT COUNT(*) FROM api_cache", [], |row| row.get(0))

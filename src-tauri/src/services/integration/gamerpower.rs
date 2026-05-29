@@ -47,7 +47,7 @@ pub async fn fetch_giveaways(app: &AppHandle) -> Result<Vec<Giveaway>, String> {
                 .collect();
 
             // Sucesso: Salva a lista filtrada no Cache
-            if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+            if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
                 if let Ok(json) = serde_json::to_string(&active_ones) {
                     // Usamos "gamerpower" como source
                     let _ = cache::save_cached_api_data(&conn, "gamerpower", cache_key, &json);
@@ -59,7 +59,7 @@ pub async fn fetch_giveaways(app: &AppHandle) -> Result<Vec<Giveaway>, String> {
     }
 
     // 2. FALLBACK: Cache Offline
-    if let Ok(conn) = app.state::<AppState>().metadata_db.lock() {
+    if let Ok(conn) = app.state::<AppState>().cache_db.lock() {
         if let Some(payload) = cache::get_stale_api_data(&conn, "gamerpower", cache_key) {
             if let Ok(cached_giveaways) = serde_json::from_str::<Vec<Giveaway>>(&payload) {
                 return Ok(cached_giveaways);
