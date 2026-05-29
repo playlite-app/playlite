@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+
 import { useNetworkStatus } from '@/hooks/common/useNetworkStatus';
 
 interface OfflineAwareSectionProps {
@@ -20,4 +21,3 @@ export function OfflineAwareSection({
 
   return <>{children}</>;
 }
-
