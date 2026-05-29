@@ -42,5 +42,7 @@
   "affinity_badge_explanation_recommended": "Recomendado com base no seu perfil.",
   "affinity_badge_description_recommended": "Selecionado para você",
   "profile_similar_section": "Similares ao Meu Perfil",
-  "profile_similar_description": "Baseado nos jogos que você mais jogou e avaliou"
+  "profile_similar_description": "Baseado nos jogos que você mais jogou e avaliou",
+  "similarity_tooltip_title": "Sugestão",
+  "similarity_tooltip_description": "Similar ao jogo que você gostou {{becauseOf}}."
 }

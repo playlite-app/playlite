@@ -31,6 +31,8 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
+import { Similarity } from '@/components';
+import { wishlistService } from '@/services/wishlistService';
 import { Game, Giveaway, RawgGame, SimilarGame } from '@/types';
 import { Button } from '@/ui/button';
 import {
@@ -44,7 +46,6 @@ import {
 import { Separator } from '@/ui/separator';
 import { Skeleton } from '@/ui/skeleton';
 import { toast } from '@/utils/toast';
-import { wishlistService } from '@/services/wishlistService';
 
 import { openExternalLink } from '../utils/openLink';
 
@@ -425,9 +426,11 @@ export default function Trending(props: TrendingProps) {
                         rating={game.rating ?? undefined}
                         subtitle={game.genre ?? undefined}
                         badge={
-                          <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white">
-                            {game.because_of}
-                          </span>
+                          <Similarity becauseOf={game.because_of}>
+                            <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white">
+                              {game.because_of}
+                            </span>
+                          </Similarity>
                         }
                         actions={
                           <>
