@@ -2,21 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ExternalLink, Frown, ImageOff, Loader2, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Game } from '@/types/game';
-
-// Espelha SimilarGame do backend (gamebrain.rs)
-interface SimilarGame {
-  id: string;
-  name: string;
-  cover_url: string | null;
-  genre: string | null;
-  year: number | null;
-  rating: number | null;
-  link: string | null;
-  screenshots: string[];
-  micro_trailer: string | null;
-  adult_only: boolean;
-}
+import { Game, SimilarGame } from '@/types/game';
 
 interface GameDiscoveryProps {
   game: Game;

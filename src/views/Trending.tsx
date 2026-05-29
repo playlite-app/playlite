@@ -7,6 +7,7 @@ import {
   Gift,
   Heart,
   Loader2,
+  Sparkles,
   TrendingUp,
   WifiOff,
 } from 'lucide-react';
@@ -23,13 +24,14 @@ import {
   useGiveaways,
   useHeroCarousel,
   useNetworkStatus,
+  useProfileSimilar,
   useRecommendation,
   useSortedByAffinity,
   useTrending,
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import { Game, Giveaway, RawgGame } from '@/types';
+import { Game, Giveaway, RawgGame, SimilarGame } from '@/types';
 import { Button } from '@/ui/button';
 import {
   DropdownMenu,
@@ -42,6 +44,7 @@ import {
 import { Separator } from '@/ui/separator';
 import { Skeleton } from '@/ui/skeleton';
 import { toast } from '@/utils/toast';
+import { wishlistService } from '@/services/wishlistService';
 
 import { openExternalLink } from '../utils/openLink';
 
@@ -89,6 +92,11 @@ export default function Trending(props: TrendingProps) {
 
   const { profile } = useRecommendation();
   const { games: wishlistGames } = useWishlist();
+  const {
+    games: profileSimilar,
+    loading: profileLoading,
+    hasAnchors,
+  } = useProfileSimilar(props.userGames);
   const { upcomingGames } = useUpcoming({
     cachedGames: props.upcomingCache,
     setCachedGames: props.setUpcomingCache,
@@ -112,7 +120,8 @@ export default function Trending(props: TrendingProps) {
   const hasData =
     games.length > 0 ||
     upcomingGames.length > 0 ||
-    filteredGiveaways.length > 0;
+    filteredGiveaways.length > 0 ||
+    profileSimilar.length > 0;
 
   // Lógica de Bloqueio: Só mostra erro se estiver offline E sem dados
   if (!isOnline && !hasData) {
@@ -139,6 +148,23 @@ export default function Trending(props: TrendingProps) {
   const handleWishlistClick = async (game: RawgGame) => {
     try {
       await addToWishlist(game);
+      toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
+        description: t('game_added_to_wishlist_description'),
+      });
+    } catch {
+      toast.error(t('add_to_wishlist_error_title'), {
+        description: t('add_to_wishlist_error_description'),
+      });
+    }
+  };
+
+  const handleSimilarWishlistClick = async (game: SimilarGame) => {
+    try {
+      await wishlistService.addToWishlist({
+        id: game.id,
+        name: game.name,
+        cover_url: game.cover_url,
+      });
       toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
         description: t('game_added_to_wishlist_description'),
       });
@@ -247,7 +273,6 @@ export default function Trending(props: TrendingProps) {
           </>
         }
       />
-
       {/* 2. Barra de Filtros de Gênero (Sticky) */}
       <div className="bg-background/80 border-border sticky top-0 z-20 border-b p-4 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6">
@@ -356,12 +381,85 @@ export default function Trending(props: TrendingProps) {
                     ))}
               </div>
             )}
+            <Separator className="mt-8" />
+          </>
+        )}
+
+        {/* 4. Similares ao Meu Perfil */}
+        {hasAnchors && (profileSimilar.length > 0 || profileLoading) && (
+          <>
+            <div className="mb-6 flex items-center gap-2 pt-8">
+              <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {t('profile_similar_section')}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {t('profile_similar_description')}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {profileLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="aspect-3/4 w-full rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))
+                : profileSimilar.map((game: SimilarGame) => {
+                    const isInWishlist = wishlistGames.some(
+                      w => w.id === game.id
+                    );
+
+                    return (
+                      <StandardGameCard
+                        key={game.id}
+                        id={game.id}
+                        title={game.name}
+                        coverUrl={game.cover_url ?? undefined}
+                        rating={game.rating ?? undefined}
+                        subtitle={game.genre ?? undefined}
+                        badge={
+                          <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white">
+                            {game.because_of}
+                          </span>
+                        }
+                        actions={
+                          <>
+                            <ActionButton
+                              icon={Heart}
+                              variant={
+                                isInWishlist ? 'glass-destructive' : 'glass'
+                              }
+                              onClick={() => handleSimilarWishlistClick(game)}
+                              tooltip={t('wishlist_button')}
+                            />
+                            {game.link ? (
+                              <ActionButton
+                                icon={ExternalLink}
+                                variant="secondary"
+                                size={16}
+                                onClick={() => openExternalLink(game.link!)}
+                                tooltip={t('view_details_button')}
+                              />
+                            ) : null}
+                          </>
+                        }
+                      />
+                    );
+                  })}
+            </div>
 
             <Separator className="mt-8" />
           </>
         )}
 
-        {/* 4. Mais Sugestões (Trending Grid) */}
+        {/* 5. Mais Sugestões (Trending Grid) */}
         <div className="mb-6 flex items-center gap-2 pt-8">
           <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
             <TrendingUp size={20} />
@@ -421,7 +519,7 @@ export default function Trending(props: TrendingProps) {
           })}
         </div>
 
-        {/* 5. Lançamentos Aguardados */}
+        {/* 6. Lançamentos Aguardados */}
         {upcomingGames.length > 0 && (
           <>
             <div className="mb-6 flex items-center gap-2 pt-12">

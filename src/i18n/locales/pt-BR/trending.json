@@ -40,5 +40,7 @@
   "affinity_badge_description_for_you": "Elementos do jogo combinam com seu estilo de jogar",
   "affinity_badge_label_recommended": "Recomendado",
   "affinity_badge_explanation_recommended": "Recomendado com base no seu perfil.",
-  "affinity_badge_description_recommended": "Selecionado para você"
+  "affinity_badge_description_recommended": "Selecionado para você",
+  "profile_similar_section": "Similares ao Meu Perfil",
+  "profile_similar_description": "Baseado nos jogos que você mais jogou e avaliou"
 }

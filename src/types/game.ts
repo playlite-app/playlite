@@ -152,3 +152,19 @@ export interface Tab {
   label: string;
   icon: React.ReactNode;
 }
+
+// Espelha SimilarGame do backend (gamebrain.rs)
+// + campo because_of adicionado por ProfileSimilarGame
+export interface SimilarGame {
+  id: string;
+  name: string;
+  cover_url: string | null;
+  genre: string | null;
+  year: number | null;
+  rating: number | null;
+  link: string | null;
+  screenshots: string[];
+  micro_trailer: string | null;
+  adult_only: boolean;
+  because_of: string; // nome do jogo âncora
+}
