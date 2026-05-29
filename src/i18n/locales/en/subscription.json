@@ -21,6 +21,7 @@
   "config_save_success_toast": "Subscriptions saved successfully",
   "config_save_error_toast": "Error saving subscriptions",
   "config_ea_play_warning": "⚠️ {{ea_play}} is already included in {{game_pass_pc}} and Ultimate.",
+  "config_offline_unavailable_warning": "Subscription sections are unavailable offline",
   "config_save_button": "Save Subscriptions",
   "service_prime_gaming_description": "Monthly free games included with Amazon Prime",
   "service_game_pass_pc_description": "Microsoft PC games catalog",

@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useNetworkStatus } from '@/hooks/common/useNetworkStatus';
 import { ServiceId, SUBSCRIPTION_SERVICES } from '@/types';
 import { Button } from '@/ui/button';
 import { Switch } from '@/ui/toggle-switch';
@@ -24,6 +25,7 @@ export function SubscriptionsConfig({
   className = '',
 }: Readonly<SubscriptionsConfigProps>) {
   const { t } = useTranslation('subscription');
+  const isOnline = useNetworkStatus();
   const [isExpanded, setIsExpanded] = useState(false);
   const [enabledServices, setEnabledServices] = useState<ServiceId[]>([]);
   const [loading, setLoading] = useState(true);
@@ -215,6 +217,18 @@ export function SubscriptionsConfig({
                       {t('config_ea_play_warning', {
                         ea_play: 'EA Play',
                         game_pass_pc: 'Game Pass PC',
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                {/* Aviso de seções indisponíveis offline */}
+                {!isOnline && (
+                  <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 px-4 py-3">
+                    <p className="text-xs text-yellow-400">
+                      {t('config_offline_unavailable_warning', {
+                        defaultValue:
+                          'As seções de assinaturas estão indisponíveis offline',
                       })}
                     </p>
                   </div>

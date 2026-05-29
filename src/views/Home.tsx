@@ -25,6 +25,7 @@ import Hero from '@/components/common/Hero';
 import {
   EAPlaySection,
   GamePassSection,
+  OfflineAwareSection,
   PrimeGamingSection,
   UbisoftPlusSection,
 } from '@/components/subscriptions';
@@ -254,26 +255,36 @@ export default function Home(props: Readonly<HomeProps>) {
         {/* Achievements Component */}
         <Achievements />
 
-        {/* Seção: Prime Gaming — renderiza somente se habilitado */}
-        {enabledServices.includes('prime_gaming') && <PrimeGamingSection />}
+        {/* Seção: Prime Gaming — renderiza somente se habilitado e online */}
+        <OfflineAwareSection enabled={enabledServices.includes('prime_gaming')}>
+          <PrimeGamingSection />
+        </OfflineAwareSection>
 
-        {/* Seção: Game Pass — renderiza somente se habilitado */}
-        {enabledServices.includes('game_pass_pc') && (
+        {/* Seção: Game Pass — renderiza somente se habilitado e online */}
+        <OfflineAwareSection enabled={enabledServices.includes('game_pass_pc')}>
           <GamePassSection
             excludeEaPlay={enabledServices.includes('ea_play')}
           />
-        )}
+        </OfflineAwareSection>
 
-        {/* Seção: EA Play — renderiza quando habilitado. Quando ambos (Game Pass + EA Play)
+        {/* Seção: EA Play — renderiza quando habilitado e online. Quando ambos (Game Pass + EA Play)
             estiverem ativos, o GamePassSection exclui os títulos EA Play para evitar duplicatas,
             portanto aqui mostramos sempre a seção do EA Play quando o usuário a habilitar. */}
-        {enabledServices.includes('ea_play') && <EAPlaySection />}
+        <OfflineAwareSection enabled={enabledServices.includes('ea_play')}>
+          <EAPlaySection />
+        </OfflineAwareSection>
 
-        {/* Seção: Ubisoft+ — renderiza somente se habilitado */}
-        {enabledServices.includes('ubisoft_plus') && <UbisoftPlusSection />}
+        {/* Seção: Ubisoft+ — renderiza somente se habilitado e online */}
+        <OfflineAwareSection enabled={enabledServices.includes('ubisoft_plus')}>
+          <UbisoftPlusSection />
+        </OfflineAwareSection>
 
-        {/* Seção: Humble Choice — renderiza somente se habilitado */}
-        {enabledServices.includes('humble_choice') && <HumbleChoiceSection />}
+        {/* Seção: Humble Choice — renderiza somente se habilitado e online */}
+        <OfflineAwareSection
+          enabled={enabledServices.includes('humble_choice')}
+        >
+          <HumbleChoiceSection />
+        </OfflineAwareSection>
 
         {/* Seção: Continue Jogando */}
         {continuePlaying.length > 0 && (
