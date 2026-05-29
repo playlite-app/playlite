@@ -45,7 +45,7 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
       {/* Cover / Trailer */}
       <div className="bg-muted/30 relative aspect-3/4 w-full overflow-hidden">
         {/* Imagem de capa */}
-        {coverSrc && (
+        {coverSrc && !imgError ? (
           <img
             src={coverSrc}
             alt={game.name}
@@ -54,9 +54,13 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
             }`}
             onError={() => setImgError(true)}
           />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <ImageOff className="h-8 w-8 opacity-20" />
+          </div>
         )}
 
-        {/* Micro-trailer (webm) — só carrega quando hover para não desperdiçar banda */}
+        {/* Micro-trailer (webm) — só carrega quando tiver para não desperdiçar banda */}
         {hasTrailer && hovered && (
           <video
             src={game.micro_trailer!}
@@ -70,11 +74,8 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
 
         {/* Fallback sem imagem */}
         {!coverSrc && !hasTrailer && (
-          <div className="from-secondary/50 via-muted to-background flex h-full w-full flex-col items-center justify-center bg-linear-to-br p-4 text-center">
-            <ImageOff className="mb-3 h-10 w-10 opacity-30" />
-            <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest wrap-break-word uppercase">
-              {game.name}
-            </span>
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <ImageOff className="h-8 w-8 opacity-20" />
           </div>
         )}
 
