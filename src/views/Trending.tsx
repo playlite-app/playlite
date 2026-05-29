@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Affinity, ErrorState } from '@/components';
+import { Affinity, ErrorState, Similarity } from '@/components';
 import { FreeGameCard } from '@/components/cards';
 import StandardGameCard from '@/components/cards/StandardGameCard';
 import { ActionButton } from '@/components/common';
@@ -31,7 +31,6 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import { Similarity } from '@/components';
 import { wishlistService } from '@/services/wishlistService';
 import { Game, Giveaway, RawgGame, SimilarGame } from '@/types';
 import { Button } from '@/ui/button';

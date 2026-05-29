@@ -1,9 +1,21 @@
-import { Copy, CopySlash, Eye, EyeOff, Gamepad2, Moon, Search, Settings, Store, Sun, } from 'lucide-react';
+import {
+  Copy,
+  CopySlash,
+  Eye,
+  EyeOff,
+  Gamepad2,
+  Moon,
+  Search,
+  Settings,
+  Store,
+  Sun,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
+import { Game } from '@/types';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 import { PlataformsConfig } from '@/windows/PlataformsConfig';
@@ -95,6 +107,7 @@ interface HeaderProps {
   onToggleDuplicatesFilter: () => void;
   onCheckUpdates: () => void;
   onLibraryUpdate: () => void;
+  userGames: Game[];
 }
 
 export default function Header({
@@ -108,6 +121,7 @@ export default function Header({
   onToggleDuplicatesFilter,
   onCheckUpdates,
   onLibraryUpdate,
+  userGames,
 }: Readonly<HeaderProps>) {
   const { t } = useTranslation('common');
 
@@ -232,6 +246,7 @@ export default function Header({
         onClose={() => setIsQuickSettingsOpen(false)}
         onGenerateReport={generateRecommendationAnalysis}
         onCheckUpdates={onCheckUpdates}
+        userGames={userGames}
       />
 
       <PlataformsConfig

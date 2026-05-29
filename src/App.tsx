@@ -278,6 +278,7 @@ function AppContent() {
           onToggleDuplicatesFilter={toggleDuplicatesFilter}
           onCheckUpdates={handleCheckUpdates}
           onLibraryUpdate={refreshGames}
+          userGames={games}
         />
         <ErrorBoundary>{renderContent()}</ErrorBoundary>
       </main>
