@@ -1,8 +1,8 @@
-import {invoke} from '@tauri-apps/api/core';
-import {ExternalLink, Frown, Loader2, Star} from 'lucide-react';
-import {useEffect, useState} from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { ExternalLink, Frown, ImageOff, Loader2, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import {Game} from '@/types/game';
+import { Game } from '@/types/game';
 
 // Espelha SimilarGame do backend (gamebrain.rs)
 interface SimilarGame {
@@ -70,8 +70,11 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
 
         {/* Fallback sem imagem */}
         {!coverSrc && !hasTrailer && (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-muted-foreground text-xs">Sem capa</span>
+          <div className="from-secondary/50 via-muted to-background flex h-full w-full flex-col items-center justify-center bg-linear-to-br p-4 text-center">
+            <ImageOff className="mb-3 h-10 w-10 opacity-20" />
+            <span className="text-muted-foreground line-clamp-2 text-[10px] font-semibold tracking-widest uppercase">
+              {game.name}
+            </span>
           </div>
         )}
 

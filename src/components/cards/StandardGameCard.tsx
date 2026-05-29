@@ -25,10 +25,10 @@ interface StandardGameCardProps {
  * Aspect ratio fixo 3:4 (capa vertical de jogo).
  *
  * Features:
- * - Fallback automÃ¡tico se imagem falhar: exibe gradiente + nome do jogo em maiÃºsculas
- * - Overlay de aÃ§Ãµes aparece no hover (botÃ£o Play + aÃ§Ãµes customizadas)
+ * - Fallback automatico se imagem falhar: exibe gradiente + nome do jogo em maiusculas
+ * - Overlay de acoes aparece no hover (botao Play + acoes customizadas)
  * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
- * - Efeito hover: elevaÃ§Ã£o + zoom suave na imagem
+ * - Efeito hover: elevacao + zoom suave na imagem
  */
 export default function StandardGameCard({
   id,
