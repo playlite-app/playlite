@@ -316,6 +316,15 @@ export function AboutPlaylite({
                 >
                   {t('about_license_mit')}
                 </a>
+                <span className="text-muted-foreground">•</span>
+                <a
+                  href="https://playlite.vercel.app/en/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t('about_docs_link')}
+                </a>
               </div>
               <p className="text-muted-foreground text-xs">
                 {t('about_developed_by')}
