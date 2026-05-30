@@ -265,3 +265,127 @@ pub struct WishlistGame {
     #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
 }
+
+/// Dados técnicos do jogo obtidos do PCGamingWiki.
+///
+/// Tratados como dados estáticos do jogo — não expiram automaticamente.
+/// Atualizados apenas por invalidação explícita (manual ou por detecção de update recente via Steam).
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PcgwData {
+    #[serde(rename = "steamAppId")]
+    pub steam_app_id: String,
+
+    #[serde(rename = "pcgwPageId")]
+    pub pcgw_page_id: Option<String>,
+
+    #[serde(rename = "pcgwPageName")]
+    pub pcgw_page_name: Option<String>,
+
+    pub engine: Option<String>,
+
+    // Suporte a OS
+    #[serde(rename = "linuxSupport")]
+    pub linux_support: Option<String>, // "true" | "false" | "hackable" | "unknown"
+
+    #[serde(rename = "windowsSupport")]
+    pub windows_support: Option<String>,
+
+    #[serde(rename = "macosSupport")]
+    pub macos_support: Option<String>,
+
+    // Tecnologias gráficas
+    #[serde(rename = "rayTracing")]
+    pub ray_tracing: Option<String>,
+
+    pub dlss: Option<String>,
+    pub fsr: Option<String>,
+    pub xess: Option<String>,
+
+    #[serde(rename = "frameGeneration")]
+    pub frame_generation: Option<String>,
+
+    // Requisitos Windows
+    #[serde(rename = "winMinOs")]
+    pub win_min_os: Option<String>,
+
+    #[serde(rename = "winMinCpu")]
+    pub win_min_cpu: Option<String>,
+
+    #[serde(rename = "winMinRam")]
+    pub win_min_ram: Option<String>,
+
+    #[serde(rename = "winMinGpu")]
+    pub win_min_gpu: Option<String>,
+
+    #[serde(rename = "winMinVram")]
+    pub win_min_vram: Option<String>,
+
+    #[serde(rename = "winMinDx")]
+    pub win_min_dx: Option<String>,
+
+    #[serde(rename = "winMinStorage")]
+    pub win_min_storage: Option<String>,
+
+    #[serde(rename = "winRecCpu")]
+    pub win_rec_cpu: Option<String>,
+
+    #[serde(rename = "winRecRam")]
+    pub win_rec_ram: Option<String>,
+
+    #[serde(rename = "winRecGpu")]
+    pub win_rec_gpu: Option<String>,
+
+    #[serde(rename = "winRecVram")]
+    pub win_rec_vram: Option<String>,
+
+    #[serde(rename = "winRecDx")]
+    pub win_rec_dx: Option<String>,
+
+    // Requisitos Linux
+    #[serde(rename = "linuxMinCpu")]
+    pub linux_min_cpu: Option<String>,
+
+    #[serde(rename = "linuxMinRam")]
+    pub linux_min_ram: Option<String>,
+
+    #[serde(rename = "linuxMinGpu")]
+    pub linux_min_gpu: Option<String>,
+
+    #[serde(rename = "linuxMinStorage")]
+    pub linux_min_storage: Option<String>,
+
+    #[serde(rename = "linuxRecCpu")]
+    pub linux_rec_cpu: Option<String>,
+
+    #[serde(rename = "linuxRecRam")]
+    pub linux_rec_ram: Option<String>,
+
+    #[serde(rename = "linuxRecGpu")]
+    pub linux_rec_gpu: Option<String>,
+
+    // Idiomas
+    #[serde(rename = "languagesInterface")]
+    pub languages_interface: Option<Vec<String>>,
+
+    #[serde(rename = "languagesAudio")]
+    pub languages_audio: Option<Vec<String>>,
+
+    #[serde(rename = "languagesSubtitles")]
+    pub languages_subtitles: Option<Vec<String>>,
+
+    // Caminhos de dados
+    #[serde(rename = "savePathWindows")]
+    pub save_path_windows: Option<String>,
+
+    #[serde(rename = "savePathLinux")]
+    pub save_path_linux: Option<String>,
+
+    #[serde(rename = "configPathWindows")]
+    pub config_path_windows: Option<String>,
+
+    #[serde(rename = "configPathLinux")]
+    pub config_path_linux: Option<String>,
+
+    #[serde(rename = "fetchedAt")]
+    pub fetched_at: Option<String>,
+}
