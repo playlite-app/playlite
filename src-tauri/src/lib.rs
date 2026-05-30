@@ -132,6 +132,9 @@ pub fn run() {
             commands::metadata::search::get_similar_games,
             commands::metadata::search::get_game_media,
             commands::metadata::search::get_profile_similar_games,
+            commands::metadata::pcgw_data::get_or_fetch_pcgw_data,
+            commands::metadata::pcgw_data::refresh_pcgw_data,
+            commands::metadata::pcgw_data::search_pcgw_games,
             // Comandos de Configuração (Secrets)
             commands::settings::set_secret,
             commands::settings::get_secret,

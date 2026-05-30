@@ -15,29 +15,55 @@ use tracing::{info, warn};
 pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> {
     let result = conn.query_row(
         "SELECT
-            steam_app_id, pcgw_page_id, pcgw_page_name, engine,
-            linux_support, windows_support, macos_support,
-            ray_tracing, dlss, fsr, xess, frame_generation,
-            ultrawidescreen, four_k_support, hdr, high_fps, fov,
-            borderless_windowed, color_blind,
-            controller_support, full_controller,
-            playstation_controllers, xinput_controllers,
-            surround_sound, subtitles, closed_captions,
-            win_min_os, win_min_cpu, win_min_ram, win_min_gpu,
-            win_min_vram, win_min_dx, win_min_storage,
-            win_rec_cpu, win_rec_ram, win_rec_gpu, win_rec_vram, win_rec_dx,
-            linux_min_cpu, linux_min_ram, linux_min_gpu, linux_min_storage,
-            linux_rec_cpu, linux_rec_ram, linux_rec_gpu,
-            languages_interface, languages_audio, languages_subtitles,
-            save_path_windows, save_path_linux,
-            config_path_windows, config_path_linux,
+            steam_app_id,
+            pcgw_page_id,
+            pcgw_page_name,
+            engine,
+            available_on,
+
+            dx_versions,
+            vulkan_versions,
+            opengl_versions,
+
+            win64,
+            linux64,
+            macos_arm,
+            macos_intel64,
+
+            ray_tracing,
+            upscaling,
+            frame_gen,
+            ultrawidescreen,
+            four_k_support,
+            hdr,
+            high_fps,
+            fov,
+            borderless_windowed,
+            color_blind,
+
+            controller_support,
+            full_controller,
+            playstation_controllers,
+            xinput_controllers,
+
+            surround_sound,
+            subtitles,
+            closed_captions,
+
+            has_save_data,
+            has_config_data,
+
+            languages_interface,
+            languages_audio,
+            languages_subtitles,
+
             fetched_at
          FROM pcgw_data
-         WHERE steam_app_id = ?1 AND fetched_at IS NOT NULL",
+         WHERE steam_app_id = ?1
+           AND fetched_at IS NOT NULL",
         params![steam_app_id],
         |row| {
-            // Desserializa JSON arrays de idiomas
-            let parse_langs = |s: Option<String>| -> Option<Vec<String>> {
+            let parse_json_vec = |s: Option<String>| -> Option<Vec<String>> {
                 s.and_then(|v| serde_json::from_str(&v).ok())
             };
 
@@ -46,55 +72,51 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
                 pcgw_page_id: row.get(1)?,
                 pcgw_page_name: row.get(2)?,
                 engine: row.get(3)?,
-                linux_support: row.get(4)?,
-                windows_support: row.get(5)?,
-                macos_support: row.get(6)?,
-                ray_tracing: row.get(7)?,
-                dlss: row.get(8)?,
-                fsr: row.get(9)?,
-                xess: row.get(10)?,
-                frame_generation: row.get(11)?,
-                ultrawidescreen: row.get(12)?,
-                four_k_support: row.get(13)?,
-                hdr: row.get(14)?,
-                high_fps: row.get(15)?,
-                fov: row.get(16)?,
-                borderless_windowed: row.get(17)?,
-                color_blind: row.get(18)?,
-                controller_support: row.get(19)?,
-                full_controller: row.get(20)?,
-                playstation_controllers: row.get(21)?,
-                xinput_controllers: row.get(22)?,
-                surround_sound: row.get(23)?,
-                subtitles: row.get(24)?,
-                closed_captions: row.get(25)?,
-                win_min_os: row.get(26)?,
-                win_min_cpu: row.get(27)?,
-                win_min_ram: row.get(28)?,
-                win_min_gpu: row.get(29)?,
-                win_min_vram: row.get(30)?,
-                win_min_dx: row.get(31)?,
-                win_min_storage: row.get(32)?,
-                win_rec_cpu: row.get(33)?,
-                win_rec_ram: row.get(34)?,
-                win_rec_gpu: row.get(35)?,
-                win_rec_vram: row.get(36)?,
-                win_rec_dx: row.get(37)?,
-                linux_min_cpu: row.get(38)?,
-                linux_min_ram: row.get(39)?,
-                linux_min_gpu: row.get(40)?,
-                linux_min_storage: row.get(41)?,
-                linux_rec_cpu: row.get(42)?,
-                linux_rec_ram: row.get(43)?,
-                linux_rec_gpu: row.get(44)?,
-                languages_interface: parse_langs(row.get(45)?),
-                languages_audio: parse_langs(row.get(46)?),
-                languages_subtitles: parse_langs(row.get(47)?),
-                save_path_windows: row.get(48)?,
-                save_path_linux: row.get(49)?,
-                config_path_windows: row.get(50)?,
-                config_path_linux: row.get(51)?,
-                fetched_at: row.get(52)?,
+                available_on: row.get(4)?,
+
+                // API
+                dx_versions: row.get(5)?,
+                vulkan_versions: row.get(6)?,
+                opengl_versions: row.get(7)?,
+
+                win64: row.get(8)?,
+                linux64: row.get(9)?,
+                macos_arm: row.get(10)?,
+                macos_intel64: row.get(11)?,
+
+                // Video
+                ray_tracing: row.get(12)?,
+                upscaling: row.get(13)?,
+                frame_gen: row.get(14)?,
+                ultrawidescreen: row.get(15)?,
+                four_k_support: row.get(16)?,
+                hdr: row.get(17)?,
+                high_fps: row.get(18)?,
+                fov: row.get(19)?,
+                borderless_windowed: row.get(20)?,
+                color_blind: row.get(21)?,
+
+                // Input
+                controller_support: row.get(22)?,
+                full_controller: row.get(23)?,
+                playstation_controllers: row.get(24)?,
+                xinput_controllers: row.get(25)?,
+
+                // Audio
+                surround_sound: row.get(26)?,
+                subtitles: row.get(27)?,
+                closed_captions: row.get(28)?,
+
+                // Tags
+                has_save_data: row.get(29)?,
+                has_config_data: row.get(30)?,
+
+                // L10n
+                languages_interface: parse_json_vec(row.get(31)?),
+                languages_audio: parse_json_vec(row.get(32)?),
+                languages_subtitles: parse_json_vec(row.get(33)?),
+
+                fetched_at: row.get(34)?,
             })
         },
     );
@@ -111,51 +133,83 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
 
 /// Salva ou atualiza os dados do PCGamingWiki para um jogo.
 pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> {
-    // Serializa Vec<String> de idiomas para JSON
-    let serialize_langs = |v: &Option<Vec<String>>| -> Option<String> {
+    let serialize_vec = |v: &Option<Vec<String>>| -> Option<String> {
         v.as_ref().and_then(|list| serde_json::to_string(list).ok())
     };
 
     conn.execute(
         "INSERT OR REPLACE INTO pcgw_data (
-            steam_app_id, pcgw_page_id, pcgw_page_name, engine,
-            linux_support, windows_support, macos_support,
-            ray_tracing, dlss, fsr, xess, frame_generation,
-            ultrawidescreen, four_k_support, hdr, high_fps, fov,
-            borderless_windowed, color_blind,
-            controller_support, full_controller,
-            playstation_controllers, xinput_controllers,
-            surround_sound, subtitles, closed_captions,
-            win_min_os, win_min_cpu, win_min_ram, win_min_gpu,
-            win_min_vram, win_min_dx, win_min_storage,
-            win_rec_cpu, win_rec_ram, win_rec_gpu, win_rec_vram, win_rec_dx,
-            linux_min_cpu, linux_min_ram, linux_min_gpu, linux_min_storage,
-            linux_rec_cpu, linux_rec_ram, linux_rec_gpu,
-            languages_interface, languages_audio, languages_subtitles,
-            save_path_windows, save_path_linux,
-            config_path_windows, config_path_linux,
+            steam_app_id,
+            pcgw_page_id,
+            pcgw_page_name,
+            engine,
+            available_on,
+
+            dx_versions,
+            vulkan_versions,
+            opengl_versions,
+
+            win64,
+            linux64,
+            macos_arm,
+            macos_intel64,
+
+            ray_tracing,
+            upscaling,
+            frame_gen,
+            ultrawidescreen,
+            four_k_support,
+            hdr,
+            high_fps,
+            fov,
+            borderless_windowed,
+            color_blind,
+
+            controller_support,
+            full_controller,
+            playstation_controllers,
+            xinput_controllers,
+
+            surround_sound,
+            subtitles,
+            closed_captions,
+
+            has_save_data,
+            has_config_data,
+
+            languages_interface,
+            languages_audio,
+            languages_subtitles,
+
             fetched_at
         ) VALUES (
-            ?1,  ?2,  ?3,  ?4,  ?5,  ?6,  ?7,  ?8,  ?9,  ?10,
-            ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20,
-            ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30,
-            ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40,
-            ?41, ?42, ?43, ?44, ?45, ?46, ?47, ?48, ?49, ?50,
-            ?51, ?52, ?53
+            ?1,  ?2,  ?3,  ?4,  ?5,
+            ?6,  ?7,  ?8,
+            ?9,  ?10, ?11, ?12,
+            ?13, ?14, ?15, ?16, ?17,
+            ?18, ?19, ?20, ?21, ?22,
+            ?23, ?24, ?25, ?26,
+            ?27, ?28, ?29,
+            ?30, ?31,
+            ?32, ?33, ?34,
+            ?35
         )",
         params![
             data.steam_app_id,
             data.pcgw_page_id,
             data.pcgw_page_name,
             data.engine,
-            data.linux_support,
-            data.windows_support,
-            data.macos_support,
+            data.available_on,
+            data.dx_versions,
+            data.vulkan_versions,
+            data.opengl_versions,
+            data.win64,
+            data.linux64,
+            data.macos_arm,
+            data.macos_intel64,
             data.ray_tracing,
-            data.dlss,
-            data.fsr,
-            data.xess,
-            data.frame_generation,
+            data.upscaling,
+            data.frame_gen,
             data.ultrawidescreen,
             data.four_k_support,
             data.hdr,
@@ -170,32 +224,11 @@ pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> 
             data.surround_sound,
             data.subtitles,
             data.closed_captions,
-            data.win_min_os,
-            data.win_min_cpu,
-            data.win_min_ram,
-            data.win_min_gpu,
-            data.win_min_vram,
-            data.win_min_dx,
-            data.win_min_storage,
-            data.win_rec_cpu,
-            data.win_rec_ram,
-            data.win_rec_gpu,
-            data.win_rec_vram,
-            data.win_rec_dx,
-            data.linux_min_cpu,
-            data.linux_min_ram,
-            data.linux_min_gpu,
-            data.linux_min_storage,
-            data.linux_rec_cpu,
-            data.linux_rec_ram,
-            data.linux_rec_gpu,
-            serialize_langs(&data.languages_interface),
-            serialize_langs(&data.languages_audio),
-            serialize_langs(&data.languages_subtitles),
-            data.save_path_windows,
-            data.save_path_linux,
-            data.config_path_windows,
-            data.config_path_linux,
+            data.has_save_data,
+            data.has_config_data,
+            serialize_vec(&data.languages_interface),
+            serialize_vec(&data.languages_audio),
+            serialize_vec(&data.languages_subtitles),
             data.fetched_at,
         ],
     )

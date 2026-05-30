@@ -4,6 +4,8 @@
 //! - Game: tabela `games`
 //! - GameDetails: tabela `game_details`
 //! - WishlistGame: tabela `wishlist`
+//! - Subscriptions: tabela `subscriptions`
+//! - PcgwData: tabela `pcgw_data`
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -266,10 +268,27 @@ pub struct WishlistGame {
     pub added_at: Option<String>,
 }
 
+/// Assinatura de serviço de jogos rastreada pelo usuário.
+///
+/// Representa um serviço como Game Pass, Prime Gaming ou EA Play,
+/// com controle de ativação e timestamp da última sincronização.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Subscription {
+    /// Identificador do serviço: "game_pass", "prime_gaming", "ea_play", etc.
+    pub service: String,
+    pub enabled: bool,
+    /// Timestamp ISO 8601 da última sincronização bem-sucedida com a API do serviço.
+    /// `None` se nunca foi sincronizado.
+    #[serde(rename = "lastSynced")]
+    pub last_synced: Option<String>,
+}
+
 /// Dados técnicos do jogo obtidos do PCGamingWiki.
 ///
 /// Tratados como dados estáticos do jogo — não expiram automaticamente.
-/// Atualizados apenas por invalidação explícita (manual ou por detecção de update recente via Steam).
+/// Atualizados apenas por invalidação explícita.
+///
+/// Tabelas Cargo consultadas: Infobox_game, API, Video, Input, Audio, L10n, Tags.
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PcgwData {
     #[serde(rename = "steamAppId")]
@@ -283,29 +302,38 @@ pub struct PcgwData {
 
     pub engine: Option<String>,
 
-    // Suporte a OS
-    #[serde(rename = "linuxSupport")]
-    pub linux_support: Option<String>, // "true" | "false" | "hackable" | "unknown"
+    // Plataformas suportadas — string separada por vírgula, ex: "Windows,Linux"
+    #[serde(rename = "availableOn")]
+    pub available_on: Option<String>,
 
-    #[serde(rename = "windowsSupport")]
-    pub windows_support: Option<String>,
+    // Graphics APIs (tabela API)
+    #[serde(rename = "dxVersions")]
+    pub dx_versions: Option<String>, // ex: "11, 12"
 
-    #[serde(rename = "macosSupport")]
-    pub macos_support: Option<String>,
+    #[serde(rename = "vulkanVersions")]
+    pub vulkan_versions: Option<String>,
 
-    // Tecnologias gráficas
+    #[serde(rename = "openglVersions")]
+    pub opengl_versions: Option<String>,
+
+    // Executáveis por OS — confirma suporte real (tabela API)
+    pub win64: Option<String>,
+    pub linux64: Option<String>,
+    pub macos_arm: Option<String>,
+    pub macos_intel64: Option<String>,
+
+    // Tecnologias gráficas (tabela Video)
     #[serde(rename = "rayTracing")]
     pub ray_tracing: Option<String>,
 
-    pub dlss: Option<String>,
-    pub fsr: Option<String>,
-    pub xess: Option<String>,
+    // Lista de upscalers suportados, ex: "DLSS 3,FSR 3,XeSS"
+    pub upscaling: Option<String>,
 
-    #[serde(rename = "frameGeneration")]
-    pub frame_generation: Option<String>,
+    // Lista de frame gen suportadas, ex: "DLSS Frame Generation"
+    #[serde(rename = "frameGen")]
+    pub frame_gen: Option<String>,
 
-    // Display
-    #[serde(rename = "ultrawidescreen")]
+    // Display (tabela Video)
     pub ultrawidescreen: Option<String>,
 
     #[serde(rename = "fourKSupport")]
@@ -314,9 +342,9 @@ pub struct PcgwData {
     pub hdr: Option<String>,
 
     #[serde(rename = "highFps")]
-    pub high_fps: Option<String>,
+    pub high_fps: Option<String>, // 120fps+
 
-    pub fov: Option<String>,
+    pub fov: Option<String>, // FOV ajustável
 
     #[serde(rename = "borderlessWindowed")]
     pub borderless_windowed: Option<String>,
@@ -324,7 +352,7 @@ pub struct PcgwData {
     #[serde(rename = "colorBlind")]
     pub color_blind: Option<String>,
 
-    // Controle
+    // Controle (tabela Input)
     #[serde(rename = "controllerSupport")]
     pub controller_support: Option<String>,
 
@@ -337,7 +365,7 @@ pub struct PcgwData {
     #[serde(rename = "xinputControllers")]
     pub xinput_controllers: Option<String>,
 
-    // Audio
+    // Áudio (tabela Audio)
     #[serde(rename = "surroundSound")]
     pub surround_sound: Option<String>,
 
@@ -346,66 +374,14 @@ pub struct PcgwData {
     #[serde(rename = "closedCaptions")]
     pub closed_captions: Option<String>,
 
-    // Requisitos Windows
-    #[serde(rename = "winMinOs")]
-    pub win_min_os: Option<String>,
+    // Presença de dados (tabela Tags)
+    #[serde(rename = "hasSaveData")]
+    pub has_save_data: Option<String>,
 
-    #[serde(rename = "winMinCpu")]
-    pub win_min_cpu: Option<String>,
+    #[serde(rename = "hasConfigData")]
+    pub has_config_data: Option<String>,
 
-    #[serde(rename = "winMinRam")]
-    pub win_min_ram: Option<String>,
-
-    #[serde(rename = "winMinGpu")]
-    pub win_min_gpu: Option<String>,
-
-    #[serde(rename = "winMinVram")]
-    pub win_min_vram: Option<String>,
-
-    #[serde(rename = "winMinDx")]
-    pub win_min_dx: Option<String>,
-
-    #[serde(rename = "winMinStorage")]
-    pub win_min_storage: Option<String>,
-
-    #[serde(rename = "winRecCpu")]
-    pub win_rec_cpu: Option<String>,
-
-    #[serde(rename = "winRecRam")]
-    pub win_rec_ram: Option<String>,
-
-    #[serde(rename = "winRecGpu")]
-    pub win_rec_gpu: Option<String>,
-
-    #[serde(rename = "winRecVram")]
-    pub win_rec_vram: Option<String>,
-
-    #[serde(rename = "winRecDx")]
-    pub win_rec_dx: Option<String>,
-
-    // Requisitos Linux
-    #[serde(rename = "linuxMinCpu")]
-    pub linux_min_cpu: Option<String>,
-
-    #[serde(rename = "linuxMinRam")]
-    pub linux_min_ram: Option<String>,
-
-    #[serde(rename = "linuxMinGpu")]
-    pub linux_min_gpu: Option<String>,
-
-    #[serde(rename = "linuxMinStorage")]
-    pub linux_min_storage: Option<String>,
-
-    #[serde(rename = "linuxRecCpu")]
-    pub linux_rec_cpu: Option<String>,
-
-    #[serde(rename = "linuxRecRam")]
-    pub linux_rec_ram: Option<String>,
-
-    #[serde(rename = "linuxRecGpu")]
-    pub linux_rec_gpu: Option<String>,
-
-    // Idiomas
+    // Idiomas (tabela L10n) — JSON arrays
     #[serde(rename = "languagesInterface")]
     pub languages_interface: Option<Vec<String>>,
 
@@ -414,19 +390,6 @@ pub struct PcgwData {
 
     #[serde(rename = "languagesSubtitles")]
     pub languages_subtitles: Option<Vec<String>>,
-
-    // Caminhos de dados
-    #[serde(rename = "savePathWindows")]
-    pub save_path_windows: Option<String>,
-
-    #[serde(rename = "savePathLinux")]
-    pub save_path_linux: Option<String>,
-
-    #[serde(rename = "configPathWindows")]
-    pub config_path_windows: Option<String>,
-
-    #[serde(rename = "configPathLinux")]
-    pub config_path_linux: Option<String>,
 
     #[serde(rename = "fetchedAt")]
     pub fetched_at: Option<String>,

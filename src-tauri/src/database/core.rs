@@ -4,14 +4,12 @@
 //! além do armazenamento seguro de secrets (API keys, tokens) com criptografia.
 //!
 //! **Bancos de Dados:**
-//! - library.db: armazena a biblioteca de jogos e wishlist do usuário.
+//! - games.db: armazena jogos, wishlist, dados técnicos (pcgw_data) e subscriptions.
 //! - secrets.db: armazena secrets encriptados com AES-256-GCM.
-//! - metadata.db: cache para respostas de APIs externas (RAWG, Steam).
-//!
-//! **Versão do Schema:** v3
+//! - cache.db: cache para respostas de APIs externas (RAWG, Steam).
 
 use crate::constants::{
-    DB_FILENAME_LIBRARY, DB_FILENAME_METADATA, DB_FILENAME_SECRETS, DB_JOURNAL_MODE,
+    DB_FILENAME_CACHE, DB_FILENAME_GAMES, DB_FILENAME_SECRETS, DB_JOURNAL_MODE,
 };
 use crate::errors::AppError;
 use crate::security;
@@ -26,8 +24,6 @@ pub struct AppState {
     pub secrets_db: Mutex<Connection>,
     pub cache_db: Mutex<Connection>,
 }
-
-pub const SCHEMA_VERSION: u32 = 3;
 
 /// Retorna a versão atual do schema armazenada no banco
 pub fn current_schema_version(conn: &Connection) -> Result<u32, AppError> {
@@ -63,19 +59,27 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
         .map_err(|e| format!("Falha ao criar diretório: {}", e))?;
 
     // Conexão para games.db
-    let library_path = app_data_dir.join(DB_FILENAME_LIBRARY);
-    let games_conn = Connection::open(&library_path)
-        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_LIBRARY, e))?;
+    let games_path = app_data_dir.join(DB_FILENAME_GAMES);
+    let games_conn = Connection::open(&games_path)
+        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_GAMES, e))?;
 
     games_conn
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| format!("Erro ao configurar WAL no library.db: {}", e))?;
 
-    // Executa migrations
-    crate::database::migrations::run_migrations(app, &games_conn)?;
+    // Conexão para cache.db
+    let cache_path = app_data_dir.join(DB_FILENAME_CACHE);
+    let cache_conn = Connection::open(&cache_path)
+        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_CACHE, e))?;
 
-    // Cria schema completo
-    create_schema(&games_conn)?;
+    cache_conn
+        .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
+        .map_err(|e| {
+            AppError::DatabaseWalConfigError("cache.db".to_string(), e.to_string()).to_string()
+        })?;
+
+    // Inicializa schema do cache
+    crate::services::cache::initialize_cache_db(&cache_conn)?;
 
     // Conexão para secrets.db
     let secrets_path = app_data_dir.join(DB_FILENAME_SECRETS);
@@ -86,19 +90,12 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| format!("Erro ao configurar WAL no secrets.db: {}", e))?;
 
-    // Conexão para cache.db
-    let metadata_path = app_data_dir.join(DB_FILENAME_METADATA);
-    let cache_conn = Connection::open(&metadata_path)
-        .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_METADATA, e))?;
+    // Executa migrations
+    crate::database::migrations::run_migrations(app, &games_conn)?;
 
-    cache_conn
-        .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
-        .map_err(|e| {
-            AppError::DatabaseWalConfigError("cache.db".to_string(), e.to_string()).to_string()
-        })?;
-
-    // Inicializa schema do cache
-    crate::services::cache::initialize_cache_db(&cache_conn)?;
+    // Cria schema completo
+    let schema_version = app.package_info().version.major as u32;
+    create_schema(&games_conn, schema_version)?;
 
     Ok(AppState {
         games_db: Mutex::new(games_conn),
@@ -115,7 +112,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 /// - Campos HLTB removidos
 /// - URLs legadas removidas (agora em external_links JSON)
 /// - users_score removido (substituído por steam_review_*)
-fn create_schema(conn: &Connection) -> Result<(), String> {
+fn create_schema(conn: &Connection, schema_version: u32) -> Result<(), String> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS games (
             id TEXT PRIMARY KEY,
@@ -224,7 +221,7 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     // Marca versão do schema
-    conn.pragma_update(None, "user_version", SCHEMA_VERSION)
+    conn.pragma_update(None, "user_version", schema_version)
         .map_err(|e| format!("Erro ao definir versão do schema: {}", e))?;
 
     Ok(())
@@ -241,78 +238,46 @@ fn initialize_pcgw_table(conn: &Connection) -> Result<(), String> {
             pcgw_page_name          TEXT,
             engine                  TEXT,
 
-            -- Suporte a sistemas operacionais (tabela OS)
-            linux_support           TEXT,   -- 'true' | 'false' | 'hackable' | 'unknown'
-            windows_support         TEXT,
-            macos_support           TEXT,
+            available_on            TEXT,
 
-            -- Tecnologias graficas (tabela Video_settings)
+            dx_versions             TEXT,
+            vulkan_versions         TEXT,
+            opengl_versions         TEXT,
+
+            win64                   TEXT,
+            linux64                 TEXT,
+            macos_arm               TEXT,
+            macos_intel64           TEXT,
+
             ray_tracing             TEXT,
-            dlss                    TEXT,
-            fsr                     TEXT,
-            xess                    TEXT,
-            frame_generation        TEXT,
+            upscaling               TEXT,
+            frame_gen               TEXT,
 
-            -- Display (tabela Video_settings)
             ultrawidescreen         TEXT,
             four_k_support          TEXT,
             hdr                     TEXT,
-            high_fps                TEXT,   -- 120fps+
-            fov                     TEXT,   -- FOV ajustavel
+            high_fps                TEXT,
+            fov                     TEXT,
             borderless_windowed     TEXT,
             color_blind             TEXT,
 
-            -- Controle (tabela Input)
-            controller_support      TEXT,   -- suporte parcial
-            full_controller         TEXT,   -- 100% jogavel no controle
-            playstation_controllers TEXT,   -- suporte nativo DualSense/DS4
-            xinput_controllers      TEXT,   -- Xbox / XInput
+            controller_support      TEXT,
+            full_controller         TEXT,
+            playstation_controllers TEXT,
+            xinput_controllers      TEXT,
 
-            -- Audio (tabela Audio_settings)
             surround_sound          TEXT,
             subtitles               TEXT,
             closed_captions         TEXT,
 
-            -- Requisitos minimos Windows (tabela System_requirements)
-            win_min_os              TEXT,
-            win_min_cpu             TEXT,
-            win_min_ram             TEXT,
-            win_min_gpu             TEXT,
-            win_min_vram            TEXT,
-            win_min_dx              TEXT,
-            win_min_storage         TEXT,
+            has_save_data           TEXT,
+            has_config_data         TEXT,
 
-            -- Requisitos recomendados Windows
-            win_rec_cpu             TEXT,
-            win_rec_ram             TEXT,
-            win_rec_gpu             TEXT,
-            win_rec_vram            TEXT,
-            win_rec_dx              TEXT,
-
-            -- Requisitos minimos Linux (tabela System_requirements)
-            linux_min_cpu           TEXT,
-            linux_min_ram           TEXT,
-            linux_min_gpu           TEXT,
-            linux_min_storage       TEXT,
-
-            -- Requisitos recomendados Linux
-            linux_rec_cpu           TEXT,
-            linux_rec_ram           TEXT,
-            linux_rec_gpu           TEXT,
-
-            -- Idiomas (tabela L10n) — JSON arrays ex: '[\"English\",\"Portuguese\"]'
             languages_interface     TEXT,
             languages_audio         TEXT,
             languages_subtitles     TEXT,
 
-            -- Caminhos de dados (tabela Game_data)
-            save_path_windows       TEXT,
-            save_path_linux         TEXT,
-            config_path_windows     TEXT,
-            config_path_linux       TEXT,
-
-            -- Controle de persistencia (sem TTL; None = nunca buscado)
-            fetched_at              TEXT    -- ISO 8601
+            fetched_at              TEXT
         )",
         [],
     )
@@ -342,7 +307,8 @@ pub fn init_db(app: AppHandle, state: State<AppState>) -> Result<String, String>
     let expected_version = expected_schema_version(&app) as i32;
 
     if current_version == 0 {
-        return Ok(format!("Banco de dados novo criado (v{})", SCHEMA_VERSION));
+        let schema_version = expected_schema_version(&app);
+        return Ok(format!("Banco de dados novo criado (v{})", schema_version));
     }
 
     if current_version != expected_version {

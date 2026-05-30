@@ -11,14 +11,15 @@
 
 use crate::errors::AppError;
 use crate::models::PcgwData;
-use crate::services::integration::pcgamingwiki::{
-    fetch_pcgw_data, get_pcgw_data, invalidate_pcgw_data, save_pcgw_data, search_pcgw_by_name,
-    PcgwSearchResult,
+use crate::services::integration::pcgamingwiki::client::{search_pcgw_by_name, PcgwSearchResult};
+use crate::services::integration::pcgamingwiki::db::{
+    get_pcgw_data, invalidate_pcgw_data, save_pcgw_data,
 };
+use crate::services::integration::pcgamingwiki::fetch::fetch_pcgw_data;
+use crate::services::integration::pcgamingwiki::scraper::save_scraped_data;
 use chrono::Utc;
 use rusqlite::Connection;
 use tracing::{debug, info, warn};
-
 // === Comandos Tauri ===
 
 /// Retorna dados do PCGamingWiki para um jogo.
@@ -50,9 +51,13 @@ pub async fn get_or_fetch_pcgw_data(
         steam_app_id
     );
     match fetch_pcgw_data(&steam_app_id).await {
-        Ok(data) => {
+        Ok((data, scraped)) => {
             let db = conn.lock().map_err(|e| e.to_string())?;
             save_pcgw_data(&db, &data).map_err(|e| e.to_string())?;
+            if let Some(scraped_data) = scraped {
+                save_scraped_data(&db, &data.steam_app_id, &scraped_data)
+                    .map_err(|e| e.to_string())?;
+            }
             info!("pcgw_data: salvo para {}", steam_app_id);
             Ok(Some(data))
         }

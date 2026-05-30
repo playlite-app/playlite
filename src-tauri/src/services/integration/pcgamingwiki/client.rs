@@ -43,6 +43,7 @@ pub(crate) async fn cargo_query(
     tables: &str,
     fields: &str,
     where_clause: &str,
+    limit: u32,
 ) -> Result<Vec<Value>, AppError> {
     sleep(Duration::from_millis(REQUEST_PCGW_DELAY_MS)).await;
 
@@ -53,7 +54,7 @@ pub(crate) async fn cargo_query(
             ("tables", tables),
             ("fields", fields),
             ("where", where_clause),
-            ("limit", "5"), // protecao: nunca deveria retornar mais que 1-2 linhas por jogo
+            ("limit", &limit.to_string()),
             ("format", "json"),
         ])
         .send()
