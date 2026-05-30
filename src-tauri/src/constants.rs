@@ -10,6 +10,7 @@ pub(crate) const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
 pub const ITAD_API_URL: &str = "https://api.isthereanydeal.com";
 pub(crate) const GEMINI_API_URL: &str =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+pub const PCGW_API_BASE: &str = "https://www.pcgamingwiki.com/w/api.php"; // Base da MediaWiki Action API do PCGamingWiki.
 
 // === CAMINHOS DE IMAGENS DA STEAM ===
 pub const STEAM_HEADER_IMAGE_PATH: &str = "steam/apps/{}/header.jpg";
@@ -67,6 +68,7 @@ pub const RAWG_TRENDING_PAGE_SIZE: u32 = 20;
 pub const RAWG_UPCOMING_PAGE_SIZE: u32 = 10;
 pub const GAME_PASS_BATCH_SIZE: usize = 20;
 pub const GAMEBRAIN_SIMILAR_REQUEST_LIMIT: u32 = 12;
+pub const REQUEST_PCGW_DELAY_MS: u64 = 250; // Delay (ms) devido ao rate limit de 30 req/min de PCGamingWiki.
 
 // === TIMEOUTS DE REQUISIÇÕES HTTP (em segundos) ===
 pub const HTTP_REQUEST_TIMEOUT_SECS: u64 = 30;

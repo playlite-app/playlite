@@ -25,6 +25,9 @@ pub enum AppError {
     #[error("Erro de serialização: {0}")]
     SerializationError(String),
 
+    #[error("Erro ao interpretar resposta da API: {0}")]
+    ParseError(String),
+
     #[error("Recurso já existe: {0}")]
     AlreadyExists(String),
 

@@ -62,7 +62,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
     std::fs::create_dir_all(&app_data_dir)
         .map_err(|e| format!("Falha ao criar diretório: {}", e))?;
 
-    // Conexão para library.db
+    // Conexão para games.db
     let library_path = app_data_dir.join(DB_FILENAME_LIBRARY);
     let games_conn = Connection::open(&library_path)
         .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_LIBRARY, e))?;
@@ -86,7 +86,7 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
         .pragma_update(None, "journal_mode", DB_JOURNAL_MODE)
         .map_err(|e| format!("Erro ao configurar WAL no secrets.db: {}", e))?;
 
-    // Conexão para metadata.db (cache)
+    // Conexão para cache.db
     let metadata_path = app_data_dir.join(DB_FILENAME_METADATA);
     let cache_conn = Connection::open(&metadata_path)
         .map_err(|e| format!("Erro ao abrir {}: {}", DB_FILENAME_METADATA, e))?;
@@ -199,6 +199,8 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
 
+    initialize_pcgw_table(conn)?;
+
     // Índices
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",
@@ -224,6 +226,104 @@ fn create_schema(conn: &Connection) -> Result<(), String> {
     // Marca versão do schema
     conn.pragma_update(None, "user_version", SCHEMA_VERSION)
         .map_err(|e| format!("Erro ao definir versão do schema: {}", e))?;
+
+    Ok(())
+}
+
+/// Cria a tabela `pcgw_data` em `games.db` se ainda não existir.
+///
+/// Chamada uma vez durante a inicialização do banco principal.
+fn initialize_pcgw_table(conn: &Connection) -> Result<(), String> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS pcgw_data (
+            steam_app_id            TEXT PRIMARY KEY,
+            pcgw_page_id            TEXT,
+            pcgw_page_name          TEXT,
+            engine                  TEXT,
+
+            -- Suporte a sistemas operacionais (tabela OS)
+            linux_support           TEXT,   -- 'true' | 'false' | 'hackable' | 'unknown'
+            windows_support         TEXT,
+            macos_support           TEXT,
+
+            -- Tecnologias graficas (tabela Video_settings)
+            ray_tracing             TEXT,
+            dlss                    TEXT,
+            fsr                     TEXT,
+            xess                    TEXT,
+            frame_generation        TEXT,
+
+            -- Display (tabela Video_settings)
+            ultrawidescreen         TEXT,
+            four_k_support          TEXT,
+            hdr                     TEXT,
+            high_fps                TEXT,   -- 120fps+
+            fov                     TEXT,   -- FOV ajustavel
+            borderless_windowed     TEXT,
+            color_blind             TEXT,
+
+            -- Controle (tabela Input)
+            controller_support      TEXT,   -- suporte parcial
+            full_controller         TEXT,   -- 100% jogavel no controle
+            playstation_controllers TEXT,   -- suporte nativo DualSense/DS4
+            xinput_controllers      TEXT,   -- Xbox / XInput
+
+            -- Audio (tabela Audio_settings)
+            surround_sound          TEXT,
+            subtitles               TEXT,
+            closed_captions         TEXT,
+
+            -- Requisitos minimos Windows (tabela System_requirements)
+            win_min_os              TEXT,
+            win_min_cpu             TEXT,
+            win_min_ram             TEXT,
+            win_min_gpu             TEXT,
+            win_min_vram            TEXT,
+            win_min_dx              TEXT,
+            win_min_storage         TEXT,
+
+            -- Requisitos recomendados Windows
+            win_rec_cpu             TEXT,
+            win_rec_ram             TEXT,
+            win_rec_gpu             TEXT,
+            win_rec_vram            TEXT,
+            win_rec_dx              TEXT,
+
+            -- Requisitos minimos Linux (tabela System_requirements)
+            linux_min_cpu           TEXT,
+            linux_min_ram           TEXT,
+            linux_min_gpu           TEXT,
+            linux_min_storage       TEXT,
+
+            -- Requisitos recomendados Linux
+            linux_rec_cpu           TEXT,
+            linux_rec_ram           TEXT,
+            linux_rec_gpu           TEXT,
+
+            -- Idiomas (tabela L10n) — JSON arrays ex: '[\"English\",\"Portuguese\"]'
+            languages_interface     TEXT,
+            languages_audio         TEXT,
+            languages_subtitles     TEXT,
+
+            -- Caminhos de dados (tabela Game_data)
+            save_path_windows       TEXT,
+            save_path_linux         TEXT,
+            config_path_windows     TEXT,
+            config_path_linux       TEXT,
+
+            -- Controle de persistencia (sem TTL; None = nunca buscado)
+            fetched_at              TEXT    -- ISO 8601
+        )",
+        [],
+    )
+    .map_err(|e| format!("Erro ao criar tabela pcgw_data: {}", e))?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pcgw_fetched_at
+            ON pcgw_data(fetched_at)",
+        [],
+    )
+    .map_err(|e| format!("Erro ao criar indice idx_pcgw_fetched_at: {}", e))?;
 
     Ok(())
 }

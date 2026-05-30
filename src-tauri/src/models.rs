@@ -270,7 +270,7 @@ pub struct WishlistGame {
 ///
 /// Tratados como dados estáticos do jogo — não expiram automaticamente.
 /// Atualizados apenas por invalidação explícita (manual ou por detecção de update recente via Steam).
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PcgwData {
     #[serde(rename = "steamAppId")]
     pub steam_app_id: String,
@@ -303,6 +303,48 @@ pub struct PcgwData {
 
     #[serde(rename = "frameGeneration")]
     pub frame_generation: Option<String>,
+
+    // Display
+    #[serde(rename = "ultrawidescreen")]
+    pub ultrawidescreen: Option<String>,
+
+    #[serde(rename = "fourKSupport")]
+    pub four_k_support: Option<String>,
+
+    pub hdr: Option<String>,
+
+    #[serde(rename = "highFps")]
+    pub high_fps: Option<String>,
+
+    pub fov: Option<String>,
+
+    #[serde(rename = "borderlessWindowed")]
+    pub borderless_windowed: Option<String>,
+
+    #[serde(rename = "colorBlind")]
+    pub color_blind: Option<String>,
+
+    // Controle
+    #[serde(rename = "controllerSupport")]
+    pub controller_support: Option<String>,
+
+    #[serde(rename = "fullController")]
+    pub full_controller: Option<String>,
+
+    #[serde(rename = "playstationControllers")]
+    pub playstation_controllers: Option<String>,
+
+    #[serde(rename = "xinputControllers")]
+    pub xinput_controllers: Option<String>,
+
+    // Audio
+    #[serde(rename = "surroundSound")]
+    pub surround_sound: Option<String>,
+
+    pub subtitles: Option<String>,
+
+    #[serde(rename = "closedCaptions")]
+    pub closed_captions: Option<String>,
 
     // Requisitos Windows
     #[serde(rename = "winMinOs")]
