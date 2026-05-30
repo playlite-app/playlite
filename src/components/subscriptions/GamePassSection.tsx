@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowRight, ExternalLink, Gamepad2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Gamepad2, } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +38,7 @@ function GamePassSlide({
     <div
       className={`absolute inset-0 transition-opacity duration-500 ${active ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
     >
-      <div className="flex h-full gap-0 overflow-hidden rounded-2xl border border-white/5 bg-[#0f1113]">
+      <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         <div className="relative w-[46%] shrink-0 overflow-hidden">
           {game.image_hero ? (
             <img
@@ -57,7 +57,7 @@ function GamePassSlide({
               <Gamepad2 size={48} className="text-white/20" />
             </div>
           )}
-          <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent to-[#0f1113]" />
+          <div className="to-card absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent" />
         </div>
 
         <div className="flex flex-1 flex-col justify-center gap-5 px-10 py-8">
@@ -68,7 +68,7 @@ function GamePassSlide({
             </span>
           </div>
 
-          <h3 className="text-3xl leading-tight font-extrabold tracking-tight text-white">
+          <h3 className="text-foreground text-3xl leading-tight font-extrabold tracking-tight">
             {game.title}
           </h3>
 
@@ -78,7 +78,7 @@ function GamePassSlide({
               {game.categories.slice(0, 3).map((c, idx) => (
                 <span
                   key={idx}
-                  className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/60"
+                  className="bg-muted text-muted-foreground inline-block rounded-full px-2 py-0.5 text-xs"
                 >
                   {c}
                 </span>
@@ -87,7 +87,7 @@ function GamePassSlide({
           )}
 
           {game.description && (
-            <p className="line-clamp-3 text-sm leading-relaxed text-white/50">
+            <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
               {game.description}
             </p>
           )}
@@ -95,7 +95,7 @@ function GamePassSlide({
           <div className="flex items-center gap-3">
             <Button
               onClick={() => openExternalLink(game.store_url)}
-              className="gap-2 border border-white/15 bg-white/10 text-white hover:bg-white/20"
+              className="gap-2"
               variant="outline"
             >
               <ExternalLink size={15} />
@@ -103,7 +103,7 @@ function GamePassSlide({
             </Button>
 
             {game.original_release_date && (
-              <div className="text-sm text-white/40">
+              <div className="text-muted-foreground text-sm">
                 {t('gamepass_released', {
                   date: formatRelease(game.original_release_date),
                 })}
@@ -111,7 +111,7 @@ function GamePassSlide({
             )}
           </div>
 
-          <div className="text-sm text-white/40">
+          <div className="text-muted-foreground text-sm">
             {game.developer && (
               <span className="mr-3">
                 {t('gamepass_developer')}: {game.developer}
@@ -268,18 +268,18 @@ export function GamePassSection({
             <button
               type="button"
               onClick={prev}
-              className="absolute top-50 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#0f1113] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-50 left-0 -translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
               aria-label={t('gamepass_previous_slide_aria_label')}
             >
-              <ArrowRight className="-scale-x-100" size={20} />
+              <ChevronLeft size={20} />
             </button>
             <button
               type="button"
               onClick={next}
-              className="absolute top-50 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#0f1113] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-50 right-0 translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
               aria-label={t('gamepass_next_slide_aria_label')}
             >
-              <ArrowRight size={20} />
+              <ChevronRight size={20} />
             </button>
           </>
         )}

@@ -1,5 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowRight, ExternalLink, Gamepad2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Gamepad2,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -41,7 +46,7 @@ function UbisoftSlide({
         active ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
-      <div className="flex h-full gap-0 overflow-hidden rounded-2xl border border-white/5 bg-[#0c111a]">
+      <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         <div className="relative w-[46%] shrink-0 overflow-hidden">
           {game.image_url ? (
             <img
@@ -54,7 +59,7 @@ function UbisoftSlide({
               <Gamepad2 size={48} className="text-white/20" />
             </div>
           )}
-          <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent to-[#0c111a]" />
+          <div className="to-card absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent" />
         </div>
 
         <div className="flex flex-1 flex-col justify-center gap-5 px-10 py-8">
@@ -78,13 +83,13 @@ function UbisoftSlide({
             )}
           </div>
 
-          <h3 className="text-3xl leading-tight font-extrabold tracking-tight text-white">
+          <h3 className="text-foreground text-3xl leading-tight font-extrabold tracking-tight">
             {title}
           </h3>
 
           {game.edition && (
             <div>
-              <span className="inline-block rounded-full bg-white/5 px-2 py-0.5 text-xs text-white/60">
+              <span className="bg-muted text-muted-foreground inline-block rounded-full px-2 py-0.5 text-xs">
                 {game.edition}
               </span>
             </div>
@@ -95,7 +100,7 @@ function UbisoftSlide({
               {game.streaming_platforms.slice(0, 3).map((platform: string) => (
                 <span
                   key={platform}
-                  className="inline-block rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-200/80"
+                  className="text-muted-foreground inline-block rounded-full bg-blue-500/20 px-2 py-0.5 text-xs"
                 >
                   {platform}
                 </span>
@@ -106,14 +111,14 @@ function UbisoftSlide({
           <div className="flex flex-wrap items-center gap-3">
             <Button
               onClick={() => openExternalLink(game.store_url)}
-              className="gap-2 border border-white/15 bg-white/10 text-white hover:bg-white/20"
+              className="gap-2"
               variant="outline"
             >
               <ExternalLink size={15} />
               {t('ubisoft_view_store', { defaultValue: 'Abrir na loja' })}
             </Button>
 
-            <div className="flex flex-col gap-0.5 text-sm text-white/40">
+            <div className="text-muted-foreground flex flex-col gap-0.5 text-sm">
               {game.release_date && (
                 <span>
                   {t('ubisoft_released', {
@@ -262,22 +267,18 @@ export function UbisoftPlusSection() {
             <button
               type="button"
               onClick={prev}
-              className="absolute top-40 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#0c111a] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
-              aria-label={t('ubisoft_previous_slide_aria_label', {
-                defaultValue: 'Anterior',
-              })}
+              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-40 left-0 -translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
+              aria-label={t('ubisoft_previous_slide_aria_label')}
             >
-              <ArrowRight className="-scale-x-100" size={20} />
+              <ChevronLeft size={20} />
             </button>
             <button
               type="button"
               onClick={next}
-              className="absolute top-40 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#0c111a] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
-              aria-label={t('ubisoft_next_slide_aria_label', {
-                defaultValue: 'Próximo',
-              })}
+              className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-40 right-0 translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
+              aria-label={t('ubisoft_next_slide_aria_label')}
             >
-              <ArrowRight size={20} />
+              <ChevronRight size={20} />
             </button>
           </>
         )}

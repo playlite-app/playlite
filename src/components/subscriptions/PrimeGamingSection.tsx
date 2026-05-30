@@ -80,7 +80,7 @@ function PrimeSlide({
         active ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
-      <div className="flex h-full gap-0 overflow-hidden rounded-2xl border border-white/5 bg-[#1c1c1e]">
+      <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         {/* Imagem */}
         <div className="relative w-[46%] shrink-0 overflow-hidden">
           {game.image_url ? (
@@ -95,7 +95,7 @@ function PrimeSlide({
             </div>
           )}
           {/* Gradiente lateral para fundir com o painel direito */}
-          <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent to-[#1c1c1e]" />
+          <div className="to-card absolute inset-y-0 right-0 w-24 bg-linear-to-r from-transparent" />
         </div>
 
         {/* Painel direito */}
@@ -109,13 +109,13 @@ function PrimeSlide({
           </div>
 
           {/* Título */}
-          <h3 className="text-4xl leading-tight font-extrabold tracking-tight text-white">
+          <h3 className="text-foreground text-4xl leading-tight font-extrabold tracking-tight">
             {game.title}
           </h3>
 
           {/* Descrição */}
           {game.description && (
-            <p className="line-clamp-2 text-sm leading-relaxed text-white/50">
+            <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
               {game.description}
             </p>
           )}
@@ -124,7 +124,7 @@ function PrimeSlide({
           <div>
             <Button
               onClick={() => openExternalLink(game.claim_url)}
-              className="gap-2 border border-white/15 bg-white/10 text-white hover:bg-white/20"
+              className="gap-2"
               variant="outline"
             >
               <ExternalLink size={15} />
@@ -136,7 +136,7 @@ function PrimeSlide({
           {expiry.label && (
             <div
               className={`flex items-center gap-2 text-sm font-medium ${
-                expiry.urgent ? 'text-red-400' : 'text-white/40'
+                expiry.urgent ? 'text-red-400' : 'text-muted-foreground'
               }`}
             >
               {expiry.urgent ? <AlertCircle size={14} /> : <Clock size={14} />}
@@ -252,7 +252,7 @@ export function PrimeGamingSection() {
             <button
               type="button"
               onClick={prev}
-              className="absolute top-40 left-0 -translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-40 left-0 -translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
               aria-label={t('prime_previous_slide_aria_label')}
             >
               <ChevronLeft size={20} />
@@ -260,7 +260,7 @@ export function PrimeGamingSection() {
             <button
               type="button"
               onClick={next}
-              className="absolute top-40 right-0 translate-x-5 -translate-y-1/2 rounded-full border border-white/10 bg-[#1c1c1e] p-2 text-white/60 shadow-lg transition hover:bg-white/10 hover:text-white"
+              className="bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted-foreground absolute top-40 right-0 translate-x-5 -translate-y-1/2 rounded-full border p-2 shadow-lg transition"
               aria-label={t('prime_next_slide_aria_label')}
             >
               <ChevronRight size={20} />
