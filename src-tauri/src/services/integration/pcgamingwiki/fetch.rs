@@ -13,7 +13,7 @@ use crate::services::integration::pcgamingwiki::parsers::{
 };
 use crate::services::integration::pcgamingwiki::scraper::scrape_pcgw_page;
 use chrono::Utc;
-use tracing::{debug, info};
+use tracing::info;
 
 /// Busca todos os dados técnicos de um jogo no PCGamingWiki pelo Steam AppID.
 ///
@@ -28,7 +28,6 @@ pub async fn fetch_pcgw_data(
     steam_app_id: &str,
 ) -> Result<(GameExtras, Option<PcgwScrapedData>), AppError> {
     let client = build_http_client()?;
-    debug!("Iniciando busca PCGW para steam_app_id={}", steam_app_id);
 
     // ------------------------------------------------------------------
     // 1. Infobox_game — resolve page_id, page_name e engine
@@ -70,13 +69,6 @@ pub async fn fetch_pcgw_data(
     // Busca wikitext (system requirements + game data paths) em paralelo com as
     // queries Cargo restantes — salvo separadamente pelo chamador via save_scraped_data
     let scraped = scrape_pcgw_page(&client, &page_id, steam_app_id).await.ok();
-    // .ok() converte Err em None — falha de rede não aborta o resto da busca
-    info!(
-        "fetch_pcgw_data: scraped = {:?}",
-        scraped
-            .as_ref()
-            .map(|s| (s.system_requirements.len(), s.game_data_paths.len()))
-    );
 
     // ------------------------------------------------------------------
     // 2. OS — suporte a sistemas operacionais
