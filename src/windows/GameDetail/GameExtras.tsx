@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import {invoke} from '@tauri-apps/api/core';
 import {
   CheckCircle2,
   ChevronDown,
@@ -13,11 +13,11 @@ import {
   WifiOff,
   XCircle,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
-import { Game, GameDetails } from '@/types/game';
+import {Game, GameDetails} from '@/types/game';
 
-// === TIPOS — espelham PcgwScrapedResponse e PcgwData do backend ===
+// === TIPOS — espelham PcgwScrapedResponse e GameExtras do backend ===
 
 interface SystemRequirements {
   os_family: string;
@@ -56,15 +56,21 @@ interface PcgwScrapedData {
   save_paths: GameDataPath[];
 }
 
-interface PcgwData {
+interface GameExtras {
+  steamAppId: string;
+  pcgwPageId: string | null;
   pcgwPageName: string | null;
   engine: string | null;
   availableOn: string | null;
+  // API
   dxVersions: string | null;
   vulkanVersions: string | null;
   openglVersions: string | null;
+  // OS support
   win64: string | null;
   linux64: string | null;
+  macOsArm: string | null;
+  macOsIntel64: string | null;
   // Video
   rayTracing: string | null;
   upscaling: string | null;
@@ -92,6 +98,7 @@ interface PcgwData {
   // Tags
   hasSaveData: string | null;
   hasConfigData: string | null;
+  fetchedAt: string | null;
 }
 
 // === PROPS ===
@@ -137,7 +144,7 @@ function combineCpu(cpu: string | null, cpu2: string | null): string | null {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-muted-foreground mb-3 text-[10px] font-semibold tracking-widest uppercase">
+    <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-widest uppercase">
       {children}
     </h3>
   );
@@ -169,12 +176,27 @@ function BoolBadge({ value, label }: { value: string | null; label: string }) {
         }`}
       >
         {label}
-        {isHackable && (
-          <span className="ml-1 text-[10px] opacity-70">(mod)</span>
-        )}
+        {isHackable && <span className="ml-1 text-xs opacity-70">(mod)</span>}
       </span>
     </div>
   );
+}
+
+// Remove o prefixo "Engine:" do valor (ex: "Engine:GoldSrc" → "GoldSrc")
+function formatEngine(value: string | null): string | null {
+  if (!value) return null;
+
+  return value.replace(/^Engine:/i, '').trim();
+}
+
+// Normaliza lista separada por vírgula adicionando espaço após cada vírgula
+function formatList(value: string | null): string | null {
+  if (!value) return null;
+
+  return value
+    .split(',')
+    .map(s => s.trim())
+    .join(', ');
 }
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
@@ -193,10 +215,10 @@ function PathRow({ path }: { path: GameDataPath }) {
 
   return (
     <div className="border-border/40 flex items-start gap-2 border-b py-2 last:border-0">
-      <span className="bg-muted text-muted-foreground mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px]">
+      <span className="bg-muted text-muted-foreground mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs">
         {path.os}
       </span>
-      <code className="text-foreground/80 text-[11px] leading-relaxed break-all">
+      <code className="text-foreground/80 text-xs leading-relaxed break-all">
         {display}
       </code>
     </div>
@@ -244,7 +266,7 @@ function SystemRequirementsBlock({ req }: { req: SystemRequirements }) {
           <Monitor className="text-muted-foreground h-3.5 w-3.5" />
           <span className="text-sm font-medium">{title}</span>
           {req.target && (
-            <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
+            <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-xs">
               {req.target}
             </span>
           )}
@@ -261,13 +283,13 @@ function SystemRequirementsBlock({ req }: { req: SystemRequirements }) {
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-muted-foreground pb-2 text-left text-[10px] tracking-wider uppercase">
+                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
                   Componente
                 </th>
-                <th className="text-muted-foreground pb-2 text-left text-[10px] tracking-wider uppercase">
+                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
                   Mínimo
                 </th>
-                <th className="text-muted-foreground pb-2 text-left text-[10px] tracking-wider uppercase">
+                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
                   Recomendado
                 </th>
               </tr>
@@ -361,20 +383,6 @@ function ExtrasError({ onRetry }: { onRetry: () => void }) {
       >
         Tentar novamente
       </button>
-
-      {/* Temporário — remover após debug */}
-      <button
-        onClick={async () => {
-          const result = await invoke('debug_pcgw').catch(
-            (e: unknown) => `ERRO: ${e}`
-          );
-          console.log('debug_pcgw:', result);
-          alert(String(result));
-        }}
-        className="text-xs text-red-500 underline"
-      >
-        debug pcgw
-      </button>
     </div>
   );
 }
@@ -382,7 +390,7 @@ function ExtrasError({ onRetry }: { onRetry: () => void }) {
 // === COMPONENTE PRINCIPAL ===
 
 export function GameExtras({ game, details }: GameExtrasProps) {
-  const [cargoData, setCargoData] = useState<PcgwData | null>(null);
+  const [cargoData, setCargoData] = useState<GameExtras | null>(null);
   const [scrapedData, setScrapedData] = useState<PcgwScrapedData | null>(null);
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'not_found' | 'no_steam_id' | 'error'
@@ -410,7 +418,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
     setStatus('loading');
 
     try {
-      const cargo = await invoke<PcgwData | null>('get_or_fetch_pcgw_data', {
+      const cargo = await invoke<GameExtras | null>('get_or_fetch_pcgw_data', {
         steamAppId,
       });
 
@@ -476,7 +484,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {/* ---- Cabeçalho com link para a página ---- */}
       {cargoData?.pcgwPageName && (
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-sm">
             Fonte:{' '}
             <a
               href={`https://www.pcgamingwiki.com/wiki/${encodeURIComponent(cargoData.pcgwPageName.replace(/ /g, '_'))}`}
@@ -496,8 +504,11 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           <SectionTitle>Informações Técnicas</SectionTitle>
           <div className="border-border/50 divide-border/30 divide-y rounded-lg border">
             <div className="px-4 py-1">
-              <InfoRow label="Engine" value={cargoData.engine} />
-              <InfoRow label="Plataformas" value={cargoData.availableOn} />
+              <InfoRow label="Engine" value={formatEngine(cargoData.engine)} />
+              <InfoRow
+                label="Plataformas"
+                value={formatList(cargoData.availableOn)}
+              />
               <InfoRow label="DirectX" value={cargoData.dxVersions} />
               <InfoRow label="Vulkan" value={cargoData.vulkanVersions} />
               <InfoRow label="OpenGL" value={cargoData.openglVersions} />
@@ -509,7 +520,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {cargoData && (
         <div>
           <SectionTitle>Vídeo</SectionTitle>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 sm:grid-cols-3">
+          <div className="border-border/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg border p-4 sm:grid-cols-3">
             <BoolBadge value={cargoData.fourKSupport} label="4K" />
             <BoolBadge value={cargoData.ultrawidescreen} label="Ultrawide" />
             <BoolBadge value={cargoData.hdr} label="HDR" />
@@ -526,7 +537,9 @@ export function GameExtras({ game, details }: GameExtrasProps) {
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
                 <span className="text-xs">
                   Upscaling:{' '}
-                  <span className="text-foreground">{cargoData.upscaling}</span>
+                  <span className="text-foreground">
+                    {formatList(cargoData.upscaling)}
+                  </span>
                 </span>
               </div>
             )}
@@ -535,7 +548,9 @@ export function GameExtras({ game, details }: GameExtrasProps) {
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
                 <span className="text-xs">
                   Frame Gen:{' '}
-                  <span className="text-foreground">{cargoData.frameGen}</span>
+                  <span className="text-foreground">
+                    {formatList(cargoData.frameGen)}
+                  </span>
                 </span>
               </div>
             )}
@@ -544,35 +559,41 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       )}
       {/* ---- Input e Áudio ---- */}
       {cargoData && (
-        <div className="grid gap-8 sm:grid-cols-2">
-          <div>
-            <SectionTitle>Controles</SectionTitle>
-            <div className="space-y-1.5">
-              <BoolBadge value={cargoData.controllerSupport} label="Controle" />
-              <BoolBadge
-                value={cargoData.fullController}
-                label="Suporte completo"
-              />
-              <BoolBadge
-                value={cargoData.playstationControllers}
-                label="PlayStation"
-              />
-              <BoolBadge
-                value={cargoData.xinputControllers}
-                label="XInput / Xbox"
-              />
+        <div>
+          <SectionTitle>Compatibilidade</SectionTitle>
+          <div className="border-border/50 grid gap-8 rounded-lg border p-4 sm:grid-cols-2">
+            <div>
+              <SectionTitle>Controles</SectionTitle>
+              <div className="space-y-1.5">
+                <BoolBadge
+                  value={cargoData.controllerSupport}
+                  label="Controle"
+                />
+                <BoolBadge
+                  value={cargoData.fullController}
+                  label="Suporte completo"
+                />
+                <BoolBadge
+                  value={cargoData.playstationControllers}
+                  label="PlayStation"
+                />
+                <BoolBadge
+                  value={cargoData.xinputControllers}
+                  label="XInput / Xbox"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <SectionTitle>Áudio e Acessibilidade</SectionTitle>
-            <div className="space-y-1.5">
-              <BoolBadge value={cargoData.surroundSound} label="Surround" />
-              <BoolBadge value={cargoData.subtitles} label="Legendas" />
-              <BoolBadge
-                value={cargoData.closedCaptions}
-                label="Closed Captions"
-              />
+            <div>
+              <SectionTitle>Áudio e Acessibilidade</SectionTitle>
+              <div className="space-y-1.5">
+                <BoolBadge value={cargoData.surroundSound} label="Surround" />
+                <BoolBadge value={cargoData.subtitles} label="Legendas" />
+                <BoolBadge
+                  value={cargoData.closedCaptions}
+                  label="Closed Captions"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -585,16 +606,16 @@ export function GameExtras({ game, details }: GameExtrasProps) {
             <table className="w-full">
               <thead className="bg-muted/20">
                 <tr>
-                  <th className="text-muted-foreground px-4 py-2 text-left text-[10px] tracking-wider uppercase">
+                  <th className="text-muted-foreground px-4 py-2 text-left text-xs tracking-wider uppercase">
                     Idioma
                   </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-[10px] tracking-wider uppercase">
+                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
                     Interface
                   </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-[10px] tracking-wider uppercase">
+                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
                     Áudio
                   </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-[10px] tracking-wider uppercase">
+                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
                     Legendas
                   </th>
                 </tr>

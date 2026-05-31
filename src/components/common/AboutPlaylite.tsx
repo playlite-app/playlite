@@ -106,7 +106,7 @@ export function AboutPlaylite({
             {/* Idioma */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">{t('about_language')}</h4>
-              <div className="bg-accent/30 flex items-center justify-between rounded-lg p-4 text-sm">
+              <div className="bg-accent/30 text-muted-foreground flex items-center justify-between rounded-lg p-4 text-sm">
                 {t('about_select_language')}
                 <select
                   className={
@@ -185,7 +185,7 @@ export function AboutPlaylite({
               <h4 className="text-sm font-semibold">
                 {t('about_apis_services')}
               </h4>
-              <div className="bg-accent/30 grid gap-2 rounded-lg p-4 text-sm">
+              <div className="bg-accent/30 text-muted-foreground grid gap-2 rounded-lg p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5 text-xs">
                     •
