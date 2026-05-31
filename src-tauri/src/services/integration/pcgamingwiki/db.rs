@@ -1,12 +1,108 @@
 //! Persistência dos dados do PCGamingWiki no banco SQLite local.
 //!
-//! Os dados são armazenados na tabela `pcgw_data` sem TTL — tratados como
+//! Os dados são armazenados na tabela `game_extras` sem TTL — tratados como
 //! características fixas do jogo e atualizados apenas por invalidação explícita
 //! via [`invalidate_pcgw_data`].
 
 use crate::models::PcgwData;
+use crate::services::integration::pcgamingwiki::scraper::{
+    GameDataPath, PcgwScrapedData, SystemRequirements,
+};
 use rusqlite::{params, Connection};
 use tracing::{info, warn};
+
+/// Cria a tabela `game_extras`, `system_requirements` e `game_data_paths` em `games.db` se ainda não existirem.
+///
+/// Chamada uma vez durante a inicialização do banco principal.
+pub fn initialize_pcgamingwiki_tables(conn: &Connection) -> Result<(), String> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS game_extras (
+            steam_app_id            TEXT PRIMARY KEY,
+            pcgw_page_id            TEXT,
+            pcgw_page_name          TEXT,
+            engine                  TEXT,
+            available_on            TEXT,
+            dx_versions             TEXT,
+            vulkan_versions         TEXT,
+            opengl_versions         TEXT,
+            win64                   TEXT,
+            linux64                 TEXT,
+            macos_arm               TEXT,
+            macos_intel64           TEXT,
+            ray_tracing             TEXT,
+            upscaling               TEXT,
+            frame_gen               TEXT,
+            ultrawidescreen         TEXT,
+            four_k_support          TEXT,
+            hdr                     TEXT,
+            high_fps                TEXT,
+            fov                     TEXT,
+            borderless_windowed     TEXT,
+            color_blind             TEXT,
+            controller_support      TEXT,
+            full_controller         TEXT,
+            playstation_controllers TEXT,
+            xinput_controllers      TEXT,
+            surround_sound          TEXT,
+            subtitles               TEXT,
+            closed_captions         TEXT,
+            has_save_data           TEXT,
+            has_config_data         TEXT,
+            languages_interface     TEXT,
+            languages_audio         TEXT,
+            languages_subtitles     TEXT,
+            fetched_at              TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_game_extras_fetched_at
+            ON game_extras(fetched_at);
+
+        CREATE TABLE IF NOT EXISTS system_requirements (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            steam_app_id TEXT NOT NULL,
+            os_family    TEXT NOT NULL,
+            tier_title   TEXT,
+            target       TEXT,
+            min_os       TEXT,
+            min_cpu      TEXT,
+            min_cpu2     TEXT,
+            min_ram      TEXT,
+            min_gpu      TEXT,
+            min_gpu2     TEXT,
+            min_vram     TEXT,
+            min_dx       TEXT,
+            min_storage  TEXT,
+            rec_os       TEXT,
+            rec_cpu      TEXT,
+            rec_cpu2     TEXT,
+            rec_ram      TEXT,
+            rec_gpu      TEXT,
+            rec_gpu2     TEXT,
+            rec_vram     TEXT,
+            rec_dx       TEXT,
+            rec_storage  TEXT,
+            fetched_at   TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_sysreq_app_id
+            ON system_requirements(steam_app_id);
+
+        CREATE TABLE IF NOT EXISTS game_data_paths (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            steam_app_id TEXT NOT NULL,
+            kind         TEXT NOT NULL,
+            os           TEXT NOT NULL,
+            raw_path     TEXT NOT NULL,
+            fetched_at   TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_gamedata_app_id
+            ON game_data_paths(steam_app_id);",
+    )
+    .map_err(|e| format!("Erro ao criar tabelas do PCGamingWiki: {}", e))?;
+
+    Ok(())
+}
 
 /// Retorna os dados do PCGamingWiki armazenados para o jogo.
 ///
@@ -58,7 +154,7 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
             languages_subtitles,
 
             fetched_at
-         FROM pcgw_data
+         FROM game_extras
          WHERE steam_app_id = ?1
            AND fetched_at IS NOT NULL",
         params![steam_app_id],
@@ -125,7 +221,7 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
         Ok(data) => Some(data),
         Err(rusqlite::Error::QueryReturnedNoRows) => None,
         Err(e) => {
-            warn!("Erro ao buscar pcgw_data para {}: {}", steam_app_id, e);
+            warn!("Erro ao buscar game_extras para {}: {}", steam_app_id, e);
             None
         }
     }
@@ -138,7 +234,7 @@ pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> 
     };
 
     conn.execute(
-        "INSERT OR REPLACE INTO pcgw_data (
+        "INSERT OR REPLACE INTO game_extras (
             steam_app_id,
             pcgw_page_id,
             pcgw_page_name,
@@ -232,7 +328,7 @@ pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> 
             data.fetched_at,
         ],
     )
-    .map_err(|e| format!("Erro ao salvar pcgw_data: {}", e))?;
+    .map_err(|e| format!("Erro ao salvar game_extras: {}", e))?;
 
     Ok(())
 }
@@ -243,11 +339,190 @@ pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> 
 /// `get_pcgw_data` ignora registros sem `fetched_at`.
 pub fn invalidate_pcgw_data(conn: &Connection, steam_app_id: &str) -> Result<(), String> {
     conn.execute(
-        "UPDATE pcgw_data SET fetched_at = NULL WHERE steam_app_id = ?1",
+        "UPDATE game_extras SET fetched_at = NULL WHERE steam_app_id = ?1",
         params![steam_app_id],
     )
-    .map_err(|e| format!("Erro ao invalidar pcgw_data: {}", e))?;
+    .map_err(|e| format!("Erro ao invalidar game_extras: {}", e))?;
 
-    info!("pcgw_data invalidado para steam_app_id={}", steam_app_id);
+    info!("game_extras invalidado para steam_app_id={}", steam_app_id);
     Ok(())
+}
+
+/// Salva os dados raspados no banco, substituindo entradas anteriores do jogo.
+///
+/// Usa DELETE + INSERT em vez de REPLACE porque os dados têm múltiplas linhas
+/// por jogo (não há PK natural além de `steam_app_id + os_family + tier_title`).
+pub fn save_scraped_data(
+    conn: &rusqlite::Connection,
+    steam_app_id: &str,
+    data: &PcgwScrapedData,
+) -> Result<(), String> {
+    use chrono::Utc;
+    use rusqlite::params;
+
+    let now = Utc::now().to_rfc3339();
+
+    // Remove dados anteriores deste jogo antes de reinserir
+    conn.execute(
+        "DELETE FROM system_requirements WHERE steam_app_id = ?1",
+        params![steam_app_id],
+    )
+    .map_err(|e| format!("Erro ao limpar system_requirements: {}", e))?;
+
+    conn.execute(
+        "DELETE FROM game_data_paths WHERE steam_app_id = ?1",
+        params![steam_app_id],
+    )
+    .map_err(|e| format!("Erro ao limpar game_data_paths: {}", e))?;
+
+    // Insere requisitos de sistema
+    let mut sysreq_stmt = conn
+        .prepare(
+            "INSERT INTO system_requirements (
+                steam_app_id, os_family, tier_title, target,
+                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage,
+                fetched_at
+            ) VALUES (
+                ?1,  ?2,  ?3,  ?4,
+                ?5,  ?6,  ?7,  ?8,  ?9,  ?10, ?11, ?12, ?13,
+                ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
+                ?23
+            )",
+        )
+        .map_err(|e| format!("Erro ao preparar insert de system_requirements: {}", e))?;
+
+    for req in &data.system_requirements {
+        sysreq_stmt
+            .execute(params![
+                steam_app_id,
+                req.os_family,
+                req.tier_title,
+                req.target,
+                req.min_os,
+                req.min_cpu,
+                req.min_cpu2,
+                req.min_ram,
+                req.min_gpu,
+                req.min_gpu2,
+                req.min_vram,
+                req.min_dx,
+                req.min_storage,
+                req.rec_os,
+                req.rec_cpu,
+                req.rec_cpu2,
+                req.rec_ram,
+                req.rec_gpu,
+                req.rec_gpu2,
+                req.rec_vram,
+                req.rec_dx,
+                req.rec_storage,
+                now,
+            ])
+            .map_err(|e| {
+                let msg = format!("Erro ao inserir system_requirement: {}", e);
+                tracing::error!("{}", msg);
+                msg
+            })?;
+    }
+
+    // Insere caminhos de game data
+    let mut path_stmt = conn
+        .prepare(
+            "INSERT INTO game_data_paths (steam_app_id, kind, os, raw_path, fetched_at)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+        )
+        .map_err(|e| format!("Erro ao preparar insert de game_data_paths: {}", e))?;
+
+    for path in &data.game_data_paths {
+        path_stmt
+            .execute(params![
+                steam_app_id,
+                path.kind,
+                path.os,
+                path.raw_path,
+                now,
+            ])
+            .map_err(|e| format!("Erro ao inserir game_data_path: {}", e))?;
+    }
+
+    Ok(())
+}
+
+/// Retorna os requisitos de sistema salvos para um jogo.
+/// Retorna vetor vazio se nunca foram buscados.
+pub fn get_system_requirements(
+    conn: &rusqlite::Connection,
+    steam_app_id: &str,
+) -> Vec<SystemRequirements> {
+    let mut stmt = match conn.prepare(
+        "SELECT os_family, tier_title, target,
+                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage
+         FROM system_requirements
+         WHERE steam_app_id = ?1
+         ORDER BY id ASC",
+    ) {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+
+    let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
+        Ok(SystemRequirements {
+            os_family: row.get(0)?,
+            tier_title: row.get(1)?,
+            target: row.get(2)?,
+            min_os: row.get(3)?,
+            min_cpu: row.get(4)?,
+            min_cpu2: row.get(5)?,
+            min_ram: row.get(6)?,
+            min_gpu: row.get(7)?,
+            min_gpu2: row.get(8)?,
+            min_vram: row.get(9)?,
+            min_dx: row.get(10)?,
+            min_storage: row.get(11)?,
+            rec_os: row.get(12)?,
+            rec_cpu: row.get(13)?,
+            rec_cpu2: row.get(14)?,
+            rec_ram: row.get(15)?,
+            rec_gpu: row.get(16)?,
+            rec_gpu2: row.get(17)?,
+            rec_vram: row.get(18)?,
+            rec_dx: row.get(19)?,
+            rec_storage: row.get(20)?,
+        })
+    });
+
+    match iter {
+        Ok(rows) => rows.filter_map(|r| r.ok()).collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
+/// Retorna os caminhos de game data salvos para um jogo.
+/// Retorna vetor vazio se nunca foram buscados.
+pub fn get_game_data_paths(conn: &rusqlite::Connection, steam_app_id: &str) -> Vec<GameDataPath> {
+    let mut stmt = match conn.prepare(
+        "SELECT kind, os, raw_path
+         FROM game_data_paths
+         WHERE steam_app_id = ?1
+         ORDER BY id ASC",
+    ) {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+
+    let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
+        Ok(GameDataPath {
+            kind: row.get(0)?,
+            os: row.get(1)?,
+            raw_path: row.get(2)?,
+            expanded_path: None,
+        })
+    });
+
+    match iter {
+        Ok(rows) => rows.filter_map(|r| r.ok()).collect(),
+        Err(_) => Vec::new(),
+    }
 }

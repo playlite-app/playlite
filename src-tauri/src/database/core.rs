@@ -13,7 +13,7 @@ use crate::constants::{
 };
 use crate::errors::AppError;
 use crate::security;
-use crate::services::integration::pcgamingwiki::scraper::initialize_scraper_tables;
+use crate::services::integration::pcgamingwiki::db::initialize_pcgamingwiki_tables;
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
 use tauri::State;
@@ -197,10 +197,6 @@ fn create_schema(conn: &Connection, schema_version: u32) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
 
-    // Tabelas extras - PCGamingWiki e scrapers relacionados
-    initialize_pcgw_table(conn).map_err(|e| e.to_string())?;
-    initialize_scraper_tables(conn).map_err(|e| e.to_string())?;
-
     // Índices
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_name ON games(name COLLATE NOCASE)",
@@ -223,75 +219,12 @@ fn create_schema(conn: &Connection, schema_version: u32) -> Result<(), String> {
     conn.execute("CREATE INDEX IF NOT EXISTS idx_status ON games(status)", [])
         .map_err(|e| e.to_string())?;
 
+    // Tabelas extras - PCGamingWiki e scrapers relacionados
+    initialize_pcgamingwiki_tables(conn).map_err(|e| e.to_string())?;
+
     // Marca versão do schema
     conn.pragma_update(None, "user_version", schema_version)
         .map_err(|e| format!("Erro ao definir versão do schema: {}", e))?;
-
-    Ok(())
-}
-
-/// Cria a tabela `pcgw_data` em `games.db` se ainda não existir.
-///
-/// Chamada uma vez durante a inicialização do banco principal.
-fn initialize_pcgw_table(conn: &Connection) -> Result<(), String> {
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS pcgw_data (
-            steam_app_id            TEXT PRIMARY KEY,
-            pcgw_page_id            TEXT,
-            pcgw_page_name          TEXT,
-            engine                  TEXT,
-
-            available_on            TEXT,
-
-            dx_versions             TEXT,
-            vulkan_versions         TEXT,
-            opengl_versions         TEXT,
-
-            win64                   TEXT,
-            linux64                 TEXT,
-            macos_arm               TEXT,
-            macos_intel64           TEXT,
-
-            ray_tracing             TEXT,
-            upscaling               TEXT,
-            frame_gen               TEXT,
-
-            ultrawidescreen         TEXT,
-            four_k_support          TEXT,
-            hdr                     TEXT,
-            high_fps                TEXT,
-            fov                     TEXT,
-            borderless_windowed     TEXT,
-            color_blind             TEXT,
-
-            controller_support      TEXT,
-            full_controller         TEXT,
-            playstation_controllers TEXT,
-            xinput_controllers      TEXT,
-
-            surround_sound          TEXT,
-            subtitles               TEXT,
-            closed_captions         TEXT,
-
-            has_save_data           TEXT,
-            has_config_data         TEXT,
-
-            languages_interface     TEXT,
-            languages_audio         TEXT,
-            languages_subtitles     TEXT,
-
-            fetched_at              TEXT
-        )",
-        [],
-    )
-    .map_err(|e| format!("Erro ao criar tabela pcgw_data: {}", e))?;
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_pcgw_fetched_at
-            ON pcgw_data(fetched_at)",
-        [],
-    )
-    .map_err(|e| format!("Erro ao criar indice idx_pcgw_fetched_at: {}", e))?;
 
     Ok(())
 }

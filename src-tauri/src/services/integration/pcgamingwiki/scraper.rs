@@ -42,13 +42,18 @@ use serde::{Deserialize, Serialize};
 
 /// Captura `|chave = valor` dentro de um bloco de template.
 /// Grupos: 1 = chave (sem espaços), 2 = valor (sem espaços nas bordas).
+/// O valor é delimitado por `[^|}\n]*` — a própria classe de caracteres já
+/// para antes de `|`, `}` ou newline, tornando o lookahead desnecessário
+/// (e incompatível com a crate `regex`, que não suporta look-around).
 static RE_PARAM: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\|([^=|}\n]+?)\s*=\s*([^|}\n]*?)(?=\s*\||\s*|$)").unwrap());
+    Lazy::new(|| Regex::new(r"\|([^=|}\n]+?)\s*=\s*([^|}\n]*)").expect("RE_PARAM: regex inválida"));
 
 /// Captura `{{Game data/config|OS|path}}` ou `{{Game data/saves|OS|path}}`.
 /// Grupos: 1 = tipo ("config" ou "saves"), 2 = OS, 3 = path bruto.
-static RE_GAME_DATA_ROW: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\{\{Game data/(config|saves)\|([^|]+)\|([^}]+)}}").unwrap());
+static RE_GAME_DATA_ROW: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"\{\{Game data/(config|saves)\|([^|]+)\|([^}]+)}}")
+        .expect("RE_GAME_DATA_ROW: regex inválida")
+});
 
 // ============================================================
 // Tipos públicos
@@ -139,7 +144,6 @@ pub async fn fetch_wikitext(client: &reqwest::Client, page_id: &str) -> Result<S
 
     // Mesmo delay das queries Cargo para respeitar rate limit de 30 req/min
     sleep(Duration::from_millis(250)).await;
-    tracing::debug!("PCGW scraper: buscando wikitext para page_id={}", page_id);
 
     let response = client
         .get("https://www.pcgamingwiki.com/w/api.php")
@@ -171,7 +175,6 @@ pub async fn fetch_wikitext(client: &reqwest::Client, page_id: &str) -> Result<S
         .ok_or_else(|| AppError::ParseError("Campo wikitext ausente na resposta".to_string()))?
         .to_string();
 
-    tracing::debug!("PCGW scraper: wikitext recebido, {} bytes", wikitext.len());
     Ok(wikitext)
 }
 
@@ -422,7 +425,7 @@ pub async fn scrape_pcgw_page(
     let system_requirements = parse_system_requirements(&wikitext);
     let game_data_paths = parse_game_data_paths(&wikitext);
 
-    tracing::info!(
+    tracing::debug!(
         "PCGW scraper page_id={}: {} blocos de sysreq, {} paths de game data",
         page_id,
         system_requirements.len(),
@@ -433,246 +436,4 @@ pub async fn scrape_pcgw_page(
         system_requirements,
         game_data_paths,
     })
-}
-
-// ============================================================
-// Persistência SQLite
-// ============================================================
-
-/// Cria as tabelas de requisitos e game data paths se não existirem.
-///
-/// Separadas da tabela `pcgw_data` porque têm cardinalidade N:1 com o jogo —
-/// um jogo pode ter múltiplos blocos de requisitos (Windows + Linux + tiers).
-pub fn initialize_scraper_tables(conn: &rusqlite::Connection) -> Result<(), String> {
-    conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS pcgw_system_requirements (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            steam_app_id TEXT NOT NULL,
-            os_family   TEXT NOT NULL,
-            tier_title  TEXT,           -- NULL para requisitos padrão
-            target      TEXT,           -- ex: '1080p, DX11'
-            -- Mínimo
-            min_os      TEXT,
-            min_cpu     TEXT,
-            min_cpu2    TEXT,
-            min_ram     TEXT,
-            min_gpu     TEXT,
-            min_gpu2    TEXT,
-            min_vram    TEXT,
-            min_dx      TEXT,
-            min_storage TEXT,
-            -- Recomendado
-            rec_os      TEXT,
-            rec_cpu     TEXT,
-            rec_cpu2    TEXT,
-            rec_ram     TEXT,
-            rec_gpu     TEXT,
-            rec_gpu2    TEXT,
-            rec_vram    TEXT,
-            rec_dx      TEXT,
-            rec_storage TEXT,
-            fetched_at  TEXT NOT NULL
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_sysreq_app_id
-            ON pcgw_system_requirements(steam_app_id);
-
-        CREATE TABLE IF NOT EXISTS pcgw_game_data_paths (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            steam_app_id TEXT NOT NULL,
-            kind         TEXT NOT NULL,  -- 'config' ou 'saves'
-            os           TEXT NOT NULL,  -- 'Windows', 'Linux', 'OS X'
-            raw_path     TEXT NOT NULL,  -- preserva {{p|variavel}}
-            fetched_at   TEXT NOT NULL
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_gamedata_app_id
-            ON pcgw_game_data_paths(steam_app_id);",
-    )
-    .map_err(|e| format!("Erro ao criar tabelas do scraper: {}", e))
-}
-
-/// Salva os dados raspados no banco, substituindo entradas anteriores do jogo.
-///
-/// Usa DELETE + INSERT em vez de REPLACE porque os dados têm múltiplas linhas
-/// por jogo (não há PK natural além de `steam_app_id + os_family + tier_title`).
-pub fn save_scraped_data(
-    conn: &rusqlite::Connection,
-    steam_app_id: &str,
-    data: &PcgwScrapedData,
-) -> Result<(), String> {
-    use chrono::Utc;
-    use rusqlite::params;
-    tracing::info!(
-        "save_scraped_data: salvando {} sysreqs e {} paths para {}",
-        data.system_requirements.len(),
-        data.game_data_paths.len(),
-        steam_app_id
-    );
-
-    let now = Utc::now().to_rfc3339();
-
-    // Remove dados anteriores deste jogo antes de reinserir
-    conn.execute(
-        "DELETE FROM pcgw_system_requirements WHERE steam_app_id = ?1",
-        params![steam_app_id],
-    )
-    .map_err(|e| format!("Erro ao limpar system_requirements: {}", e))?;
-
-    conn.execute(
-        "DELETE FROM pcgw_game_data_paths WHERE steam_app_id = ?1",
-        params![steam_app_id],
-    )
-    .map_err(|e| format!("Erro ao limpar game_data_paths: {}", e))?;
-
-    // Insere requisitos de sistema
-    let mut sysreq_stmt = conn
-        .prepare(
-            "INSERT INTO pcgw_system_requirements (
-                steam_app_id, os_family, tier_title, target,
-                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
-                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage,
-                fetched_at
-            ) VALUES (
-                ?1,  ?2,  ?3,  ?4,
-                ?5,  ?6,  ?7,  ?8,  ?9,  ?10, ?11, ?12, ?13,
-                ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
-                ?23
-            )",
-        )
-        .map_err(|e| format!("Erro ao preparar insert de system_requirements: {}", e))?;
-
-    for req in &data.system_requirements {
-        sysreq_stmt
-            .execute(params![
-                steam_app_id,
-                req.os_family,
-                req.tier_title,
-                req.target,
-                req.min_os,
-                req.min_cpu,
-                req.min_cpu2,
-                req.min_ram,
-                req.min_gpu,
-                req.min_gpu2,
-                req.min_vram,
-                req.min_dx,
-                req.min_storage,
-                req.rec_os,
-                req.rec_cpu,
-                req.rec_cpu2,
-                req.rec_ram,
-                req.rec_gpu,
-                req.rec_gpu2,
-                req.rec_vram,
-                req.rec_dx,
-                req.rec_storage,
-                now,
-            ])
-            .map_err(|e| {
-                let msg = format!("Erro ao inserir system_requirement: {}", e);
-                tracing::error!("{}", msg);
-                msg
-            })?;
-    }
-
-    // Insere caminhos de game data
-    let mut path_stmt = conn
-        .prepare(
-            "INSERT INTO pcgw_game_data_paths (steam_app_id, kind, os, raw_path, fetched_at)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-        )
-        .map_err(|e| format!("Erro ao preparar insert de game_data_paths: {}", e))?;
-
-    for path in &data.game_data_paths {
-        path_stmt
-            .execute(params![
-                steam_app_id,
-                path.kind,
-                path.os,
-                path.raw_path,
-                now,
-            ])
-            .map_err(|e| format!("Erro ao inserir game_data_path: {}", e))?;
-    }
-
-    Ok(())
-}
-
-/// Retorna os requisitos de sistema salvos para um jogo.
-/// Retorna vetor vazio se nunca foram buscados.
-pub fn get_system_requirements(
-    conn: &rusqlite::Connection,
-    steam_app_id: &str,
-) -> Vec<SystemRequirements> {
-    let mut stmt = match conn.prepare(
-        "SELECT os_family, tier_title, target,
-                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
-                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage
-         FROM pcgw_system_requirements
-         WHERE steam_app_id = ?1
-         ORDER BY id ASC",
-    ) {
-        Ok(s) => s,
-        Err(_) => return Vec::new(),
-    };
-
-    let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
-        Ok(SystemRequirements {
-            os_family: row.get(0)?,
-            tier_title: row.get(1)?,
-            target: row.get(2)?,
-            min_os: row.get(3)?,
-            min_cpu: row.get(4)?,
-            min_cpu2: row.get(5)?,
-            min_ram: row.get(6)?,
-            min_gpu: row.get(7)?,
-            min_gpu2: row.get(8)?,
-            min_vram: row.get(9)?,
-            min_dx: row.get(10)?,
-            min_storage: row.get(11)?,
-            rec_os: row.get(12)?,
-            rec_cpu: row.get(13)?,
-            rec_cpu2: row.get(14)?,
-            rec_ram: row.get(15)?,
-            rec_gpu: row.get(16)?,
-            rec_gpu2: row.get(17)?,
-            rec_vram: row.get(18)?,
-            rec_dx: row.get(19)?,
-            rec_storage: row.get(20)?,
-        })
-    });
-
-    match iter {
-        Ok(rows) => rows.filter_map(|r| r.ok()).collect(),
-        Err(_) => Vec::new(),
-    }
-}
-
-/// Retorna os caminhos de game data salvos para um jogo.
-/// Retorna vetor vazio se nunca foram buscados.
-pub fn get_game_data_paths(conn: &rusqlite::Connection, steam_app_id: &str) -> Vec<GameDataPath> {
-    let mut stmt = match conn.prepare(
-        "SELECT kind, os, raw_path
-         FROM pcgw_game_data_paths
-         WHERE steam_app_id = ?1
-         ORDER BY id ASC",
-    ) {
-        Ok(s) => s,
-        Err(_) => return Vec::new(),
-    };
-
-    let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
-        Ok(GameDataPath {
-            kind: row.get(0)?,
-            os: row.get(1)?,
-            raw_path: row.get(2)?,
-            expanded_path: None,
-        })
-    });
-
-    match iter {
-        Ok(rows) => rows.filter_map(|r| r.ok()).collect(),
-        Err(_) => Vec::new(),
-    }
 }

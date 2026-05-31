@@ -9,13 +9,11 @@ use crate::errors::AppError;
 use crate::models::PcgwData;
 use crate::services::integration::pcgamingwiki::client::{search_pcgw_by_name, PcgwSearchResult};
 use crate::services::integration::pcgamingwiki::db::{
-    get_pcgw_data, invalidate_pcgw_data, save_pcgw_data,
+    get_game_data_paths, get_pcgw_data, get_system_requirements, invalidate_pcgw_data,
+    save_pcgw_data, save_scraped_data,
 };
 use crate::services::integration::pcgamingwiki::fetch::fetch_pcgw_data;
-use crate::services::integration::pcgamingwiki::scraper::{
-    get_game_data_paths, get_system_requirements, save_scraped_data, GameDataPath,
-    SystemRequirements,
-};
+use crate::services::integration::pcgamingwiki::scraper::{GameDataPath, SystemRequirements};
 use chrono::Utc;
 use tracing::warn;
 
