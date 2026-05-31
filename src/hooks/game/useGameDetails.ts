@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
-
-import { Game, GameDetails, GamePlatformLink } from '@/types';
+import { Game, GameDetails, GamePlatformLink } from 'src/types';
 
 /**
  * Hook para gerenciar os detalhes de um jogo selecionado, incluindo o carregamento

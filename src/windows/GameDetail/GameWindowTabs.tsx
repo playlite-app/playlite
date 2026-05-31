@@ -1,7 +1,8 @@
 import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Game, GameDetails, GameTab, Tab } from '@/types/game';
+import { GameTab, Tab } from '@/types';
+import { Game, GameDetails } from '@/types/game';
 import {
   GameDescription,
   GameDiscovery,

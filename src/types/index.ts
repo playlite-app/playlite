@@ -1,5 +1,6 @@
 export * from './errors';
 export * from './game';
+export * from './game_detail';
 export * from './integration';
 export * from './recommendation';
 export * from './scanner';

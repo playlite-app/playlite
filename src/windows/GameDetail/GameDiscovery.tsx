@@ -2,7 +2,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { ExternalLink, Frown, ImageOff, Loader2, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Game, SimilarGame } from '@/types/game';
+import { SimilarGame } from '@/types';
+import { Game } from '@/types/game';
 
 interface GameDiscoveryProps {
   game: Game;

@@ -9,4 +9,6 @@ export * from './GameLinks';
 export * from './GameMedia';
 export * from './GameSidebar';
 export * from './GameWindowTabs';
+export * from './LanguageTable';
 export * from './SteamReviewBadge';
+export * from './SystemRequirementsBlock';

@@ -1,5 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Meh, Play, WifiOff, X, } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Maximize2,
+  Meh,
+  Play,
+  WifiOff,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useNetworkStatus } from '@/hooks';

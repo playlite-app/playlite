@@ -1,160 +1,17 @@
-import { invoke } from '@tauri-apps/api/core';
-import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  Cpu,
-  ExternalLink,
-  FolderOpen,
-  HardDrive,
-  Loader2,
-  Monitor,
-  Search,
-  WifiOff,
-  XCircle,
-} from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {CheckCircle2, Cpu, ExternalLink, FolderOpen, HardDrive, Loader2, Search, WifiOff, XCircle,} from 'lucide-react';
+import React from 'react';
 
-import { Game, GameDetails } from '@/types/game'; // === TIPOS — espelham PcgwScrapedResponse e GameExtras do backend ===
-
-// === TIPOS — espelham PcgwScrapedResponse e GameExtras do backend ===
-
-interface SystemRequirements {
-  os_family: string;
-  tier_title: string | null;
-  target: string | null;
-  min_os: string | null;
-  min_cpu: string | null;
-  min_cpu2: string | null;
-  min_ram: string | null;
-  min_gpu: string | null;
-  min_gpu2: string | null;
-  min_vram: string | null;
-  min_dx: string | null;
-  min_storage: string | null;
-  rec_os: string | null;
-  rec_cpu: string | null;
-  rec_cpu2: string | null;
-  rec_ram: string | null;
-  rec_gpu: string | null;
-  rec_gpu2: string | null;
-  rec_vram: string | null;
-  rec_dx: string | null;
-  rec_storage: string | null;
-}
-
-interface GameDataPath {
-  kind: string;
-  os: string;
-  raw_path: string;
-  expanded_path: string | null;
-}
-
-interface PcgwScrapedData {
-  system_requirements: SystemRequirements[];
-  config_paths: GameDataPath[];
-  save_paths: GameDataPath[];
-}
-
-interface GameExtras {
-  steamAppId: string;
-  pcgwPageId: string | null;
-  pcgwPageName: string | null;
-  engine: string | null;
-  availableOn: string | null;
-  // API
-  dxVersions: string | null;
-  vulkanVersions: string | null;
-  openglVersions: string | null;
-  // OS support
-  win64: string | null;
-  linux64: string | null;
-  macOsArm: string | null;
-  macOsIntel64: string | null;
-  // Video
-  rayTracing: string | null;
-  upscaling: string | null;
-  frameGen: string | null;
-  ultrawidescreen: string | null;
-  fourKSupport: string | null;
-  hdr: string | null;
-  highFps: string | null;
-  fov: string | null;
-  borderlessWindowed: string | null;
-  colorBlind: string | null;
-  // Input
-  controllerSupport: string | null;
-  fullController: string | null;
-  playstationControllers: string | null;
-  xinputControllers: string | null;
-  // Audio
-  surroundSound: string | null;
-  subtitles: string | null;
-  closedCaptions: string | null;
-  // L10n
-  languagesInterface: string[] | null;
-  languagesAudio: string[] | null;
-  languagesSubtitles: string[] | null;
-  // Tags
-  hasSaveData: string | null;
-  hasConfigData: string | null;
-  fetchedAt: string | null;
-}
+import {usePcgwData} from '@/hooks/game';
+import {GameDataPath} from '@/types';
+import {Game, GameDetails} from '@/types/game';
+import {expandPathVars, formatEngine, formatList} from '@/utils/pcgw.ts';
+import {LanguageTable, SystemRequirementsBlock} from '@/windows';
 
 // === PROPS ===
 
 interface GameExtrasProps {
   game: Game;
   details: GameDetails | null;
-}
-
-// === HELPERS — expansão de variáveis de path ===
-
-/** Converte `{{p|localappdata}}\Game\` para `%LOCALAPPDATA%\Game\` */
-function expandPathVars(raw: string): string {
-  return (
-    raw
-      .replace(/\{\{p\|localappdata}}/gi, '%LOCALAPPDATA%')
-      .replace(/\{\{p\|appdata}}/gi, '%APPDATA%')
-      .replace(/\{\{p\|userprofile\\documents}}/gi, '%USERPROFILE%\\Documents')
-      .replace(/\{\{p\|userprofile\/documents}}/gi, '%USERPROFILE%/Documents')
-      .replace(/\{\{p\|userprofile}}/gi, '%USERPROFILE%')
-      .replace(/\{\{p\|programdata}}/gi, '%PROGRAMDATA%')
-      .replace(/\{\{p\|public}}/gi, '%PUBLIC%')
-      .replace(/\{\{p\|game}}/gi, '<pasta do jogo>')
-      .replace(/\{\{p\|steam}}/gi, '<pasta do Steam>')
-      .replace(/\{\{p\|uid}}/gi, '<Steam User ID>')
-      .replace(/\{\{p\|xdgdatahome}}/gi, '$XDG_DATA_HOME')
-      .replace(/\{\{p\|editorconfig}}/gi, '$XDG_CONFIG_HOME')
-      .replace(/\{\{p\|xdgcachehome}}/gi, '$XDG_CACHE_HOME')
-      .replace(/\{\{p\|osxhome}}/gi, '$HOME')
-      .replace(/\{\{p\|home}}/gi, '$HOME')
-      // Remove qualquer {{p|...}} restante não mapeado
-      .replace(/\{\{p\|([^}]+)}}/gi, '<$1>')
-  );
-}
-
-function combineCpu(cpu: string | null, cpu2: string | null): string | null {
-  if (cpu && cpu2) return `${cpu} / ${cpu2}`;
-
-  return cpu ?? cpu2 ?? null;
-}
-
-// Remove o prefixo "Engine:" do valor (ex: "Engine:GoldSrc" → "GoldSrc")
-function formatEngine(value: string | null): string | null {
-  if (!value) return null;
-
-  return value.replace(/^Engine:/i, '').trim();
-}
-
-// Normaliza lista separada por vírgula adicionando espaço após cada vírgula
-function formatList(value: string | null): string | null {
-  if (!value) return null;
-
-  return value
-    .split(',')
-    .map(s => s.trim())
-    .join(', ');
 }
 
 // === COMPONENTES DE UI MENORES ===
@@ -221,128 +78,6 @@ function PathRow({ path }: { path: GameDataPath }) {
       <code className="text-foreground/80 text-xs leading-relaxed break-all">
         {display}
       </code>
-    </div>
-  );
-}
-
-// === REQUISITOS DE SISTEMA ===
-
-function formatOs(osFamily: string, value: string | null): string | null {
-  if (!value) return null;
-
-  const family = osFamily.toLowerCase();
-
-  if (value.toLowerCase().includes(family)) return value;
-
-  // Caso especial: "OS X" — checa só "os x" ou "mac"
-  if (
-    family === 'os x' &&
-    (value.toLowerCase().includes('os x') ||
-      value.toLowerCase().includes('mac'))
-  )
-    return value;
-
-  // Caso especial: "Linux" — muitos requisitos listam só a distro (ex: "Ubuntu 20.04") sem mencionar "Linux"
-  if (family === 'linux') return value;
-
-  return `${osFamily} ${value}`;
-}
-
-function SysreqRow({
-  label,
-  min,
-  rec,
-}: {
-  label: string;
-  min: string | null;
-  rec: string | null;
-}) {
-  if (!min && !rec) return null;
-
-  return (
-    <tr className="border-border/30 border-b last:border-0">
-      <td className="text-muted-foreground py-2 pr-3 text-xs font-medium">
-        {label}
-      </td>
-      <td className="text-foreground py-2 pr-3 text-xs">{min ?? '—'}</td>
-      <td className="text-foreground py-2 text-xs">{rec ?? '—'}</td>
-    </tr>
-  );
-}
-
-function SystemRequirementsBlock({ req }: { req: SystemRequirements }) {
-  const [expanded, setExpanded] = useState(true);
-
-  const title = req.tier_title
-    ? `${req.os_family} — ${req.tier_title}`
-    : req.os_family;
-
-  return (
-    <div className="border-border/50 mb-3 overflow-hidden rounded-lg border">
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="hover:bg-muted/30 flex w-full items-center justify-between px-4 py-3 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Monitor className="text-muted-foreground h-3.5 w-3.5" />
-          <span className="text-sm font-medium">{title}</span>
-          {req.target && (
-            <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-xs">
-              {req.target}
-            </span>
-          )}
-        </div>
-        {expanded ? (
-          <ChevronUp className="text-muted-foreground h-4 w-4" />
-        ) : (
-          <ChevronDown className="text-muted-foreground h-4 w-4" />
-        )}
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Componente
-                </th>
-                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Mínimo
-                </th>
-                <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Recomendado
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <SysreqRow
-                label="OS"
-                min={formatOs(req.os_family, req.min_os)}
-                rec={formatOs(req.os_family, req.rec_os)}
-              />
-              <SysreqRow
-                label="CPU"
-                min={combineCpu(req.min_cpu, req.min_cpu2)}
-                rec={combineCpu(req.rec_cpu, req.rec_cpu2)}
-              />
-              <SysreqRow label="RAM" min={req.min_ram} rec={req.rec_ram} />
-              <SysreqRow
-                label="GPU"
-                min={combineCpu(req.min_gpu, req.min_gpu2)}
-                rec={combineCpu(req.rec_gpu, req.rec_gpu2)}
-              />
-              <SysreqRow label="VRAM" min={req.min_vram} rec={req.rec_vram} />
-              <SysreqRow label="DirectX" min={req.min_dx} rec={req.rec_dx} />
-              <SysreqRow
-                label="Armazenamento"
-                min={req.min_storage}
-                rec={req.rec_storage}
-              />
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }
@@ -415,75 +150,10 @@ function ExtrasError({ onRetry }: { onRetry: () => void }) {
 // === COMPONENTE PRINCIPAL ===
 
 export function GameExtras({ game, details }: GameExtrasProps) {
-  const [cargoData, setCargoData] = useState<GameExtras | null>(null);
-  const [scrapedData, setScrapedData] = useState<PcgwScrapedData | null>(null);
-  const [status, setStatus] = useState<
-    'idle' | 'loading' | 'success' | 'not_found' | 'no_steam_id' | 'error'
-  >('idle');
-
-  const steamAppId = details?.steamAppId ?? null;
-
-  const abortRef = useRef(false);
-
-  useEffect(() => {
-    abortRef.current = false;
-
-    return () => {
-      abortRef.current = true;
-    };
-  }, [game.id]);
-
-  const load = useCallback(async () => {
-    if (!steamAppId) {
-      setStatus('no_steam_id');
-
-      return;
-    }
-
-    setStatus('loading');
-
-    try {
-      const cargo = await invoke<GameExtras | null>('get_or_fetch_pcgw_data', {
-        steamAppId,
-      });
-
-      const scraped = await invoke<PcgwScrapedData | null>(
-        'get_pcgw_scraped_data',
-        { steamAppId }
-      );
-
-      if (abortRef.current) return; // componente desmontado ou jogo mudou
-
-      if (!cargo && !scraped) {
-        setStatus('not_found');
-
-        return;
-      }
-
-      setCargoData(cargo);
-      setScrapedData(scraped);
-      setStatus('success');
-    } catch {
-      if (!abortRef.current) setStatus('error');
-    }
-  }, [steamAppId]);
-
-  // 1. Reset ao trocar de jogo
-  useEffect(() => {
-    setCargoData(null);
-    setScrapedData(null);
-    setStatus('idle');
-  }, [game.id]);
-
-  // 2. Carrega quando idle (caminho normal)
-  useEffect(() => {
-    if (status === 'idle') load();
-  }, [status, load]);
-
-  // 3. Recupera se details chegou depois do mount
-  useEffect(() => {
-    if (steamAppId && status === 'no_steam_id') load();
-  }, [steamAppId, status, load]);
+  const { cargoData, scrapedData, status, retry } = usePcgwData(
+    game.id,
+    details?.steamAppId
+  );
 
   if (status === 'loading') return <ExtrasLoading />;
 
@@ -491,8 +161,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
 
   if (status === 'not_found') return <ExtrasNotFound gameName={game.name} />;
 
-  if (status === 'error')
-    return <ExtrasError onRetry={() => setStatus('idle')} />;
+  if (status === 'error') return <ExtrasError onRetry={retry} />;
 
   if (status !== 'success') return null;
 
@@ -523,6 +192,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           </p>
         </div>
       )}
+
       {/* ---- Informações gerais ---- */}
       {cargoData && (
         <div>
@@ -541,6 +211,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           </div>
         </div>
       )}
+
       {/* ---- Vídeo ---- */}
       {cargoData && (
         <div>
@@ -582,6 +253,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           </div>
         </div>
       )}
+
       {/* ---- Input e Áudio ---- */}
       {cargoData && (
         <div>
@@ -623,57 +295,16 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           </div>
         </div>
       )}
+
       {/* ---- Idiomas ---- */}
       {hasLangs && (
-        <div>
-          <SectionTitle>Idiomas</SectionTitle>
-          <div className="border-border/50 overflow-hidden rounded-lg border">
-            <table className="w-full">
-              <thead className="bg-muted/20">
-                <tr>
-                  <th className="text-muted-foreground px-4 py-2 text-left text-xs tracking-wider uppercase">
-                    Idioma
-                  </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-                    Interface
-                  </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-                    Áudio
-                  </th>
-                  <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-                    Legendas
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {buildLanguageRows(
-                  cargoData?.languagesInterface ?? null,
-                  cargoData?.languagesAudio ?? null,
-                  cargoData?.languagesSubtitles ?? null
-                ).map(row => (
-                  <tr
-                    key={row.lang}
-                    className="border-border/30 border-b last:border-0"
-                  >
-                    <td className="text-foreground px-4 py-2 text-xs">
-                      {row.lang}
-                    </td>
-                    <td className="px-2 py-2 text-center">
-                      <LangDot has={row.interface} />
-                    </td>
-                    <td className="px-2 py-2 text-center">
-                      <LangDot has={row.audio} />
-                    </td>
-                    <td className="px-2 py-2 text-center">
-                      <LangDot has={row.subtitles} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <LanguageTable
+          interface={cargoData?.languagesInterface ?? null}
+          audio={cargoData?.languagesAudio ?? null}
+          subtitles={cargoData?.languagesSubtitles ?? null}
+        />
       )}
+
       {/* ---- Requisitos de Sistema ---- */}
       {hasSysreqs && (
         <div>
@@ -687,6 +318,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           ))}
         </div>
       )}
+
       {/* ---- Caminhos de Save ---- */}
       {hasSavePaths && (
         <div>
@@ -702,6 +334,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
           </div>
         </div>
       )}
+
       {/* ---- Caminhos de Config ---- */}
       {hasConfigPaths && (
         <div>
@@ -719,48 +352,4 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       )}
     </div>
   );
-}
-
-// === HELPERS DE IDIOMAS ===
-
-interface LangRow {
-  lang: string;
-  interface: boolean;
-  audio: boolean;
-  subtitles: boolean;
-}
-
-function LangDot({ has }: { has: boolean }) {
-  return has ? (
-    <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
-  ) : (
-    <span className="bg-muted-foreground/20 inline-block h-2 w-2 rounded-full" />
-  );
-}
-
-/**
- * Reconstrói a tabela de idiomas a partir das três strings CSV do backend.
- * Cada string é uma lista separada por vírgula: "English,Portuguese,French".
- * Os índices correspondem entre as três listas.
- */
-function buildLanguageRows(
-  iface: string[] | null,
-  audio: string[] | null,
-  subs: string[] | null
-): LangRow[] {
-  const ifaceList = iface ?? [];
-  const audioList = audio ?? [];
-  const subsList = subs ?? [];
-
-  // União de todos os idiomas encontrados em qualquer das três listas
-  const allLangs = Array.from(
-    new Set([...ifaceList, ...audioList, ...subsList])
-  ).sort();
-
-  return allLangs.map(lang => ({
-    lang,
-    interface: ifaceList.includes(lang),
-    audio: audioList.includes(lang),
-    subtitles: subsList.includes(lang),
-  }));
 }
