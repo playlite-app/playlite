@@ -2,7 +2,12 @@ import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Game, GameDetails, GameTab, Tab } from '@/types/game';
-import { GameDescription, GameDiscovery, GameMedia } from '@/windows';
+import {
+  GameDescription,
+  GameDiscovery,
+  GameExtras,
+  GameMedia,
+} from '@/windows';
 
 // === COMPONENTE DE ABAS ===
 
@@ -41,35 +46,6 @@ export function GameTabs({ activeTab, onTabChange }: GameTabsProps) {
           {tab.label}
         </button>
       ))}
-    </div>
-  );
-}
-
-interface ExtrasPlaceholderProps {
-  gameId: string;
-}
-
-/**
- * Placeholder — src/windows/game/GameExtras.tsx
- *
- * Conteúdo futuro:
- * - Dados do PCGamingWiki (localização de saves, suporte a mods, etc.)
- */
-export function GameExtras({ gameId }: ExtrasPlaceholderProps) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-      <div className="bg-muted rounded-full p-4">
-        <Wrench />
-      </div>
-      <p className="text-foreground text-sm font-medium">Extras</p>
-      <p className="text-muted-foreground max-w-xs text-xs">
-        Dados do PCGamingWiki — em breve.
-      </p>
-      {process.env.NODE_ENV === 'development' && (
-        <code className="bg-muted text-muted-foreground mt-2 rounded px-2 py-1 text-xs">
-          gameId: {gameId}
-        </code>
-      )}
     </div>
   );
 }
@@ -125,7 +101,7 @@ export function GameContentTabs({
         )}
         {activeTab === 'media' && !isEditing && <GameMedia game={game} />}
         {activeTab === 'extras' && !isEditing && (
-          <GameExtras gameId={game.id} />
+          <GameExtras game={game} details={details} />
         )}
       </div>
     </div>

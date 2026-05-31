@@ -13,6 +13,7 @@ use crate::constants::{
 };
 use crate::errors::AppError;
 use crate::security;
+use crate::services::integration::pcgamingwiki::scraper::initialize_scraper_tables;
 use rusqlite::{params, Connection};
 use std::sync::Mutex;
 use tauri::State;
@@ -196,7 +197,9 @@ fn create_schema(conn: &Connection, schema_version: u32) -> Result<(), String> {
     )
     .map_err(|e| e.to_string())?;
 
-    initialize_pcgw_table(conn)?;
+    // Tabelas extras - PCGamingWiki e scrapers relacionados
+    initialize_pcgw_table(conn).map_err(|e| e.to_string())?;
+    initialize_scraper_tables(conn).map_err(|e| e.to_string())?;
 
     // Índices
     conn.execute(

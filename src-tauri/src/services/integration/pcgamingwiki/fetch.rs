@@ -71,6 +71,12 @@ pub async fn fetch_pcgw_data(
     // queries Cargo restantes — salvo separadamente pelo chamador via save_scraped_data
     let scraped = scrape_pcgw_page(&client, &page_id).await.ok();
     // .ok() converte Err em None — falha de rede não aborta o resto da busca
+    info!(
+        "fetch_pcgw_data: scraped = {:?}",
+        scraped
+            .as_ref()
+            .map(|s| (s.system_requirements.len(), s.game_data_paths.len()))
+    );
 
     // ------------------------------------------------------------------
     // 2. OS — suporte a sistemas operacionais

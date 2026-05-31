@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 /// Captura `|chave = valor` dentro de um bloco de template.
 /// Grupos: 1 = chave (sem espaços), 2 = valor (sem espaços nas bordas).
 static RE_PARAM: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?m)^\s*\|([^=\n]+?)\s*=\s*([^\n]*?)\s*$").unwrap());
+    Lazy::new(|| Regex::new(r"\|([^=|}\n]+?)\s*=\s*([^|}\n]*?)(?=\s*\||\s*|$)").unwrap());
 
 /// Captura `{{Game data/config|OS|path}}` ou `{{Game data/saves|OS|path}}`.
 /// Grupos: 1 = tipo ("config" ou "saves"), 2 = OS, 3 = path bruto.
@@ -139,6 +139,7 @@ pub async fn fetch_wikitext(client: &reqwest::Client, page_id: &str) -> Result<S
 
     // Mesmo delay das queries Cargo para respeitar rate limit de 30 req/min
     sleep(Duration::from_millis(250)).await;
+    tracing::debug!("PCGW scraper: buscando wikitext para page_id={}", page_id);
 
     let response = client
         .get("https://www.pcgamingwiki.com/w/api.php")
@@ -170,6 +171,7 @@ pub async fn fetch_wikitext(client: &reqwest::Client, page_id: &str) -> Result<S
         .ok_or_else(|| AppError::ParseError("Campo wikitext ausente na resposta".to_string()))?
         .to_string();
 
+    tracing::debug!("PCGW scraper: wikitext recebido, {} bytes", wikitext.len());
     Ok(wikitext)
 }
 
@@ -420,6 +422,13 @@ pub async fn scrape_pcgw_page(
     let system_requirements = parse_system_requirements(&wikitext);
     let game_data_paths = parse_game_data_paths(&wikitext);
 
+    tracing::info!(
+        "PCGW scraper page_id={}: {} blocos de sysreq, {} paths de game data",
+        page_id,
+        system_requirements.len(),
+        game_data_paths.len()
+    );
+
     Ok(PcgwScrapedData {
         system_requirements,
         game_data_paths,
@@ -445,16 +454,20 @@ pub fn initialize_scraper_tables(conn: &rusqlite::Connection) -> Result<(), Stri
             -- Mínimo
             min_os      TEXT,
             min_cpu     TEXT,
+            min_cpu2    TEXT,
             min_ram     TEXT,
             min_gpu     TEXT,
+            min_gpu2    TEXT,
             min_vram    TEXT,
             min_dx      TEXT,
             min_storage TEXT,
             -- Recomendado
             rec_os      TEXT,
             rec_cpu     TEXT,
+            rec_cpu2    TEXT,
             rec_ram     TEXT,
             rec_gpu     TEXT,
+            rec_gpu2    TEXT,
             rec_vram    TEXT,
             rec_dx      TEXT,
             rec_storage TEXT,
@@ -490,6 +503,12 @@ pub fn save_scraped_data(
 ) -> Result<(), String> {
     use chrono::Utc;
     use rusqlite::params;
+    tracing::info!(
+        "save_scraped_data: salvando {} sysreqs e {} paths para {}",
+        data.system_requirements.len(),
+        data.game_data_paths.len(),
+        steam_app_id
+    );
 
     let now = Utc::now().to_rfc3339();
 
@@ -511,14 +530,14 @@ pub fn save_scraped_data(
         .prepare(
             "INSERT INTO pcgw_system_requirements (
                 steam_app_id, os_family, tier_title, target,
-                min_os, min_cpu, min_ram, min_gpu, min_vram, min_dx, min_storage,
-                rec_os, rec_cpu, rec_ram, rec_gpu, rec_vram, rec_dx, rec_storage,
+                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage,
                 fetched_at
             ) VALUES (
-                ?1, ?2, ?3, ?4,
-                ?5, ?6, ?7, ?8, ?9, ?10, ?11,
-                ?12, ?13, ?14, ?15, ?16, ?17, ?18,
-                ?19
+                ?1,  ?2,  ?3,  ?4,
+                ?5,  ?6,  ?7,  ?8,  ?9,  ?10, ?11, ?12, ?13,
+                ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
+                ?23
             )",
         )
         .map_err(|e| format!("Erro ao preparar insert de system_requirements: {}", e))?;
@@ -532,21 +551,29 @@ pub fn save_scraped_data(
                 req.target,
                 req.min_os,
                 req.min_cpu,
+                req.min_cpu2,
                 req.min_ram,
                 req.min_gpu,
+                req.min_gpu2,
                 req.min_vram,
                 req.min_dx,
                 req.min_storage,
                 req.rec_os,
                 req.rec_cpu,
+                req.rec_cpu2,
                 req.rec_ram,
                 req.rec_gpu,
+                req.rec_gpu2,
                 req.rec_vram,
                 req.rec_dx,
                 req.rec_storage,
                 now,
             ])
-            .map_err(|e| format!("Erro ao inserir system_requirement: {}", e))?;
+            .map_err(|e| {
+                let msg = format!("Erro ao inserir system_requirement: {}", e);
+                tracing::error!("{}", msg);
+                msg
+            })?;
     }
 
     // Insere caminhos de game data
@@ -580,8 +607,8 @@ pub fn get_system_requirements(
 ) -> Vec<SystemRequirements> {
     let mut stmt = match conn.prepare(
         "SELECT os_family, tier_title, target,
-                min_os, min_cpu, min_ram, min_gpu, min_vram, min_dx, min_storage,
-                rec_os, rec_cpu, rec_ram, rec_gpu, rec_vram, rec_dx, rec_storage
+                min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+                rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage
          FROM pcgw_system_requirements
          WHERE steam_app_id = ?1
          ORDER BY id ASC",
@@ -597,22 +624,22 @@ pub fn get_system_requirements(
             target: row.get(2)?,
             min_os: row.get(3)?,
             min_cpu: row.get(4)?,
-            min_cpu2: None,
-            min_ram: row.get(5)?,
-            min_gpu: row.get(6)?,
-            min_gpu2: None,
-            min_vram: row.get(7)?,
-            min_dx: row.get(8)?,
-            min_storage: row.get(9)?,
-            rec_os: row.get(10)?,
-            rec_cpu: row.get(11)?,
-            rec_cpu2: None,
-            rec_ram: row.get(12)?,
-            rec_gpu: row.get(13)?,
-            rec_gpu2: None,
-            rec_vram: row.get(14)?,
-            rec_dx: row.get(15)?,
-            rec_storage: row.get(16)?,
+            min_cpu2: row.get(5)?,
+            min_ram: row.get(6)?,
+            min_gpu: row.get(7)?,
+            min_gpu2: row.get(8)?,
+            min_vram: row.get(9)?,
+            min_dx: row.get(10)?,
+            min_storage: row.get(11)?,
+            rec_os: row.get(12)?,
+            rec_cpu: row.get(13)?,
+            rec_cpu2: row.get(14)?,
+            rec_ram: row.get(15)?,
+            rec_gpu: row.get(16)?,
+            rec_gpu2: row.get(17)?,
+            rec_vram: row.get(18)?,
+            rec_dx: row.get(19)?,
+            rec_storage: row.get(20)?,
         })
     });
 

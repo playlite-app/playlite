@@ -3,6 +3,7 @@ export * from './GameDescription';
 export * from './GameDetail';
 export * from './GameDiscovery';
 export * from './GameEditForm';
+export * from './GameExtras';
 export * from './GameHeader';
 export * from './GameLinks';
 export * from './GameMedia';
