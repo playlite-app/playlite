@@ -1,4 +1,4 @@
-import {invoke} from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core';
 import {
   CheckCircle2,
   ChevronDown,
@@ -13,9 +13,9 @@ import {
   WifiOff,
   XCircle,
 } from 'lucide-react';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import {Game, GameDetails} from '@/types/game';
+import { Game, GameDetails } from '@/types/game'; // === TIPOS — espelham PcgwScrapedResponse e GameExtras do backend ===
 
 // === TIPOS — espelham PcgwScrapedResponse e GameExtras do backend ===
 
@@ -140,6 +140,23 @@ function combineCpu(cpu: string | null, cpu2: string | null): string | null {
   return cpu ?? cpu2 ?? null;
 }
 
+// Remove o prefixo "Engine:" do valor (ex: "Engine:GoldSrc" → "GoldSrc")
+function formatEngine(value: string | null): string | null {
+  if (!value) return null;
+
+  return value.replace(/^Engine:/i, '').trim();
+}
+
+// Normaliza lista separada por vírgula adicionando espaço após cada vírgula
+function formatList(value: string | null): string | null {
+  if (!value) return null;
+
+  return value
+    .split(',')
+    .map(s => s.trim())
+    .join(', ');
+}
+
 // === COMPONENTES DE UI MENORES ===
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -182,23 +199,6 @@ function BoolBadge({ value, label }: { value: string | null; label: string }) {
   );
 }
 
-// Remove o prefixo "Engine:" do valor (ex: "Engine:GoldSrc" → "GoldSrc")
-function formatEngine(value: string | null): string | null {
-  if (!value) return null;
-
-  return value.replace(/^Engine:/i, '').trim();
-}
-
-// Normaliza lista separada por vírgula adicionando espaço após cada vírgula
-function formatList(value: string | null): string | null {
-  if (!value) return null;
-
-  return value
-    .split(',')
-    .map(s => s.trim())
-    .join(', ');
-}
-
 function InfoRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
 
@@ -226,6 +226,27 @@ function PathRow({ path }: { path: GameDataPath }) {
 }
 
 // === REQUISITOS DE SISTEMA ===
+
+function formatOs(osFamily: string, value: string | null): string | null {
+  if (!value) return null;
+
+  const family = osFamily.toLowerCase();
+
+  if (value.toLowerCase().includes(family)) return value;
+
+  // Caso especial: "OS X" — checa só "os x" ou "mac"
+  if (
+    family === 'os x' &&
+    (value.toLowerCase().includes('os x') ||
+      value.toLowerCase().includes('mac'))
+  )
+    return value;
+
+  // Caso especial: "Linux" — muitos requisitos listam só a distro (ex: "Ubuntu 20.04") sem mencionar "Linux"
+  if (family === 'linux') return value;
+
+  return `${osFamily} ${value}`;
+}
 
 function SysreqRow({
   label,
@@ -295,7 +316,11 @@ function SystemRequirementsBlock({ req }: { req: SystemRequirements }) {
               </tr>
             </thead>
             <tbody>
-              <SysreqRow label="OS" min={req.min_os} rec={req.rec_os} />
+              <SysreqRow
+                label="OS"
+                min={formatOs(req.os_family, req.min_os)}
+                rec={formatOs(req.os_family, req.rec_os)}
+              />
               <SysreqRow
                 label="CPU"
                 min={combineCpu(req.min_cpu, req.min_cpu2)}

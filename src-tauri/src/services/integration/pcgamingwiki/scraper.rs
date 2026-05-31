@@ -7,9 +7,7 @@
 //!   (`minCPU2`, `minGPU2` para alternativas AMD/Intel) e tiers extras
 //!   (`alt1Title`/`alt1CPU`/etc., comuns em jogos AAA modernos como Witcher 3).
 //!
-//! - **Game data paths** — blocos `{{Game data/config|OS|path}}` e
-//!   `{{Game data/saves|OS|path}}`. Os caminhos preservam a sintaxe
-//!   `{{p|variavel}}` para que o frontend possa expandir conforme o OS do usuário.
+//! - **Game data paths** — blocos `{{Game data/config|OS|path}}` e `{{Game data/saves|OS|path}}`.
 //!
 //! # Estratégia de parsing
 //!
@@ -44,12 +42,45 @@ use regex::Regex;
 static RE_PARAM: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"\|([^=|}\n]+?)\s*=\s*([^|}\n]*)").expect("RE_PARAM: regex inválida"));
 
-/// Captura `{{Game data/config|OS|path}}` ou `{{Game data/saves|OS|path}}`.
-/// Grupos: 1 = tipo ("config" ou "saves"), 2 = OS, 3 = path bruto.
-static RE_GAME_DATA_ROW: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\{\{Game data/(config|saves)\|([^|]+)\|([^}]+)}}")
-        .expect("RE_GAME_DATA_ROW: regex inválida")
+/// Captura apenas o início de `{{Game data/config|` ou `{{Game data/saves|`.
+/// O path completo é extraído manualmente para suportar `{{p|variavel}}` aninhado.
+static RE_GAME_DATA_START: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"\{\{Game data/(config|saves)\|([^|]+)\|")
+        .expect("RE_GAME_DATA_START: regex inválida")
 });
+
+/// Extrai o conteúdo do 3º argumento de um template `{{Game data/...}}`,
+/// respeitando aninhamento de `{{p|...}}` internos.
+///
+/// `rest` deve começar logo após o `|` que precede o path.
+/// Retorna o path bruto e o índice após o `}}` de fechamento.
+fn extract_path_arg(rest: &str) -> Option<&str> {
+    let bytes = rest.as_bytes();
+    let mut depth = 1usize; // já estamos dentro do template externo
+    let mut pos = 0;
+    let path_start = 0;
+
+    while pos < bytes.len().saturating_sub(1) {
+        if bytes[pos] == b'{' && bytes[pos + 1] == b'{' {
+            depth += 1;
+            pos += 2;
+        } else if bytes[pos] == b'}' && bytes[pos + 1] == b'}' {
+            depth -= 1;
+            if depth == 0 {
+                // pos é onde começa o }} de fechamento do template externo
+                return Some(rest[path_start..pos].trim());
+            }
+            pos += 2;
+        } else if bytes[pos] == b'|' && depth == 1 {
+            // Pipe no nível do template externo = fim do argumento
+            return Some(rest[path_start..pos].trim());
+        } else {
+            pos += 1;
+        }
+    }
+
+    None
+}
 
 /// Busca o wikitext bruto de uma página do PCGamingWiki pelo `page_id`.
 ///
@@ -288,14 +319,18 @@ pub fn parse_system_requirements(wikitext: &str, steam_app_id: &str) -> Vec<Syst
 pub fn parse_game_data_paths(wikitext: &str, steam_app_id: &str) -> Vec<GameDataPath> {
     let mut paths = Vec::new();
 
-    for cap in RE_GAME_DATA_ROW.captures_iter(wikitext) {
-        let kind = cap[1].trim().to_string(); // "config" ou "saves"
-        let os = cap[2].trim().to_string(); // "Windows", "Linux", "OS X"
-        let raw_path = cap[3].trim().to_string();
+    for cap in RE_GAME_DATA_START.captures_iter(wikitext) {
+        let kind = cap[1].trim().to_string();
+        let os = cap[2].trim().to_string();
 
-        if raw_path.is_empty() {
-            continue;
-        }
+        // Posição logo após o | que precede o path
+        let match_end = cap.get(0).unwrap().end();
+        let rest = &wikitext[match_end..];
+
+        let raw_path = match extract_path_arg(rest) {
+            Some(p) if !p.is_empty() => p.to_string(),
+            _ => continue,
+        };
 
         paths.push(GameDataPath {
             steam_app_id: steam_app_id.to_string(),
