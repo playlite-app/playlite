@@ -32,13 +32,9 @@
 //! HTTP adicional — deve respeitar o mesmo rate limiting de 250ms.
 
 use crate::errors::AppError;
+use crate::models::{GameDataPath, PcgwScrapedData, SystemRequirements};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
-
-// ============================================================
-// Regex compiladas uma única vez
-// ============================================================
 
 /// Captura `|chave = valor` dentro de um bloco de template.
 /// Grupos: 1 = chave (sem espaços), 2 = valor (sem espaços nas bordas).
@@ -54,82 +50,6 @@ static RE_GAME_DATA_ROW: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"\{\{Game data/(config|saves)\|([^|]+)\|([^}]+)}}")
         .expect("RE_GAME_DATA_ROW: regex inválida")
 });
-
-// ============================================================
-// Tipos públicos
-// ============================================================
-
-/// Requisitos de sistema para um único OS/tier.
-///
-/// Campos `cpu2` e `gpu2` capturam alternativas AMD/Intel quando presentes.
-/// Tiers extras do Witcher 3 (`alt1`, `alt2`) são representados como entradas
-/// separadas no vetor retornado por [`parse_system_requirements`].
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SystemRequirements {
-    /// OS alvo: "Windows", "Linux", "Mac OS", "DOS", etc.
-    pub os_family: String,
-
-    /// Rótulo do tier — `None` para requisitos padrão (min/rec).
-    /// Exemplos: `Some("High")`, `Some("Ultra (1440p)")`.
-    pub tier_title: Option<String>,
-
-    /// Alvo de desempenho descrito pela PCGW, ex: "1080p, DX11".
-    pub target: Option<String>,
-
-    // Mínimo
-    pub min_os: Option<String>,
-    pub min_cpu: Option<String>,
-    pub min_cpu2: Option<String>,
-    pub min_ram: Option<String>,
-    pub min_gpu: Option<String>,
-    pub min_gpu2: Option<String>,
-    pub min_vram: Option<String>,
-    pub min_dx: Option<String>,
-    pub min_storage: Option<String>,
-
-    // Recomendado
-    pub rec_os: Option<String>,
-    pub rec_cpu: Option<String>,
-    pub rec_cpu2: Option<String>,
-    pub rec_ram: Option<String>,
-    pub rec_gpu: Option<String>,
-    pub rec_gpu2: Option<String>,
-    pub rec_vram: Option<String>,
-    pub rec_dx: Option<String>,
-    pub rec_storage: Option<String>,
-}
-
-/// Caminho de dado do jogo (save ou config) para um OS específico.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameDataPath {
-    /// Tipo do dado: `"config"` ou `"saves"`.
-    pub kind: String,
-
-    /// OS alvo: `"Windows"`, `"Linux"`, `"OS X"`, etc.
-    pub os: String,
-
-    /// Caminho bruto preservando `{{p|variavel}}`.
-    /// Ex: `"{{p|userprofile\\Documents}}\\Reus\\"`.
-    pub raw_path: String,
-
-    /// Caminho com variáveis expandidas para o OS atual (calculado pelo frontend).
-    /// `None` até que o frontend expanda `{{p|...}}`.
-    pub expanded_path: Option<String>,
-}
-
-/// Resultado completo do scraping de uma página do PCGamingWiki.
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct PcgwScrapedData {
-    /// Todos os blocos de requisitos encontrados (um por OS + tiers extras).
-    pub system_requirements: Vec<SystemRequirements>,
-
-    /// Todos os caminhos de save e config encontrados.
-    pub game_data_paths: Vec<GameDataPath>,
-}
-
-// ============================================================
-// Busca do wikitext via MediaWiki API
-// ============================================================
 
 /// Busca o wikitext bruto de uma página do PCGamingWiki pelo `page_id`.
 ///
@@ -178,10 +98,6 @@ pub async fn fetch_wikitext(client: &reqwest::Client, page_id: &str) -> Result<S
     Ok(wikitext)
 }
 
-// ============================================================
-// Extração de blocos de template
-// ============================================================
-
 /// Encontra todas as ocorrências de `{{NomeDoTemplate` no wikitext e retorna
 /// o conteúdo interno de cada bloco (sem as chaves externas), respeitando
 /// aninhamento de templates.
@@ -229,10 +145,6 @@ fn extract_template_blocks<'a>(wikitext: &'a str, template_name: &str) -> Vec<&'
     blocks
 }
 
-// ============================================================
-// Parser de parâmetros
-// ============================================================
-
 /// Extrai todos os parâmetros `|chave = valor` de um bloco de template.
 /// Retorna um mapa de chave normalizada (lowercase, trim) → valor (trim).
 fn parse_params(block: &str) -> std::collections::HashMap<String, String> {
@@ -272,10 +184,6 @@ fn combine_fields(primary: Option<String>, secondary: Option<String>) -> Option<
     }
 }
 
-// ============================================================
-// Parser de System Requirements
-// ============================================================
-
 /// Extrai todos os blocos `{{System requirements}}` do wikitext.
 ///
 /// Retorna um vetor com uma entrada por bloco encontrado. Cada bloco
@@ -286,7 +194,7 @@ fn combine_fields(primary: Option<String>, secondary: Option<String>) -> Option<
 /// Quando `alt1Title` está presente, o bloco padrão (min/rec) é retornado como
 /// primeiro elemento e os tiers extras como elementos adicionais. Isso permite
 /// ao frontend exibir "Mínimo / Recomendado / High / Ultra" separadamente.
-pub fn parse_system_requirements(wikitext: &str) -> Vec<SystemRequirements> {
+pub fn parse_system_requirements(wikitext: &str, steam_app_id: &str) -> Vec<SystemRequirements> {
     let blocks = extract_template_blocks(wikitext, "System requirements");
     let mut all_reqs = Vec::new();
 
@@ -297,6 +205,7 @@ pub fn parse_system_requirements(wikitext: &str) -> Vec<SystemRequirements> {
 
         // --- Requisitos padrão (min / rec) ---
         let standard = SystemRequirements {
+            steam_app_id: steam_app_id.to_string(),
             os_family: os_family.clone(),
             tier_title: None,
             target: get_param(&params, "mintgt"),
@@ -333,6 +242,7 @@ pub fn parse_system_requirements(wikitext: &str) -> Vec<SystemRequirements> {
             };
 
             let alt = SystemRequirements {
+                steam_app_id: steam_app_id.to_string(),
                 os_family: os_family.clone(),
                 tier_title: Some(tier_title),
                 target: get_param(&params, &format!("{}tgt", prefix)),
@@ -369,17 +279,13 @@ pub fn parse_system_requirements(wikitext: &str) -> Vec<SystemRequirements> {
     all_reqs
 }
 
-// ============================================================
-// Parser de Game Data Paths
-// ============================================================
-
 /// Extrai todos os caminhos de save e config do wikitext.
 ///
 /// Cada `{{Game data/config|OS|path}}` e `{{Game data/saves|OS|path}}` gera
 /// uma entrada. Os caminhos preservam a sintaxe `{{p|variavel}}` intacta.
 ///
 /// OS normalizado: "Windows", "Linux", "OS X" (como aparece na PCGW).
-pub fn parse_game_data_paths(wikitext: &str) -> Vec<GameDataPath> {
+pub fn parse_game_data_paths(wikitext: &str, steam_app_id: &str) -> Vec<GameDataPath> {
     let mut paths = Vec::new();
 
     for cap in RE_GAME_DATA_ROW.captures_iter(wikitext) {
@@ -392,6 +298,7 @@ pub fn parse_game_data_paths(wikitext: &str) -> Vec<GameDataPath> {
         }
 
         paths.push(GameDataPath {
+            steam_app_id: steam_app_id.to_string(),
             kind,
             os,
             raw_path,
@@ -401,10 +308,6 @@ pub fn parse_game_data_paths(wikitext: &str) -> Vec<GameDataPath> {
 
     paths
 }
-
-// ============================================================
-// Ponto de entrada principal
-// ============================================================
 
 /// Faz o scraping completo de uma página do PCGamingWiki pelo `page_id`.
 ///
@@ -419,11 +322,12 @@ pub fn parse_game_data_paths(wikitext: &str) -> Vec<GameDataPath> {
 pub async fn scrape_pcgw_page(
     client: &reqwest::Client,
     page_id: &str,
+    steam_app_id: &str,
 ) -> Result<PcgwScrapedData, AppError> {
     let wikitext = fetch_wikitext(client, page_id).await?;
 
-    let system_requirements = parse_system_requirements(&wikitext);
-    let game_data_paths = parse_game_data_paths(&wikitext);
+    let system_requirements = parse_system_requirements(&wikitext, steam_app_id);
+    let game_data_paths = parse_game_data_paths(&wikitext, steam_app_id);
 
     tracing::debug!(
         "PCGW scraper page_id={}: {} blocos de sysreq, {} paths de game data",

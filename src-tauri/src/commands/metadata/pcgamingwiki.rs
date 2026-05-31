@@ -6,14 +6,13 @@
 
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::models::PcgwData;
+use crate::models::{GameDataPath, GameExtras, SystemRequirements};
 use crate::services::integration::pcgamingwiki::client::{search_pcgw_by_name, PcgwSearchResult};
 use crate::services::integration::pcgamingwiki::db::{
     get_game_data_paths, get_pcgw_data, get_system_requirements, invalidate_pcgw_data,
     save_pcgw_data, save_scraped_data,
 };
 use crate::services::integration::pcgamingwiki::fetch::fetch_pcgw_data;
-use crate::services::integration::pcgamingwiki::scraper::{GameDataPath, SystemRequirements};
 use chrono::Utc;
 use tracing::warn;
 
@@ -21,7 +20,7 @@ use tracing::warn;
 
 /// Dados completos do scraper para o frontend.
 ///
-/// Retornados separadamente do `PcgwData` (Cargo) porque têm
+/// Retornados separadamente do `GameExtras` (Cargo) porque têm
 /// cardinalidade N:1 — múltiplas linhas por jogo.
 #[derive(Debug, serde::Serialize)]
 pub struct PcgwScrapedResponse {
@@ -45,7 +44,7 @@ pub struct PcgwScrapedResponse {
 pub async fn get_or_fetch_pcgw_data(
     steam_app_id: String,
     conn: tauri::State<'_, AppState>,
-) -> Result<Option<PcgwData>, String> {
+) -> Result<Option<GameExtras>, String> {
     {
         let db = conn.games_db.lock().map_err(|e| e.to_string())?;
         if let Some(data) = get_pcgw_data(&db, &steam_app_id) {
@@ -71,7 +70,7 @@ pub async fn get_or_fetch_pcgw_data(
                 "pcgw_data: jogo {} não encontrado na PCGW — {}",
                 steam_app_id, msg
             );
-            let empty = PcgwData {
+            let empty = GameExtras {
                 steam_app_id: steam_app_id.clone(),
                 fetched_at: Some(Utc::now().to_rfc3339()),
                 ..Default::default()
@@ -97,7 +96,7 @@ pub async fn get_or_fetch_pcgw_data(
 pub async fn refresh_pcgw_data(
     steam_app_id: String,
     conn: tauri::State<'_, AppState>,
-) -> Result<Option<PcgwData>, String> {
+) -> Result<Option<GameExtras>, String> {
     {
         let db = conn.games_db.lock().map_err(|e| e.to_string())?;
         invalidate_pcgw_data(&db, &steam_app_id).map_err(|e| e.to_string())?;

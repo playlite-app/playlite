@@ -6,12 +6,12 @@
 //! O rate limiting é aplicado automaticamente em cada query via `cargo_query`.
 
 use crate::errors::AppError;
-use crate::models::PcgwData;
+use crate::models::{GameExtras, PcgwScrapedData};
 use crate::services::integration::pcgamingwiki::client::{build_http_client, cargo_query};
 use crate::services::integration::pcgamingwiki::parsers::{
     extract_field, normalize_bool_field, parse_l10n_rows,
 };
-use crate::services::integration::pcgamingwiki::scraper::{scrape_pcgw_page, PcgwScrapedData};
+use crate::services::integration::pcgamingwiki::scraper::scrape_pcgw_page;
 use chrono::Utc;
 use tracing::{debug, info};
 
@@ -26,7 +26,7 @@ use tracing::{debug, info};
 /// - `AppError::NotFound` — jogo não encontrado na PCGW pelo AppID fornecido
 pub async fn fetch_pcgw_data(
     steam_app_id: &str,
-) -> Result<(PcgwData, Option<PcgwScrapedData>), AppError> {
+) -> Result<(GameExtras, Option<PcgwScrapedData>), AppError> {
     let client = build_http_client()?;
     debug!("Iniciando busca PCGW para steam_app_id={}", steam_app_id);
 
@@ -69,7 +69,7 @@ pub async fn fetch_pcgw_data(
 
     // Busca wikitext (system requirements + game data paths) em paralelo com as
     // queries Cargo restantes — salvo separadamente pelo chamador via save_scraped_data
-    let scraped = scrape_pcgw_page(&client, &page_id).await.ok();
+    let scraped = scrape_pcgw_page(&client, &page_id, steam_app_id).await.ok();
     // .ok() converte Err em None — falha de rede não aborta o resto da busca
     info!(
         "fetch_pcgw_data: scraped = {:?}",
@@ -214,7 +214,7 @@ pub async fn fetch_pcgw_data(
     let fetched_at = Utc::now().to_rfc3339();
 
     Ok((
-        PcgwData {
+        GameExtras {
             steam_app_id: steam_app_id.to_string(),
             pcgw_page_id: Some(page_id),
             pcgw_page_name: page_name,

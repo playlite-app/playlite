@@ -4,12 +4,11 @@
 //! características fixas do jogo e atualizados apenas por invalidação explícita
 //! via [`invalidate_pcgw_data`].
 
-use crate::models::PcgwData;
-use crate::services::integration::pcgamingwiki::scraper::{
-    GameDataPath, PcgwScrapedData, SystemRequirements,
-};
+use crate::models::{GameDataPath, GameExtras, PcgwScrapedData, SystemRequirements};
 use rusqlite::{params, Connection};
 use tracing::{info, warn};
+
+// === INICIALIZAÇÃO DO BANCO ===
 
 /// Cria a tabela `game_extras`, `system_requirements` e `game_data_paths` em `games.db` se ainda não existirem.
 ///
@@ -104,11 +103,13 @@ pub fn initialize_pcgamingwiki_tables(conn: &Connection) -> Result<(), String> {
     Ok(())
 }
 
+// ===  DADOS DA API (fetch.rs) ===
+
 /// Retorna os dados do PCGamingWiki armazenados para o jogo.
 ///
 /// Retorna `None` se o jogo nunca foi buscado (fetched_at IS NULL ou linha inexistente).
 /// Dados expirados **nunca** são descartados automaticamente — a invalidação é explícita.
-pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> {
+pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<GameExtras> {
     let result = conn.query_row(
         "SELECT
             steam_app_id,
@@ -163,7 +164,7 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
                 s.and_then(|v| serde_json::from_str(&v).ok())
             };
 
-            Ok(PcgwData {
+            Ok(GameExtras {
                 steam_app_id: row.get(0)?,
                 pcgw_page_id: row.get(1)?,
                 pcgw_page_name: row.get(2)?,
@@ -228,7 +229,7 @@ pub fn get_pcgw_data(conn: &Connection, steam_app_id: &str) -> Option<PcgwData> 
 }
 
 /// Salva ou atualiza os dados do PCGamingWiki para um jogo.
-pub fn save_pcgw_data(conn: &Connection, data: &PcgwData) -> Result<(), String> {
+pub fn save_pcgw_data(conn: &Connection, data: &GameExtras) -> Result<(), String> {
     let serialize_vec = |v: &Option<Vec<String>>| -> Option<String> {
         v.as_ref().and_then(|list| serde_json::to_string(list).ok())
     };
@@ -348,12 +349,14 @@ pub fn invalidate_pcgw_data(conn: &Connection, steam_app_id: &str) -> Result<(),
     Ok(())
 }
 
+// ===  DADOS OBTIDOS VIA SCRAPING DA PÁGINA (scraper.rs) ===
+
 /// Salva os dados raspados no banco, substituindo entradas anteriores do jogo.
 ///
 /// Usa DELETE + INSERT em vez de REPLACE porque os dados têm múltiplas linhas
 /// por jogo (não há PK natural além de `steam_app_id + os_family + tier_title`).
 pub fn save_scraped_data(
-    conn: &rusqlite::Connection,
+    conn: &Connection,
     steam_app_id: &str,
     data: &PcgwScrapedData,
 ) -> Result<(), String> {
@@ -451,10 +454,7 @@ pub fn save_scraped_data(
 
 /// Retorna os requisitos de sistema salvos para um jogo.
 /// Retorna vetor vazio se nunca foram buscados.
-pub fn get_system_requirements(
-    conn: &rusqlite::Connection,
-    steam_app_id: &str,
-) -> Vec<SystemRequirements> {
+pub fn get_system_requirements(conn: &Connection, steam_app_id: &str) -> Vec<SystemRequirements> {
     let mut stmt = match conn.prepare(
         "SELECT os_family, tier_title, target,
                 min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
@@ -469,6 +469,7 @@ pub fn get_system_requirements(
 
     let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
         Ok(SystemRequirements {
+            steam_app_id: steam_app_id.to_string(),
             os_family: row.get(0)?,
             tier_title: row.get(1)?,
             target: row.get(2)?,
@@ -514,6 +515,7 @@ pub fn get_game_data_paths(conn: &rusqlite::Connection, steam_app_id: &str) -> V
 
     let iter = stmt.query_map(rusqlite::params![steam_app_id], |row| {
         Ok(GameDataPath {
+            steam_app_id: steam_app_id.to_string(),
             kind: row.get(0)?,
             os: row.get(1)?,
             raw_path: row.get(2)?,

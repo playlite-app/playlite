@@ -7,12 +7,11 @@
 //! - Subscriptions: tabela `subscriptions`
 //! - PcgwData: tabela `pcgw_data`
 
+// Reexportar GameTag do utils para consistência
+pub use crate::utils::tag_utils::GameTag;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
-
-// Reexportar GameTag do utils para consistência
-pub use crate::utils::tag_utils::GameTag;
 
 // === ENUMS ===
 
@@ -110,43 +109,35 @@ impl std::fmt::Display for Platform {
 /// Representa um jogo adicionado à biblioteca pessoal, com metadados
 /// importados da plataforma e dados de progresso do usuário.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
     pub name: String,
-    #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
     pub genres: Option<String>,
     pub developer: Option<String>,
     pub platform: Platform,
-    #[serde(rename = "platformGameId")]
     pub platform_game_id: String,
 
     // Execução
     pub installed: bool,
-    #[serde(rename = "installPath")]
     pub install_path: Option<String>,
-    #[serde(rename = "executablePath")]
     pub executable_path: Option<String>,
-    #[serde(rename = "launchArgs")]
     pub launch_args: Option<String>,
-    #[serde(rename = "importConfidence")]
     pub import_confidence: Option<ImportConfidence>,
 
     // Dados do Usuário
-    #[serde(rename = "userRating")]
     pub user_rating: Option<i32>,
     pub favorite: bool,
     pub status: Option<String>,
+    pub playtime: Option<i32>,
 
     // Metadados de Tempo
-    pub playtime: Option<i32>,
-    #[serde(rename = "lastPlayed")]
     pub last_played: Option<String>,
-    #[serde(rename = "addedAt")]
     pub added_at: String,
 
     // Conteúdo Adulto
-    #[serde(default, rename = "isAdult")]
+    #[serde(default)]
     pub is_adult: bool,
 }
 
@@ -155,75 +146,48 @@ pub struct Game {
 /// Contém metadados enriquecidos obtidos de APIs externas como RAWG,
 /// substituindo e expandindo os dados anteriores.
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameDetails {
-    #[serde(rename = "gameId")]
     pub game_id: String,
-
-    #[serde(rename = "steamAppId")]
     pub steam_app_id: Option<String>,
 
     // Metadados Básicos
     pub developer: Option<String>,
     pub publisher: Option<String>,
-
-    #[serde(rename = "releaseDate")]
     pub release_date: Option<String>,
 
     // Categorização
     pub genres: Option<String>,
-    pub tags: Option<Vec<GameTag>>, // Array de tags categorizadas
+    pub tags: Option<Vec<GameTag>>,
     pub series: Option<String>,
 
     // Descrição
-    #[serde(rename = "descriptionRaw")]
     pub description_raw: Option<String>,
-
-    #[serde(rename = "descriptionPtbr")]
     pub description_ptbr: Option<String>,
 
     // Mídia
-    #[serde(rename = "backgroundImage")]
     pub background_image: Option<String>,
 
-    // Scores
-    #[serde(rename = "criticScore")]
-    pub critic_score: Option<i32>, // Metacritic
+    // Scores e Avaliações
+    pub critic_score: Option<i32>,
 
     // Steam Reviews
-    #[serde(rename = "steamReviewLabel")]
-    pub steam_review_label: Option<String>, // "Very Positive", "Mixed", etc.
-
-    #[serde(rename = "steamReviewCount")]
+    pub steam_review_label: Option<String>,
     pub steam_review_count: Option<i32>,
-
-    #[serde(rename = "steamReviewScore")]
-    pub steam_review_score: Option<f32>, // Porcentagem de positivos (0-100)
-
-    #[serde(rename = "steamReviewUpdatedAt")]
+    pub steam_review_score: Option<f32>,
     pub steam_review_updated_at: Option<String>,
 
     // Conteúdo Adulto
-    #[serde(rename = "esrbRating")]
-    pub esrb_rating: Option<String>, // "E", "T", "M", etc.
-
-    #[serde(rename = "isAdult")]
+    pub esrb_rating: Option<String>,
     pub is_adult: bool,
-
-    #[serde(rename = "adultTags")]
-    pub adult_tags: Option<String>, // Nudity, Gore, Sexual Content, etc.
+    pub adult_tags: Option<String>,
 
     // Links Externos
-    #[serde(rename = "externalLinks")]
     pub external_links: Option<HashMap<String, String>>,
-    // Exemplo: {"website": "...", "steam": "...", "rawg": "...", "reddit": "..."}
 
-    // Tempo de Jogo (Alternativa a HLTB)
-    #[serde(rename = "medianPlaytime")]
-    pub median_playtime: Option<i32>, // Mediana do SteamSpy em horas
-
-    // Estimativa de Tempo de Jogo
-    #[serde(rename = "estimatedPlaytime")]
-    pub estimated_playtime: Option<f32>, // Tempo estimado em horas (história principal)
+    // Tempo de jogo
+    pub median_playtime: Option<i32>, // Alternativa para HLTB (média da Steam)
+    pub estimated_playtime: Option<f32>, // Estimativa de tempo de jogo
 }
 
 /// Jogo na lista de desejos (wishlist) com tracking de preços.
@@ -231,40 +195,20 @@ pub struct GameDetails {
 /// Representa um jogo adicionado à wishlist do usuário,
 /// incluindo informações de preço, disponibilidade e vouchers.
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WishlistGame {
     pub id: String,
     pub name: String,
-
-    #[serde(rename = "coverUrl")]
     pub cover_url: Option<String>,
-
-    #[serde(rename = "storeUrl")]
     pub store_url: Option<String>,
-
-    #[serde(rename = "storePlatform")]
     pub store_platform: Option<String>,
-
-    #[serde(rename = "itadId")]
     pub itad_id: Option<String>,
-
-    #[serde(rename = "currentPrice")]
     pub current_price: Option<f64>,
-
-    #[serde(rename = "normalPrice")]
     pub normal_price: Option<f64>,
-
-    #[serde(rename = "lowestPrice")]
     pub lowest_price: Option<f64>,
-
-    #[serde(rename = "currency")]
     pub currency: Option<String>,
-
-    #[serde(rename = "onSale")]
     pub on_sale: bool,
-
     pub voucher: Option<String>,
-
-    #[serde(rename = "addedAt")]
     pub added_at: Option<String>,
 }
 
@@ -274,11 +218,9 @@ pub struct WishlistGame {
 /// com controle de ativação e timestamp da última sincronização.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Subscription {
-    /// Identificador do serviço: "game_pass", "prime_gaming", "ea_play", etc.
-    pub service: String,
+    pub service: String, // EX: "game_pass", "prime_gaming", "ea_play", etc.
     pub enabled: bool,
-    /// Timestamp ISO 8601 da última sincronização bem-sucedida com a API do serviço.
-    /// `None` se nunca foi sincronizado.
+    // Timestamp ISO 8601 da última sincronização com a API do serviço. `None` se nunca foi sincronizado.
     #[serde(rename = "lastSynced")]
     pub last_synced: Option<String>,
 }
@@ -290,107 +232,112 @@ pub struct Subscription {
 ///
 /// Tabelas Cargo consultadas: Infobox_game, API, Video, Input, Audio, L10n, Tags.
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub struct PcgwData {
-    #[serde(rename = "steamAppId")]
+#[serde(rename_all = "camelCase")]
+pub struct GameExtras {
     pub steam_app_id: String,
-
-    #[serde(rename = "pcgwPageId")]
     pub pcgw_page_id: Option<String>,
-
-    #[serde(rename = "pcgwPageName")]
     pub pcgw_page_name: Option<String>,
-
     pub engine: Option<String>,
 
     // Plataformas suportadas — string separada por vírgula, ex: "Windows,Linux"
-    #[serde(rename = "availableOn")]
     pub available_on: Option<String>,
 
     // Graphics APIs (tabela API)
-    #[serde(rename = "dxVersions")]
     pub dx_versions: Option<String>, // ex: "11, 12"
-
-    #[serde(rename = "vulkanVersions")]
     pub vulkan_versions: Option<String>,
-
-    #[serde(rename = "openglVersions")]
     pub opengl_versions: Option<String>,
 
     // Executáveis por OS — confirma suporte real (tabela API)
     pub win64: Option<String>,
     pub linux64: Option<String>,
+    #[serde(rename = "macOsArm")]
     pub macos_arm: Option<String>,
+    #[serde(rename = "macOsIntel64")]
     pub macos_intel64: Option<String>,
 
     // Tecnologias gráficas (tabela Video)
-    #[serde(rename = "rayTracing")]
     pub ray_tracing: Option<String>,
-
-    // Lista de upscalers suportados, ex: "DLSS 3,FSR 3,XeSS"
-    pub upscaling: Option<String>,
-
-    // Lista de frame gen suportadas, ex: "DLSS Frame Generation"
-    #[serde(rename = "frameGen")]
-    pub frame_gen: Option<String>,
+    pub upscaling: Option<String>, // ex: "DLSS 3,FSR 3,XeSS"
+    pub frame_gen: Option<String>, // ex: "DLSS Frame Generation"
 
     // Display (tabela Video)
     pub ultrawidescreen: Option<String>,
-
-    #[serde(rename = "fourKSupport")]
     pub four_k_support: Option<String>,
-
     pub hdr: Option<String>,
-
-    #[serde(rename = "highFps")]
     pub high_fps: Option<String>, // 120fps+
-
-    pub fov: Option<String>, // FOV ajustável
-
-    #[serde(rename = "borderlessWindowed")]
+    pub fov: Option<String>,      // FOV ajustável
     pub borderless_windowed: Option<String>,
-
-    #[serde(rename = "colorBlind")]
     pub color_blind: Option<String>,
 
     // Controle (tabela Input)
-    #[serde(rename = "controllerSupport")]
     pub controller_support: Option<String>,
-
-    #[serde(rename = "fullController")]
     pub full_controller: Option<String>,
-
-    #[serde(rename = "playstationControllers")]
     pub playstation_controllers: Option<String>,
-
-    #[serde(rename = "xinputControllers")]
     pub xinput_controllers: Option<String>,
 
     // Áudio (tabela Audio)
-    #[serde(rename = "surroundSound")]
     pub surround_sound: Option<String>,
-
     pub subtitles: Option<String>,
-
-    #[serde(rename = "closedCaptions")]
     pub closed_captions: Option<String>,
 
     // Presença de dados (tabela Tags)
-    #[serde(rename = "hasSaveData")]
     pub has_save_data: Option<String>,
-
-    #[serde(rename = "hasConfigData")]
     pub has_config_data: Option<String>,
 
     // Idiomas (tabela L10n) — JSON arrays
-    #[serde(rename = "languagesInterface")]
     pub languages_interface: Option<Vec<String>>,
-
-    #[serde(rename = "languagesAudio")]
     pub languages_audio: Option<Vec<String>>,
-
-    #[serde(rename = "languagesSubtitles")]
     pub languages_subtitles: Option<Vec<String>>,
 
-    #[serde(rename = "fetchedAt")]
     pub fetched_at: Option<String>,
+}
+
+/// Requisitos de sistema para um único OS/tier.
+///
+/// Campos `cpu2` e `gpu2` capturam alternativas AMD/Intel quando presentes.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SystemRequirements {
+    pub steam_app_id: String,
+    pub os_family: String, // OS alvo: "Windows", "Linux", "Mac OS", "DOS", etc.
+    pub tier_title: Option<String>, // Rótulo do tier — `None` para padrão (min/rec). Ex: `Some("High")`, `Some("Ultra (1440p)")`.
+    pub target: Option<String>,     // Ex: "1080p, DX11".
+
+    // Mínimo
+    pub min_os: Option<String>,
+    pub min_cpu: Option<String>,
+    pub min_cpu2: Option<String>,
+    pub min_ram: Option<String>,
+    pub min_gpu: Option<String>,
+    pub min_gpu2: Option<String>,
+    pub min_vram: Option<String>,
+    pub min_dx: Option<String>,
+    pub min_storage: Option<String>,
+
+    // Recomendado
+    pub rec_os: Option<String>,
+    pub rec_cpu: Option<String>,
+    pub rec_cpu2: Option<String>,
+    pub rec_ram: Option<String>,
+    pub rec_gpu: Option<String>,
+    pub rec_gpu2: Option<String>,
+    pub rec_vram: Option<String>,
+    pub rec_dx: Option<String>,
+    pub rec_storage: Option<String>,
+}
+
+/// Caminho de dado do jogo (save ou config) para um OS específico.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameDataPath {
+    pub steam_app_id: String,
+    pub kind: String,                  // Tipo do dado: `"config"` ou `"saves"`.
+    pub os: String,                    // OS alvo: `"Windows"`, `"Linux"`, `"OS X"`, etc.
+    pub raw_path: String, // Caminho bruto preservando `{{p|variavel}}`. Ex: `"{{p|userprofile\\Documents}}\\Reus\\"`.
+    pub expanded_path: Option<String>, // Caminho com variáveis expandidas. `None` até que o frontend expanda `{{p|...}}`.
+}
+
+/// Resultado completo do scraping de uma página do PCGamingWiki.
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct PcgwScrapedData {
+    pub system_requirements: Vec<SystemRequirements>,
+    pub game_data_paths: Vec<GameDataPath>,
 }

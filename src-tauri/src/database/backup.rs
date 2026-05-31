@@ -9,7 +9,9 @@
 use crate::database;
 use crate::database::{current_schema_version, AppState};
 use crate::errors::AppError;
-use crate::models::{Game, GameDetails, PcgwData, Platform, WishlistGame};
+use crate::models::{
+    Game, GameDataPath, GameDetails, GameExtras, Platform, SystemRequirements, WishlistGame,
+};
 use chrono::Utc;
 use rusqlite::params;
 use std::fs;
@@ -21,7 +23,9 @@ type BackupDataTuple = (
     Vec<Game>,
     Vec<GameDetails>,
     Vec<WishlistGame>,
-    Vec<PcgwData>,
+    Vec<GameExtras>,
+    Vec<SystemRequirements>,
+    Vec<GameDataPath>,
     u32,
 );
 
@@ -39,7 +43,13 @@ pub struct BackupData {
     /// Dados técnicos obtidos do PCGamingWiki.
     /// Campo ausente em backups anteriores ao schema v4 — tratado como lista vazia.
     #[serde(default)]
-    pub pcgw_data: Vec<PcgwData>,
+    pub game_extras: Vec<GameExtras>,
+    /// Requisitos de sistema por jogo/OS/tier.
+    #[serde(default)]
+    pub system_requirements: Vec<SystemRequirements>,
+    /// Caminhos de save e config por jogo/OS.
+    #[serde(default)]
+    pub game_data_paths: Vec<GameDataPath>,
 }
 
 /// Função auxiliar interna para buscar dados do backup com transação ACID
@@ -54,7 +64,9 @@ fn fetch_backup_data(state: &State<AppState>) -> Result<BackupDataTuple, AppErro
     let games = fetch_games(&conn)?;
     let game_details = fetch_game_details(&conn)?;
     let wishlist_game = fetch_wishlist(&conn)?;
-    let pcgw_data = fetch_pcgw_data(&conn)?;
+    let game_extras = fetch_game_extras(&conn)?;
+    let system_requirements = fetch_system_requirements(&conn)?;
+    let game_data_paths = fetch_game_data_paths(&conn)?;
     let schema_version = current_schema_version(&conn)?;
 
     conn.execute("COMMIT", [])?;
@@ -63,7 +75,9 @@ fn fetch_backup_data(state: &State<AppState>) -> Result<BackupDataTuple, AppErro
         games,
         game_details,
         wishlist_game,
-        pcgw_data,
+        game_extras,
+        system_requirements,
+        game_data_paths,
         schema_version,
     ))
 }
@@ -79,8 +93,15 @@ pub async fn export_database(
     file_path: String,
 ) -> Result<(), AppError> {
     // Buscar dados com transação ACID
-    let (games, game_details, wishlist_game, pcgw_data, schema_version) =
-        fetch_backup_data(&state)?;
+    let (
+        games,
+        game_details,
+        wishlist_game,
+        game_extras,
+        system_requirements,
+        game_data_paths,
+        schema_version,
+    ) = fetch_backup_data(&state)?;
 
     let backup = BackupData {
         version: schema_version,
@@ -89,7 +110,9 @@ pub async fn export_database(
         games,
         game_details,
         wishlist_game,
-        pcgw_data,
+        game_extras,
+        system_requirements,
+        game_data_paths,
     };
 
     let json = serde_json::to_string_pretty(&backup)?;
@@ -155,8 +178,15 @@ pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<P
 
     // Reutiliza a função auxiliar de fetch
     let state: tauri::State<AppState> = app.state();
-    let (games, game_details, wishlist_game, pcgw_data, schema_version) =
-        fetch_backup_data(&state)?;
+    let (
+        games,
+        game_details,
+        wishlist_game,
+        game_extras,
+        system_requirements,
+        game_data_paths,
+        schema_version,
+    ) = fetch_backup_data(&state)?;
 
     let backup = BackupData {
         version: schema_version,
@@ -165,7 +195,9 @@ pub fn backup_before_update(app: &AppHandle, previous_version: &str) -> Result<P
         games,
         game_details,
         wishlist_game,
-        pcgw_data,
+        game_extras,
+        system_requirements,
+        game_data_paths,
     };
 
     let json = serde_json::to_string_pretty(&backup)?;
@@ -227,9 +259,9 @@ pub async fn import_database(
         game_id, steam_app_id, developer, publisher, release_date, genres, tags, series,
         description_raw, description_ptbr, background_image, critic_score, steam_review_label,
         steam_review_count, steam_review_score, steam_review_updated_at, esrb_rating, is_adult,
-        adult_tags, external_links, median_playtime
+        adult_tags, external_links, median_playtime, estimated_playtime
     )
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)"
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)"
     )?;
 
     let mut wishlist_stmt = conn.prepare(
@@ -292,7 +324,8 @@ pub async fn import_database(
             detail.is_adult,
             detail.adult_tags,
             links_json, // JSON String
-            detail.median_playtime
+            detail.median_playtime,
+            detail.estimated_playtime
         ])?;
     }
 
@@ -314,53 +347,19 @@ pub async fn import_database(
         ])?;
     }
 
-    // Prepared statement para pcgw_data
-    let mut pcgw_stmt = conn.prepare(
-        "INSERT OR REPLACE INTO pcgw_data (
-        steam_app_id,
-        pcgw_page_id,
-        pcgw_page_name,
-        engine,
-
+    // Prepared statement para game_extras
+    let mut extras_stmt = conn.prepare(
+        "INSERT OR REPLACE INTO game_extras (
+        steam_app_id, pcgw_page_id, pcgw_page_name, engine,
         available_on,
-
-        dx_versions,
-        vulkan_versions,
-        opengl_versions,
-
-        win64,
-        linux64,
-        macos_arm,
-        macos_intel64,
-
-        ray_tracing,
-        upscaling,
-        frame_gen,
-
-        ultrawidescreen,
-        four_k_support,
-        hdr,
-        high_fps,
-        fov,
-        borderless_windowed,
-        color_blind,
-
-        controller_support,
-        full_controller,
-        playstation_controllers,
-        xinput_controllers,
-
-        surround_sound,
-        subtitles,
-        closed_captions,
-
-        has_save_data,
-        has_config_data,
-
-        languages_interface,
-        languages_audio,
-        languages_subtitles,
-
+        dx_versions, vulkan_versions, opengl_versions,
+        win64, linux64, macos_arm, macos_intel64,
+        ray_tracing, upscaling, frame_gen,
+        ultrawidescreen, four_k_support, hdr, high_fps, fov, borderless_windowed, color_blind,
+        controller_support, full_controller, playstation_controllers, xinput_controllers,
+        surround_sound, subtitles, closed_captions,
+        has_save_data, has_config_data,
+        languages_interface, languages_audio, languages_subtitles,
         fetched_at
     ) VALUES (
         ?1,  ?2,  ?3,  ?4,
@@ -377,58 +376,123 @@ pub async fn import_database(
     )",
     )?;
 
+    let mut sysreq_stmt = conn.prepare(
+        "INSERT INTO system_requirements (
+            steam_app_id, os_family, tier_title, target,
+            min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+            rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage,
+            fetched_at
+        ) VALUES (
+            ?1,  ?2,  ?3,  ?4,
+            ?5,  ?6,  ?7,  ?8,  ?9,  ?10, ?11, ?12, ?13,
+            ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
+            ?23
+        )",
+    )?;
+
+    let mut paths_stmt = conn.prepare(
+        "INSERT INTO game_data_paths (steam_app_id, kind, os, raw_path, fetched_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+    )?;
+
     let serialize_vec = |v: &Option<Vec<String>>| -> Option<String> {
         v.as_ref().and_then(|list| serde_json::to_string(list).ok())
     };
 
-    for pcgw in &backup.pcgw_data {
-        pcgw_stmt.execute(params![
-            pcgw.steam_app_id,
-            pcgw.pcgw_page_id,
-            pcgw.pcgw_page_name,
-            pcgw.engine,
-            pcgw.available_on,
-            pcgw.dx_versions,
-            pcgw.vulkan_versions,
-            pcgw.opengl_versions,
-            pcgw.win64,
-            pcgw.linux64,
-            pcgw.macos_arm,
-            pcgw.macos_intel64,
-            pcgw.ray_tracing,
-            pcgw.upscaling,
-            pcgw.frame_gen,
-            pcgw.ultrawidescreen,
-            pcgw.four_k_support,
-            pcgw.hdr,
-            pcgw.high_fps,
-            pcgw.fov,
-            pcgw.borderless_windowed,
-            pcgw.color_blind,
-            pcgw.controller_support,
-            pcgw.full_controller,
-            pcgw.playstation_controllers,
-            pcgw.xinput_controllers,
-            pcgw.surround_sound,
-            pcgw.subtitles,
-            pcgw.closed_captions,
-            pcgw.has_save_data,
-            pcgw.has_config_data,
-            serialize_vec(&pcgw.languages_interface),
-            serialize_vec(&pcgw.languages_audio),
-            serialize_vec(&pcgw.languages_subtitles),
-            pcgw.fetched_at,
+    let now = Utc::now().to_rfc3339();
+
+    // Limpa dados anteriores das tabelas com múltiplas linhas por jogo antes de reinserir
+    conn.execute("DELETE FROM system_requirements", [])?;
+    conn.execute("DELETE FROM game_data_paths", [])?;
+
+    for extras in &backup.game_extras {
+        extras_stmt.execute(params![
+            extras.steam_app_id,
+            extras.pcgw_page_id,
+            extras.pcgw_page_name,
+            extras.engine,
+            extras.available_on,
+            extras.dx_versions,
+            extras.vulkan_versions,
+            extras.opengl_versions,
+            extras.win64,
+            extras.linux64,
+            extras.macos_arm,
+            extras.macos_intel64,
+            extras.ray_tracing,
+            extras.upscaling,
+            extras.frame_gen,
+            extras.ultrawidescreen,
+            extras.four_k_support,
+            extras.hdr,
+            extras.high_fps,
+            extras.fov,
+            extras.borderless_windowed,
+            extras.color_blind,
+            extras.controller_support,
+            extras.full_controller,
+            extras.playstation_controllers,
+            extras.xinput_controllers,
+            extras.surround_sound,
+            extras.subtitles,
+            extras.closed_captions,
+            extras.has_save_data,
+            extras.has_config_data,
+            serialize_vec(&extras.languages_interface),
+            serialize_vec(&extras.languages_audio),
+            serialize_vec(&extras.languages_subtitles),
+            extras.fetched_at,
+        ])?;
+    }
+
+    for req in &backup.system_requirements {
+        sysreq_stmt.execute(params![
+            req.steam_app_id,
+            req.os_family,
+            req.tier_title,
+            req.target,
+            req.min_os,
+            req.min_cpu,
+            req.min_cpu2,
+            req.min_ram,
+            req.min_gpu,
+            req.min_gpu2,
+            req.min_vram,
+            req.min_dx,
+            req.min_storage,
+            req.rec_os,
+            req.rec_cpu,
+            req.rec_cpu2,
+            req.rec_ram,
+            req.rec_gpu,
+            req.rec_gpu2,
+            req.rec_vram,
+            req.rec_dx,
+            req.rec_storage,
+            now,
+        ])?;
+    }
+
+    for path in &backup.game_data_paths {
+        paths_stmt.execute(params![
+            path.steam_app_id,
+            path.kind,
+            path.os,
+            path.raw_path,
+            now,
         ])?;
     }
 
     conn.execute("COMMIT", [])?;
 
     Ok(format!(
-        "Backup restaurado! {} jogos, {} detalhes, {} itens da wishlist e {} dados técnicos.",
+        "Backup restaurado! {} jogos, {} detalhes, {} itens da wishlist, {} dados técnicos, {} requisitos de sistema e {} caminhos.",
         backup.games.len(),
         backup.game_details.len(),
         backup.wishlist_game.len(),
-        backup.pcgw_data.len()
+        backup.game_extras.len(),
+        backup.system_requirements.len(),
+        backup.game_data_paths.len(),
     ))
 }
 
@@ -552,27 +616,21 @@ fn fetch_wishlist(conn: &rusqlite::Connection) -> Result<Vec<WishlistGame>, AppE
 /// Busca todos os dados técnicos do PCGamingWiki para backup.
 ///
 /// Inclui apenas registros que já foram buscados (`fetched_at IS NOT NULL`).
-fn fetch_pcgw_data(conn: &rusqlite::Connection) -> Result<Vec<PcgwData>, AppError> {
+fn fetch_game_extras(conn: &rusqlite::Connection) -> Result<Vec<GameExtras>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT
             steam_app_id, pcgw_page_id, pcgw_page_name, engine,
-            linux_support, windows_support, macos_support,
-            ray_tracing, dlss, fsr, xess, frame_generation,
-            ultrawidescreen, four_k_support, hdr, high_fps, fov,
-            borderless_windowed, color_blind,
-            controller_support, full_controller,
-            playstation_controllers, xinput_controllers,
+            available_on,
+            dx_versions, vulkan_versions, opengl_versions,
+            win64, linux64, macos_arm, macos_intel64,
+            ray_tracing, upscaling, frame_gen,
+            ultrawidescreen, four_k_support, hdr, high_fps, fov, borderless_windowed, color_blind,
+            controller_support, full_controller, playstation_controllers, xinput_controllers,
             surround_sound, subtitles, closed_captions,
-            win_min_os, win_min_cpu, win_min_ram, win_min_gpu,
-            win_min_vram, win_min_dx, win_min_storage,
-            win_rec_cpu, win_rec_ram, win_rec_gpu, win_rec_vram, win_rec_dx,
-            linux_min_cpu, linux_min_ram, linux_min_gpu, linux_min_storage,
-            linux_rec_cpu, linux_rec_ram, linux_rec_gpu,
+            has_save_data, has_config_data,
             languages_interface, languages_audio, languages_subtitles,
-            save_path_windows, save_path_linux,
-            config_path_windows, config_path_linux,
             fetched_at
-         FROM pcgw_data
+         FROM game_extras
          WHERE fetched_at IS NOT NULL",
     )?;
 
@@ -581,24 +639,19 @@ fn fetch_pcgw_data(conn: &rusqlite::Connection) -> Result<Vec<PcgwData>, AppErro
     };
 
     let iter = stmt.query_map([], |row| {
-        Ok(PcgwData {
+        Ok(GameExtras {
             steam_app_id: row.get(0)?,
             pcgw_page_id: row.get(1)?,
             pcgw_page_name: row.get(2)?,
             engine: row.get(3)?,
             available_on: row.get(4)?,
-
-            // API
             dx_versions: row.get(5)?,
             vulkan_versions: row.get(6)?,
             opengl_versions: row.get(7)?,
-
             win64: row.get(8)?,
             linux64: row.get(9)?,
             macos_arm: row.get(10)?,
             macos_intel64: row.get(11)?,
-
-            // Video
             ray_tracing: row.get(12)?,
             upscaling: row.get(13)?,
             frame_gen: row.get(14)?,
@@ -609,28 +662,83 @@ fn fetch_pcgw_data(conn: &rusqlite::Connection) -> Result<Vec<PcgwData>, AppErro
             fov: row.get(19)?,
             borderless_windowed: row.get(20)?,
             color_blind: row.get(21)?,
-
-            // Input
             controller_support: row.get(22)?,
             full_controller: row.get(23)?,
             playstation_controllers: row.get(24)?,
             xinput_controllers: row.get(25)?,
-
-            // Audio
             surround_sound: row.get(26)?,
             subtitles: row.get(27)?,
             closed_captions: row.get(28)?,
-
-            // Tags
             has_save_data: row.get(29)?,
             has_config_data: row.get(30)?,
-
-            // L10n
             languages_interface: parse_json_vec(row.get(31)?),
             languages_audio: parse_json_vec(row.get(32)?),
             languages_subtitles: parse_json_vec(row.get(33)?),
-
             fetched_at: row.get(34)?,
+        })
+    })?;
+
+    Ok(iter.collect::<Result<Vec<_>, _>>()?)
+}
+
+/// Busca todos os requisitos de sistema para backup.
+fn fetch_system_requirements(
+    conn: &rusqlite::Connection,
+) -> Result<Vec<SystemRequirements>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            steam_app_id, os_family, tier_title, target,
+            min_os, min_cpu, min_cpu2, min_ram, min_gpu, min_gpu2, min_vram, min_dx, min_storage,
+            rec_os, rec_cpu, rec_cpu2, rec_ram, rec_gpu, rec_gpu2, rec_vram, rec_dx, rec_storage
+         FROM system_requirements
+         ORDER BY steam_app_id, id ASC",
+    )?;
+
+    let iter = stmt.query_map([], |row| {
+        Ok(SystemRequirements {
+            steam_app_id: row.get(0)?,
+            os_family: row.get(1)?,
+            tier_title: row.get(2)?,
+            target: row.get(3)?,
+            min_os: row.get(4)?,
+            min_cpu: row.get(5)?,
+            min_cpu2: row.get(6)?,
+            min_ram: row.get(7)?,
+            min_gpu: row.get(8)?,
+            min_gpu2: row.get(9)?,
+            min_vram: row.get(10)?,
+            min_dx: row.get(11)?,
+            min_storage: row.get(12)?,
+            rec_os: row.get(13)?,
+            rec_cpu: row.get(14)?,
+            rec_cpu2: row.get(15)?,
+            rec_ram: row.get(16)?,
+            rec_gpu: row.get(17)?,
+            rec_gpu2: row.get(18)?,
+            rec_vram: row.get(19)?,
+            rec_dx: row.get(20)?,
+            rec_storage: row.get(21)?,
+        })
+    })?;
+
+    Ok(iter.collect::<Result<Vec<_>, _>>()?)
+}
+
+/// Busca todos os caminhos de game data para backup.
+fn fetch_game_data_paths(conn: &rusqlite::Connection) -> Result<Vec<GameDataPath>, AppError> {
+    let mut stmt = conn.prepare(
+        "SELECT steam_app_id, kind, os, raw_path
+         FROM game_data_paths
+         ORDER BY steam_app_id, id ASC",
+    )?;
+
+    let iter = stmt.query_map([], |row| {
+        Ok(GameDataPath {
+            steam_app_id: row.get(0)?,
+            kind: row.get(1)?,
+            os: row.get(2)?,
+            raw_path: row.get(3)?,
+            expanded_path: None,
         })
     })?;
 
