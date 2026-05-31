@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
 import { useNetworkStatus } from '@/hooks';
@@ -49,14 +50,6 @@ function buildMediaQueue(data: GameMediaData): MediaItem[] {
   data.youtube_embeds.forEach(url => queue.push({ kind: 'youtube', url }));
 
   return queue;
-}
-
-function getItemLabel(item: MediaItem): string {
-  if (item.kind === 'screenshot') return 'Screenshot';
-
-  if (item.kind === 'trailer') return 'Trailer';
-
-  return 'Vídeo';
 }
 
 // === THUMBNAIL DO ITEM ===
@@ -131,12 +124,21 @@ function MediaViewer({
   onNavigate,
   onFullscreen,
 }: MediaViewerProps) {
+  const { t } = useTranslation('game_detail');
   const item = items[activeIndex];
 
   if (!item) return null;
 
   const canPrev = activeIndex > 0;
   const canNext = activeIndex < items.length - 1;
+
+  const getItemLabel = (mediaItem: MediaItem): string => {
+    if (mediaItem.kind === 'screenshot') return t('media_label_screenshot');
+
+    if (mediaItem.kind === 'trailer') return t('media_label_trailer');
+
+    return t('media_label_video');
+  };
 
   return (
     <div
@@ -253,14 +255,16 @@ function Lightbox({ url, onClose }: LightboxProps) {
 // === ESTADOS DE UI ===
 
 function MediaEmpty({ gameName }: { gameName: string }) {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
       <Meh className="text-muted-foreground/50 h-8 w-8" />
       <p className="text-foreground text-sm font-medium">
-        Sem mídia disponível
+        {t('media_empty_title')}
       </p>
       <p className="text-muted-foreground max-w-xs text-xs">
-        A GameBrain não possui screenshots ou trailers para{' '}
+        {t('media_empty_description')}{' '}
         <span className="text-foreground font-medium">{gameName}</span>.
       </p>
     </div>
@@ -268,6 +272,8 @@ function MediaEmpty({ gameName }: { gameName: string }) {
 }
 
 function MediaOffline() {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-4 text-center">
       <div className="bg-muted/40 rounded-full p-4">
@@ -276,13 +282,13 @@ function MediaOffline() {
 
       <div className="space-y-1">
         <p className="text-foreground text-sm font-medium">
-          Sem conexão com a internet
+          {t('media_offline_title')}
         </p>
 
         <p className="text-muted-foreground max-w-sm text-xs leading-relaxed">
-          Não é possível carregar screenshots e trailers offline.
+          {t('media_offline_description1')}
           <br />
-          Conecte-se a uma rede e tente novamente.
+          {t('media_offline_description2')}
         </p>
       </div>
     </div>
@@ -292,6 +298,7 @@ function MediaOffline() {
 // === COMPONENTE PRINCIPAL ===
 
 export function GameMedia({ game }: GameMediaProps) {
+  const { t } = useTranslation('game_detail');
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
@@ -317,10 +324,10 @@ export function GameMedia({ game }: GameMediaProps) {
       setActiveIndex(0);
       setStatus('success');
     } catch (err) {
-      setErrorMsg(typeof err === 'string' ? err : 'Erro desconhecido');
+      setErrorMsg(typeof err === 'string' ? err : t('media_unknown_error'));
       setStatus('error');
     }
-  }, [game.id, game.name]);
+  }, [game.id, game.name, t]);
 
   // Reset ao trocar de jogo
   useEffect(() => {
@@ -371,7 +378,7 @@ export function GameMedia({ game }: GameMediaProps) {
   if (!isOnline) return <MediaOffline />;
 
   if (status === 'loading')
-    return <ContentLoading message="Carregando mídia…" />;
+    return <ContentLoading message={t('media_loading_message')} />;
 
   if (status === 'error')
     return (

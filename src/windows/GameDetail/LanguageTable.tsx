@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { LangRow } from '@/types/game_detail';
 import { buildLanguageRows } from '@/utils/pcgw';
 
@@ -24,6 +26,7 @@ export function LanguageTable({
   audio,
   subtitles,
 }: LanguageTableProps) {
+  const { t } = useTranslation('game_detail');
   const rows: LangRow[] = buildLanguageRows(iface, audio, subtitles);
 
   if (rows.length === 0) return null;
@@ -34,16 +37,16 @@ export function LanguageTable({
         <thead className="bg-muted/20">
           <tr>
             <th className="text-muted-foreground px-4 py-2 text-left text-xs tracking-wider uppercase">
-              Idioma
+              {t('language_table_th_language')}
             </th>
             <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-              Interface
+              {t('language_table_th_interface')}
             </th>
             <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-              Áudio
+              {t('language_table_th_audio')}
             </th>
             <th className="text-muted-foreground px-2 py-2 text-center text-xs tracking-wider uppercase">
-              Legendas
+              {t('language_table_th_subtitles')}
             </th>
           </tr>
         </thead>

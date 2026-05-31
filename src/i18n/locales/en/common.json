@@ -59,5 +59,8 @@
   "confirm_dialog_title": "Are you sure?",
   "confirm_dialog_description": "This action cannot be undone.",
   "confirm_dialog_cancel": "Cancel",
-  "confirm_dialog_confirm": "Confirm"
+  "confirm_dialog_confirm": "Confirm",
+  "error_title": "Could not load content",
+  "error_retry_button": "Try again",
+  "loading_default_message": "Loading…"
 }

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { ExternalLink, Frown, ImageOff, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
 import { SimilarGame } from '@/types';
@@ -17,6 +18,7 @@ interface SimilarGameCardProps {
 // === CARD DE JOGO SIMILAR ===
 
 function SimilarGameCard({ game }: SimilarGameCardProps) {
+  const { t } = useTranslation('game_detail');
   const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -103,7 +105,7 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary ml-2 shrink-0 transition-colors"
-              title="Ver na GameBrain"
+              title={t('discovery_card_link_title')}
               onClick={e => e.stopPropagation()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -118,14 +120,16 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
 // === ESTADOS DE UI ===
 
 function DiscoveryEmpty({ gameName }: { gameName: string }) {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
       <Frown className="text-muted-foreground/50 h-8 w-8" />
       <p className="text-foreground text-sm font-medium">
-        Nenhum similar encontrado
+        {t('discovery_empty_title')}
       </p>
       <p className="text-muted-foreground max-w-xs text-xs">
-        A GameBrain não encontrou jogos similares a{' '}
+        {t('discovery_empty_description')}{' '}
         <span className="text-foreground font-medium">{gameName}</span>.
       </p>
     </div>
@@ -135,6 +139,7 @@ function DiscoveryEmpty({ gameName }: { gameName: string }) {
 // === COMPONENTE PRINCIPAL ===
 
 export function GameDiscovery({ game }: GameDiscoveryProps) {
+  const { t } = useTranslation('game_detail');
   const [results, setResults] = useState<SimilarGame[]>([]);
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'
@@ -154,7 +159,7 @@ export function GameDiscovery({ game }: GameDiscoveryProps) {
       setResults(data);
       setStatus('success');
     } catch (err) {
-      const msg = typeof err === 'string' ? err : 'Erro desconhecido';
+      const msg = typeof err === 'string' ? err : t('discovery_unknown_error');
       setErrorMsg(msg);
       setStatus('error');
     }
@@ -173,7 +178,7 @@ export function GameDiscovery({ game }: GameDiscoveryProps) {
   }, [status]);
 
   if (status === 'loading')
-    return <ContentLoading message="Buscando jogos similares…" />;
+    return <ContentLoading message={t('discovery_loading_message')} />;
 
   if (status === 'error')
     return (
@@ -187,10 +192,11 @@ export function GameDiscovery({ game }: GameDiscoveryProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-foreground text-sm font-semibold">
-          Similares a <span className="text-primary">{game.name}</span>
+          {t('discovery_header_title')}{' '}
+          <span className="text-primary">{game.name}</span>
         </h3>
         <span className="text-muted-foreground text-xs">
-          {results.length} jogos
+          {results.length} {t('discovery_games_count')}
         </span>
       </div>
 

@@ -59,5 +59,8 @@
   "confirm_dialog_title": "Você tem certeza?",
   "confirm_dialog_description": "Esta ação não pode ser desfeita.",
   "confirm_dialog_cancel": "Cancelar",
-  "confirm_dialog_confirm": "Confirmar"
+  "confirm_dialog_confirm": "Confirmar",
+  "error_title": "Não foi possível carregar",
+  "error_retry_button": "Tentar novamente",
+  "loading_default_message": "Carregando…"
 }

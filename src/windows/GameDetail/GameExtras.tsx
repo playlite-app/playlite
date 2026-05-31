@@ -9,6 +9,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
 import { usePcgwData } from '@/hooks/game';
@@ -95,14 +96,16 @@ function PathRow({ path }: { path: GameDataPath }) {
 // === ESTADOS DE UI ===
 
 function ExtrasNotFound({ gameName }: { gameName: string }) {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="flex h-48 flex-col items-center justify-center gap-3 text-center">
       <Search className="text-muted-foreground/40 h-8 w-8" />
-      <p className="text-sm font-medium">Não encontrado no PCGamingWiki</p>
+      <p className="text-sm font-medium">{t('extras_not_found_title')}</p>
       <p className="text-muted-foreground max-w-xs text-xs">
-        Não foram encontrados dados técnicos para{' '}
-        <span className="text-foreground font-medium">{gameName}</span> no
-        PCGamingWiki.
+        {t('extras_not_found_description')}{' '}
+        <span className="text-foreground font-medium">{gameName}</span>{' '}
+        {t('extras_not_found_suffix')}.
       </p>
       <a
         href={`https://www.pcgamingwiki.com/w/index.php?search=${encodeURIComponent(gameName)}`}
@@ -110,21 +113,23 @@ function ExtrasNotFound({ gameName }: { gameName: string }) {
         rel="noopener noreferrer"
         className="text-primary hover:text-primary/80 flex items-center gap-1 text-xs transition-colors"
       >
-        Buscar manualmente <ExternalLink className="h-3 w-3" />
+        {t('extras_manual_search')} <ExternalLink className="h-3 w-3" />
       </a>
     </div>
   );
 }
 
 function ExtrasNoSteamId({ gameName }: { gameName: string }) {
+  const { t } = useTranslation('game_detail');
+
   return (
     <div className="flex h-48 flex-col items-center justify-center gap-3 text-center">
       <WifiOff className="text-muted-foreground/40 h-8 w-8" />
-      <p className="text-sm font-medium">Steam AppID não disponível</p>
+      <p className="text-sm font-medium">{t('extras_no_steam_id_title')}</p>
       <p className="text-muted-foreground max-w-xs text-xs">
-        Os dados do PCGamingWiki requerem um Steam AppID.{' '}
-        <span className="text-foreground font-medium">{gameName}</span> não
-        possui este identificador.
+        {t('extras_no_steam_id_description1')}{' '}
+        <span className="text-foreground font-medium">{gameName}</span>{' '}
+        {t('extras_no_steam_id_description2')}
       </p>
     </div>
   );
@@ -133,13 +138,14 @@ function ExtrasNoSteamId({ gameName }: { gameName: string }) {
 // === COMPONENTE PRINCIPAL ===
 
 export function GameExtras({ game, details }: GameExtrasProps) {
+  const { t } = useTranslation('game_detail');
   const { cargoData, scrapedData, status, retry } = usePcgwData(
     game.id,
     details?.steamAppId
   );
 
   if (status === 'loading')
-    return <ContentLoading message="Buscando dados técnicos…" />;
+    return <ContentLoading message={t('extras_loading_message')} />;
 
   if (status === 'no_steam_id') return <ExtrasNoSteamId gameName={game.name} />;
 
@@ -163,7 +169,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {cargoData?.pcgwPageName && (
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground text-sm">
-            Fonte:{' '}
+            {t('extras_source_label')}{' '}
             <a
               href={`https://www.pcgamingwiki.com/wiki/${encodeURIComponent(cargoData.pcgwPageName.replace(/ /g, '_'))}`}
               target="_blank"
@@ -180,12 +186,15 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {/* ---- Informações gerais ---- */}
       {cargoData && (
         <div>
-          <SectionTitle>Informações Técnicas</SectionTitle>
+          <SectionTitle>{t('extras_section_technical')}</SectionTitle>
           <div className="border-border/50 divide-border/30 divide-y rounded-lg border">
             <div className="px-4 py-1">
-              <InfoRow label="Engine" value={formatEngine(cargoData.engine)} />
               <InfoRow
-                label="Plataformas"
+                label={t('extras_info_engine')}
+                value={formatEngine(cargoData.engine)}
+              />
+              <InfoRow
+                label={t('extras_info_platforms')}
                 value={formatList(cargoData.availableOn)}
               />
               <InfoRow label="DirectX" value={cargoData.dxVersions} />
@@ -199,24 +208,27 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {/* ---- Vídeo ---- */}
       {cargoData && (
         <div>
-          <SectionTitle>Vídeo</SectionTitle>
+          <SectionTitle>{t('extras_section_video')}</SectionTitle>
           <div className="border-border/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg border p-4 sm:grid-cols-3">
             <BoolBadge value={cargoData.fourKSupport} label="4K" />
             <BoolBadge value={cargoData.ultrawidescreen} label="Ultrawide" />
             <BoolBadge value={cargoData.hdr} label="HDR" />
             <BoolBadge value={cargoData.highFps} label="120 FPS+" />
             <BoolBadge value={cargoData.rayTracing} label="Ray Tracing" />
-            <BoolBadge value={cargoData.fov} label="FOV ajustável" />
+            <BoolBadge value={cargoData.fov} label={t('extras_badge_fov')} />
             <BoolBadge
               value={cargoData.borderlessWindowed}
               label="Borderless"
             />
-            <BoolBadge value={cargoData.colorBlind} label="Daltonismo" />
+            <BoolBadge
+              value={cargoData.colorBlind}
+              label={t('extras_badge_color_blind')}
+            />
             {cargoData.upscaling && (
               <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
                 <span className="text-xs">
-                  Upscaling:{' '}
+                  {t('extras_label_upscaling')}{' '}
                   <span className="text-foreground">
                     {formatList(cargoData.upscaling)}
                   </span>
@@ -227,7 +239,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
               <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
                 <span className="text-xs">
-                  Frame Gen:{' '}
+                  {t('extras_label_frame_gen')}{' '}
                   <span className="text-foreground">
                     {formatList(cargoData.frameGen)}
                   </span>
@@ -241,18 +253,18 @@ export function GameExtras({ game, details }: GameExtrasProps) {
       {/* ---- Input e Áudio ---- */}
       {cargoData && (
         <div>
-          <SectionTitle>Compatibilidade</SectionTitle>
+          <SectionTitle>{t('extras_section_compatibility')}</SectionTitle>
           <div className="border-border/50 grid gap-8 rounded-lg border p-4 sm:grid-cols-2">
             <div>
-              <SectionTitle>Controles</SectionTitle>
+              <SectionTitle>{t('extras_section_controls')}</SectionTitle>
               <div className="space-y-1.5">
                 <BoolBadge
                   value={cargoData.controllerSupport}
-                  label="Controle"
+                  label={t('extras_badge_controller')}
                 />
                 <BoolBadge
                   value={cargoData.fullController}
-                  label="Suporte completo"
+                  label={t('extras_badge_full_controller')}
                 />
                 <BoolBadge
                   value={cargoData.playstationControllers}
@@ -266,10 +278,13 @@ export function GameExtras({ game, details }: GameExtrasProps) {
             </div>
 
             <div>
-              <SectionTitle>Áudio e Acessibilidade</SectionTitle>
+              <SectionTitle>{t('extras_section_audio')}</SectionTitle>
               <div className="space-y-1.5">
                 <BoolBadge value={cargoData.surroundSound} label="Surround" />
-                <BoolBadge value={cargoData.subtitles} label="Legendas" />
+                <BoolBadge
+                  value={cargoData.subtitles}
+                  label={t('extras_badge_subtitles')}
+                />
                 <BoolBadge
                   value={cargoData.closedCaptions}
                   label="Closed Captions"
@@ -294,7 +309,8 @@ export function GameExtras({ game, details }: GameExtrasProps) {
         <div>
           <SectionTitle>
             <span className="flex items-center gap-1.5">
-              <Cpu className="h-3 w-3" /> Requisitos de Sistema
+              <Cpu className="h-3 w-3" />{' '}
+              {t('extras_section_system_requirements')}
             </span>
           </SectionTitle>
           {scrapedData!.system_requirements.map((req, i) => (
@@ -308,7 +324,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
         <div>
           <SectionTitle>
             <span className="flex items-center gap-1.5">
-              <HardDrive className="h-3 w-3" /> Localização dos Saves
+              <HardDrive className="h-3 w-3" /> {t('extras_section_save_paths')}
             </span>
           </SectionTitle>
           <div className="border-border/50 rounded-lg border px-4">
@@ -324,7 +340,8 @@ export function GameExtras({ game, details }: GameExtrasProps) {
         <div>
           <SectionTitle>
             <span className="flex items-center gap-1.5">
-              <FolderOpen className="h-3 w-3" /> Arquivos de Configuração
+              <FolderOpen className="h-3 w-3" />{' '}
+              {t('extras_section_config_paths')}
             </span>
           </SectionTitle>
           <div className="border-border/50 rounded-lg border px-4">

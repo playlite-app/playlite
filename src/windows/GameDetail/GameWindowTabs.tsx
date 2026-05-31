@@ -1,5 +1,6 @@
 import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { GameTab, Tab } from '@/types';
 import { Game, GameDetails } from '@/types/game';
@@ -18,11 +19,20 @@ interface GameTabsProps {
 }
 
 export function GameTabs({ activeTab, onTabChange }: GameTabsProps) {
+  const { t } = useTranslation('game_detail');
   const tabs: Tab[] = [
-    { id: 'description', label: 'Descrição', icon: <BookOpen /> },
-    { id: 'discovery', label: 'Descoberta', icon: <Compass /> },
-    { id: 'media', label: 'Mídia', icon: <Play /> },
-    { id: 'extras', label: 'Extras', icon: <Wrench /> },
+    {
+      id: 'description',
+      label: t('window_tabs_tab_description'),
+      icon: <BookOpen />,
+    },
+    {
+      id: 'discovery',
+      label: t('window_tabs_tab_discovery'),
+      icon: <Compass />,
+    },
+    { id: 'media', label: t('window_tabs_tab_media'), icon: <Play /> },
+    { id: 'extras', label: t('window_tabs_tab_extras'), icon: <Wrench /> },
   ];
 
   return (

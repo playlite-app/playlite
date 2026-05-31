@@ -1,8 +1,3 @@
-// utils/pcgw.ts
-//
-// Funções utilitárias para formatação e normalização de dados provenientes
-// do PCGamingWiki — usadas em windows/GameDetail/ e em utils de teste.
-
 import { LangRow } from '@/types/game_detail';
 
 /**

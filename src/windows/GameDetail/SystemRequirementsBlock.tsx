@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Monitor } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { SystemRequirements } from '@/types/game_detail';
 import { combineParts, formatOs } from '@/utils/pcgw';
@@ -29,6 +30,7 @@ interface SystemRequirementsBlockProps {
 }
 
 export function SystemRequirementsBlock({ req }: SystemRequirementsBlockProps) {
+  const { t } = useTranslation('game_detail');
   const [expanded, setExpanded] = useState(true);
 
   const title = req.tier_title
@@ -63,13 +65,13 @@ export function SystemRequirementsBlock({ req }: SystemRequirementsBlockProps) {
             <thead>
               <tr>
                 <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Componente
+                  {t('system_requirements_th_component')}
                 </th>
                 <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Mínimo
+                  {t('system_requirements_th_minimum')}
                 </th>
                 <th className="text-muted-foreground pb-2 text-left text-xs tracking-wider uppercase">
-                  Recomendado
+                  {t('system_requirements_th_recommended')}
                 </th>
               </tr>
             </thead>
@@ -93,7 +95,7 @@ export function SystemRequirementsBlock({ req }: SystemRequirementsBlockProps) {
               <SysreqRow label="VRAM" min={req.min_vram} rec={req.rec_vram} />
               <SysreqRow label="DirectX" min={req.min_dx} rec={req.rec_dx} />
               <SysreqRow
-                label="Armazenamento"
+                label={t('system_requirements_label_storage')}
                 min={req.min_storage}
                 rec={req.rec_storage}
               />
