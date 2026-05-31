@@ -1,11 +1,21 @@
-import {CheckCircle2, Cpu, ExternalLink, FolderOpen, HardDrive, Loader2, Search, WifiOff, XCircle,} from 'lucide-react';
+import {
+  CheckCircle2,
+  Cpu,
+  ExternalLink,
+  FolderOpen,
+  HardDrive,
+  Search,
+  WifiOff,
+  XCircle,
+} from 'lucide-react';
 import React from 'react';
 
-import {usePcgwData} from '@/hooks/game';
-import {GameDataPath} from '@/types';
-import {Game, GameDetails} from '@/types/game';
-import {expandPathVars, formatEngine, formatList} from '@/utils/pcgw.ts';
-import {LanguageTable, SystemRequirementsBlock} from '@/windows';
+import { ContentError, ContentLoading } from '@/components';
+import { usePcgwData } from '@/hooks/game';
+import { GameDataPath } from '@/types';
+import { Game, GameDetails } from '@/types/game';
+import { expandPathVars, formatEngine, formatList } from '@/utils/pcgw.ts';
+import { LanguageTable, SystemRequirementsBlock } from '@/windows';
 
 // === PROPS ===
 
@@ -84,19 +94,6 @@ function PathRow({ path }: { path: GameDataPath }) {
 
 // === ESTADOS DE UI ===
 
-function ExtrasLoading() {
-  return (
-    <div className="flex h-48 items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-        <p className="text-muted-foreground text-sm">
-          Buscando dados técnicos…
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function ExtrasNotFound({ gameName }: { gameName: string }) {
   return (
     <div className="flex h-48 flex-col items-center justify-center gap-3 text-center">
@@ -133,20 +130,6 @@ function ExtrasNoSteamId({ gameName }: { gameName: string }) {
   );
 }
 
-function ExtrasError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex h-48 flex-col items-center justify-center gap-3 text-center">
-      <p className="text-sm font-medium">Não foi possível carregar</p>
-      <button
-        onClick={onRetry}
-        className="border-border text-foreground hover:bg-muted rounded-md border px-3 py-1.5 text-xs transition-colors"
-      >
-        Tentar novamente
-      </button>
-    </div>
-  );
-}
-
 // === COMPONENTE PRINCIPAL ===
 
 export function GameExtras({ game, details }: GameExtrasProps) {
@@ -155,13 +138,14 @@ export function GameExtras({ game, details }: GameExtrasProps) {
     details?.steamAppId
   );
 
-  if (status === 'loading') return <ExtrasLoading />;
+  if (status === 'loading')
+    return <ContentLoading message="Buscando dados técnicos…" />;
 
   if (status === 'no_steam_id') return <ExtrasNoSteamId gameName={game.name} />;
 
   if (status === 'not_found') return <ExtrasNotFound gameName={game.name} />;
 
-  if (status === 'error') return <ExtrasError onRetry={retry} />;
+  if (status === 'error') return <ContentError onRetry={retry} />;
 
   if (status !== 'success') return null;
 

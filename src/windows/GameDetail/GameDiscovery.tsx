@@ -1,7 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ExternalLink, Frown, ImageOff, Loader2, Star } from 'lucide-react';
+import { ExternalLink, Frown, ImageOff, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { ContentError, ContentLoading } from '@/components';
 import { SimilarGame } from '@/types';
 import { Game } from '@/types/game';
 
@@ -116,19 +117,6 @@ function SimilarGameCard({ game }: SimilarGameCardProps) {
 
 // === ESTADOS DE UI ===
 
-function DiscoveryLoading() {
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-        <p className="text-muted-foreground text-sm">
-          Buscando jogos similares…
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function DiscoveryEmpty({ gameName }: { gameName: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -140,29 +128,6 @@ function DiscoveryEmpty({ gameName }: { gameName: string }) {
         A GameBrain não encontrou jogos similares a{' '}
         <span className="text-foreground font-medium">{gameName}</span>.
       </p>
-    </div>
-  );
-}
-
-function DiscoveryError({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-      <p className="text-foreground text-sm font-medium">
-        Não foi possível carregar
-      </p>
-      <p className="text-muted-foreground max-w-xs text-xs">{message}</p>
-      <button
-        onClick={onRetry}
-        className="border-border text-foreground hover:bg-muted mt-1 rounded-md border px-3 py-1.5 text-xs transition-colors"
-      >
-        Tentar novamente
-      </button>
     </div>
   );
 }
@@ -207,11 +172,12 @@ export function GameDiscovery({ game }: GameDiscoveryProps) {
     }
   }, [status]);
 
-  if (status === 'loading') return <DiscoveryLoading />;
+  if (status === 'loading')
+    return <ContentLoading message="Buscando jogos similares…" />;
 
   if (status === 'error')
     return (
-      <DiscoveryError message={errorMsg} onRetry={() => setStatus('idle')} />
+      <ContentError message={errorMsg} onRetry={() => setStatus('idle')} />
     );
 
   if (status === 'success' && results.length === 0)

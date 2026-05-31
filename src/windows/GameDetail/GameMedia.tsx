@@ -2,7 +2,6 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Maximize2,
   Meh,
   Play,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ContentError, ContentLoading } from '@/components';
 import { useNetworkStatus } from '@/hooks';
 import { Game } from '@/types/game';
 
@@ -252,17 +252,6 @@ function Lightbox({ url, onClose }: LightboxProps) {
 
 // === ESTADOS DE UI ===
 
-function MediaLoading() {
-  return (
-    <div className="flex h-64 items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-        <p className="text-muted-foreground text-sm">Carregando mídia…</p>
-      </div>
-    </div>
-  );
-}
-
 function MediaEmpty({ gameName }: { gameName: string }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
@@ -274,29 +263,6 @@ function MediaEmpty({ gameName }: { gameName: string }) {
         A GameBrain não possui screenshots ou trailers para{' '}
         <span className="text-foreground font-medium">{gameName}</span>.
       </p>
-    </div>
-  );
-}
-
-function MediaError({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
-  return (
-    <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
-      <p className="text-foreground text-sm font-medium">
-        Não foi possível carregar
-      </p>
-      <p className="text-muted-foreground max-w-xs text-xs">{message}</p>
-      <button
-        onClick={onRetry}
-        className="border-border text-foreground hover:bg-muted mt-1 rounded-md border px-3 py-1.5 text-xs transition-colors"
-      >
-        Tentar novamente
-      </button>
     </div>
   );
 }
@@ -404,10 +370,13 @@ export function GameMedia({ game }: GameMediaProps) {
 
   if (!isOnline) return <MediaOffline />;
 
-  if (status === 'loading') return <MediaLoading />;
+  if (status === 'loading')
+    return <ContentLoading message="Carregando mídia…" />;
 
   if (status === 'error')
-    return <MediaError message={errorMsg} onRetry={() => setStatus('idle')} />;
+    return (
+      <ContentError message={errorMsg} onRetry={() => setStatus('idle')} />
+    );
 
   if (status === 'success' && queue.length === 0)
     return <MediaEmpty gameName={game.name} />;
