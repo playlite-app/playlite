@@ -1,8 +1,7 @@
 import { BookOpen, Compass, Play, Wrench } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { GameTab, Tab } from '@/types';
 import { Game, GameDetails } from '@/types/game';
 import {
   GameDescription,
@@ -10,6 +9,17 @@ import {
   GameExtras,
   GameMedia,
 } from '@/windows';
+
+// === TIPOS ===
+
+// Tipo das abas disponíveis
+type GameTab = 'description' | 'discovery' | 'media' | 'extras';
+
+interface Tab {
+  id: GameTab;
+  label: string;
+  icon: React.ReactNode;
+}
 
 // === COMPONENTE DE ABAS ===
 

@@ -1,19 +1,16 @@
 import { invoke } from '@tauri-apps/api/core';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Maximize2,
-  Meh,
-  Play,
-  WifiOff,
-  X,
-} from 'lucide-react';
+import { Meh, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
-import { useNetworkStatus } from '@/hooks';
+import {
+  useMediaKeyboard,
+  useMediaThumbnailScroll,
+  useNetworkStatus,
+} from '@/hooks';
 import { Game } from '@/types/game';
+import { Lightbox, MediaThumbnail, MediaViewer } from '@/windows';
 
 // === TIPOS ===
 
@@ -50,206 +47,6 @@ function buildMediaQueue(data: GameMediaData): MediaItem[] {
   data.youtube_embeds.forEach(url => queue.push({ kind: 'youtube', url }));
 
   return queue;
-}
-
-// === THUMBNAIL DO ITEM ===
-
-interface ThumbnailProps {
-  item: MediaItem;
-  active: boolean;
-  onClick: () => void;
-}
-
-function MediaThumbnail({ item, active, onClick }: ThumbnailProps) {
-  const [imgErr, setImgErr] = useState(false);
-
-  const isVideo = item.kind === 'trailer' || item.kind === 'youtube';
-
-  // Para YouTube, extrai o thumbnail direto do ID
-  const bgUrl =
-    item.kind === 'youtube'
-      ? (() => {
-          const match = item.url.match(/embed\/([\w-]+)/);
-
-          return match
-            ? `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`
-            : null;
-        })()
-      : item.kind === 'screenshot' && !imgErr
-        ? item.url
-        : null;
-
-  return (
-    <button
-      onClick={onClick}
-      className={`relative h-16 w-28 shrink-0 overflow-hidden rounded-md border-2 transition-all duration-150 ${active ? 'border-primary' : 'hover:border-border border-transparent opacity-60 hover:opacity-100'} `}
-    >
-      {bgUrl ? (
-        <img
-          src={bgUrl}
-          alt=""
-          className="h-full w-full object-cover"
-          onError={() => setImgErr(true)}
-        />
-      ) : (
-        <div className="bg-muted/40 flex h-full w-full items-center justify-center">
-          {isVideo && <Play className="text-muted-foreground h-4 w-4" />}
-        </div>
-      )}
-
-      {/* Overlay de play para vídeos */}
-      {isVideo && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <div className="rounded-full bg-black/50 p-1">
-            <Play className="h-3 w-3 fill-white text-white" />
-          </div>
-        </div>
-      )}
-    </button>
-  );
-}
-
-// === VIEWER PRINCIPAL ===
-
-interface MediaViewerProps {
-  items: MediaItem[];
-  activeIndex: number;
-  onNavigate: (index: number) => void;
-  onFullscreen: () => void;
-}
-
-function MediaViewer({
-  items,
-  activeIndex,
-  onNavigate,
-  onFullscreen,
-}: MediaViewerProps) {
-  const { t } = useTranslation('game_detail');
-  const item = items[activeIndex];
-
-  if (!item) return null;
-
-  const canPrev = activeIndex > 0;
-  const canNext = activeIndex < items.length - 1;
-
-  const getItemLabel = (mediaItem: MediaItem): string => {
-    if (mediaItem.kind === 'screenshot') return t('media_label_screenshot');
-
-    if (mediaItem.kind === 'trailer') return t('media_label_trailer');
-
-    return t('media_label_video');
-  };
-
-  return (
-    <div
-      className="relative w-full overflow-hidden rounded-lg bg-black"
-      style={{ aspectRatio: '16/9' }}
-    >
-      {/* Conteúdo */}
-      {item.kind === 'screenshot' && (
-        <img
-          key={item.url}
-          src={item.url}
-          alt="Screenshot"
-          className="h-full w-full object-contain"
-        />
-      )}
-
-      {item.kind === 'trailer' && (
-        <video
-          key={item.url}
-          src={item.url}
-          controls
-          autoPlay
-          className="h-full w-full object-contain"
-        />
-      )}
-
-      {item.kind === 'youtube' && (
-        <iframe
-          key={item.url}
-          src={`${item.url}?autoplay=1&rel=0`}
-          className="h-full w-full"
-          allow="autoplay; fullscreen"
-          allowFullScreen
-          title="Vídeo do jogo"
-        />
-      )}
-
-      {/* Navegação — setas */}
-      {canPrev && (
-        <button
-          onClick={() => onNavigate(activeIndex - 1)}
-          className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-      )}
-      {canNext && (
-        <button
-          onClick={() => onNavigate(activeIndex + 1)}
-          className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Label do tipo + botão fullscreen (screenshots) */}
-      <div className="absolute right-2 bottom-2 left-2 flex items-center justify-between">
-        <span className="rounded bg-black/60 px-2 py-0.5 text-[11px] text-white/80 backdrop-blur-sm">
-          {getItemLabel(item)} · {activeIndex + 1}/{items.length}
-        </span>
-
-        {item.kind === 'screenshot' && (
-          <button
-            onClick={onFullscreen}
-            className="rounded bg-black/60 p-1 text-white/80 backdrop-blur-sm transition-colors hover:text-white"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// === LIGHTBOX (fullscreen de screenshot) ===
-
-interface LightboxProps {
-  url: string;
-  onClose: () => void;
-}
-
-function Lightbox({ url, onClose }: LightboxProps) {
-  // Fecha com ESC
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-      >
-        <X className="h-5 w-5" />
-      </button>
-      <img
-        src={url}
-        alt="Screenshot"
-        className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      />
-    </div>
-  );
 }
 
 // === ESTADOS DE UI ===
@@ -343,37 +140,15 @@ export function GameMedia({ game }: GameMediaProps) {
   }, [status, load, isOnline]);
 
   // Scroll automático da thumbnail ativa para o centro
-  useEffect(() => {
-    const container = thumbnailsRef.current;
-
-    if (!container) return;
-
-    const thumb = container.children[activeIndex] as HTMLElement | undefined;
-
-    if (!thumb) return;
-
-    thumb.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'center',
-    });
-  }, [activeIndex]);
+  useMediaThumbnailScroll(thumbnailsRef, activeIndex);
 
   // Navegação por teclado (← →) quando a aba está visível
-  useEffect(() => {
-    if (status !== 'success') return;
-
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && activeIndex > 0) setActiveIndex(i => i - 1);
-
-      if (e.key === 'ArrowRight' && activeIndex < queue.length - 1)
-        setActiveIndex(i => i + 1);
-    };
-
-    window.addEventListener('keydown', handler);
-
-    return () => window.removeEventListener('keydown', handler);
-  }, [status, activeIndex, queue.length]);
+  useMediaKeyboard({
+    enabled: status === 'success',
+    activeIndex,
+    totalItems: queue.length,
+    onNavigate: setActiveIndex,
+  });
 
   if (!isOnline) return <MediaOffline />;
 

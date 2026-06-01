@@ -1,18 +1,3 @@
-// types/game_detail.ts
-//
-// Tipos que espelham as estruturas retornadas pelo backend para dados do Gamebrain e PCGamingWiki.
-
-import React from 'react';
-
-// Tipo das abas disponíveis
-export type GameTab = 'description' | 'discovery' | 'media' | 'extras';
-
-export interface Tab {
-  id: GameTab;
-  label: string;
-  icon: React.ReactNode;
-}
-
 /**
  * Espelha SimilarGame do backend (gamebrain.rs)
  * OBS.: campo because_of adicionado por ProfileSimilarGame
