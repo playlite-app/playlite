@@ -1,14 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
-import { Meh, WifiOff } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Meh, WifiOff } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
-import {
-  useMediaKeyboard,
-  useMediaThumbnailScroll,
-  useNetworkStatus,
-} from '@/hooks';
+import { useMediaKeyboard, useMediaThumbnailScroll, useNetworkStatus, } from '@/hooks';
 import { Game } from '@/types/game';
 import { Lightbox, MediaThumbnail, MediaViewer } from '@/windows';
 
@@ -47,6 +43,50 @@ function buildMediaQueue(data: GameMediaData): MediaItem[] {
   data.youtube_embeds.forEach(url => queue.push({ kind: 'youtube', url }));
 
   return queue;
+}
+
+function ScrollThumb({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [thumb, setThumb] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) return;
+
+    const update = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const trackWidth = 100; // percentual
+
+      const thumbWidth = Math.max((clientWidth / scrollWidth) * trackWidth, 10);
+      const thumbLeft =
+        (scrollLeft / (scrollWidth - clientWidth)) * (trackWidth - thumbWidth);
+
+      setThumb({ left: thumbLeft, width: thumbWidth });
+    };
+
+    update();
+    container.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+
+    return () => {
+      container.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [containerRef]);
+
+  return (
+    <div
+      className="bg-muted-foreground/40 hover:bg-muted-foreground/70 absolute top-0 h-full rounded transition-colors"
+      style={{
+        left: `${thumb.left}%`,
+        width: `${thumb.width}%`,
+      }}
+    />
+  );
 }
 
 // === ESTADOS DE UI ===
@@ -172,7 +212,6 @@ export function GameMedia({ game }: GameMediaProps) {
       {lightboxUrl && (
         <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
-
       <div className="flex flex-col gap-4">
         {/* Viewer principal */}
         <MediaViewer
@@ -185,10 +224,10 @@ export function GameMedia({ game }: GameMediaProps) {
           }}
         />
 
-        {/* Fila de thumbnails com scroll horizontal */}
+        {/* Fila de thumbnails */}
         <div
           ref={thumbnailsRef}
-          className="flex gap-2 overflow-x-auto pb-1"
+          className="flex gap-2 overflow-x-auto"
           style={{ scrollbarWidth: 'none' }}
         >
           {queue.map((item, i) => (
@@ -199,6 +238,53 @@ export function GameMedia({ game }: GameMediaProps) {
               onClick={() => setActiveIndex(i)}
             />
           ))}
+        </div>
+
+        {/* Barra de navegação inferior — estilo Steam */}
+        <div className="flex items-center gap-2">
+          {/* Botão esquerdo */}
+          <button
+            onClick={() =>
+              thumbnailsRef.current?.scrollBy({
+                left: -240,
+                behavior: 'smooth',
+              })
+            }
+            className="bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* Scrollbar customizada */}
+          <div
+            className="bg-muted/40 relative h-6 flex-1 cursor-pointer rounded"
+            onClick={e => {
+              const bar = e.currentTarget;
+              const container = thumbnailsRef.current;
+
+              if (!container) return;
+
+              const ratio = e.nativeEvent.offsetX / bar.offsetWidth;
+              const maxScroll = container.scrollWidth - container.clientWidth;
+
+              container.scrollTo({
+                left: ratio * maxScroll,
+                behavior: 'smooth',
+              });
+            }}
+          >
+            <ScrollThumb containerRef={thumbnailsRef} />
+          </div>
+
+          {/* Botão direito */}
+          <button
+            onClick={() =>
+              thumbnailsRef.current?.scrollBy({ left: 240, behavior: 'smooth' })
+            }
+            className="bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </>
