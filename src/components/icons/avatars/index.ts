@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { AvatarIconProps, PresetAvatar } from '../../../types/avatars';
+import { AvatarIconProps, PresetAvatar } from '@/types/avatars.ts';
+
 import { Bear } from './Bear';
 import { Cat } from './Cat';
 import { Dog } from './Dog';

@@ -1,4 +1,4 @@
-import { AvatarIconProps } from '../../../types/avatars';
+import { AvatarIconProps } from '@/types/avatars.ts';
 
 export function Cat({ className = 'w-full h-full' }: AvatarIconProps) {
   return (
