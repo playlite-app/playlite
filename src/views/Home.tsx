@@ -15,11 +15,10 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
-import { StatCard } from '@/components/cards/StatCard';
 import { ActionButton } from '@/components/common';
 import Hero from '@/components/common/Hero';
 import {
@@ -40,6 +39,26 @@ import Achievements from '../components/common/Achievements';
 import { formatTime } from '../utils/formatTime';
 import { launchGame } from '../utils/launcher';
 import { openExternalLink } from '../utils/openLink';
+
+interface StatCardProps {
+  icon: ReactNode;
+  label: string;
+  value: string | number;
+  color: string;
+  bg: string;
+}
+
+function StatCard({ icon, label, value, color, bg }: StatCardProps) {
+  return (
+    <div className="bg-card border-border hover:border-primary/50 flex items-center gap-4 rounded-xl border p-5 transition-colors">
+      <div className={`rounded-lg p-3 ${bg} ${color}`}>{icon}</div>
+      <div>
+        <p className="text-muted-foreground text-sm">{label}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 interface HomeProps {
   onChangeTab: (tab: string) => void;

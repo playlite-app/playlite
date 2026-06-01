@@ -16,7 +16,7 @@ import { Game, GameDetails } from '@/types/game';
 import { expandPathVars, formatEngine, formatList } from '@/utils/pcgw.ts';
 import { BoolBadge, LanguageTable, SystemRequirementsBlock } from '@/windows';
 
-import { usePcgwData } from '../../hooks/game_detail';
+import { usePcgwData } from '@/hooks';
 
 // === PROPS ===
 
