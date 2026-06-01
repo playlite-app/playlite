@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/ui/button';
+import { Button } from '@/ui/button.tsx';
 
 interface GameLinksProps {
   links?: Record<string, string>;

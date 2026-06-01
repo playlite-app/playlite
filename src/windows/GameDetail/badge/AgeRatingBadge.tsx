@@ -4,16 +4,26 @@ import { useTranslation } from 'react-i18next';
 interface AgeRatingProps {
   esrb?: string;
   isAdult?: boolean;
+  adultTags?: string | null;
 }
 
-export function AgeRatingBadge({ esrb, isAdult }: AgeRatingProps) {
+export function AgeRatingBadge({ esrb, isAdult, adultTags }: AgeRatingProps) {
   const { t } = useTranslation('game_detail');
 
   if (isAdult) {
+    // Normaliza adultTags — pode vir como JSON array ou string simples
+    const tags = adultTags
+      ? adultTags.startsWith('[')
+        ? JSON.parse(adultTags).join(', ')
+        : adultTags
+      : null;
+
     return (
-      <div className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-500/50 bg-red-500/10 px-2 py-1 text-sm font-bold text-red-400">
-        <AlertTriangle size={18} />
-        <span>{t('age_rating_adult_content')}</span>
+      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-400">
+        <div className="mb-1 flex items-center gap-2 font-bold">
+          <AlertTriangle size={16} /> {t('sidebar_adult_content_title')}
+        </div>
+        {tags && <p className="text-sm opacity-80">{tags}</p>}
       </div>
     );
   }

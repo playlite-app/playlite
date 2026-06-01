@@ -6,17 +6,17 @@ import {
   HardDrive,
   Search,
   WifiOff,
-  XCircle,
 } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
-import { usePcgwData } from '@/hooks/game';
 import { GameDataPath } from '@/types';
 import { Game, GameDetails } from '@/types/game';
 import { expandPathVars, formatEngine, formatList } from '@/utils/pcgw.ts';
-import { LanguageTable, SystemRequirementsBlock } from '@/windows';
+import { BoolBadge, LanguageTable, SystemRequirementsBlock } from '@/windows';
+
+import { usePcgwData } from '../../hooks/game_detail';
 
 // === PROPS ===
 
@@ -32,38 +32,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-widest uppercase">
       {children}
     </h3>
-  );
-}
-
-function BoolBadge({ value, label }: { value: string | null; label: string }) {
-  if (!value || value === 'unknown' || value === 'n/a') return null;
-
-  const isTrue = value === 'true';
-  const isHackable = value === 'hackable';
-
-  return (
-    <div className="flex items-center gap-1.5">
-      {isTrue ? (
-        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
-      ) : isHackable ? (
-        // hackable = disponível com mod/workaround
-        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-yellow-500" />
-      ) : (
-        <XCircle className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
-      )}
-      <span
-        className={`text-xs ${
-          isTrue
-            ? 'text-foreground'
-            : isHackable
-              ? 'text-yellow-500/80'
-              : 'text-muted-foreground/50 line-through'
-        }`}
-      >
-        {label}
-        {isHackable && <span className="ml-1 text-xs opacity-70">(mod)</span>}
-      </span>
-    </div>
   );
 }
 
@@ -165,24 +133,6 @@ export function GameExtras({ game, details }: GameExtrasProps) {
 
   return (
     <div className="space-y-8">
-      {/* ---- Cabeçalho com link para a página ---- */}
-      {cargoData?.pcgwPageName && (
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">
-            {t('extras_source_label')}{' '}
-            <a
-              href={`https://www.pcgamingwiki.com/wiki/${encodeURIComponent(cargoData.pcgwPageName.replace(/ /g, '_'))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 transition-colors"
-            >
-              PCGamingWiki
-              <ExternalLink className="ml-1 inline h-3 w-3" />
-            </a>
-          </p>
-        </div>
-      )}
-
       {/* ---- Informações gerais ---- */}
       {cargoData && (
         <div>
@@ -297,11 +247,14 @@ export function GameExtras({ game, details }: GameExtrasProps) {
 
       {/* ---- Idiomas ---- */}
       {hasLangs && (
-        <LanguageTable
-          interface={cargoData?.languagesInterface ?? null}
-          audio={cargoData?.languagesAudio ?? null}
-          subtitles={cargoData?.languagesSubtitles ?? null}
-        />
+        <div>
+          <SectionTitle>{t('section_languages_title')}</SectionTitle>
+          <LanguageTable
+            interface={cargoData?.languagesInterface ?? null}
+            audio={cargoData?.languagesAudio ?? null}
+            subtitles={cargoData?.languagesSubtitles ?? null}
+          />
+        </div>
       )}
 
       {/* ---- Requisitos de Sistema ---- */}
@@ -349,6 +302,24 @@ export function GameExtras({ game, details }: GameExtrasProps) {
               <PathRow key={i} path={p} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ---- Footer com link para a página ---- */}
+      {cargoData?.pcgwPageName && (
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            {t('extras_source_label')}{' '}
+            <a
+              href={`https://www.pcgamingwiki.com/wiki/${encodeURIComponent(cargoData.pcgwPageName.replace(/ /g, '_'))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              PCGamingWiki
+              <ExternalLink className="ml-1 inline h-3 w-3" />
+            </a>
+          </p>
         </div>
       )}
     </div>

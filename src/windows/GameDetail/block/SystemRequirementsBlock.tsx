@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, Monitor } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SystemRequirements } from '@/types/game_detail';
+import { SystemRequirements } from '@/types';
 import { combineParts, formatOs } from '@/utils/pcgw';
 
 interface SysreqRowProps {
@@ -60,7 +60,7 @@ export function SystemRequirementsBlock({ req }: SystemRequirementsBlockProps) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pt-2 pb-4">
           <table className="w-full">
             <thead>
               <tr>

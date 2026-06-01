@@ -127,6 +127,8 @@
   "window_tabs_tab_media": "Media",
   "window_tabs_tab_extras": "Extras",
 
+  "section_languages_title": "Languages",
+  "language_table_title": "Available Languages",
   "language_table_th_language": "Language",
   "language_table_th_interface": "Interface",
   "language_table_th_audio": "Audio",

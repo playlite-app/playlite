@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   Building2,
   Calendar,
   Clock,
@@ -19,7 +18,7 @@ import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { formatTime } from '@/utils/formatTime';
 import { getPlaytimeCategory } from '@/utils/playtime';
-import { GameLinks, SteamReviewBadge } from '@/windows';
+import { AgeRatingBadge, GameLinks, SteamReviewBadge } from '@/windows';
 
 interface GameSidebarProps {
   game: Game;
@@ -111,18 +110,10 @@ export function GameSidebar({
     <div className="space-y-6 p-6 lg:p-8">
       {/* AVISO DE CONTEÚDO ADULTO */}
       {(details?.isAdult || details?.adultTags) && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-400">
-          <div className="mb-1 flex items-center gap-2 font-bold">
-            <AlertTriangle size={16} /> {t('sidebar_adult_content_title')}
-          </div>
-          {details?.adultTags && (
-            <p className="text-sm opacity-80">
-              {details.adultTags.startsWith('[')
-                ? JSON.parse(details.adultTags).join(', ')
-                : details.adultTags}
-            </p>
-          )}
-        </div>
+        <AgeRatingBadge
+          isAdult={details?.isAdult}
+          adultTags={details?.adultTags}
+        />
       )}
 
       {/* 1. DADOS DO USUÁRIO */}
