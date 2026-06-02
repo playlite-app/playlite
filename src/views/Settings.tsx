@@ -23,7 +23,11 @@ import { useTranslation } from 'react-i18next';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import { SubscriptionsConfig } from '@/components/subscriptions/SubscriptionsConfig.tsx';
-import { useRecommendation, useRecommendationSliders, useSettings, } from '@/hooks';
+import {
+  useRecommendation,
+  useRecommendationSliders,
+  useSettings,
+} from '@/hooks';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
