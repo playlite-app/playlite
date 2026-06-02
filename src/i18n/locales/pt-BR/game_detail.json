@@ -137,5 +137,7 @@
   "system_requirements_th_component": "Componente",
   "system_requirements_th_minimum": "Mínimo",
   "system_requirements_th_recommended": "Recomendado",
-  "system_requirements_label_storage": "Armazenamento"
+  "system_requirements_label_storage": "Armazenamento",
+
+  "path_row_copy_tooltip": "Copiar caminho"
 }

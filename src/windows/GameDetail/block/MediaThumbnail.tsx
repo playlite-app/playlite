@@ -1,10 +1,7 @@
-import { Play } from 'lucide-react';
-import { useState } from 'react';
+import {Play} from 'lucide-react';
+import {useState} from 'react';
 
-export type MediaItem =
-  | { kind: 'screenshot'; url: string }
-  | { kind: 'trailer'; url: string }
-  | { kind: 'youtube'; url: string };
+import {MediaItem} from '@/types';
 
 interface MediaThumbnailProps {
   item: MediaItem;

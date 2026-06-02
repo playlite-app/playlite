@@ -11,12 +11,15 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ContentError, ContentLoading } from '@/components';
-import { GameDataPath } from '@/types';
-import { Game, GameDetails } from '@/types/game';
-import { expandPathVars, formatEngine, formatList } from '@/utils/pcgw.ts';
-import { BoolBadge, LanguageTable, SystemRequirementsBlock } from '@/windows';
-
 import { usePcgwData } from '@/hooks';
+import { Game, GameDetails } from '@/types/game';
+import { formatEngine, formatList } from '@/utils/pcgw';
+import {
+  BoolBadge,
+  LanguageTable,
+  PathRow,
+  SystemRequirements,
+} from '@/windows';
 
 // === PROPS ===
 
@@ -42,21 +45,6 @@ function InfoRow({ label, value }: { label: string; value: string | null }) {
     <div className="flex items-start justify-between gap-4 py-1.5 text-xs">
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span className="text-foreground text-right">{value}</span>
-    </div>
-  );
-}
-
-function PathRow({ path }: { path: GameDataPath }) {
-  const display = path.expanded_path ?? expandPathVars(path.raw_path);
-
-  return (
-    <div className="border-border/40 flex items-start gap-2 border-b py-2 last:border-0">
-      <span className="bg-muted text-muted-foreground mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs">
-        {path.os}
-      </span>
-      <code className="text-foreground/80 text-xs leading-relaxed break-all">
-        {display}
-      </code>
     </div>
   );
 }
@@ -126,123 +114,121 @@ export function GameExtras({ game, details }: GameExtrasProps) {
   const hasSysreqs = (scrapedData?.system_requirements?.length ?? 0) > 0;
   const hasConfigPaths = (scrapedData?.config_paths?.length ?? 0) > 0;
   const hasSavePaths = (scrapedData?.save_paths?.length ?? 0) > 0;
-  const hasLangs =
-    cargoData?.languagesInterface ||
-    cargoData?.languagesAudio ||
-    cargoData?.languagesSubtitles;
+  const hasLangs = Boolean(
+    cargoData?.languagesInterface?.length ||
+    cargoData?.languagesAudio?.length ||
+    cargoData?.languagesSubtitles?.length
+  );
 
   return (
     <div className="space-y-8">
-      {/* ---- Informações gerais ---- */}
       {cargoData && (
-        <div>
-          <SectionTitle>{t('extras_section_technical')}</SectionTitle>
-          <div className="border-border/50 divide-border/30 divide-y rounded-lg border">
-            <div className="px-4 py-1">
-              <InfoRow
-                label={t('extras_info_engine')}
-                value={formatEngine(cargoData.engine)}
+        <>
+          {/* ---- Informações Técnicas ---- */}
+          <div>
+            <SectionTitle>{t('extras_section_technical')}</SectionTitle>
+            <div className="border-border/50 divide-border/30 divide-y rounded-lg border">
+              <div className="px-4 py-1">
+                <InfoRow
+                  label={t('extras_info_engine')}
+                  value={formatEngine(cargoData.engine)}
+                />
+                <InfoRow
+                  label={t('extras_info_platforms')}
+                  value={formatList(cargoData.availableOn)}
+                />
+                <InfoRow label="DirectX" value={cargoData.dxVersions} />
+                <InfoRow label="Vulkan" value={cargoData.vulkanVersions} />
+                <InfoRow label="OpenGL" value={cargoData.openglVersions} />
+              </div>
+            </div>
+          </div>
+
+          {/* ---- Vídeo ---- */}
+          <div>
+            <SectionTitle>{t('extras_section_video')}</SectionTitle>
+            <div className="border-border/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg border p-4 sm:grid-cols-3">
+              <BoolBadge value={cargoData.fourKSupport} label="4K" />
+              <BoolBadge value={cargoData.ultrawidescreen} label="Ultrawide" />
+              <BoolBadge value={cargoData.hdr} label="HDR" />
+              <BoolBadge value={cargoData.highFps} label="120 FPS+" />
+              <BoolBadge value={cargoData.rayTracing} label="Ray Tracing" />
+              <BoolBadge value={cargoData.fov} label={t('extras_badge_fov')} />
+              <BoolBadge
+                value={cargoData.borderlessWindowed}
+                label="Borderless"
               />
-              <InfoRow
-                label={t('extras_info_platforms')}
-                value={formatList(cargoData.availableOn)}
+              <BoolBadge
+                value={cargoData.colorBlind}
+                label={t('extras_badge_color_blind')}
               />
-              <InfoRow label="DirectX" value={cargoData.dxVersions} />
-              <InfoRow label="Vulkan" value={cargoData.vulkanVersions} />
-              <InfoRow label="OpenGL" value={cargoData.openglVersions} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ---- Vídeo ---- */}
-      {cargoData && (
-        <div>
-          <SectionTitle>{t('extras_section_video')}</SectionTitle>
-          <div className="border-border/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg border p-4 sm:grid-cols-3">
-            <BoolBadge value={cargoData.fourKSupport} label="4K" />
-            <BoolBadge value={cargoData.ultrawidescreen} label="Ultrawide" />
-            <BoolBadge value={cargoData.hdr} label="HDR" />
-            <BoolBadge value={cargoData.highFps} label="120 FPS+" />
-            <BoolBadge value={cargoData.rayTracing} label="Ray Tracing" />
-            <BoolBadge value={cargoData.fov} label={t('extras_badge_fov')} />
-            <BoolBadge
-              value={cargoData.borderlessWindowed}
-              label="Borderless"
-            />
-            <BoolBadge
-              value={cargoData.colorBlind}
-              label={t('extras_badge_color_blind')}
-            />
-            {cargoData.upscaling && (
-              <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
-                <span className="text-xs">
-                  {t('extras_label_upscaling')}{' '}
-                  <span className="text-foreground">
-                    {formatList(cargoData.upscaling)}
+              {cargoData.upscaling && (
+                <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                  <span className="text-xs">
+                    {t('extras_label_upscaling')}{' '}
+                    <span className="text-foreground">
+                      {formatList(cargoData.upscaling)}
+                    </span>
                   </span>
-                </span>
-              </div>
-            )}
-            {cargoData.frameGen && (
-              <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
-                <span className="text-xs">
-                  {t('extras_label_frame_gen')}{' '}
-                  <span className="text-foreground">
-                    {formatList(cargoData.frameGen)}
+                </div>
+              )}
+              {cargoData.frameGen && (
+                <div className="col-span-2 flex items-center gap-1.5 sm:col-span-3">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                  <span className="text-xs">
+                    {t('extras_label_frame_gen')}{' '}
+                    <span className="text-foreground">
+                      {formatList(cargoData.frameGen)}
+                    </span>
                   </span>
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ---- Input e Áudio ---- */}
-      {cargoData && (
-        <div>
-          <SectionTitle>{t('extras_section_compatibility')}</SectionTitle>
-          <div className="border-border/50 grid gap-8 rounded-lg border p-4 sm:grid-cols-2">
-            <div>
-              <SectionTitle>{t('extras_section_controls')}</SectionTitle>
-              <div className="space-y-1.5">
-                <BoolBadge
-                  value={cargoData.controllerSupport}
-                  label={t('extras_badge_controller')}
-                />
-                <BoolBadge
-                  value={cargoData.fullController}
-                  label={t('extras_badge_full_controller')}
-                />
-                <BoolBadge
-                  value={cargoData.playstationControllers}
-                  label="PlayStation"
-                />
-                <BoolBadge
-                  value={cargoData.xinputControllers}
-                  label="XInput / Xbox"
-                />
-              </div>
+                </div>
+              )}
             </div>
+          </div>
 
-            <div>
-              <SectionTitle>{t('extras_section_audio')}</SectionTitle>
-              <div className="space-y-1.5">
-                <BoolBadge value={cargoData.surroundSound} label="Surround" />
-                <BoolBadge
-                  value={cargoData.subtitles}
-                  label={t('extras_badge_subtitles')}
-                />
-                <BoolBadge
-                  value={cargoData.closedCaptions}
-                  label="Closed Captions"
-                />
+          {/* ---- Input e Áudio ---- */}
+          <div>
+            <SectionTitle>{t('extras_section_compatibility')}</SectionTitle>
+            <div className="border-border/50 grid gap-8 rounded-lg border p-4 sm:grid-cols-2">
+              <div>
+                <SectionTitle>{t('extras_section_controls')}</SectionTitle>
+                <div className="space-y-1.5">
+                  <BoolBadge
+                    value={cargoData.controllerSupport}
+                    label={t('extras_badge_controller')}
+                  />
+                  <BoolBadge
+                    value={cargoData.fullController}
+                    label={t('extras_badge_full_controller')}
+                  />
+                  <BoolBadge
+                    value={cargoData.playstationControllers}
+                    label="PlayStation"
+                  />
+                  <BoolBadge
+                    value={cargoData.xinputControllers}
+                    label="XInput / Xbox"
+                  />
+                </div>
+              </div>
+              <div>
+                <SectionTitle>{t('extras_section_audio')}</SectionTitle>
+                <div className="space-y-1.5">
+                  <BoolBadge value={cargoData.surroundSound} label="Surround" />
+                  <BoolBadge
+                    value={cargoData.subtitles}
+                    label={t('extras_badge_subtitles')}
+                  />
+                  <BoolBadge
+                    value={cargoData.closedCaptions}
+                    label="Closed Captions"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ---- Idiomas ---- */}
@@ -267,7 +253,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
             </span>
           </SectionTitle>
           {scrapedData!.system_requirements.map((req, i) => (
-            <SystemRequirementsBlock key={i} req={req} />
+            <SystemRequirements key={i} req={req} />
           ))}
         </div>
       )}

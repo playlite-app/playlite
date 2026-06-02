@@ -1,4 +1,13 @@
 /**
+ * Item unificado da fila de mídia
+ * Usada em GameMedia.tsx e MediaViewer.tsx
+ */
+export type MediaItem =
+  | { kind: 'screenshot'; url: string }
+  | { kind: 'trailer'; url: string }
+  | { kind: 'youtube'; url: string };
+
+/**
  * Espelha SimilarGame do backend (gamebrain.rs)
  * OBS.: campo because_of adicionado por ProfileSimilarGame
  */
@@ -25,7 +34,7 @@ export interface SimilarGame {
  * "Intel Core i5 / AMD Ryzen 5" — mantidos aqui apenas para compatibilidade
  * caso o backend passe a enviar separado no futuro.
  */
-export interface SystemRequirements {
+export interface Sysreq {
   os_family: string;
   tier_title: string | null;
   target: string | null;
@@ -71,7 +80,7 @@ export interface GameDataPath {
  * Retornado pelo comando Tauri `get_pcgw_scraped_data`.
  */
 export interface PcgwScrapedData {
-  system_requirements: SystemRequirements[];
+  system_requirements: Sysreq[];
   config_paths: GameDataPath[];
   save_paths: GameDataPath[];
 }

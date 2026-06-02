@@ -108,7 +108,7 @@ export function GameContentTabs({
       )}
 
       {/* Conteúdo da aba ativa */}
-      <div className="custom-scrollbar flex-1 overflow-y-auto p-6 lg:p-10">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-6 lg:p-10">
         {activeTab === 'description' && (
           <GameDescription
             gameId={game.id}

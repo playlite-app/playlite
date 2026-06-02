@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { MediaItem } from '@/windows';
+import { MediaItem } from '@/types';
 
 interface MediaViewerProps {
   items: MediaItem[];

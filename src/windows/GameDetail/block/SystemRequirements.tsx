@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, Monitor } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SystemRequirements } from '@/types';
+import { Sysreq } from '@/types';
 import { combineParts, formatOs } from '@/utils/pcgw';
 
 interface SysreqRowProps {
@@ -25,11 +25,11 @@ function SysreqRow({ label, min, rec }: SysreqRowProps) {
   );
 }
 
-interface SystemRequirementsBlockProps {
-  req: SystemRequirements;
+interface SystemRequirementsProps {
+  req: Sysreq;
 }
 
-export function SystemRequirementsBlock({ req }: SystemRequirementsBlockProps) {
+export function SystemRequirements({ req }: SystemRequirementsProps) {
   const { t } = useTranslation('game_detail');
   const [expanded, setExpanded] = useState(true);
 

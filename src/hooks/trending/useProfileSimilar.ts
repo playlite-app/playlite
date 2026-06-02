@@ -1,7 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
-import { Game, SimilarGame } from '@/types/game';
+import { SimilarGame } from '@/types';
+import { Game } from '@/types/game';
 
 interface UseProfileSimilarResult {
   games: SimilarGame[];

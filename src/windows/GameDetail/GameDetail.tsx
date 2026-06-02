@@ -63,10 +63,10 @@ export default function GameDetail({
       />
 
       {/* Layout Principal */}
-      <div className="bg-background grid h-[calc(95vh-10rem)] grid-cols-1 gap-0 overflow-hidden md:h-[calc(90vh-10rem)] lg:grid-cols-12">
+      <div className="bg-background grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-hidden lg:grid-cols-12">
         {/* Coluna 1: Sidebar (Escondida em modo edição para dar espaço ao form) */}
         {!isEditing && (
-          <div className="border-border bg-muted/5 custom-scrollbar overflow-y-auto border-r lg:col-span-4">
+          <div className="border-border bg-muted/5 custom-scrollbar min-h-0 overflow-y-auto border-r lg:col-span-4">
             <GameSidebar
               game={game}
               details={currentDetails}
@@ -78,7 +78,7 @@ export default function GameDetail({
 
         {/* Coluna 2: Conteúdo Principal (Expandido em modo edição) */}
         <div
-          className={`bg-background overflow-hidden ${isEditing ? 'lg:col-span-12' : 'lg:col-span-8'}`}
+          className={`bg-background flex min-h-0 flex-col overflow-hidden ${isEditing ? 'lg:col-span-12' : 'lg:col-span-8'}`}
         >
           {isEditing && currentDetails ? (
             <div className="custom-scrollbar h-full overflow-y-auto p-6 lg:p-10">

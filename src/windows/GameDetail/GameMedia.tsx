@@ -1,12 +1,13 @@
-import { invoke } from '@tauri-apps/api/core';
-import { ChevronLeft, ChevronRight, Meh, WifiOff } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import {invoke} from '@tauri-apps/api/core';
+import {ChevronLeft, ChevronRight, Meh, WifiOff} from 'lucide-react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 
-import { ContentError, ContentLoading } from '@/components';
-import { useMediaKeyboard, useMediaThumbnailScroll, useNetworkStatus, } from '@/hooks';
-import { Game } from '@/types/game';
-import { Lightbox, MediaThumbnail, MediaViewer } from '@/windows';
+import {ContentError, ContentLoading} from '@/components';
+import {useMediaKeyboard, useMediaThumbnailScroll, useNetworkStatus,} from '@/hooks';
+import {MediaItem} from '@/types';
+import {Game} from '@/types/game';
+import {Lightbox, MediaThumbnail, MediaViewer} from '@/windows';
 
 // === TIPOS ===
 
@@ -16,12 +17,6 @@ interface GameMediaData {
   youtube_embeds: string[];
   micro_trailer: string | null;
 }
-
-// Item unificado da fila de mídia
-type MediaItem =
-  | { kind: 'screenshot'; url: string }
-  | { kind: 'trailer'; url: string }
-  | { kind: 'youtube'; url: string };
 
 interface GameMediaProps {
   game: Game;
@@ -51,6 +46,7 @@ function ScrollThumb({
   containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [thumb, setThumb] = useState({ left: 0, width: 0 });
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -59,12 +55,10 @@ function ScrollThumb({
 
     const update = () => {
       const { scrollLeft, scrollWidth, clientWidth } = container;
-      const trackWidth = 100; // percentual
-
+      const trackWidth = 100;
       const thumbWidth = Math.max((clientWidth / scrollWidth) * trackWidth, 10);
       const thumbLeft =
         (scrollLeft / (scrollWidth - clientWidth)) * (trackWidth - thumbWidth);
-
       setThumb({ left: thumbLeft, width: thumbWidth });
     };
 
@@ -80,11 +74,16 @@ function ScrollThumb({
 
   return (
     <div
-      className="bg-muted-foreground/40 hover:bg-muted-foreground/70 absolute top-0 h-full rounded transition-colors"
+      className="absolute top-1/2 h-6 -translate-y-1/2 rounded transition-colors duration-150"
       style={{
         left: `${thumb.left}%`,
         width: `${thumb.width}%`,
+        backgroundColor: hovered
+          ? 'var(--muted-foreground)'
+          : 'color-mix(in oklch, var(--muted-foreground), transparent 45%)',
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     />
   );
 }
@@ -250,14 +249,18 @@ export function GameMedia({ game }: GameMediaProps) {
                 behavior: 'smooth',
               })
             }
-            className="bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors"
+            className="bg-muted hover:bg-muted/80 border-border text-foreground shrink-0 rounded border p-1 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
 
           {/* Scrollbar customizada */}
           <div
-            className="bg-muted/40 relative h-6 flex-1 cursor-pointer rounded"
+            className="relative h-6 flex-1 cursor-pointer rounded transition-colors"
+            style={{
+              backgroundColor: 'var(--muted)',
+              border: '1px solid var(--border)',
+            }}
             onClick={e => {
               const bar = e.currentTarget;
               const container = thumbnailsRef.current;
@@ -266,7 +269,6 @@ export function GameMedia({ game }: GameMediaProps) {
 
               const ratio = e.nativeEvent.offsetX / bar.offsetWidth;
               const maxScroll = container.scrollWidth - container.clientWidth;
-
               container.scrollTo({
                 left: ratio * maxScroll,
                 behavior: 'smooth',
@@ -281,7 +283,7 @@ export function GameMedia({ game }: GameMediaProps) {
             onClick={() =>
               thumbnailsRef.current?.scrollBy({ left: 240, behavior: 'smooth' })
             }
-            className="bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors"
+            className="bg-muted hover:bg-muted/80 border-border text-foreground shrink-0 rounded border p-1 transition-colors"
           >
             <ChevronRight className="h-4 w-4" />
           </button>

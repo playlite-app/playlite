@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { GameDetails } from '@/types/game';
 import { Button } from '@/ui/button';
-import { ScrollArea } from '@/ui/scroll-area';
 import { Skeleton } from '@/ui/skeleton';
 import { toast } from '@/utils/toast';
 
@@ -114,7 +113,7 @@ export function GameDescription({
       : details.descriptionRaw || t('description_no_description');
 
   return (
-    <div className="flex h-full flex-col pr-4">
+    <div className="pr-4">
       {/* CABEÇALHO: Título + Toggle */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold tracking-tight">
@@ -165,13 +164,12 @@ export function GameDescription({
       </div>
 
       {/* CONTEÚDO */}
-      <ScrollArea className="-mr-4 flex-1 pr-4">
-        <div className="text-foreground/90 pb-8 text-sm leading-relaxed transition-opacity duration-300 lg:text-base">
-          <p className="text-secondary-foreground font-light whitespace-pre-line">
-            {textToShow}
-          </p>
-        </div>
-      </ScrollArea>
+
+      <div className="text-foreground/90 pb-8 text-sm leading-relaxed transition-opacity duration-300 lg:text-base">
+        <p className="text-secondary-foreground font-light whitespace-pre-line">
+          {textToShow}
+        </p>
+      </div>
     </div>
   );
 }

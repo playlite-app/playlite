@@ -27,8 +27,10 @@ export function WindowBase({
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent
+        showCloseButton={false}
         className={cn(
           'bg-background flex h-[95vh] w-[95vw] flex-col gap-0 overflow-hidden rounded-xl border-none p-0 shadow-2xl',
+          'grid-cols-1! grid-rows-1!', // reseta o grid do shadcn
           maxWidthClass,
           className
         )}
