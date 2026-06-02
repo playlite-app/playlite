@@ -23,11 +23,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AboutPlaylite, SettingsRow, StatusBadge } from '@/components/common';
 import { SubscriptionsConfig } from '@/components/subscriptions/SubscriptionsConfig.tsx';
-import {
-  useRecommendation,
-  useRecommendationSliders,
-  useSettings,
-} from '@/hooks';
+import { useRecommendation, useRecommendationSliders, useSettings, } from '@/hooks';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Separator } from '@/ui/separator';
@@ -147,7 +143,7 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
           <div className="grid gap-2">
             <Input
               type="password"
-              placeholder="Cole sua chave da API GameBrain"
+              placeholder={t('gamebain_api_key_placeholder')}
               value={keys.gamebrainApiKey}
               onChange={e =>
                 setKeys({
@@ -179,13 +175,28 @@ export default function Settings({ onLibraryUpdate }: Readonly<SettingsProps>) {
           title={t('rawg_title')}
           description={t('rawg_description')}
         >
-          <Input
-            type="password"
-            placeholder={t('rawg_api_key_placeholder')}
-            value={keys.rawgApiKey}
-            onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
-            className="bg-background/50"
-          />
+          <div className="grid gap-2">
+            <Input
+              type="password"
+              placeholder={t('rawg_api_key_placeholder')}
+              value={keys.rawgApiKey}
+              onChange={e => setKeys({ ...keys, rawgApiKey: e.target.value })}
+              className="bg-background/50"
+            />
+
+            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+              <span>{t('no_key_question')}</span>
+
+              <a
+                href="https://rawg.io/login?forward=developer"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-0.5 text-blue-400 hover:underline"
+              >
+                {t('get_api_key_button_rawg')} <ExternalLink size={10} />
+              </a>
+            </div>
+          </div>
         </SettingsRow>
 
         {/* Ações para enriquecer metadados e buscar capas */}
