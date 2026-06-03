@@ -27,6 +27,65 @@ interface GameSidebarProps {
   onSwitchGame: (id: string) => void;
 }
 
+// === TagSection ====
+
+const TAG_ORDER = ['mode', 'narrative', 'theme', 'gameplay', 'meta'];
+const TAG_LABEL_KEYS: Record<string, string> = {
+  mode: 'tags_mode',
+  narrative: 'tags_narrative',
+  theme: 'tags_theme',
+  gameplay: 'tags_gameplay',
+  meta: 'tags_meta',
+};
+
+function TagSection({ tags }: { tags: GameTag[] }) {
+  const { t } = useTranslation('game_detail');
+
+  const grouped = tags.reduce(
+    (acc, tag) => {
+      const cat = tag.category;
+
+      if (!acc[cat]) acc[cat] = [];
+
+      acc[cat].push(tag);
+
+      return acc;
+    },
+    {} as Record<string, GameTag[]>
+  );
+
+  return (
+    <div className="space-y-3">
+      {TAG_ORDER.map(cat => {
+        const catTags = grouped[cat];
+
+        if (!catTags?.length) return null;
+
+        return (
+          <div key={cat} className="space-y-1.5">
+            <span className="text-muted-foreground/70 pl-1 text-[10px] font-bold tracking-widest uppercase">
+              {t(TAG_LABEL_KEYS[cat] || cat)}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {catTags.map(tag => (
+                <Badge
+                  key={tag.slug}
+                  variant="secondary"
+                  className="bg-secondary/40 hover:bg-secondary hover:border-border/50 border border-transparent px-2 py-0.5 text-xs font-normal transition-all"
+                >
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// === Componente Principal (Sidebar) ===
+
 export function GameSidebar({
   game,
   details,
@@ -34,76 +93,14 @@ export function GameSidebar({
   onSwitchGame,
 }: GameSidebarProps) {
   const { t } = useTranslation('game_detail');
-  // Lógica para renderizar as tags categorizadas
-  const renderTags = () => {
-    if (!details?.tags) return null;
-
-    if (Array.isArray(details.tags)) {
-      if (details.tags.length === 0) return null;
-
-      // Agrupa por categoria
-      const grouped = details.tags.reduce(
-        (acc, tag) => {
-          const cat = tag.category;
-
-          if (!acc[cat]) acc[cat] = [];
-
-          acc[cat].push(tag);
-
-          return acc;
-        },
-        {} as Record<string, GameTag[]>
-      );
-
-      const order = ['mode', 'narrative', 'theme', 'gameplay', 'meta'];
-      const labelKeys: Record<string, string> = {
-        mode: 'tags_mode',
-        narrative: 'tags_narrative',
-        theme: 'tags_theme',
-        gameplay: 'tags_gameplay',
-        meta: 'tags_meta',
-      };
-
-      return (
-        <div className="space-y-3">
-          {order.map(cat => {
-            const tags = grouped[cat];
-
-            if (!tags?.length) return null;
-
-            return (
-              <div key={cat} className="space-y-1.5">
-                <span className="text-muted-foreground/70 pl-1 text-[10px] font-bold tracking-widest uppercase">
-                  {t(labelKeys[cat] || cat)}
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map(tag => (
-                    <Badge
-                      key={tag.slug}
-                      variant="secondary"
-                      className="bg-secondary/40 hover:bg-secondary hover:border-border/50 border border-transparent px-2 py-0.5 text-xs font-normal transition-all"
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    return null;
-  };
 
   // Lógica para extrair APENAS os modos de jogo
   const gameModes =
     details?.tags && Array.isArray(details.tags)
       ? details.tags
-          .filter(t => t.category === 'mode') // Filtra só categoria 'mode'
-          .map(t => t.name) // Pega o nome (Singleplayer, Co-op...)
-          .join(', ') // Junta com vírgula
+          .filter(tag => tag.category === 'mode') // Filtra só categoria 'mode'
+          .map(tag => tag.name) // Pega o nome (Singleplayer, Co-op...)
+          .join(', ') || null // Junta com vírgula
       : null;
 
   return (
@@ -230,14 +227,16 @@ export function GameSidebar({
       <GameLinks links={details?.externalLinks} />
 
       {/* 5. TAGS (Com Categorização) */}
-      {details?.tags && (
-        <div className="space-y-3">
-          <h3 className="text-muted-foreground flex items-center gap-1 text-sm font-bold tracking-wider uppercase">
-            <Tag size={18} /> {t('sidebar_features')}
-          </h3>
-          {renderTags()}
-        </div>
-      )}
+      {details?.tags &&
+        Array.isArray(details.tags) &&
+        details.tags.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-muted-foreground flex items-center gap-1 text-sm font-bold tracking-wider uppercase">
+              <Tag size={18} /> {t('sidebar_features')}
+            </h3>
+            <TagSection tags={details.tags} />
+          </div>
+        )}
 
       {/* 6. OUTRAS PLATAFORMAS */}
       {siblings.length > 0 && (

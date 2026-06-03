@@ -1,6 +1,7 @@
 import { Minus, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { SteamReviewSummary } from 'src/types';
+
+import { SteamReviewSummary } from '@/types';
 
 interface SteamReviewBadgeProps {
   label?: SteamReviewSummary;

@@ -44,7 +44,7 @@ export default function GameDetail({
   const handleEditSuccess = () => {
     setIsEditing(false);
 
-    if (onRefresh) onRefresh(); // Recarrega os dados do banco
+    onRefresh?.(); // Recarrega os dados do banco
   };
 
   const handleClose = () => {

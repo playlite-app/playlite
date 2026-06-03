@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/ui/button.tsx';
+import { Button } from '@/ui/button';
 
 interface GameLinksProps {
   links?: Record<string, string>;
@@ -34,7 +34,7 @@ export function GameLinks({ links }: Readonly<GameLinksProps>) {
 
   // Filtra links vazios ANTES de renderizar
   const validLinks = Object.entries(links).filter(
-    ([_, url]) => url && url.trim().length > 0
+    ([, url]) => url && url.trim().length > 0
   );
 
   if (validLinks.length === 0) return null;

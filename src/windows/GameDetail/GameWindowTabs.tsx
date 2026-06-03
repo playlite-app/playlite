@@ -95,11 +95,6 @@ export function GameContentTabs({
     setActiveTab('description');
   }, [game.id]);
 
-  // Quando entrar em modo edição, força a aba Descrição
-  useEffect(() => {
-    if (isEditing) setActiveTab('description');
-  }, [isEditing]);
-
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Só mostra as abas fora do modo edição */}
