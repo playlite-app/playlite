@@ -40,7 +40,7 @@ export function AboutPlaylite({
 }: Readonly<AboutPlayliteProps>) {
   const { t } = useTranslation('settings');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [appVersion, setAppVersion] = useState('3.0.0');
+  const [appVersion, setAppVersion] = useState('4.0.0');
 
   useEffect(() => {
     // Busca a versão do app do backend Rust
@@ -257,6 +257,18 @@ export function AboutPlaylite({
                     <TechLink
                       name="Gemini"
                       url="https://aistudio.google.com/"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5 text-xs">
+                    •
+                  </span>
+                  <p>{t('about_technical_data_games')}</p>
+                  <div className="flex-1">
+                    <TechLink
+                      name="PCGamingWiki"
+                      url="https://www.pcgamingwiki.com/wiki/Home"
                     />
                   </div>
                 </div>

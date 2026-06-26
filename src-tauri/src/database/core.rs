@@ -107,12 +107,17 @@ pub fn initialize_databases(app: &AppHandle) -> Result<AppState, String> {
 
 // === BANCO DE DADOS DE GERENCIAMENTO DE BIBLIOTECAS E WISHLIST  ===
 
-/// Cria o schema completo do banco de dados (versão v3)
+/// Cria o schema completo do banco de dados (versão v4)
 ///
-/// **Schema v3:**
+/// **Schema v4:**
 /// - Campos HLTB removidos
 /// - URLs legadas removidas (agora em external_links JSON)
 /// - users_score removido (substituído por steam_review_*)
+/// - Adicionadas as tabelas:
+///     - subscriptions
+///     - game_extras (detalhes técnicos)
+///     - game_data_paths
+///     - system_requirements
 fn create_schema(conn: &Connection, schema_version: u32) -> Result<(), String> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS games (

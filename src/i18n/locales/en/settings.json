@@ -121,6 +121,7 @@
   "about_free_games": "Free games:",
   "about_search_discover_games": "Search, media and discover games:",
   "about_description_translation": "Description translation:",
+  "about_technical_data_games": "Technical data of games:",
   "about_recommendation_dataset": "Recommendation Dataset",
   "about_recommendation_prefix": "Recommendations are based on the public dataset ",
   "about_recommendation_dataset_name": "Game Recommendations on Steam",

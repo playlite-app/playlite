@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2026-06-26
+
+### Added
+
+- Game search by characteristics in Wishlist using the GameBrain API
+- Media tab in game details window with screenshots, trailers, and videos
+- Similar games tab in game details window
+- Technical details tab in game details window with system requirements, language support, and controller
+  compatibility (data sourced from PCGamingWiki)
+
+### Improved
+
+- Game details window restructured into tabbed navigation for better content organization
+- PCGamingWiki integration expanded to surface technical data directly in the UI
+
 ## [3.4.0] - 2026-05-24
 
 ### Added
