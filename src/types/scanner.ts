@@ -11,8 +11,8 @@ export interface ScanResult {
 
 export interface GameDiscovery {
   id: string;
-  base_path: string;
-  suggested_name: string;
+  basePath: string;
+  suggestedName: string;
   confidence: number;
   executables: ExecutableCandidate[];
 }
@@ -20,7 +20,7 @@ export interface GameDiscovery {
 export interface ExecutableCandidate {
   path: string;
   filename: string;
-  size_mb: number;
-  rank_score: number;
-  executable_type: 'WindowsExe' | 'LinuxElf' | 'Script' | 'Unknown';
+  sizeMb: number;
+  rankScore: number;
+  executableType: 'WindowsExe' | 'LinuxElf' | 'Script' | 'Unknown';
 }

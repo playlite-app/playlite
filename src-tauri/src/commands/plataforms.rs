@@ -28,6 +28,7 @@ pub struct ScanResult {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScanGameInput {
     pub name: String,
     pub executable_path: String,

@@ -17,7 +17,7 @@ export async function scanGamesFolder(folderPath: string): Promise<ScanResult> {
  * @param games - Lista de jogos a adicionar
  */
 export async function addGamesFromScan(
-  games: { name: string; executable_path: string; base_path: string }[]
+  games: { name: string; executablePath: string; basePath: string }[]
 ): Promise<string> {
   return await invoke<string>('add_games_from_scan', { games });
 }
@@ -33,7 +33,7 @@ export function getBestExecutable(
   if (discovery.executables.length === 0) return null;
 
   return discovery.executables.reduce((best, current) =>
-    current.rank_score > best.rank_score ? current : best
+    current.rankScore > best.rankScore ? current : best
   );
 }
 

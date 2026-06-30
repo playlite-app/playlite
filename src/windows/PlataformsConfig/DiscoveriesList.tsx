@@ -39,7 +39,7 @@ function GameDiscoveryCard({ discovery }: { discovery: GameDiscovery }) {
               <div className="flex items-center gap-2">
                 <Gamepad2 className="text-muted-foreground h-4 w-4" />
                 <h5 className="truncate text-sm font-semibold">
-                  {discovery.suggested_name}
+                  {discovery.suggestedName}
                 </h5>
                 <Badge variant="secondary" className="text-xs">
                   {discovery.confidence}/10
@@ -48,7 +48,7 @@ function GameDiscoveryCard({ discovery }: { discovery: GameDiscovery }) {
 
               <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
                 <div className="flex max-w-xs items-center gap-1 truncate">
-                  <FolderOpen size={12} /> {discovery.base_path}
+                  <FolderOpen size={12} /> {discovery.basePath}
                 </div>
                 <div className="flex items-center gap-1">
                   <FileText size={12} /> {discovery.executables.length}{' '}

@@ -55,15 +55,15 @@ export function useScanner() {
           if (!best) return null;
 
           return {
-            name: d.suggested_name,
-            executable_path: best.path,
-            base_path: d.base_path,
+            name: d.suggestedName,
+            executablePath: best.path,
+            basePath: d.basePath,
           };
         })
         .filter(Boolean) as {
         name: string;
-        executable_path: string;
-        base_path: string;
+        executablePath: string;
+        basePath: string;
       }[];
 
       const message = await addGamesFromScan(games);

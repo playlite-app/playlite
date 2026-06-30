@@ -39,12 +39,12 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
     try {
       // Chama o comando Rust definido em plataforms.rs
       await invoke<string>('add_game_from_scan', {
-        name: discovery.suggested_name,
+        name: discovery.suggestedName,
         executablePath: exe.path,
-        basePath: discovery.base_path,
+        basePath: discovery.basePath,
       });
       toast.success(
-        t('executable_added_to_library', { name: discovery.suggested_name })
+        t('executable_added_to_library', { name: discovery.suggestedName })
       );
       onClose();
     } catch (error) {
@@ -67,7 +67,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <DialogTitle className="text-2xl leading-none font-bold tracking-tight">
-                {discovery.suggested_name}
+                {discovery.suggestedName}
               </DialogTitle>
               <DialogDescription className="text-sm">
                 {t('executable_dialog_description')}
@@ -96,7 +96,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
             </TableHeader>
             <TableBody>
               {discovery.executables
-                .sort((a, b) => b.rank_score - a.rank_score)
+                .sort((a, b) => b.rankScore - a.rankScore)
                 .map((exe, idx) => (
                   <TableRow key={exe.path}>
                     <TableCell className="py-4 pl-8">
@@ -130,7 +130,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
                           size={14}
                           className="text-muted-foreground opacity-70"
                         />
-                        {formatFileSize(exe.size_mb)}
+                        {formatFileSize(exe.sizeMb)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -139,7 +139,7 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
                         className="bg-background/50 border-border/50 font-mono text-xs font-semibold uppercase"
                       >
                         <Cpu size={12} className="mr-1.5 opacity-60" />
-                        {exe.executable_type}
+                        {exe.executableType}
                       </Badge>
                     </TableCell>
                     <TableCell className="pr-8 text-right">

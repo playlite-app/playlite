@@ -41,6 +41,7 @@ pub struct ScanSession {
 
 /// Representa um possível jogo descoberto durante o scan
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameDiscovery {
     pub id: String,
     pub base_path: String,
@@ -52,6 +53,7 @@ pub struct GameDiscovery {
 
 /// Representa um executável candidato a ser o launcher do jogo
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExecutableCandidate {
     pub path: String,
     pub filename: String,
