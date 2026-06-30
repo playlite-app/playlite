@@ -79,10 +79,20 @@ their respective terms of service:
    - Terms: https://www.gamerpower.com/api-read
    - Purpose: Free game giveaways and promotions
 
-6. Google Gemini API
+6. GameBrain API
+   - Provider: GameBrain
+   - Terms: https://gamebrain.co
+   - Purpose: Game discovery, media, and semantic search for Wishlist
+
+7. Google Gemini API
    - Provider: Google
    - Terms: https://ai.google.dev/gemini-api/terms
    - Purpose: AI-powered translation of game descriptions to Portuguese
+
+8. PCGamingWiki
+   - Provider: PCGamingWiki contributors (CC BY-NC-SA 3.0)
+   - Terms: https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights
+   - Purpose: Technical game data including system requirements, language support, and controller compatibility
 
 Note: Use of these APIs requires compliance with their respective terms of
 service. API keys must be obtained directly from providers.

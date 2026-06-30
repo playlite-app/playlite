@@ -1,8 +1,16 @@
-import { FolderOpen, Globe, Loader2, RefreshCw } from 'lucide-react';
+import {
+  ExternalLink,
+  FolderOpen,
+  Globe,
+  Info,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { useStoresConfig } from '@/hooks';
+import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button.tsx';
 import { Input } from '@/ui/input.tsx';
 import { Separator } from '@/ui/separator.tsx';
@@ -43,28 +51,30 @@ export function SteamSettings({
           title={t('steam_api_credentials_title')}
           description={t('steam_api_credentials_description')}
         >
-          <div className="flex flex-col gap-2">
-            <Input
-              type="text"
-              value={steamConfig.steamId}
-              onChange={e =>
-                setSteamConfig(prev => ({ ...prev, steamId: e.target.value }))
-              }
-              placeholder={t('steam_id_placeholder')}
-              className="bg-background/50"
-            />
-            <Input
-              type="password"
-              value={steamConfig.steamApiKey}
-              onChange={e =>
-                setSteamConfig(prev => ({
-                  ...prev,
-                  steamApiKey: e.target.value,
-                }))
-              }
-              placeholder={t('steam_api_key_placeholder')}
-              className="bg-background/50"
-            />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+              <Input
+                type="text"
+                value={steamConfig.steamId}
+                onChange={e =>
+                  setSteamConfig(prev => ({ ...prev, steamId: e.target.value }))
+                }
+                placeholder={t('steam_id_placeholder')}
+                className="bg-background/50"
+              />
+              <Input
+                type="password"
+                value={steamConfig.steamApiKey}
+                onChange={e =>
+                  setSteamConfig(prev => ({
+                    ...prev,
+                    steamApiKey: e.target.value,
+                  }))
+                }
+                placeholder={t('steam_api_key_placeholder')}
+                className="bg-background/50"
+              />
+            </div>
           </div>
         </SettingsRow>
 
@@ -89,6 +99,49 @@ export function SteamSettings({
             </Button>
           </div>
         </SettingsRow>
+      </div>
+
+      {/* Ajuda */}
+      <div className="space-y-2 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
+        <div className="flex items-center gap-2">
+          <Info className="h-4 w-4 shrink-0 text-blue-400" />
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-300">
+            {t('steam_help_badge')}
+          </Badge>
+          <p className="text-sm font-semibold text-blue-300">
+            {t('steam_help_title')}
+          </p>
+        </div>
+
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {t('steam_help_description')}
+        </p>
+
+        <div className="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
+          <span>{t('steam_no_api_key_question')}</span>
+          <a
+            href="https://steamcommunity.com/dev/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-0.5 text-blue-400 hover:underline"
+          >
+            {t('steam_get_api_key_button')}
+            <ExternalLink size={10} />
+          </a>
+        </div>
+
+        <div className="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
+          <span>{t('steam_no_steamid_question')}</span>
+          <a
+            href="https://steamid.io/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-0.5 text-blue-400 hover:underline"
+          >
+            {t('steam_get_steamid_button')}
+            <ExternalLink size={10} />
+          </a>
+        </div>
       </div>
 
       {/* Progress Indicator */}
