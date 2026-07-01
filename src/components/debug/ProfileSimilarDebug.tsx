@@ -255,7 +255,7 @@ export function ProfileSimilarDebug({ userGames, open, onClose }: Props) {
                     <Row
                       key={g.id ?? i}
                       label={truncate(g.name ?? '?', 26)}
-                      value={`≈ ${truncate(g.because_of ?? '?', 18)}`}
+                      value={`≈ ${truncate(g.becauseOf ?? '?', 18)}`}
                       color={colors.lime}
                     />
                   ))

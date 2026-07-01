@@ -13,9 +13,9 @@ export function SimilarGameCard({ game }: SimilarGameCardProps) {
   const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // Imagem de fundo: micro_trailer quando hover, cover quando não
-  const hasTrailer = !!game.micro_trailer;
-  const coverSrc = imgError ? null : game.cover_url;
+  // Imagem de fundo: microTrailer quando hover, cover quando não
+  const hasTrailer = !!game.microTrailer;
+  const coverSrc = imgError ? null : game.coverUrl;
 
   return (
     <div
@@ -44,7 +44,7 @@ export function SimilarGameCard({ game }: SimilarGameCardProps) {
         {/* Micro-trailer (webm) — só carrega quando tiver para não desperdiçar banda */}
         {hasTrailer && hovered && (
           <video
-            src={game.micro_trailer!}
+            src={game.microTrailer!}
             autoPlay
             muted
             loop
@@ -60,8 +60,8 @@ export function SimilarGameCard({ game }: SimilarGameCardProps) {
           </div>
         )}
 
-        {/* Badge adult_only */}
-        {game.adult_only && (
+        {/* Badge adultOnly */}
+        {game.adultOnly && (
           <span className="bg-destructive/80 text-destructive-foreground absolute top-2 left-2 rounded px-1.5 py-0.5 text-[10px] font-semibold">
             +18
           </span>

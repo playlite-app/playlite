@@ -42,15 +42,15 @@ function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
       <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         {/* Imagem */}
         <div className="relative w-[46%] shrink-0 overflow-hidden">
-          {game.image_hero ? (
+          {game.imageHero ? (
             <img
-              src={game.image_hero}
+              src={game.imageHero}
               alt={game.title}
               className="h-full w-full object-cover"
             />
-          ) : game.image_poster ? (
+          ) : game.imagePoster ? (
             <img
-              src={game.image_poster}
+              src={game.imagePoster}
               alt={game.title}
               className="h-full w-full object-cover"
             />
@@ -101,7 +101,7 @@ function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
           {/* Botão + data */}
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => openExternalLink(game.store_url)}
+              onClick={() => openExternalLink(game.storeUrl)}
               className="gap-2"
               variant="outline"
             >
@@ -109,10 +109,10 @@ function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
               {t('eaplay_view_store', 'Abrir na loja')}
             </Button>
 
-            {game.original_release_date && (
+            {game.originalReleaseDate && (
               <div className="text-muted-foreground text-sm">
                 {t('eaplay_released', {
-                  date: formatRelease(game.original_release_date),
+                  date: formatRelease(game.originalReleaseDate),
                 })}
               </div>
             )}
@@ -125,10 +125,10 @@ function EAPlaySlide({ game, active }: { game: EAPlayGame; active: boolean }) {
                 {t('eaplay_developer', 'Desenvolvedor')}: {game.developer}
               </span>
             )}
-            {game.review_score !== undefined && game.review_score !== null && (
+            {game.reviewScore !== undefined && game.reviewScore !== null && (
               <span>
-                {t('eaplay_score', 'Avaliação')}: {game.review_score} (
-                {game.review_count ?? 0})
+                {t('eaplay_score', 'Avaliação')}: {game.reviewScore} (
+                {game.reviewCount ?? 0})
               </span>
             )}
           </div>
@@ -249,7 +249,7 @@ export function EAPlaySection() {
         <div className="relative h-100 overflow-hidden transition-all duration-300 ease-in-out">
           {slides.map((game, i) => (
             <EAPlaySlide
-              key={game.store_id}
+              key={game.storeId}
               game={game}
               active={i === currentIndex}
             />

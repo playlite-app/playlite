@@ -1,15 +1,26 @@
-import { Copy, CopySlash, Eye, EyeOff, Gamepad2, Moon, Search, Settings, Store, Sun, } from 'lucide-react';
+import {
+  Copy,
+  CopySlash,
+  Eye,
+  EyeOff,
+  Gamepad2,
+  Moon,
+  Search,
+  Settings,
+  Store,
+  Sun,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Kofi } from '@/components';
 import { QuickSettings } from '@/dialogs/QuickSettings';
 import { useHeaderState, useRecommendationAnalysis, useTheme } from '@/hooks';
 import { Game } from '@/types';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
-import { PlataformsConfig } from '@/windows/PlataformsConfig';
 import { openExternalLink } from '@/utils/openLink.ts';
-import { Kofi } from '@/components';
+import { PlataformsConfig } from '@/windows/PlataformsConfig';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;

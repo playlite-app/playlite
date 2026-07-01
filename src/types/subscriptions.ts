@@ -7,47 +7,47 @@ export interface LunaGame {
 }
 
 export interface GamePassGame {
-  store_id: string;
+  storeId: string;
   title: string;
   description: string | null;
-  image_poster: string | null;
-  image_hero: string | null;
-  image_tile?: string | null;
+  imagePoster: string | null;
+  imageHero: string | null;
+  imageTile?: string | null;
   categories: string[];
   developer?: string | null;
   publisher?: string | null;
-  review_score?: number | null;
-  review_count?: number | null;
-  is_ea_play: boolean;
-  store_url: string;
-  original_release_date?: string | null;
+  reviewScore?: number | null;
+  reviewCount?: number | null;
+  isEaPlay: boolean;
+  storeUrl: string;
+  originalReleaseDate?: string | null;
 }
 
 export interface EAPlayGame {
-  store_id: string;
+  storeId: string;
   title: string;
   description: string | null;
-  image_poster: string | null;
-  image_hero: string | null;
+  imagePoster: string | null;
+  imageHero: string | null;
   categories: string[];
   developer?: string | null;
-  store_url: string;
-  original_release_date?: string | null;
-  review_score?: number | null;
-  review_count?: number | null;
+  storeUrl: string;
+  originalReleaseDate?: string | null;
+  reviewScore?: number | null;
+  reviewCount?: number | null;
 }
 
 export interface UbisoftGame {
   title: string;
-  short_title: string | null;
+  shortTitle: string | null;
   edition: string | null;
   genre: string | null;
-  image_url: string | null;
-  store_url: string;
-  release_date: string | null;
-  subscription_expiration_date: string | null;
+  imageUrl: string | null;
+  storeUrl: string;
+  releaseDate: string | null;
+  subscriptionExpirationDate: string | null;
   adult: boolean;
-  streaming_platforms: string[];
+  streamingPlatforms: string[];
 }
 
 // Definição dos serviços

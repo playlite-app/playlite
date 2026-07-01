@@ -24,6 +24,7 @@ const UBISOFT_PLUS_PREMIUM_OFFER_ID: &str = "5f44de7b5cdf9a0c2027ca78";
 // === Tipos de dados ===
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UbisoftGame {
     pub title: String,
     pub short_title: Option<String>,

@@ -23,6 +23,7 @@ use tracing::warn;
 /// Retornados separadamente do `GameExtras` (Cargo) porque têm
 /// cardinalidade N:1 — múltiplas linhas por jogo.
 #[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PcgwScrapedResponse {
     pub system_requirements: Vec<SystemRequirements>,
     pub config_paths: Vec<GameDataPath>,

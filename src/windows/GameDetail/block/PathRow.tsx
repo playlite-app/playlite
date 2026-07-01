@@ -13,7 +13,7 @@ export function PathRow({ path }: PathRowProps) {
   const { t } = useTranslation('game_detail');
   const [copied, setCopied] = useState(false);
 
-  const display = path.expanded_path ?? expandPathVars(path.raw_path);
+  const display = path.expandedPath ?? expandPathVars(path.rawPath);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(display);

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 const GAME_PASS_PC_SIGL: &str = "fdd9e2a7-0fee-49f6-ad69-4354098401ff";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GamePassGame {
     pub store_id: String,
     pub title: String,

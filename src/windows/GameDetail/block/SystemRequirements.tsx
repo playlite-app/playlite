@@ -33,9 +33,9 @@ export function SystemRequirements({ req }: SystemRequirementsProps) {
   const { t } = useTranslation('game_detail');
   const [expanded, setExpanded] = useState(true);
 
-  const title = req.tier_title
-    ? `${req.os_family} — ${req.tier_title}`
-    : req.os_family;
+  const title = req.tierTitle
+    ? `${req.osFamily} — ${req.tierTitle}`
+    : req.osFamily;
 
   return (
     <div className="border-border/50 mb-3 overflow-hidden rounded-lg border">
@@ -78,26 +78,26 @@ export function SystemRequirements({ req }: SystemRequirementsProps) {
             <tbody>
               <SysreqRow
                 label="OS"
-                min={formatOs(req.os_family, req.min_os)}
-                rec={formatOs(req.os_family, req.rec_os)}
+                min={formatOs(req.osFamily, req.minOs)}
+                rec={formatOs(req.osFamily, req.recOs)}
               />
               <SysreqRow
                 label="CPU"
-                min={combineParts(req.min_cpu, req.min_cpu2)}
-                rec={combineParts(req.rec_cpu, req.rec_cpu2)}
+                min={combineParts(req.minCpu, req.minCpu2)}
+                rec={combineParts(req.recCpu, req.recCpu2)}
               />
-              <SysreqRow label="RAM" min={req.min_ram} rec={req.rec_ram} />
+              <SysreqRow label="RAM" min={req.minRam} rec={req.recRam} />
               <SysreqRow
                 label="GPU"
-                min={combineParts(req.min_gpu, req.min_gpu2)}
-                rec={combineParts(req.rec_gpu, req.rec_gpu2)}
+                min={combineParts(req.minGpu, req.minGpu2)}
+                rec={combineParts(req.recGpu, req.recGpu2)}
               />
-              <SysreqRow label="VRAM" min={req.min_vram} rec={req.rec_vram} />
-              <SysreqRow label="DirectX" min={req.min_dx} rec={req.rec_dx} />
+              <SysreqRow label="VRAM" min={req.minVram} rec={req.recVram} />
+              <SysreqRow label="DirectX" min={req.minDx} rec={req.recDx} />
               <SysreqRow
                 label={t('system_requirements_label_storage')}
-                min={req.min_storage}
-                rec={req.rec_storage}
+                min={req.minStorage}
+                rec={req.recStorage}
               />
             </tbody>
           </table>

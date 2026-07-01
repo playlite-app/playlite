@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 const EA_PLAY_SIGL: &str = "b8900d09-a491-44cc-916e-32b5acae621b";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EAPlayGame {
     pub store_id: String,
     pub title: String,

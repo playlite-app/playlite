@@ -45,15 +45,15 @@ function GamePassSlide({
     >
       <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         <div className="relative w-[46%] shrink-0 overflow-hidden">
-          {game.image_hero ? (
+          {game.imageHero ? (
             <img
-              src={game.image_hero}
+              src={game.imageHero}
               alt={game.title}
               className="h-full w-full object-cover"
             />
-          ) : game.image_poster ? (
+          ) : game.imagePoster ? (
             <img
-              src={game.image_poster}
+              src={game.imagePoster}
               alt={game.title}
               className="h-full w-full object-cover"
             />
@@ -99,7 +99,7 @@ function GamePassSlide({
 
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => openExternalLink(game.store_url)}
+              onClick={() => openExternalLink(game.storeUrl)}
               className="gap-2"
               variant="outline"
             >
@@ -107,10 +107,10 @@ function GamePassSlide({
               {t('gamepass_view_store', 'Abrir na loja')}
             </Button>
 
-            {game.original_release_date && (
+            {game.originalReleaseDate && (
               <div className="text-muted-foreground text-sm">
                 {t('gamepass_released', {
-                  date: formatRelease(game.original_release_date),
+                  date: formatRelease(game.originalReleaseDate),
                 })}
               </div>
             )}
@@ -122,10 +122,10 @@ function GamePassSlide({
                 {t('gamepass_developer')}: {game.developer}
               </span>
             )}
-            {game.review_score !== undefined && game.review_score !== null && (
+            {game.reviewScore !== undefined && game.reviewScore !== null && (
               <span>
-                {t('gamepass_score')}: {game.review_score} (
-                {game.review_count ?? 0})
+                {t('gamepass_score')}: {game.reviewScore} (
+                {game.reviewCount ?? 0})
               </span>
             )}
           </div>
@@ -260,7 +260,7 @@ export function GamePassSection({
         <div className="relative h-100 overflow-hidden transition-all duration-300 ease-in-out">
           {slides.map((game, i) => (
             <GamePassSlide
-              key={game.store_id}
+              key={game.storeId}
               game={game}
               active={i === currentIndex}
               t={t}

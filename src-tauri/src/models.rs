@@ -296,6 +296,7 @@ pub struct GameExtras {
 ///
 /// Campos `cpu2` e `gpu2` capturam alternativas AMD/Intel quando presentes.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct SystemRequirements {
     pub steam_app_id: String,
     pub os_family: String, // OS alvo: "Windows", "Linux", "Mac OS", "DOS", etc.
@@ -327,6 +328,7 @@ pub struct SystemRequirements {
 
 /// Caminho de dado do jogo (save ou config) para um OS específico.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameDataPath {
     pub steam_app_id: String,
     pub kind: String,                  // Tipo do dado: `"config"` ou `"saves"`.
@@ -337,6 +339,7 @@ pub struct GameDataPath {
 
 /// Resultado completo do scraping de uma página do PCGamingWiki.
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PcgwScrapedData {
     pub system_requirements: Vec<SystemRequirements>,
     pub game_data_paths: Vec<GameDataPath>,

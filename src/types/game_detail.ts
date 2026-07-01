@@ -9,20 +9,20 @@ export type MediaItem =
 
 /**
  * Espelha SimilarGame do backend (gamebrain.rs)
- * OBS.: campo because_of adicionado por ProfileSimilarGame
+ * OBS.: campo becauseOf adicionado por ProfileSimilarGame
  */
 export interface SimilarGame {
   id: string;
   name: string;
-  cover_url: string | null;
+  coverUrl: string | null;
   genre: string | null;
   year: number | null;
   rating: number | null;
   link: string | null;
   screenshots: string[];
-  micro_trailer: string | null;
-  adult_only: boolean;
-  because_of: string; // nome do jogo âncora
+  microTrailer: string | null;
+  adultOnly: boolean;
+  becauseOf: string; // nome do jogo âncora
 }
 
 /**
@@ -35,29 +35,29 @@ export interface SimilarGame {
  * caso o backend passe a enviar separado no futuro.
  */
 export interface Sysreq {
-  os_family: string;
-  tier_title: string | null;
+  osFamily: string;
+  tierTitle: string | null;
   target: string | null;
-  // Mínimo
-  min_os: string | null;
-  min_cpu: string | null;
-  min_cpu2: string | null;
-  min_ram: string | null;
-  min_gpu: string | null;
-  min_gpu2: string | null;
-  min_vram: string | null;
-  min_dx: string | null;
-  min_storage: string | null;
-  // Recomendado
-  rec_os: string | null;
-  rec_cpu: string | null;
-  rec_cpu2: string | null;
-  rec_ram: string | null;
-  rec_gpu: string | null;
-  rec_gpu2: string | null;
-  rec_vram: string | null;
-  rec_dx: string | null;
-  rec_storage: string | null;
+  // Minimum
+  minOs: string | null;
+  minCpu: string | null;
+  minCpu2: string | null;
+  minRam: string | null;
+  minGpu: string | null;
+  minGpu2: string | null;
+  minVram: string | null;
+  minDx: string | null;
+  minStorage: string | null;
+  // Recommended
+  recOs: string | null;
+  recCpu: string | null;
+  recCpu2: string | null;
+  recRam: string | null;
+  recGpu: string | null;
+  recGpu2: string | null;
+  recVram: string | null;
+  recDx: string | null;
+  recStorage: string | null;
 }
 
 /**
@@ -71,8 +71,8 @@ export interface Sysreq {
 export interface GameDataPath {
   kind: 'config' | 'saves';
   os: string;
-  raw_path: string;
-  expanded_path: string | null;
+  rawPath: string;
+  expandedPath: string | null;
 }
 
 /**
@@ -80,9 +80,9 @@ export interface GameDataPath {
  * Retornado pelo comando Tauri `get_pcgw_scraped_data`.
  */
 export interface PcgwScrapedData {
-  system_requirements: Sysreq[];
-  config_paths: GameDataPath[];
-  save_paths: GameDataPath[];
+  systemRequirements: Sysreq[];
+  configPaths: GameDataPath[];
+  savePaths: GameDataPath[];
 }
 
 /**

@@ -101,6 +101,7 @@ impl GameBrainSortOrder {
 /// Subset dos campos disponíveis na resposta de /similar.
 /// Inclui screenshots e micro_trailer para a UI da aba Descoberta.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SimilarGame {
     /// ID no formato "gamebrain:{id}" para consistência com GameBrainSearchResult.
     pub id: String,

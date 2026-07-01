@@ -111,9 +111,9 @@ export function GameExtras({ game, details }: GameExtrasProps) {
 
   if (status !== 'success') return null;
 
-  const hasSysreqs = (scrapedData?.system_requirements?.length ?? 0) > 0;
-  const hasConfigPaths = (scrapedData?.config_paths?.length ?? 0) > 0;
-  const hasSavePaths = (scrapedData?.save_paths?.length ?? 0) > 0;
+  const hasSysreqs = (scrapedData?.systemRequirements?.length ?? 0) > 0;
+  const hasConfigPaths = (scrapedData?.configPaths?.length ?? 0) > 0;
+  const hasSavePaths = (scrapedData?.savePaths?.length ?? 0) > 0;
   const hasLangs = Boolean(
     cargoData?.languagesInterface?.length ||
     cargoData?.languagesAudio?.length ||
@@ -252,7 +252,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
               {t('extras_section_system_requirements')}
             </span>
           </SectionTitle>
-          {scrapedData!.system_requirements.map((req, i) => (
+          {scrapedData!.systemRequirements.map((req, i) => (
             <SystemRequirements key={i} req={req} />
           ))}
         </div>
@@ -267,7 +267,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
             </span>
           </SectionTitle>
           <div className="border-border/50 rounded-lg border px-4">
-            {scrapedData!.save_paths.map((p, i) => (
+            {scrapedData!.savePaths.map((p, i) => (
               <PathRow key={i} path={p} />
             ))}
           </div>
@@ -284,7 +284,7 @@ export function GameExtras({ game, details }: GameExtrasProps) {
             </span>
           </SectionTitle>
           <div className="border-border/50 rounded-lg border px-4">
-            {scrapedData!.config_paths.map((p, i) => (
+            {scrapedData!.configPaths.map((p, i) => (
               <PathRow key={i} path={p} />
             ))}
           </div>

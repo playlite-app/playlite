@@ -163,7 +163,7 @@ export default function Trending(props: TrendingProps) {
       await wishlistService.addToWishlist({
         id: game.id,
         name: game.name,
-        cover_url: game.cover_url,
+        cover_url: game.coverUrl,
       });
       toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
         description: t('game_added_to_wishlist_description'),
@@ -421,13 +421,13 @@ export default function Trending(props: TrendingProps) {
                         key={game.id}
                         id={game.id}
                         title={game.name}
-                        coverUrl={game.cover_url ?? undefined}
+                        coverUrl={game.coverUrl ?? undefined}
                         rating={game.rating ?? undefined}
                         subtitle={game.genre ?? undefined}
                         badge={
-                          <Similarity becauseOf={game.because_of}>
+                          <Similarity becauseOf={game.becauseOf}>
                             <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white">
-                              {game.because_of}
+                              {game.becauseOf}
                             </span>
                           </Similarity>
                         }

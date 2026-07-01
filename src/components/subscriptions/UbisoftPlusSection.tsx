@@ -38,7 +38,7 @@ function UbisoftSlide({
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   // Preferência: short_title (sem edição no nome) → title como fallback
-  const title = game.short_title ?? game.title;
+  const title = game.shortTitle ?? game.title;
 
   return (
     <div
@@ -48,9 +48,9 @@ function UbisoftSlide({
     >
       <div className="border-border bg-card flex h-full gap-0 overflow-hidden rounded-2xl border">
         <div className="relative w-[46%] shrink-0 overflow-hidden">
-          {game.image_url ? (
+          {game.imageUrl ? (
             <img
-              src={game.image_url}
+              src={game.imageUrl}
               alt={title}
               className="h-full w-full object-cover"
             />
@@ -95,9 +95,9 @@ function UbisoftSlide({
             </div>
           )}
 
-          {game.streaming_platforms.length > 0 && (
+          {game.streamingPlatforms.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {game.streaming_platforms.slice(0, 3).map((platform: string) => (
+              {game.streamingPlatforms.slice(0, 3).map((platform: string) => (
                 <span
                   key={platform}
                   className="text-muted-foreground inline-block rounded-full bg-blue-500/20 px-2 py-0.5 text-xs"
@@ -110,7 +110,7 @@ function UbisoftSlide({
 
           <div className="flex flex-wrap items-center gap-3">
             <Button
-              onClick={() => openExternalLink(game.store_url)}
+              onClick={() => openExternalLink(game.storeUrl)}
               className="gap-2"
               variant="outline"
             >
@@ -119,19 +119,19 @@ function UbisoftSlide({
             </Button>
 
             <div className="text-muted-foreground flex flex-col gap-0.5 text-sm">
-              {game.release_date && (
+              {game.releaseDate && (
                 <span>
                   {t('ubisoft_released', {
-                    defaultValue: `Lançamento: ${formatRelease(game.release_date)}`,
-                    date: formatRelease(game.release_date),
+                    defaultValue: `Lançamento: ${formatRelease(game.releaseDate)}`,
+                    date: formatRelease(game.releaseDate),
                   })}
                 </span>
               )}
-              {game.subscription_expiration_date && (
+              {game.subscriptionExpirationDate && (
                 <span className="text-amber-400/70">
                   {t('ubisoft_expires', {
-                    defaultValue: `Disponível até: ${formatRelease(game.subscription_expiration_date)}`,
-                    date: formatRelease(game.subscription_expiration_date),
+                    defaultValue: `Disponível até: ${formatRelease(game.subscriptionExpirationDate)}`,
+                    date: formatRelease(game.subscriptionExpirationDate),
                   })}
                 </span>
               )}
