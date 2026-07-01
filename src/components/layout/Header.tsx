@@ -1,15 +1,4 @@
-import {
-  Copy,
-  CopySlash,
-  Eye,
-  EyeOff,
-  Gamepad2,
-  Moon,
-  Search,
-  Settings,
-  Store,
-  Sun,
-} from 'lucide-react';
+import { Copy, CopySlash, Eye, EyeOff, Gamepad2, Moon, Search, Settings, Store, Sun, } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,6 +8,8 @@ import { Game } from '@/types';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 import { PlataformsConfig } from '@/windows/PlataformsConfig';
+import { openExternalLink } from '@/utils/openLink.ts';
+import { Kofi } from '@/components';
 
 interface AdultFilterToggleProps {
   hideAdult: boolean;
@@ -217,6 +208,26 @@ export default function Header({
             onToggle={onToggleDuplicatesFilter}
           />
         )}
+
+        {/* Botão de Doação Ko-fi */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() =>
+                openExternalLink('https://ko-fi.com/alandeogoncalves')
+              }
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground shrink-0 hover:bg-blue-500/10 hover:text-blue-500"
+              title={t('header_support_kofi_title')}
+            >
+              <Kofi size={18} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{t('header_support_kofi_title')}</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* Quick Settings */}
         <Button

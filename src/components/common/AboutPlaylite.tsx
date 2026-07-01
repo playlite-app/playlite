@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import i18n from 'i18next';
-import { ChevronDown, ExternalLink } from 'lucide-react';
+import { Bug, ChevronDown, ExternalLink, Globe, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Github } from '@/components/icons';
+import { Github, Kofi } from '@/components/icons';
 
 interface TechLinkProps {
   name: string;
@@ -43,12 +43,10 @@ export function AboutPlaylite({
   const [appVersion, setAppVersion] = useState('4.0.0');
 
   useEffect(() => {
-    // Busca a versão do app do backend Rust
     invoke<string>('get_app_version')
       .then(version => setAppVersion(version))
       .catch(error => {
         console.warn('Erro ao obter versão do app:', error);
-        // Mantém o fallback
       });
   }, []);
 
@@ -56,9 +54,8 @@ export function AboutPlaylite({
     <div
       className={`bg-card overflow-hidden rounded-xl border transition-all ${className}`}
     >
-      {/* Header - Sempre visível */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => setIsExpanded(prev => !prev)}
         className="hover:bg-accent/5 flex w-full items-center justify-between p-6 text-left transition-colors"
       >
         <div className="flex items-center gap-4">
@@ -103,15 +100,12 @@ export function AboutPlaylite({
       >
         <div className="overflow-hidden">
           <div className="space-y-6 px-6 pb-6">
-            {/* Idioma */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold">{t('about_language')}</h4>
               <div className="bg-accent/30 text-muted-foreground flex items-center justify-between rounded-lg p-4 text-sm">
                 {t('about_select_language')}
                 <select
-                  className={
-                    'bg-background ml-2 rounded-md border px-2 py-1 text-sm focus:ring-1 focus:outline-none'
-                  }
+                  className="bg-background ml-2 rounded-md border px-2 py-1 text-sm focus:ring-1 focus:outline-none"
                   value={i18n.language}
                   onChange={e => {
                     const value = e.target.value as 'pt-BR' | 'en';
@@ -150,7 +144,6 @@ export function AboutPlaylite({
                     description={t('about_desc_frontend')}
                   />
                 </div>
-
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-muted-foreground">
                     {t('about_label_main_library')}
@@ -307,6 +300,65 @@ export function AboutPlaylite({
               </div>
             </div>
 
+            {/* Apoie o Playlite */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">
+                {t('about_support_title')}
+              </h4>
+              <div className="bg-accent/30 space-y-4 rounded-lg p-4 text-sm">
+                <p className="text-muted-foreground leading-relaxed">
+                  {t('about_support_description')}
+                </p>
+
+                <a
+                  href="https://ko-fi.com/alandeogoncalves"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+                >
+                  <Kofi size={16} />
+                  {t('about_support_kofi_button')}
+                </a>
+
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-muted-foreground text-sm font-medium">
+                    {t('about_support_other_ways')}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <a
+                      href="https://github.com/sponsors/Alan-oliveir"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                    >
+                      <Heart size={14} />
+                      {t('about_support_github')}
+                    </a>
+                    <span className="text-muted-foreground">•</span>
+                    <a
+                      href="https://landing-page-alan-oliveirs-projects.vercel.app/en#support"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                    >
+                      <Globe size={14} />
+                      {t('about_support_landing_page')}
+                    </a>
+                    <span className="text-muted-foreground">•</span>
+                    <a
+                      href="https://github.com/playlite-app/playlite/issues"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                    >
+                      <Bug size={14} />
+                      {t('about_support_report_bug')}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Links e Licença */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4">
               <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -336,6 +388,15 @@ export function AboutPlaylite({
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {t('about_docs_link')}
+                </a>
+                <span className="text-muted-foreground">•</span>
+                <a
+                  href="https://landing-page-alan-oliveirs-projects.vercel.app/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t('about_website_link')}
                 </a>
               </div>
               <p className="text-muted-foreground text-xs">

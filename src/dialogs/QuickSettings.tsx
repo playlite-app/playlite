@@ -3,6 +3,7 @@ import {
   Bug,
   FileText,
   FolderOpen,
+  Globe,
   HelpCircle,
   RefreshCw,
   Settings,
@@ -14,14 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { ProfileSimilarDebug } from '@/components/debug/ProfileSimilarDebug';
 import { Game } from '@/types/game';
 import { Button } from '@/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from '@/ui/dialog';
 import { Separator } from '@/ui/separator';
 import { openExternalLink } from '@/utils/openLink.ts';
 import { toast } from '@/utils/toast';
@@ -201,6 +195,18 @@ export function QuickSettings({
                 {t('quick_settings_documentation_section')}
               </h3>
               <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() =>
+                    openExternalLink(
+                      'https://landing-page-alan-oliveirs-projects.vercel.app/en'
+                    )
+                  }
+                >
+                  <Globe size={16} />
+                  {t('quick_settings_documentation_landing_page_button')}
+                </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-2"

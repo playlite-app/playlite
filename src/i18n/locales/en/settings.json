@@ -94,6 +94,7 @@
   "quick_settings_diagnostics_profile_similar_button": "Similar to Profile",
   "quick_settings_diagnostics_description": "Tools to identify issues in integrations.",
   "quick_settings_documentation_section": "Documentation",
+  "quick_settings_documentation_landing_page_button": "Visit Official Website",
   "quick_settings_documentation_getting_started_button": "Getting Started",
   "quick_settings_documentation_faq_button": "FAQ and Help",
   "quick_settings_documentation_description": "Access guides, troubleshooting tips and frequently asked questions to make the most of Playlite.",
@@ -132,5 +133,13 @@
   "about_github": "GitHub",
   "about_license_mit": "MIT License",
   "about_docs_link": "Documentation",
-  "about_developed_by": "Developed by Alan de O. Gonçalves, 2025-2026."
+  "about_website_link": "Official website",
+  "about_developed_by": "Developed by Alan de O. Gonçalves, 2025-2026.",
+  "about_support_title": "Support Playlite",
+  "about_support_description": "If Playlite has been useful to you, consider supporting its continued development.",
+  "about_support_kofi_button": "Support with Ko-fi",
+  "about_support_other_ways": "Other ways to support",
+  "about_support_github": "GitHub Sponsors",
+  "about_support_landing_page": "Project Website",
+  "about_support_report_bug": "Report a bug"
 }
