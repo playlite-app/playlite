@@ -135,6 +135,20 @@ npm run tauri build
 Sugestões e contribuições são bem-vindas!
 Veja o arquivo [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+## ❤️ Apoie o projeto
+
+O Playlite é um projeto gratuito e de código aberto, desenvolvido e mantido no meu tempo livre. Se ele for útil para
+você e quiser apoiar seu desenvolvimento contínuo, considere patrocinar o projeto pelo GitHub Sponsors, fazer uma doação
+única pelo Ko-fi ou visitar o site oficial para conhecer outras formas de contribuir. Seu apoio ajuda a cobrir custos de
+desenvolvimento e infraestrutura, permitindo que o Playlite continue gratuito, de
+código aberto e em constante evolução.
+
+- **GitHub Sponsors:** https://github.com/sponsors/Alan-oliveir
+- **Ko-fi:** https://ko-fi.com/playlite
+- **Site oficial:** https://landing-page-alan-oliveirs-projects.vercel.app/pt-BR
+
+Obrigado por apoiar o Playlite!
+
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.

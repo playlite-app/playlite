@@ -7,7 +7,7 @@ Ele foi criado para ajudar jogadores com bibliotecas grandes a decidir **o que j
 experiência simples, rápida e focada em uso offline, sem dependência obrigatória de serviços externos após a instalação
 e importação da biblioteca e download de dados de jogos.
 
-O projeto também funciona como um estudo de tecnologias modernas para aplicações desktop, mas sempre com foco principal
+O projeto também serve como um estudo de tecnologias modernas para aplicações desktop, mantendo sempre o foco principal
 na **experiência do usuário final**.
 
 ## Privacidade e Dados do Usuário
@@ -38,7 +38,7 @@ utilizá-los.
 ## Uso de IA como funcionalidade opcional
 
 O Playlite oferece uma funcionalidade opcional de tradução automática de descrições de jogos utilizando serviços de
-Inteligência Artificial (IA), atavés da API do Gemini.
+Inteligência Artificial (IA), através da API do Gemini.
 
 ## Uso de Inteligência Artificial no desenvolvimento
 
@@ -60,3 +60,11 @@ O Playlite adota uma postura de transparência sobre como foi desenvolvido e com
 
 Detalhes técnicos adicionais, arquitetura e decisões de implementação estão disponíveis na documentação voltada para
 desenvolvedores e no repositório oficial do projeto.
+
+## Links Oficiais
+
+Para downloads, novidades e informações gerais sobre o projeto, visite os canais oficiais do Playlite:
+
+- **Site oficial:** https://landing-page-alan-oliveirs-projects.vercel.app/pt-BR
+- **Repositório no GitHub:** https://github.com/playlite-app/playlite
+- **Última versão:** https://github.com/playlite-app/playlite/releases/latest
