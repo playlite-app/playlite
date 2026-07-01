@@ -143,7 +143,7 @@ Your support helps cover development and infrastructure costs, allowing Playlite
 improve.
 
 - **GitHub Sponsors:** https://github.com/sponsors/Alan-oliveir
-- **Ko-fi:** https://ko-fi.com/playlite
+- **Ko-fi:** https://ko-fi.com/alandeogoncalves
 - **Project Website:** https://landing-page-alan-oliveirs-projects.vercel.app/en
 
 Thank you for supporting Playlite!
