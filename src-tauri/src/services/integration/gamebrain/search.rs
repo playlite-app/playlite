@@ -150,7 +150,10 @@ pub async fn search_games_by_features(
                 genre: game.genre,
                 year: game.year.map(|y| y as u32),
                 // Converte o score 0.0–1.0 para percentual 0–100.
-                rating: game.rating.map(|r| (r.mean * 100.0).round()),
+                rating: game
+                    .rating
+                    .and_then(|r| r.mean)
+                    .map(|m| (m * 100.0).round()),
                 platforms,
                 link: game.link,
             }

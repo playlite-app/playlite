@@ -40,7 +40,7 @@ pub(super) struct RawGame {
 #[derive(Debug, Deserialize)]
 pub(super) struct RawRating {
     #[serde(default)]
-    pub(super) mean: f64,
+    pub(super) mean: Option<f64>,
 }
 
 /// Estrutura de plataforma (ex: "PC", "Xbox Series X|S").

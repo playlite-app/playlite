@@ -199,7 +199,7 @@ pub async fn fetch_similar_games(
                 cover_url: g.image,
                 genre: g.genre,
                 year: g.year.map(|y| y as u32),
-                rating: g.rating.map(|r| (r.mean * 100.0).round()),
+                rating: g.rating.and_then(|r| r.mean).map(|m| (m * 100.0).round()),
                 link: g.link,
                 screenshots: g.screenshots,
                 micro_trailer: g.micro_trailer,

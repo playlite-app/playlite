@@ -23,6 +23,7 @@ pub struct ProfileSimilarGame {
     #[serde(flatten)]
     pub game: SimilarGame,
     /// Nome do jogo da biblioteca que originou esta sugestão.
+    #[serde(rename = "becauseOf")]
     pub because_of: String,
 }
 

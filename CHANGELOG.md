@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.1] - 2026-07-02
+
+### Fixed
+
+- GameBrain similar-games response failing to parse when a game's rating was `null`, causing the "Similar to My Profile"
+  section to silently return empty results for affected anchor games
+- Missing `becauseOf` field in profile-similar recommendations due to incomplete camelCase serialization, resulting in
+  an empty badge/tooltip on similar game cards
+
 ## [4.1.0] - 2026-07-02
 
 ### Added
