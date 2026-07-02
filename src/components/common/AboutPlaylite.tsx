@@ -336,7 +336,7 @@ export function AboutPlaylite({
                     </a>
                     <span className="text-muted-foreground">•</span>
                     <a
-                      href="https://landing-page-alan-oliveirs-projects.vercel.app/en#support"
+                      href="https://landing-page-alan-oliveirs-projects.vercel.app"
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
@@ -388,15 +388,6 @@ export function AboutPlaylite({
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {t('about_docs_link')}
-                </a>
-                <span className="text-muted-foreground">•</span>
-                <a
-                  href="https://landing-page-alan-oliveirs-projects.vercel.app/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t('about_website_link')}
                 </a>
               </div>
               <p className="text-muted-foreground text-xs">

@@ -230,7 +230,6 @@ export default function Header({
               variant="ghost"
               size="icon"
               className="text-muted-foreground shrink-0 hover:bg-blue-500/10 hover:text-blue-500"
-              title={t('header_support_kofi_title')}
             >
               <Kofi size={18} />
             </Button>

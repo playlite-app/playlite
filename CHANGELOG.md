@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0] - 2026-07-02
+
+### Added
+
+- Ko-fi donation button in the app header, always visible for quick access
+- "Support Playlite" section in Settings → About, with Ko-fi donation link and alternative ways to support
+  (GitHub Sponsors, official website, bug reports)
+- Official landing page link in the Quick Settings documentation section
+- Custom Ko-fi icon component added to the icons library, consistent with the existing icons
+
+### Improved
+
+- Steam settings help callout redesigned to match the visual language of other info/warning callouts in the
+  app (icon + colored title + tinted border box), replacing the previous detached Badge component
+- Frontend type definitions standardized to camelCase across four modules (scanner, PCGW, GameBrain,
+  subscriptions), with corresponding `#[serde(rename_all = "camelCase")]` added to the matching Rust structs —
+  internal Rust field names unchanged
+
 ## [4.0.0] - 2026-06-26
 
 ### Added
