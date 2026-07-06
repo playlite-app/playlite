@@ -1,19 +1,18 @@
-import {
-  ExternalLink,
-  FolderOpen,
-  Globe,
-  Info,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
+import { ExternalLink, FolderOpen, Globe, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { useStoresConfig } from '@/hooks';
+import { useSteamConfig } from '@/hooks/plataforms';
 import { Badge } from '@/ui/badge';
-import { Button } from '@/ui/button.tsx';
-import { Input } from '@/ui/input.tsx';
-import { Separator } from '@/ui/separator.tsx';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+
+import {
+  ImportProgressIndicator,
+  PlatformActionButton,
+  PlatformActionsFooter,
+  PlatformHeader,
+} from './components';
 
 interface SteamSettingsProps {
   onLibraryUpdate?: () => void;
@@ -24,25 +23,19 @@ export function SteamSettings({
 }: Readonly<SteamSettingsProps>) {
   const { t } = useTranslation('plataforms');
   const { steamConfig, setSteamConfig, loading, status, progress, actions } =
-    useStoresConfig(onLibraryUpdate);
+    useSteamConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
-      {/* Header com Status */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {t('steam_title')}
-          </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {t('steam_description')}
-          </p>
-        </div>
-        {status.type && (
-          <StatusBadge type={status.type} message={status.message} />
-        )}
-      </div>
-      <Separator className="mt-5" />
+      <PlatformHeader
+        title={t('steam_title')}
+        description={t('steam_description')}
+        rightSlot={
+          status.type && (
+            <StatusBadge type={status.type} message={status.message} />
+          )
+        }
+      />
 
       <div className="space-y-4">
         {/* Credenciais da API */}
@@ -101,7 +94,7 @@ export function SteamSettings({
         </SettingsRow>
       </div>
 
-      {/* Ajuda */}
+      {/* Ajuda — específico da Steam, mantido inline por ora */}
       <div className="space-y-2 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 shrink-0 text-blue-400" />
@@ -144,41 +137,29 @@ export function SteamSettings({
         </div>
       </div>
 
-      {/* Progress Indicator */}
       {loading.importingSteam && progress && (
-        <div className="text-muted-foreground animate-pulse rounded-lg bg-blue-500/10 p-3 text-center text-sm">
-          {t('steam_importing')}: {progress.game} ({progress.current}/
-          {progress.total})
-        </div>
+        <ImportProgressIndicator
+          label={t('steam_importing')}
+          progress={progress}
+        />
       )}
 
-      {/* Botões de Ação */}
-      <div className="border-border/10 flex justify-end gap-3 border-t pt-8">
-        <Button
+      <PlatformActionsFooter>
+        <PlatformActionButton
           variant="outline"
           onClick={actions.saveSteamKeys}
+          isLoading={loading.saving}
           disabled={loading.saving || loading.importingSteam}
-          className="flex items-center gap-2"
-        >
-          {loading.saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            t('steam_save_credentials')
-          )}
-        </Button>
-        <Button
+          label={t('steam_save_credentials')}
+        />
+        <PlatformActionButton
           onClick={actions.saveAndImport}
+          isLoading={loading.importingSteam}
           disabled={loading.saving || loading.importingSteam}
-          className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
-        >
-          {loading.importingSteam ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw size={16} />
-          )}
-          {t('steam_save_and_import')}
-        </Button>
-      </div>
+          label={t('steam_save_and_import')}
+          icon={RefreshCw}
+        />
+      </PlatformActionsFooter>
     </div>
   );
 }

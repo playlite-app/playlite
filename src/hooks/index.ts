@@ -12,6 +12,7 @@
  * - update/         - Verificação e aplicação de atualizações
  * - configuration/  - Configurações e integrações
  * - game_detail/    - Hook para detalhes e dados extras para jogos
+ * - plataforms/     - Hook para gerenciar importações de plataformas (Steam, Epic, etc.)
  * - useHome.ts      - Hook específico para a tela inicial (na raizs)
  *
  * Cada pasta pode conter múltiplos hooks relacionados àquela funcionalidade.
@@ -46,6 +47,9 @@ export * from './configuration';
 
 // Game hooks
 export * from './game_detail';
+
+// Plataforms hooks
+export * from './plataforms';
 
 // Special hooks (na raiz)
 export * from './useHome';

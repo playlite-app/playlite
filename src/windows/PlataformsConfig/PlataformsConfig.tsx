@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle2, Settings2, Wine } from 'lucide-react';
+import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,6 +26,8 @@ type SourceProvider =
   | 'local'
   | 'wine';
 
+type IconComponent = ComponentType<{ size?: number; className?: string }>;
+
 export default function PlataformsConfig({
   isOpen,
   onClose,
@@ -37,7 +40,12 @@ export default function PlataformsConfig({
   const { t } = useTranslation('plataforms');
   const [activeStore, setActiveStore] = useState<SourceProvider>('steam');
 
-  const stores = [
+  const stores: {
+    id: SourceProvider;
+    name: string;
+    Icon: IconComponent;
+    connected: boolean;
+  }[] = [
     {
       id: 'steam',
       name: t('config_store_steam'),
@@ -78,6 +86,36 @@ export default function PlataformsConfig({
     { id: 'wine', name: t('config_store_wine'), Icon: Wine, connected: true },
   ];
 
+  const renderActiveStore = () => {
+    switch (activeStore) {
+      case 'steam':
+        return <SteamSettings onLibraryUpdate={onLibraryUpdate} />;
+      case 'epic':
+        return <EpicGamesSettings onLibraryUpdate={onLibraryUpdate} />;
+      case 'heroic':
+        return <HeroicSettings onLibraryUpdate={onLibraryUpdate} />;
+      case 'ubisoft':
+        return <UbisoftSettings onLibraryUpdate={onLibraryUpdate} />;
+      case 'legacy':
+        return <LegacySettings onLibraryUpdate={onLibraryUpdate} />;
+      case 'local':
+        return <LocalScannerSettings />;
+      case 'wine':
+        return <WineSettings />;
+      case 'gog':
+        return (
+          <div className="flex h-full flex-col items-center justify-center opacity-30">
+            <AlertCircle size={48} className="mb-4" />
+            <p className="text-lg font-medium">
+              {t('config_integration_soon')}
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <WindowBase isOpen={isOpen} onClose={onClose} maxWidth="7xl">
       <div className="flex h-full flex-row">
@@ -94,7 +132,7 @@ export default function PlataformsConfig({
               return (
                 <button
                   key={store.id}
-                  onClick={() => setActiveStore(store.id as SourceProvider)}
+                  onClick={() => setActiveStore(store.id)}
                   className={cn(
                     'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors',
                     isActive
@@ -118,33 +156,9 @@ export default function PlataformsConfig({
           </nav>
         </aside>
 
-        {/* Conteúdo com SettingsRow */}
+        {/* Conteúdo */}
         <main className="bg-background/95 custom-scrollbar flex-1 overflow-y-auto p-8">
-          {activeStore === 'steam' && (
-            <SteamSettings onLibraryUpdate={onLibraryUpdate} />
-          )}
-          {activeStore === 'epic' && (
-            <EpicGamesSettings onLibraryUpdate={onLibraryUpdate} />
-          )}
-          {activeStore === 'heroic' && (
-            <HeroicSettings onLibraryUpdate={onLibraryUpdate} />
-          )}
-          {activeStore === 'ubisoft' && (
-            <UbisoftSettings onLibraryUpdate={onLibraryUpdate} />
-          )}
-          {activeStore === 'legacy' && (
-            <LegacySettings onLibraryUpdate={onLibraryUpdate} />
-          )}
-          {activeStore === 'local' && <LocalScannerSettings />}
-          {activeStore === 'wine' && <WineSettings />}
-          {activeStore === 'gog' && (
-            <div className="flex h-full flex-col items-center justify-center opacity-30">
-              <AlertCircle size={48} className="mb-4" />
-              <p className="text-lg font-medium">
-                {t('config_integration_soon')}
-              </p>
-            </div>
-          )}
+          {renderActiveStore()}
         </main>
       </div>
     </WindowBase>

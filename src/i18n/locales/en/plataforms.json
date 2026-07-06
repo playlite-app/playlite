@@ -177,5 +177,17 @@
   "wine_executable_placeholder": "executable",
   "wine_default_prefix_note": "If not configured, Wine uses the default prefix",
   "wine_clear": "Clear",
-  "wine_save_configuration": "Save Configuration"
+  "wine_save_configuration": "Save Configuration",
+
+  "steam_credentials_saved": "Steam credentials securely updated!",
+  "common_save_error_prefix": "Error saving:",
+  "steam_missing_credentials": "Fill in your Steam credentials.",
+  "steam_missing_directory": "Select the Steam installation directory.",
+  "steam_importing_status": "Importing Steam library...",
+  "steam_select_directory_title": "Select the Steam installation directory",
+  "steam_directory_selected": "Steam directory selected!",
+  "epic_importing_status": "Importing Epic Games...",
+  "heroic_importing_status": "Importing Heroic games...",
+  "ubisoft_importing_status": "Importing Ubisoft games...",
+  "legacy_importing_status": "Importing Legacy Games..."
 }
