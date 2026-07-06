@@ -114,6 +114,8 @@
   "scanner_add_all": "Add All",
   "scanner_choose_executables": "Choose Executables:",
   "scanner_empty_state": "Select a folder and click \"Start Scan\" to begin.",
+  "scanner_scan_failed": "Failed to scan folder",
+  "scanner_add_all_failed": "Failed to add games",
 
   "config_store_steam": "Steam",
   "config_store_epic": "Epic Games",

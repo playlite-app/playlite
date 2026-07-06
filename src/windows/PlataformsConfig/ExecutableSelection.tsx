@@ -1,10 +1,10 @@
-import { invoke } from '@tauri-apps/api/core';
 import { Cpu, FileText, HardDrive, MousePointer2, Star } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useExecutableSelection } from '@/hooks/configuration';
 import { formatFileSize } from '@/services/scannerService';
-import { ExecutableCandidate, GameDiscovery } from '@/types/scanner';
+import { GameDiscovery } from '@/types/scanner';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import {
@@ -22,40 +22,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/ui/table';
-import { toast } from '@/utils/toast';
 
-interface Props {
+interface ExecutableSelectionProps {
   open: boolean;
   onClose: () => void;
   discovery: GameDiscovery;
 }
 
-export function ExecutableSelection({ open, onClose, discovery }: Props) {
+export function ExecutableSelection({
+  open,
+  onClose,
+  discovery,
+}: Readonly<ExecutableSelectionProps>) {
   const { t } = useTranslation('plataforms');
-  const [isSaving, setIsSaving] = useState(false);
-  const handleSelect = async (exe: ExecutableCandidate) => {
-    setIsSaving(true);
+  const { isSaving, handleSelect } = useExecutableSelection(discovery, onClose);
 
-    try {
-      // Chama o comando Rust definido em plataforms.rs
-      await invoke<string>('add_game_from_scan', {
-        name: discovery.suggestedName,
-        executablePath: exe.path,
-        basePath: discovery.basePath,
-      });
-      toast.success(
-        t('executable_added_to_library', { name: discovery.suggestedName })
-      );
-      onClose();
-    } catch (error) {
-      toast.error(
-        typeof error === 'string' ? error : t('executable_save_failed')
-      );
-      console.error('Erro ao adicionar jogo:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const sortedExecutables = useMemo(
+    () => [...discovery.executables].sort((a, b) => b.rankScore - a.rankScore),
+    [discovery.executables]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -95,69 +80,67 @@ export function ExecutableSelection({ open, onClose, discovery }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {discovery.executables
-                .sort((a, b) => b.rankScore - a.rankScore)
-                .map((exe, idx) => (
-                  <TableRow key={exe.path}>
-                    <TableCell className="py-4 pl-8">
-                      <div className="flex items-start gap-3">
-                        {idx === 0 ? (
-                          <Star className="mt-1 h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
-                        ) : (
-                          <FileText className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
-                        )}
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                          <span className="text-xl leading-tight font-bold">
-                            {exe.filename}
-                            {idx === 0 && (
-                              <Badge
-                                variant="outline"
-                                className="border-primary/30 text-primary ml-2 h-4 text-xs font-black uppercase"
-                              >
-                                {t('executable_suggestion')}
-                              </Badge>
-                            )}
-                          </span>
-                          <span className="text-muted-foreground max-w-2xl truncate font-mono text-xs opacity-60">
-                            {exe.path}
-                          </span>
-                        </div>
+              {sortedExecutables.map((exe, idx) => (
+                <TableRow key={exe.path}>
+                  <TableCell className="py-4 pl-8">
+                    <div className="flex items-start gap-3">
+                      {idx === 0 ? (
+                        <Star className="mt-1 h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
+                      ) : (
+                        <FileText className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
+                      )}
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-xl leading-tight font-bold">
+                          {exe.filename}
+                          {idx === 0 && (
+                            <Badge
+                              variant="outline"
+                              className="border-primary/30 text-primary ml-2 h-4 text-xs font-black uppercase"
+                            >
+                              {t('executable_suggestion')}
+                            </Badge>
+                          )}
+                        </span>
+                        <span className="text-muted-foreground max-w-2xl truncate font-mono text-xs opacity-60">
+                          {exe.path}
+                        </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <HardDrive
-                          size={14}
-                          className="text-muted-foreground opacity-70"
-                        />
-                        {formatFileSize(exe.sizeMb)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="bg-background/50 border-border/50 font-mono text-xs font-semibold uppercase"
-                      >
-                        <Cpu size={12} className="mr-1.5 opacity-60" />
-                        {exe.executableType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-8 text-right">
-                      <Button
-                        size="sm"
-                        disabled={isSaving}
-                        variant={idx === 0 ? 'default' : 'outline'}
-                        onClick={() => handleSelect(exe)}
-                        className="h-8 font-bold"
-                      >
-                        <MousePointer2 size={14} className="mr-2" />
-                        {isSaving
-                          ? t('executable_saving')
-                          : t('executable_select')}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <HardDrive
+                        size={14}
+                        className="text-muted-foreground opacity-70"
+                      />
+                      {formatFileSize(exe.sizeMb)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className="bg-background/50 border-border/50 font-mono text-xs font-semibold uppercase"
+                    >
+                      <Cpu size={12} className="mr-1.5 opacity-60" />
+                      {exe.executableType}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="pr-8 text-right">
+                    <Button
+                      size="sm"
+                      disabled={isSaving}
+                      variant={idx === 0 ? 'default' : 'outline'}
+                      onClick={() => handleSelect(exe)}
+                      className="h-8 font-bold"
+                    >
+                      <MousePointer2 size={14} className="mr-2" />
+                      {isSaving
+                        ? t('executable_saving')
+                        : t('executable_select')}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

@@ -12,6 +12,24 @@ export async function scanGamesFolder(folderPath: string): Promise<ScanResult> {
 }
 
 /**
+ * Adiciona um único jogo descoberto pelo scan ao banco de dados.
+ * Usado pelo fluxo de seleção manual de executável (ExecutableSelection).
+ *
+ * @param discovery - Descoberta de jogo de origem
+ * @param executable - Executável escolhido dentre os candidatos da descoberta
+ */
+export async function addGameFromScan(
+  discovery: GameDiscovery,
+  executable: ExecutableCandidate
+): Promise<string> {
+  return await invoke<string>('add_game_from_scan', {
+    name: discovery.suggestedName,
+    executablePath: executable.path,
+    basePath: discovery.basePath,
+  });
+}
+
+/**
  * Adiciona múltiplos jogos descobertos pelo scan ao banco de dados.
  *
  * @param games - Lista de jogos a adicionar

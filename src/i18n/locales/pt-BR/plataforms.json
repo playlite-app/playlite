@@ -114,6 +114,8 @@
   "scanner_add_all": "Adicionar Todos",
   "scanner_choose_executables": "Escolher Executáveis:",
   "scanner_empty_state": "Selecione uma pasta e clique em \"Iniciar Varredura\" para começar.",
+  "scanner_scan_failed": "Falha ao escanear a pasta",
+  "scanner_add_all_failed": "Falha ao adicionar os jogos",
 
   "config_store_steam": "Steam",
   "config_store_epic": "Epic Games",

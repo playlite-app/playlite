@@ -1,4 +1,5 @@
 export { DetectedPathsBox } from './DetectedPathsBox';
+export { GameDiscoveryCard } from './GameDiscoveryCard';
 export { ImportedItemsBox } from './ImportedItemsBox';
 export { ImportProgressIndicator } from './ImportProgressIndicator';
 export { InfoNoteBox } from './InfoNoteBox';
@@ -6,4 +7,5 @@ export { PathPickerField } from './PathPickerField';
 export { PlatformActionButton } from './PlatformActionButton';
 export { PlatformActionsFooter } from './PlatformActionsFooter';
 export { PlatformHeader } from './PlatformHeader';
+export { ScanResultBanner } from './ScanResultBanner';
 export { WarningBox } from './WarningBox';

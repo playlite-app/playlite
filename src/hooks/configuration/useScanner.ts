@@ -1,5 +1,6 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   addGamesFromScan,
@@ -7,12 +8,14 @@ import {
   scanGamesFolder,
 } from '@/services/scannerService';
 import { ScanResult } from '@/types/scanner';
+import { toast } from '@/utils/toast';
 
 /** Hook para gerenciar o estado e lógica de escaneamento de pasta de jogos.
  *
  * @returns Estado e funções para escanear a pasta de jogos
  */
 export function useScanner() {
+  const { t } = useTranslation('plataforms');
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -33,11 +36,14 @@ export function useScanner() {
     if (!selectedFolder) return;
 
     setScanning(true);
+    // Limpa o resultado anterior para não deixar dados obsoletos na tela caso o novo scan falhe.
+    setResult(null);
 
     try {
       const scanResult = await scanGamesFolder(selectedFolder);
       setResult(scanResult);
     } catch (error) {
+      toast.error(t('scanner_scan_failed'));
       console.error('Erro ao escanear:', error);
     } finally {
       setScanning(false);
@@ -60,15 +66,20 @@ export function useScanner() {
             basePath: d.basePath,
           };
         })
-        .filter(Boolean) as {
-        name: string;
-        executablePath: string;
-        basePath: string;
-      }[];
+        .filter(
+          (
+            game
+          ): game is {
+            name: string;
+            executablePath: string;
+            basePath: string;
+          } => game !== null
+        );
 
       const message = await addGamesFromScan(games);
       setResult({ ...result, message });
     } catch (error) {
+      toast.error(t('scanner_add_all_failed'));
       console.error('Erro ao adicionar jogos:', error);
     }
   };

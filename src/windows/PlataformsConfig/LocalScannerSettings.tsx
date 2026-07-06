@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { SettingsRow } from '@/components/common';
 import { useScanner } from '@/hooks';
-import { cn } from '@/lib/utils';
 import { Button } from '@/ui/button';
-import { Separator } from '@/ui/separator';
-import { DiscoveriesList } from '@/windows';
+
+import { PlatformActionButton } from './components/PlatformActionButton';
+import { PlatformHeader } from './components/PlatformHeader';
+import { ScanResultBanner } from './components/ScanResultBanner';
+import { DiscoveriesList } from './DiscoveriesList';
 
 export function LocalScannerSettings() {
   const { t } = useTranslation('plataforms');
@@ -21,16 +23,10 @@ export function LocalScannerSettings() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {t('scanner_title')}
-        </h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {t('scanner_description')}
-        </p>
-      </div>
-      <Separator className="mt-5" />
+      <PlatformHeader
+        title={t('scanner_title')}
+        description={t('scanner_description')}
+      />
 
       <div className="space-y-6">
         {/* Área de Controles */}
@@ -61,16 +57,15 @@ export function LocalScannerSettings() {
                   ? t('scanner_change_folder')
                   : t('scanner_select_folder')}
               </Button>
-              <Button
+              <PlatformActionButton
                 onClick={handleScan}
+                isLoading={scanning}
                 disabled={!selectedFolder || scanning}
+                label={t('scanner_start_scan')}
+                loadingLabel={t('scanner_scanning')}
+                icon={Scan}
                 className="flex-1"
-              >
-                <Scan
-                  className={cn('mr-2 h-4 w-4', scanning && 'animate-spin')}
-                />
-                {scanning ? t('scanner_scanning') : t('scanner_start_scan')}
-              </Button>
+              />
             </div>
           </div>
         </SettingsRow>
@@ -78,29 +73,17 @@ export function LocalScannerSettings() {
         {/* Área de Resultados */}
         {result && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div
-              className={cn(
-                'mb-6 flex items-center justify-between rounded-lg border p-4 text-sm',
-                result.success
-                  ? 'border-green-500/20 bg-green-500/5 text-green-400'
-                  : 'border-red-500/20 bg-red-500/5 text-red-400'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    'h-2 w-2 rounded-full',
-                    result.success ? 'bg-green-500' : 'bg-red-500'
-                  )}
-                />
-                {result.message}
-              </div>
-              {result.success && result.discoveries.length > 0 && (
-                <Button onClick={handleAddAll} disabled={scanning} size="sm">
-                  {t('scanner_add_all')}
-                </Button>
-              )}
-            </div>
+            <ScanResultBanner
+              success={result.success}
+              message={result.message}
+              onAddAll={
+                result.success && result.discoveries.length > 0
+                  ? handleAddAll
+                  : undefined
+              }
+              addAllDisabled={scanning}
+              addAllLabel={t('scanner_add_all')}
+            />
 
             {result.success && result.discoveries.length > 0 && (
               <div className="space-y-4">
