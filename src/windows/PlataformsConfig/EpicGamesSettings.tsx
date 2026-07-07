@@ -2,7 +2,7 @@ import { FolderOpen, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { useEpicConfig } from '@/hooks/plataforms';
+import { ImportProgressPayload, useEpicConfig } from '@/hooks/plataforms';
 
 import {
   DetectedPathsBox,
@@ -13,16 +13,19 @@ import {
   PlatformActionsFooter,
   PlatformHeader,
 } from './components';
+import { DETECTED_PATHS } from './constants';
 
 interface EpicGamesSettingsProps {
   onLibraryUpdate?: () => void;
+  progress: ImportProgressPayload | null;
 }
 
 export function EpicGamesSettings({
   onLibraryUpdate,
+  progress,
 }: Readonly<EpicGamesSettingsProps>) {
   const { t } = useTranslation('plataforms');
-  const { loading, status, progress, actions } = useEpicConfig(onLibraryUpdate);
+  const { loading, status, actions } = useEpicConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
@@ -48,11 +51,11 @@ export function EpicGamesSettings({
             paths={[
               {
                 label: t('epic_windows_label'),
-                path: 'C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests',
+                path: DETECTED_PATHS.epic.windows,
               },
               {
                 label: t('epic_linux_wine_label'),
-                path: '<wine_prefix>/drive_c/ProgramData/Epic/.../Manifests',
+                path: DETECTED_PATHS.epic.linuxWine,
               },
             ]}
             note={t('epic_scanner_item_files')}

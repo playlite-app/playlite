@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
-
-import { useImportProgress } from './useImportProgress';
-import { usePlatformImportAction } from './usePlatformImportAction';
-import { usePlatformStatus } from './usePlatformStatus';
 
 /**
  * Hook para gerenciar a importação de jogos da Legacy Games.
@@ -14,7 +11,6 @@ import { usePlatformStatus } from './usePlatformStatus';
 export function useLegacyConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('plataforms');
   const { status, setStatus } = usePlatformStatus();
-  const { progress } = useImportProgress();
 
   const { isImporting: isImportingLegacy, run: importLegacyGames } =
     usePlatformImportAction(
@@ -30,7 +26,6 @@ export function useLegacyConfig(onLibraryUpdate?: () => void) {
   return {
     loading: { importingLegacy: isImportingLegacy },
     status,
-    progress,
     actions: { importLegacyGames },
   };
 }

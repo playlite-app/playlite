@@ -1,10 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import {
-  useImportProgress,
-  usePlatformImportAction,
-  usePlatformStatus,
-} from '@/hooks';
+import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 
 /**
@@ -14,7 +10,6 @@ import { platformsService } from '@/services/plataformsService';
 export function useEpicConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('plataforms');
   const { status, setStatus } = usePlatformStatus();
-  const { progress } = useImportProgress();
 
   const { isImporting: isImportingEpic, run: importEpicGames } =
     usePlatformImportAction(() => platformsService.importEpicGames(), {
@@ -26,7 +21,6 @@ export function useEpicConfig(onLibraryUpdate?: () => void) {
   return {
     loading: { importingEpic: isImportingEpic },
     status,
-    progress,
     actions: { importEpicGames },
   };
 }

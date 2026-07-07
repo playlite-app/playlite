@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { useHeroicConfig, useNativePathPicker } from '@/hooks/plataforms';
+import {
+  ImportProgressPayload,
+  useHeroicConfig,
+  useNativePathPicker,
+} from '@/hooks/plataforms';
 
 import {
   DetectedPathsBox,
@@ -15,17 +19,19 @@ import {
   PlatformHeader,
   WarningBox,
 } from './components';
+import { DETECTED_PATHS } from './constants';
 
 interface HeroicSettingsProps {
   onLibraryUpdate?: () => void;
+  progress: ImportProgressPayload | null;
 }
 
 export function HeroicSettings({
   onLibraryUpdate,
+  progress,
 }: Readonly<HeroicSettingsProps>) {
   const { t } = useTranslation('plataforms');
-  const { loading, status, progress, actions } =
-    useHeroicConfig(onLibraryUpdate);
+  const { loading, status, actions } = useHeroicConfig(onLibraryUpdate);
 
   const [configPath, setConfigPath] = useState('');
   const { pick } = useNativePathPicker({
@@ -63,15 +69,15 @@ export function HeroicSettings({
             paths={[
               {
                 label: t('heroic_linux_native_label'),
-                path: '~/.config/heroic',
+                path: DETECTED_PATHS.heroic.linuxNative,
               },
               {
                 label: t('heroic_linux_flatpak_label'),
-                path: '~/.var/app/com.heroicgameslauncher.hgl/config/heroic',
+                path: DETECTED_PATHS.heroic.linuxFlatpak,
               },
               {
                 label: t('heroic_windows_label'),
-                path: '%APPDATA%\\heroic',
+                path: DETECTED_PATHS.heroic.windows,
               },
             ]}
           />
@@ -89,6 +95,7 @@ export function HeroicSettings({
             onBrowse={handleChooseDir}
             placeholder={t('heroic_custom_dir_placeholder')}
             browseLabel={t('heroic_browse')}
+            ariaLabel={t('heroic_custom_dir_title')}
           />
         </SettingsRow>
 
@@ -123,7 +130,6 @@ export function HeroicSettings({
         <ImportProgressIndicator
           label={t('heroic_importing')}
           progress={progress}
-          colorClassName="bg-purple-500/10"
         />
       )}
 

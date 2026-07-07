@@ -7,5 +7,6 @@ export { PathPickerField } from './PathPickerField';
 export { PlatformActionButton } from './PlatformActionButton';
 export { PlatformActionsFooter } from './PlatformActionsFooter';
 export { PlatformHeader } from './PlatformHeader';
+export { PlatformHelpBox } from './PlatformHelpBox';
 export { ScanResultBanner } from './ScanResultBanner';
 export { WarningBox } from './WarningBox';

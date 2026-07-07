@@ -2,7 +2,7 @@ import { CheckCircle2, Info, Save, Terminal, Trash2, Wine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow } from '@/components/common';
-import { useWineConfig } from '@/hooks';
+import { useWineConfig } from '@/hooks/plataforms';
 import { Button } from '@/ui/button';
 
 import {
@@ -52,6 +52,7 @@ export function WineSettings() {
             onBrowse={actions.chooseWinePrefix}
             placeholder={t('wine_prefix_placeholder')}
             browseLabel={t('wine_browse')}
+            ariaLabel={t('wine_prefix_title')}
           />
         </SettingsRow>
 

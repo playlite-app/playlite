@@ -2,7 +2,7 @@ import { RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { StatusBadge } from '@/components/common';
-import { useUbisoftConfig } from '@/hooks/plataforms';
+import { ImportProgressPayload, useUbisoftConfig } from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,
@@ -11,17 +11,19 @@ import {
   PlatformActionsFooter,
   PlatformHeader,
 } from './components';
+import { DETECTED_PATHS } from './constants';
 
 interface UbisoftSettingsProps {
   onLibraryUpdate?: () => void;
+  progress: ImportProgressPayload | null;
 }
 
 export function UbisoftSettings({
   onLibraryUpdate,
+  progress,
 }: Readonly<UbisoftSettingsProps>) {
   const { t } = useTranslation('plataforms');
-  const { loading, status, progress, actions } =
-    useUbisoftConfig(onLibraryUpdate);
+  const { loading, status, actions } = useUbisoftConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
@@ -48,7 +50,7 @@ export function UbisoftSettings({
           note={
             <>
               {t('ubisoft_import_note_prefix')}{' '}
-              <code>%LOCALAPPDATA%\Ubisoft Game Launcher</code>
+              <code>{DETECTED_PATHS.ubisoft.windows}</code>
               {t('ubisoft_import_note_suffix')}
             </>
           }

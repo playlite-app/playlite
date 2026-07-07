@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import {
+  useNativePathPicker,
+  usePlatformImportAction,
+  usePlatformStatus,
+} from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 import { settingsService } from '@/services/settingsService';
 import { toast } from '@/utils/toast';
-
-import { useImportProgress } from './useImportProgress';
-import { useNativePathPicker } from './useNativePathPicker';
-import { usePlatformImportAction } from './usePlatformImportAction';
-import { usePlatformStatus } from './usePlatformStatus';
 
 const STEAM_ROOT_KEY = 'steam_root';
 
@@ -22,7 +22,6 @@ const STEAM_ROOT_KEY = 'steam_root';
 export function useSteamConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('plataforms');
   const { status, setStatus } = usePlatformStatus();
-  const { progress } = useImportProgress();
 
   const [steamConfig, setSteamConfig] = useState({
     steamId: '',
@@ -158,7 +157,6 @@ export function useSteamConfig(onLibraryUpdate?: () => void) {
       importingSteam: isImportingSteam,
     },
     status,
-    progress,
     actions: {
       saveSteamKeys,
       importSteamLibrary,

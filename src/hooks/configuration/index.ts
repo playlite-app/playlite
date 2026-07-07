@@ -2,4 +2,3 @@
 export * from './useExecutableSelection';
 export * from './useScanner';
 export * from './useSettings';
-export * from './useWineConfig';

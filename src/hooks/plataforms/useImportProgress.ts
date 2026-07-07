@@ -7,7 +7,9 @@ import type { ImportProgressPayload } from './types';
  * Escuta os eventos globais de progresso de importação emitidos pelo backend
  * (`import_progress` / `import_complete`). Esses eventos não são específicos
  * de nenhuma plataforma — qualquer importação em andamento (Steam, Epic,
- * Heroic, Ubisoft ou Legacy) emite o mesmo payload.
+ * Heroic, Ubisoft ou Legacy) emite o mesmo payload. Chamado uma única vez em
+ * `PlataformsConfig.tsx`, no nível mais alto dajanela de configuração.
+ * O valor de `progress` é repassado como prop para o componente da plataforma ativa.
  */
 export function useImportProgress() {
   const [progress, setProgress] = useState<ImportProgressPayload | null>(null);

@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { useLegacyConfig, useNativePathPicker } from '@/hooks/plataforms';
+import {
+  ImportProgressPayload,
+  useLegacyConfig,
+  useNativePathPicker,
+} from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,
@@ -14,17 +18,19 @@ import {
   PlatformActionsFooter,
   PlatformHeader,
 } from './components';
+import { DETECTED_PATHS } from './constants';
 
 interface LegacySettingsProps {
   onLibraryUpdate?: () => void;
+  progress: ImportProgressPayload | null;
 }
 
 export function LegacySettings({
   onLibraryUpdate,
+  progress,
 }: Readonly<LegacySettingsProps>) {
   const { t } = useTranslation('plataforms');
-  const { loading, status, progress, actions } =
-    useLegacyConfig(onLibraryUpdate);
+  const { loading, status, actions } = useLegacyConfig(onLibraryUpdate);
 
   const [appStatePath, setAppStatePath] = useState('');
   const { pick } = useNativePathPicker({
@@ -69,18 +75,13 @@ export function LegacySettings({
                 <strong className="text-foreground/70">
                   {t('legacy_windows_label')}
                 </strong>{' '}
-                <code>
-                  %APPDATA%\Roaming\legacy-games-launcher\app-state.json
-                </code>
+                <code>{DETECTED_PATHS.legacy.windows}</code>
               </li>
               <li>
                 <strong className="text-foreground/70">
                   {t('legacy_linux_wine_label')}
                 </strong>{' '}
-                <code>
-                  {'<wine_prefix>'}/drive_c/users/{'<USER>'}
-                  /AppData/Roaming/legacy-games-launcher/
-                </code>
+                <code>{DETECTED_PATHS.legacy.linuxWine}</code>
               </li>
             </ul>
           </InfoNoteBox>
@@ -115,6 +116,7 @@ export function LegacySettings({
             onBrowse={handleChooseFile}
             placeholder={t('legacy_manual_path_placeholder')}
             browseLabel={t('legacy_browse')}
+            ariaLabel={t('legacy_manual_path_title')}
           />
         </SettingsRow>
 

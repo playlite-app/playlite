@@ -148,6 +148,8 @@
   "steam_importing": "Importing",
   "steam_save_credentials": "Save Credentials",
   "steam_save_and_import": "Save and Import",
+  "steam_id_aria_label": "Steam ID (SteamID64)",
+  "steam_api_key_aria_label": "Steam API Key",
 
   "ubisoft_title": "Ubisoft Import",
   "ubisoft_description": "Import installed games and library entries from Ubisoft Connect.",
@@ -180,6 +182,11 @@
   "wine_default_prefix_note": "If not configured, Wine uses the default prefix",
   "wine_clear": "Clear",
   "wine_save_configuration": "Save Configuration",
+  "wine_select_prefix_title": "Select the Wine prefix directory",
+  "wine_prefix_selected": "Wine prefix directory selected!",
+  "wine_prefix_select_error": "Error selecting directory",
+  "wine_config_saved": "Wine configuration saved!",
+  "wine_config_removed": "Wine configuration removed.",
 
   "steam_credentials_saved": "Steam credentials securely updated!",
   "common_save_error_prefix": "Error saving:",

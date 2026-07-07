@@ -8,3 +8,4 @@ export { usePlatformImportAction } from './usePlatformImportAction';
 export { usePlatformStatus } from './usePlatformStatus';
 export { useSteamConfig } from './useSteamConfig';
 export { useUbisoftConfig } from './useUbisoftConfig';
+export { useWineConfig } from './useWineConfig';

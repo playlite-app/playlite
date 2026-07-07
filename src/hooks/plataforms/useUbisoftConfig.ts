@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
-
-import { useImportProgress } from './useImportProgress';
-import { usePlatformImportAction } from './usePlatformImportAction';
-import { usePlatformStatus } from './usePlatformStatus';
 
 /**
  * Hook para gerenciar a importação de jogos do Ubisoft Game Launcher.
@@ -13,7 +10,6 @@ import { usePlatformStatus } from './usePlatformStatus';
 export function useUbisoftConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('plataforms');
   const { status, setStatus } = usePlatformStatus();
-  const { progress } = useImportProgress();
 
   const { isImporting: isImportingUbisoft, run: importUbisoftGames } =
     usePlatformImportAction(() => platformsService.importUbisoftGames(), {
@@ -25,7 +21,6 @@ export function useUbisoftConfig(onLibraryUpdate?: () => void) {
   return {
     loading: { importingUbisoft: isImportingUbisoft },
     status,
-    progress,
     actions: { importUbisoftGames },
   };
 }

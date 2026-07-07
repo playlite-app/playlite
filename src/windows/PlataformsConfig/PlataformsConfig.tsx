@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Epic, Heroic, Legacy, Steam, Ubisoft } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
+import { useImportProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
   EpicGamesSettings,
@@ -39,6 +40,7 @@ export default function PlataformsConfig({
 }>) {
   const { t } = useTranslation('plataforms');
   const [activeStore, setActiveStore] = useState<SourceProvider>('steam');
+  const { progress } = useImportProgress();
 
   const stores: {
     id: SourceProvider;
@@ -89,15 +91,40 @@ export default function PlataformsConfig({
   const renderActiveStore = () => {
     switch (activeStore) {
       case 'steam':
-        return <SteamSettings onLibraryUpdate={onLibraryUpdate} />;
+        return (
+          <SteamSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
       case 'epic':
-        return <EpicGamesSettings onLibraryUpdate={onLibraryUpdate} />;
+        return (
+          <EpicGamesSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
       case 'heroic':
-        return <HeroicSettings onLibraryUpdate={onLibraryUpdate} />;
+        return (
+          <HeroicSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
       case 'ubisoft':
-        return <UbisoftSettings onLibraryUpdate={onLibraryUpdate} />;
+        return (
+          <UbisoftSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
       case 'legacy':
-        return <LegacySettings onLibraryUpdate={onLibraryUpdate} />;
+        return (
+          <LegacySettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
       case 'local':
         return <LocalScannerSettings />;
       case 'wine':
