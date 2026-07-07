@@ -15,7 +15,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import StandardGameCard from '@/components/cards/StandardGameCard';
@@ -95,14 +95,20 @@ export default function Home(props: Readonly<HomeProps>) {
       .catch(() => setEnabledServices([]));
   }, []);
 
-  // Lógica do Hero usando useHeroCarousel
-  const heroSlides = [
-    backlogRecommendations[0],
-    ...(trending || []).slice(0, 2),
-    mostPlayed[0],
-  ].filter(Boolean);
+  // Lógica do Hero usando useHeroCarousel.
+  const heroSlides = useMemo(
+    () =>
+      [
+        mostPlayed[0],
+        ...(trending || []).slice(0, 2),
+        backlogRecommendations[0],
+      ].filter(Boolean),
+    [mostPlayed, trending, backlogRecommendations]
+  );
 
-  const { currentIndex, next, prev } = useHeroCarousel(heroSlides.length);
+  const { currentIndex, next, prev } = useHeroCarousel(heroSlides.length, {
+    autoAdvanceMs: 8000,
+  });
   const currentHero = heroSlides[currentIndex] || mostPlayed[0];
 
   // Helper para imagens

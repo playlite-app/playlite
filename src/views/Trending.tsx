@@ -76,10 +76,13 @@ const PLATFORM_OPTIONS = [
 ];
 
 export default function Trending(props: TrendingProps) {
+  // Hooks globais
   const { t } = useTranslation('trending');
   const isOnline = useNetworkStatus();
+  const { profile } = useRecommendation();
+  const { games: wishlistGames } = useWishlist();
 
-  // Hooks customizados para gerenciar diferentes aspectos da página
+  // Hooks de dados
   const {
     games,
     allGenres,
@@ -90,19 +93,19 @@ export default function Trending(props: TrendingProps) {
     addToWishlist,
   } = useTrending(props);
 
-  const { profile } = useRecommendation();
-  const { games: wishlistGames } = useWishlist();
   const {
     games: profileSimilar,
     loading: profileLoading,
     hasAnchors,
   } = useProfileSimilar(props.userGames);
+
   const { upcomingGames } = useUpcoming({
     cachedGames: props.upcomingCache,
     setCachedGames: props.setUpcomingCache,
     cachedFetchedAt: props.upcomingFetchedAt,
     setCachedFetchedAt: props.setUpcomingFetchedAt,
   });
+
   const {
     filteredGiveaways,
     loading: giveawaysLoading,
@@ -116,31 +119,36 @@ export default function Trending(props: TrendingProps) {
     setCachedFetchedAt: props.setGiveawaysFetchedAt,
   });
 
-  // Verifica se temos ALGUM dado para mostrar (cache)
+  // Dados derivados
+  const heroGames = games.slice(0, 5);
+
+  // Prioriza jogos com maior afinidade ao perfil do usuário
+  const gridGames = useSortedByAffinity(games.slice(5, 15), profile);
+
+  // Mantém os dados em tela caso exista conteúdo em cache
   const hasData =
     games.length > 0 ||
     upcomingGames.length > 0 ||
     filteredGiveaways.length > 0 ||
     profileSimilar.length > 0;
 
-  // Lógica de Bloqueio: Só mostra erro se estiver offline E sem dados
-  if (!isOnline && !hasData) {
-    return (
-      <ErrorState
-        type="offline"
-        onAction={() => props.onChangeTab('libraries')}
-      />
-    );
-  }
-
-  // Hero carousel
-  const heroGames = games.slice(0, 5);
+  // Estado do carrossel
   const {
     currentIndex: heroIndex,
     next: nextHero,
     prev: prevHero,
-  } = useHeroCarousel(heroGames.length);
+  } = useHeroCarousel(heroGames.length, {
+    autoAdvanceMs: 8000,
+  });
 
+  // Informações do jogo atualmente exibido no Hero
+  const currentHero = heroGames[heroIndex];
+
+  const isHeroInWishlist = wishlistGames.some(
+    w => w.id === currentHero?.id.toString()
+  );
+
+  // Eventos da interface
   const handleRetry = () => {
     window.location.reload();
   };
@@ -148,6 +156,7 @@ export default function Trending(props: TrendingProps) {
   const handleWishlistClick = async (game: RawgGame) => {
     try {
       await addToWishlist(game);
+
       toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
         description: t('game_added_to_wishlist_description'),
       });
@@ -165,6 +174,7 @@ export default function Trending(props: TrendingProps) {
         name: game.name,
         cover_url: game.coverUrl,
       });
+
       toast.success(t('game_added_to_wishlist_title', { name: game.name }), {
         description: t('game_added_to_wishlist_description'),
       });
@@ -175,6 +185,19 @@ export default function Trending(props: TrendingProps) {
     }
   };
 
+  // Renderizações condicionais
+
+  // Exibe estado offline apenas quando não há dados disponíveis em cache
+  if (!isOnline && !hasData) {
+    return (
+      <ErrorState
+        type="offline"
+        onAction={() => props.onChangeTab('libraries')}
+      />
+    );
+  }
+
+  // Exibe erros de configuração ou da API somente quando não há dados para exibir
   if (error && !hasData) {
     const isConfigError = error.includes('401') || error.includes('Key');
 
@@ -190,6 +213,7 @@ export default function Trending(props: TrendingProps) {
     return <ErrorState type="api" message={error} onRetry={handleRetry} />;
   }
 
+  // Exibe o loading inicial somente quando ainda não existe conteúdo disponível
   if (gamesLoading && !hasData) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center space-y-4">
@@ -199,19 +223,16 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
-  // Hero atual
-  const currentHero = heroGames[heroIndex];
-  const isHeroInWishlist = wishlistGames.some(
-    w => w.id === currentHero?.id.toString()
-  );
-
+  // Caso nenhum jogo tenha sido carregado para o Hero
   if (!currentHero) {
     return (
       <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center">
         <div className="bg-muted/20 mb-4 rounded-full p-4">
           <Gamepad2 className="h-12 w-12 opacity-50" />
         </div>
+
         <h3 className="text-lg font-medium">{t('no_games_found')}</h3>
+
         <Button variant="outline" className="mt-6" onClick={handleRetry}>
           {t('reload_button')}
         </Button>
@@ -219,9 +240,7 @@ export default function Trending(props: TrendingProps) {
     );
   }
 
-  // Ordenação da Grid por afinidade
-  const gridGames = useSortedByAffinity(games.slice(5, 15), profile);
-
+  // Renderização principal
   return (
     <div className="custom-scrollbar bg-background flex-1 overflow-y-auto">
       {/* Banner de Modo Offline */}
@@ -273,6 +292,7 @@ export default function Trending(props: TrendingProps) {
           </>
         }
       />
+
       {/* 2. Barra de Filtros de Gênero (Sticky) */}
       <div className="bg-background/80 border-border sticky top-0 z-20 border-b p-4 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6">
