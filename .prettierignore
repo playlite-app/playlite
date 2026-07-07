@@ -11,6 +11,7 @@ src-tauri/Cargo.toml
 
 # Lock files
 *.lock
+
 # Config files that should not be formatted
 .cargo/**
 

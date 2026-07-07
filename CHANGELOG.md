@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.2] - 2026-07-07
+
+### Improved
+
+- Platforms configuration window internals fully refactored: the monolithic `useStoresConfig` hook was split into
+  one dedicated hook per platform (Steam, Epic, Heroic, Ubisoft, Legacy Games), now living under `hooks/plataforms/`
+  and only loading/persisting state relevant to that platform instead of all five at once on every tab switch
+- Shared UI building blocks extracted for the platform settings screens (headers, detected-paths boxes, import
+  progress indicators, action buttons/footers, path pickers), reducing duplicated markup across Steam, Epic,
+  Heroic, Ubisoft, Legacy Games, and Wine tabs
+- External links and auto-detected file/config paths for each platform moved into dedicated constants files
+  instead of being hardcoded inline in the components
+- Credential inputs on the Steam tab are now disabled while previously saved credentials are loading, preventing
+  a rare race condition where in-progress typing could be overwritten once the stored credentials arrived
+- Accessible labels (`aria-label`) added to path and credential inputs across all platform settings screens for
+  screen reader support
+
 ## [4.1.1] - 2026-07-02
 
 ### Fixed
