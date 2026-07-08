@@ -11,6 +11,18 @@ interface CachedImageProps {
   onError?: () => void;
 }
 
+/**
+ * Lê a preferência de "salvar capas localmente" uma única vez por montagem do
+ * componente (lazy init do useState), em vez de ler o localStorage sempre.
+ */
+function useSaveCoversEnabled(): boolean {
+  const [enabled] = useState(
+    () => localStorage.getItem('config_save_covers') === 'true'
+  );
+
+  return enabled;
+}
+
 export function CachedImage({
   src,
   gameId,
@@ -19,45 +31,31 @@ export function CachedImage({
   forceRemote = false,
   onError,
 }: CachedImageProps) {
-  const [displaySrc, setDisplaySrc] = useState<string | null>(null);
+  const useLocalImages = useSaveCoversEnabled();
   const [error, setError] = useState(false);
+  const [resolvedLocalSrc, setResolvedLocalSrc] = useState<string | null>(null);
 
-  // Lê a configuração do localStorage
-  const useLocalImages = localStorage.getItem('config_save_covers') === 'true';
+  // Enquanto "salvar capas" estiver desligado (padrão do app) ou forceRemote
+  // for true, pula o ciclo assíncrono de verificação de cache local.
+  const skipLocalResolution = !useLocalImages || forceRemote;
 
   useEffect(() => {
+    if (skipLocalResolution || !src) {
+      setResolvedLocalSrc(null);
+
+      return;
+    }
+
+    if (!gameId || gameId === 'undefined' || gameId === 'null') {
+      console.warn('gameId inválido, usando URL remota:', gameId);
+      setResolvedLocalSrc(null);
+
+      return;
+    }
+
     let isMounted = true;
 
     const resolveImage = async () => {
-      // Se não tem imagem, reseta
-      if (!src) {
-        if (isMounted) {
-          setDisplaySrc(null);
-        }
-
-        return;
-      }
-
-      // Se não tem gameId válido, usa URL remota direto
-      if (!gameId || gameId === 'undefined' || gameId === 'null') {
-        console.warn('gameId inválido, usando URL remota:', gameId);
-
-        if (isMounted) {
-          setDisplaySrc(src);
-        }
-
-        return;
-      }
-
-      // Se a config estiver DESLIGADA ou forceRemote, usa URL normal
-      if (!useLocalImages || forceRemote) {
-        if (isMounted) {
-          setDisplaySrc(src);
-        }
-
-        return;
-      }
-
       try {
         // 1. Pergunta ao Rust se a imagem já existe no disco
         const localPath = await Promise.race([
@@ -75,14 +73,10 @@ export function CachedImage({
         if (!isMounted) return;
 
         if (localPath) {
-          // 2. CACHE HIT: Usa o arquivo local
-          const assetUrl = convertFileSrc(localPath);
-          setDisplaySrc(assetUrl);
+          // 2. CACHE HIT: usa o arquivo local
+          setResolvedLocalSrc(convertFileSrc(localPath));
         } else {
-          // 3. CACHE MISS: Usa a URL remota
-          setDisplaySrc(src);
-
-          // Dispara o download em background para a próxima vez
+          // 3. CACHE MISS: mantém a URL remota (via fallback) e dispara o download em background.
           invoke('cache_cover_image', {
             url: src,
             gameId: String(gameId),
@@ -90,8 +84,6 @@ export function CachedImage({
         }
       } catch (e) {
         console.warn('Erro no sistema de cache, usando URL remota:', e);
-
-        if (isMounted) setDisplaySrc(src); // Fallback para URL remota
       }
     };
 
@@ -100,7 +92,11 @@ export function CachedImage({
     return () => {
       isMounted = false;
     };
-  }, [src, gameId, useLocalImages, forceRemote]);
+  }, [src, gameId, skipLocalResolution]);
+
+  // Fonte final: local resolvida (cache hit) ou remota como fallback —
+  // sem indireção de estado extra quando o cache local está desligado.
+  const displaySrc = skipLocalResolution ? src : (resolvedLocalSrc ?? src);
 
   // Renderiza Placeholder se der erro ou não tiver imagem
   if (error || !displaySrc) {
@@ -113,7 +109,6 @@ export function CachedImage({
     );
   }
 
-  // Sempre renderiza a imagem quando temos um displaySrc
   return (
     <img
       src={displaySrc}
