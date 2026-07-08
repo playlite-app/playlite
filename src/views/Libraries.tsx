@@ -1,10 +1,11 @@
-import { Heart, Library } from 'lucide-react';
+import { Library } from 'lucide-react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ActionButton, GameActionsMenu, StandardGameCard } from '@/components';
+import { LibraryGameCard } from '@/components/cards';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
-import { Game, GameActions } from '@/types';
-import { launchGame, toast } from '@/utils';
+import { Game, GameActions } from '@/types/game';
+import { toast } from '@/utils/toast';
 
 interface LibraryProps extends GameActions {
   games: Game[];
@@ -23,15 +24,21 @@ export default function Libraries({
   const { t } = useTranslation('library');
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
-  // Handler para adicionar à playlist com notificação
-  const handleAddToPlaylist = (gameId: string) => {
-    const game = games.find(g => g.id === gameId);
-    addToPlaylist(gameId);
+  // Handler para adicionar à playlist com notificação. Estabilizado com
+  // useCallback para não quebrar a memoização do LibraryGameCard — sem
+  // isso, cada re-render de Libraries recriaria a função e invalidaria o
+  // React.memo de todos os cards da grade.
+  const handleAddToPlaylist = useCallback(
+    (gameId: string) => {
+      const game = games.find(g => g.id === gameId);
+      addToPlaylist(gameId);
 
-    if (game) {
-      toast.success(t('game_added_to_playlist', { name: game.name }));
-    }
-  };
+      if (game) {
+        toast.success(t('game_added_to_playlist', { name: game.name }));
+      }
+    },
+    [games, addToPlaylist, t]
+  );
 
   // Usa hook para filtrar jogos (busca + filtro adulto)
   const displayedGames = useLibraryFilter({
@@ -75,49 +82,18 @@ export default function Libraries({
 
         {/* Grid de Jogos */}
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {displayedGames.map(game => {
-            // Lógica inline para subtítulo (não pode ser hook dentro do map)
-            const subtitle =
-              [game.genres?.split(',')[0]?.trim(), game.developer]
-                .filter(Boolean)
-                .join(' • ') || t('no_data_fallback');
-
-            return (
-              <div key={game.id} className="group relative">
-                <StandardGameCard
-                  id={game.id.toString()}
-                  title={game.name}
-                  coverUrl={game.coverUrl}
-                  platform={game.platform}
-                  subtitle={subtitle}
-                  rating={game.userRating || undefined}
-                  onClick={() => actions.onGameClick(game)}
-                  onPlay={() => launchGame(game)}
-                  actions={
-                    <>
-                      <ActionButton
-                        icon={Heart}
-                        variant={game.favorite ? 'glass-destructive' : 'glass'}
-                        tooltip={
-                          game.favorite
-                            ? t('remove_from_favorites_tooltip')
-                            : t('add_to_favorites_tooltip')
-                        }
-                        onClick={() => actions.onToggleFavorite(game.id)}
-                      />
-                      <GameActionsMenu
-                        game={game}
-                        inPlaylist={isInPlaylist(game.id)}
-                        onAddToPlaylist={handleAddToPlaylist}
-                        onEdit={actions.onEditGame}
-                        onDelete={actions.onDeleteGame}
-                      />
-                    </>
-                  }
-                />
-              </div>
-            );
-          })}
+          {displayedGames.map(game => (
+            <LibraryGameCard
+              key={game.id}
+              game={game}
+              onGameClick={actions.onGameClick}
+              onToggleFavorite={actions.onToggleFavorite}
+              onAddToPlaylist={handleAddToPlaylist}
+              onEditGame={actions.onEditGame}
+              onDeleteGame={actions.onDeleteGame}
+              isInPlaylist={isInPlaylist}
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { Check, Edit, ListPlus, MoreVertical, Trash2 } from 'lucide-react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ActionButton } from '@/components/common';
@@ -30,13 +31,17 @@ interface GameActionsMenuProps {
  * Todos os cliques propagam stopPropagation para não acionar onClick do card pai.
  * Notificações (toasts) devem ser gerenciadas pelo componente pai.
  *
+ * Memoizado: usado dentro de grades com centenas de cards — depende de
+ * `onAddToPlaylist`/`onEdit`/`onDelete` estáveis vindos do componente pai
+ * para a memoização funcionar de fato.
+ *
  * @param game - Dados completos do jogo para edição/exclusão
  * @param inPlaylist - Se true, opção "Playlist" fica desabilitada com visual de confirmação
  * @param onAddToPlaylist - Callback para adicionar à fila (recebe apenas ID)
  * @param onEdit - Callback para abrir modal de edição (recebe jogo completo)
  * @param onDelete - Callback para excluir jogo (recebe apenas ID)
  */
-export function GameActionsMenu({
+export const GameActionsMenu = memo(function GameActionsMenu({
   game,
   inPlaylist,
   onAddToPlaylist,
@@ -106,4 +111,4 @@ export function GameActionsMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});

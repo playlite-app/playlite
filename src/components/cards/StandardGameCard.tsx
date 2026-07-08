@@ -1,5 +1,5 @@
 import { ImageOff, Play } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { memo, ReactNode, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ActionButton, CachedImage } from '@/components';
@@ -29,8 +29,12 @@ interface StandardGameCardProps {
  * - Overlay de acoes aparece no hover (botao Play + acoes customizadas)
  * - Suporta badge no canto superior esquerdo (ex: "Favorito", "Novo", "Oferta")
  * - Efeito hover: elevacao + zoom suave na imagem
+ *
+ * Memoizado: com centenas de cards na grade, o React.memo evita re-renderizar
+ * um card quando o pai re-renderiza mas as props deste card específico não
+ * mudaram.
  */
-export function StandardGameCard({
+function StandardGameCard({
   id,
   title,
   coverUrl,
@@ -45,6 +49,8 @@ export function StandardGameCard({
 }: Readonly<StandardGameCardProps>) {
   const [imageError, setImageError] = useState(false);
   const { t } = useTranslation('library');
+
+  const handleImageError = useCallback(() => setImageError(true), []);
 
   return (
     <div
@@ -69,7 +75,7 @@ export function StandardGameCard({
             gameId={id}
             alt={title}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
         ) : (
           <div className="from-secondary/50 via-muted to-background flex h-full w-full flex-col items-center justify-center bg-linear-to-br p-4 text-center">
@@ -135,3 +141,5 @@ export function StandardGameCard({
     </div>
   );
 }
+
+export default memo(StandardGameCard);

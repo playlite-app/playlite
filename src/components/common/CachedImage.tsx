@@ -1,6 +1,6 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { ImageOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 interface CachedImageProps {
   src?: string | null;
@@ -23,7 +23,7 @@ function useSaveCoversEnabled(): boolean {
   return enabled;
 }
 
-export function CachedImage({
+export const CachedImage = memo(function CachedImage({
   src,
   gameId,
   alt,
@@ -122,4 +122,4 @@ export function CachedImage({
       loading="lazy"
     />
   );
-}
+});

@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react';
-import { MouseEvent } from 'react';
+import { memo, MouseEvent } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/ui/button';
@@ -28,6 +28,10 @@ interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
  *
  * Bloqueia propagação de cliques automaticamente para evitar conflitos com cards clicáveis.
  *
+ * Memoizado: usado dentro de grades com centenas de cards, então evita
+ * re-renderizar quando o pai re-renderiza mas as props deste botão em
+ * específico não mudaram (depende de `onClick` estável no componente pai).
+ *
  * @param icon - Componente de ícone do Lucide React
  * @param variant - Estilo visual. Variantes customizadas:
  *   - 'glass': fundo preto semi-transparente com blur (hover em cards)
@@ -35,7 +39,7 @@ interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
  * @param size - Tamanho do ícone em pixels (padrão: 18)
  * @param tooltip - Texto exibido no hover (atributo title)
  */
-export function ActionButton({
+export const ActionButton = memo(function ActionButton({
   icon: Icon,
   className,
   variant = 'secondary',
@@ -87,4 +91,4 @@ export function ActionButton({
       />
     </Button>
   );
-}
+});
