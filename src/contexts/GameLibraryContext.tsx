@@ -2,6 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -49,7 +50,7 @@ export function GameLibraryProvider({
     };
   }, []);
 
-  const refreshGames = async () => {
+  const refreshGames = useCallback(async () => {
     try {
       setIsLoading(true);
       const allGames = await librariesService.getGames();
@@ -60,7 +61,7 @@ export function GameLibraryProvider({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const buildServiceGame = (data: Partial<Game>, id?: string) => {
     const ensureId =
@@ -96,44 +97,56 @@ export function GameLibraryProvider({
     };
   };
 
-  const saveGame = async (data: Partial<Game>, editId?: string) => {
-    try {
-      if (editId || data.id) {
-        const gamePayload = buildServiceGame(data, editId ?? data.id);
-        await librariesService.updateGame(gamePayload);
-        toast.success(t('context_game_updated'));
-      } else {
-        const gamePayload = buildServiceGame(data);
-        await librariesService.addGame(gamePayload);
-        toast.success(t('context_game_added'));
+  const saveGame = useCallback(
+    async (data: Partial<Game>, editId?: string) => {
+      try {
+        if (editId || data.id) {
+          const gamePayload = buildServiceGame(data, editId ?? data.id);
+          await librariesService.updateGame(gamePayload);
+          toast.success(t('context_game_updated'));
+        } else {
+          const gamePayload = buildServiceGame(data);
+          await librariesService.addGame(gamePayload);
+          toast.success(t('context_game_added'));
+        }
+
+        await refreshGames();
+      } catch (error) {
+        console.error('Erro ao salvar jogo:', error);
+        throw error;
       }
+    },
+    [refreshGames, t]
+  );
 
-      await refreshGames();
-    } catch (error) {
-      console.error('Erro ao salvar jogo:', error);
-      throw error;
-    }
-  };
+  const removeGame = useCallback(
+    async (id: string) => {
+      try {
+        await librariesService.deleteGame(id);
+        await refreshGames();
+      } catch (error) {
+        console.error('Erro ao remover jogo:', error);
+        throw error;
+      }
+    },
+    [refreshGames]
+  );
 
-  const removeGame = async (id: string) => {
-    try {
-      await librariesService.deleteGame(id);
-      await refreshGames();
-    } catch (error) {
-      console.error('Erro ao remover jogo:', error);
-      throw error;
-    }
-  };
+  const toggleFavorite = useCallback(
+    async (id: string) => {
+      setGames(prev =>
+        prev.map(g => (g.id === id ? { ...g, favorite: !g.favorite } : g))
+      );
 
-  const toggleFavorite = async (id: string) => {
-    try {
-      await librariesService.toggleFavorite(id);
-      await refreshGames();
-    } catch (error) {
-      console.error('Erro ao favoritar:', error);
-      toast.error(t('context_favorite_error'));
-    }
-  };
+      try {
+        await librariesService.toggleFavorite(id);
+      } catch (error) {
+        console.error('Erro ao favoritar:', error);
+        toast.error(t('context_favorite_error'));
+      }
+    },
+    [t]
+  );
 
   const contextValue = useMemo(
     () => ({

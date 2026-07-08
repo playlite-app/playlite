@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Toaster } from 'sonner';
 
 import { ErrorBoundary } from '@/components';
@@ -146,28 +146,32 @@ function AppContent() {
     }
   };
 
-  const handleDeleteWrapper = async (id: string) => {
-    const confirmed = await confirm({
-      title: 'Excluir Jogo',
-      description:
-        'Tem certeza que deseja excluir este jogo? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
-    });
+  const handleDeleteWrapper = useCallback(
+    async (id: string) => {
+      const confirmed = await confirm({
+        title: 'Excluir Jogo',
+        description:
+          'Tem certeza que deseja excluir este jogo? Esta ação não pode ser desfeita.',
+        confirmText: 'Excluir',
+        cancelText: 'Cancelar',
+      });
 
-    if (confirmed) {
-      try {
-        await removeGame(id);
-        toast.success('Jogo excluído com sucesso!');
-      } catch {
-        toast.error('Erro ao excluir jogo.');
+      if (confirmed) {
+        try {
+          await removeGame(id);
+          toast.success('Jogo excluído com sucesso!');
+        } catch {
+          toast.error('Erro ao excluir jogo.');
+        }
       }
-    }
-  };
+    },
+    [confirm, removeGame]
+  );
 
-  const handleGameClick = (game: Game) => {
-    setSelectedGameId(game.id);
-  };
+  const handleGameClick = useCallback(
+    (game: Game) => setSelectedGameId(game.id),
+    [setSelectedGameId]
+  );
 
   const handleSwitchGame = (id: string) => {
     setSelectedGameId(id);

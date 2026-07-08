@@ -1,5 +1,5 @@
 import { Store } from '@tauri-apps/plugin-store';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Game } from '@/types';
 
@@ -76,11 +76,9 @@ export function usePlaylist(allGames: Game[]) {
     loadQueue();
   }, []);
 
-  const saveQueue = (newQueue: string[]) => {
-    // Atualiza o estado imediatamente (síncrono)
+  const saveQueue = useCallback((newQueue: string[]) => {
     setQueueIds(newQueue);
 
-    // Salva no store de forma assíncrona (não bloqueia a UI)
     (async () => {
       try {
         const store = await Store.load(STORE_FILENAME);
@@ -90,46 +88,66 @@ export function usePlaylist(allGames: Game[]) {
         console.error('Erro ao salvar playlist:', e);
       }
     })();
-  };
+  }, []);
 
-  const addToPlaylist = (gameId: string) => {
-    if (!queueIds.includes(gameId)) {
-      saveQueue([...queueIds, gameId]);
-    }
-  };
+  const addToPlaylist = useCallback(
+    (gameId: string) => {
+      if (!queueIds.includes(gameId)) {
+        saveQueue([...queueIds, gameId]);
+      }
+    },
+    [queueIds, saveQueue]
+  );
 
-  const removeFromPlaylist = (gameId: string) => {
-    saveQueue(queueIds.filter(id => id !== gameId));
-  };
+  const removeFromPlaylist = useCallback(
+    (gameId: string) => {
+      saveQueue(queueIds.filter(id => id !== gameId));
+    },
+    [queueIds, saveQueue]
+  );
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
+  const moveUp = useCallback(
+    (index: number) => {
+      if (index === 0) return;
 
-    const newQueue = [...queueIds];
-    [newQueue[index - 1], newQueue[index]] = [
-      newQueue[index],
-      newQueue[index - 1],
-    ];
-    saveQueue(newQueue);
-  };
+      const newQueue = [...queueIds];
+      [newQueue[index - 1], newQueue[index]] = [
+        newQueue[index],
+        newQueue[index - 1],
+      ];
+      saveQueue(newQueue);
+    },
+    [queueIds, saveQueue]
+  );
 
-  const moveDown = (index: number) => {
-    if (index === queueIds.length - 1) return;
+  const moveDown = useCallback(
+    (index: number) => {
+      if (index === queueIds.length - 1) return;
 
-    const newQueue = [...queueIds];
-    [newQueue[index + 1], newQueue[index]] = [
-      newQueue[index],
-      newQueue[index + 1],
-    ];
-    saveQueue(newQueue);
-  };
+      const newQueue = [...queueIds];
+      [newQueue[index + 1], newQueue[index]] = [
+        newQueue[index],
+        newQueue[index + 1],
+      ];
+      saveQueue(newQueue);
+    },
+    [queueIds, saveQueue]
+  );
 
-  const reorderPlaylist = (startIndex: number, endIndex: number) => {
-    const newQueue = Array.from(queueIds);
-    const [removed] = newQueue.splice(startIndex, 1);
-    newQueue.splice(endIndex, 0, removed);
-    saveQueue(newQueue);
-  };
+  const reorderPlaylist = useCallback(
+    (startIndex: number, endIndex: number) => {
+      const newQueue = Array.from(queueIds);
+      const [removed] = newQueue.splice(startIndex, 1);
+      newQueue.splice(endIndex, 0, removed);
+      saveQueue(newQueue);
+    },
+    [queueIds, saveQueue]
+  );
+
+  const isInPlaylist = useCallback(
+    (id: string) => queueIds.includes(id),
+    [queueIds]
+  );
 
   const playlistGames = useMemo(() => {
     return queueIds
@@ -145,6 +163,6 @@ export function usePlaylist(allGames: Game[]) {
     moveUp,
     moveDown,
     reorderPlaylist,
-    isInPlaylist: (id: string) => queueIds.includes(id),
+    isInPlaylist,
   };
 }
