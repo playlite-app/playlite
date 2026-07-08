@@ -11,14 +11,18 @@ import {
   TrendingUp,
   WifiOff,
 } from 'lucide-react';
-import {useMemo} from 'react';
-import {useTranslation} from 'react-i18next';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import {Affinity, ErrorState, Similarity} from '@/components';
-import {FreeGameCard} from '@/components/cards';
-import StandardGameCard from '@/components/cards/StandardGameCard';
-import {ActionButton} from '@/components/common';
-import Hero from '@/components/common/Hero';
+import {
+  ActionButton,
+  Affinity,
+  ErrorState,
+  FreeGameCard,
+  Hero,
+  Similarity,
+  StandardGameCard,
+} from '@/components';
 import {
   calculateGameAffinity,
   GiveawayWithAffinity,
@@ -32,9 +36,9 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import {wishlistService} from '@/services/wishlistService';
-import {Game, Giveaway, RawgGame, SimilarGame} from '@/types';
-import {Button} from '@/ui/button';
+import { wishlistService } from '@/services/wishlistService';
+import { Game, Giveaway, RawgGame, SimilarGame } from '@/types';
+import { Button } from '@/ui/button';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -43,11 +47,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/ui/dropdown-menu';
-import {Separator} from '@/ui/separator';
-import {Skeleton} from '@/ui/skeleton';
-import {toast} from '@/utils/toast';
-
-import {openExternalLink} from '../utils/openLink';
+import { Separator } from '@/ui/separator';
+import { Skeleton } from '@/ui/skeleton';
+import { openExternalLink, toast } from '@/utils';
 
 interface TrendingProps {
   userGames: Game[];

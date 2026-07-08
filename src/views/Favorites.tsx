@@ -2,13 +2,10 @@ import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import StandardGameCard from '@/components/cards/StandardGameCard';
-import { ActionButton, GameActionsMenu } from '@/components/common';
+import { ActionButton, GameActionsMenu, StandardGameCard } from '@/components';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types';
-import { toast } from '@/utils/toast';
-
-import { launchGame } from '../utils/launcher';
+import { launchGame, toast } from '@/utils';
 
 interface FavoritesProps extends GameActions {
   games: Game[];

@@ -15,16 +15,13 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import StandardGameCard from '@/components/cards/StandardGameCard';
-import { ActionButton } from '@/components/common';
+import { ActionButton, StandardGameCard } from '@/components';
 import AddWishlist from '@/dialogs/AddWishlist';
 import { useWishlist, useWishlistFilter } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Button } from '@/ui/button';
 import { Separator } from '@/ui/separator';
-import { toast } from '@/utils/toast';
-
-import { openExternalLink } from '../utils/openLink';
+import { openExternalLink, toast } from '@/utils';
 
 interface WishlistProps {
   searchTerm?: string;

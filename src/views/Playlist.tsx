@@ -14,17 +14,12 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Recommendation } from '@/components';
-import StandardGameCard from '@/components/cards/StandardGameCard';
+import { PlaylistCard, Recommendation, StandardGameCard } from '@/components';
 import { usePagination, usePlaylist, useRecommendation } from '@/hooks';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { Game, traduzirType, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
-import { toast } from '@/utils/toast';
-
-import PlaylistCard from '../components/cards/PlaylistCard';
-import { launchGame } from '../utils/launcher';
-import { getFavoriteSeries } from '../utils/recommendation';
+import { getFavoriteSeries, launchGame, toast } from '@/utils';
 
 interface PlaylistProps {
   allGames: Game[];
