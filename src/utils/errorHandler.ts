@@ -1,6 +1,5 @@
-import { toast } from '@/utils/toast';
-
 import { AppError, getErrorMessage, isAppError } from '@/types/errors';
+import { toast } from '@/utils/toast';
 
 /**
  * Opções para o handler de erros
@@ -146,4 +145,3 @@ export function handleValidationError(error: unknown): string {
 
   return message;
 }
-

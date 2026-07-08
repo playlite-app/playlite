@@ -66,7 +66,7 @@ function shouldUseNativeNotification(): boolean {
   );
 }
 
-function requestNativeNotificationPermission(): Promise<boolean> {
+async function requestNativeNotificationPermission(): Promise<boolean> {
   if (typeof window === 'undefined' || typeof Notification === 'undefined') {
     return Promise.resolve(false);
   }
@@ -79,9 +79,13 @@ function requestNativeNotificationPermission(): Promise<boolean> {
     return Promise.resolve(false);
   }
 
-  return Notification.requestPermission()
-    .then(permission => permission === 'granted')
-    .catch(() => false);
+  try {
+    const permission = await Notification.requestPermission();
+
+    return permission === 'granted';
+  } catch {
+    return false;
+  }
 }
 
 async function syncWindowState() {

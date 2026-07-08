@@ -15,50 +15,25 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import StandardGameCard from '@/components/cards/StandardGameCard';
-import { ActionButton } from '@/components/common';
-import Hero from '@/components/common/Hero';
+import { StandardGameCard, StatCard } from '@/components/cards';
+import { Achievements, ActionButton, Hero } from '@/components/common';
 import {
   EAPlaySection,
   GamePassSection,
+  HumbleChoiceSection,
   OfflineAwareSection,
   PrimeGamingSection,
   UbisoftPlusSection,
 } from '@/components/subscriptions';
-import HumbleChoiceSection from '@/components/subscriptions/HumbleChoiceSection.tsx';
 import { Recommendation } from '@/components/tooltips';
 import { useHeroCarousel, useHome } from '@/hooks';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 import { Button } from '@/ui/button';
 import { Separator } from '@/ui/separator';
-
-import Achievements from '../components/common/Achievements';
-import { formatTime } from '../utils/formatTime';
-import { launchGame } from '../utils/launcher';
-import { openExternalLink } from '../utils/openLink';
-
-interface StatCardProps {
-  icon: ReactNode;
-  label: string;
-  value: string | number;
-  color: string;
-  bg: string;
-}
-
-function StatCard({ icon, label, value, color, bg }: StatCardProps) {
-  return (
-    <div className="bg-card border-border hover:border-primary/50 flex items-center gap-4 rounded-xl border p-5 transition-colors">
-      <div className={`rounded-lg p-3 ${bg} ${color}`}>{icon}</div>
-      <div>
-        <p className="text-muted-foreground text-sm">{label}</p>
-        <p className="text-2xl font-bold">{value}</p>
-      </div>
-    </div>
-  );
-}
+import { formatTime, launchGame, openExternalLink } from '@/utils';
 
 interface HomeProps {
   onChangeTab: (tab: string) => void;

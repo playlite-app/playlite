@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { useNetworkStatus } from '@/hooks/common';
 import { useLibraryStats } from '@/hooks/library';
+import { useRecommendation } from '@/hooks/recommendation';
 import { Game, RawgGame, UserPreferenceVector } from '@/types';
 
 import { trendingService } from '../services/trendingService';
-import { useRecommendation } from './recommendation';
 
 const HOME_TRENDING_TTL_MS = 10 * 60 * 1000;
 

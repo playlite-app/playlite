@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function HumbleChoiceSection() {
+export function HumbleChoiceSection() {
   const { t } = useTranslation('subscription');
 
   return (

@@ -1,6 +1,5 @@
-import { toast } from '@/utils/toast';
-
 import { Game } from '@/types';
+import { toast } from '@/utils/toast';
 
 export const launchGame = (game: Game) => {
   if (!game.platform || game.platform === 'Steam') {
@@ -17,4 +16,3 @@ export const launchGame = (game: Game) => {
     toast.info(`Lançamento para ${game.platform} será implementado em breve`);
   }
 };
-

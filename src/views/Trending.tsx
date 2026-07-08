@@ -11,12 +11,13 @@ import {
   TrendingUp,
   WifiOff,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 
-import { Affinity, ErrorState, Similarity } from '@/components';
-import { FreeGameCard } from '@/components/cards';
+import {Affinity, ErrorState, Similarity} from '@/components';
+import {FreeGameCard} from '@/components/cards';
 import StandardGameCard from '@/components/cards/StandardGameCard';
-import { ActionButton } from '@/components/common';
+import {ActionButton} from '@/components/common';
 import Hero from '@/components/common/Hero';
 import {
   calculateGameAffinity,
@@ -31,9 +32,9 @@ import {
   useUpcoming,
   useWishlist,
 } from '@/hooks';
-import { wishlistService } from '@/services/wishlistService';
-import { Game, Giveaway, RawgGame, SimilarGame } from '@/types';
-import { Button } from '@/ui/button';
+import {wishlistService} from '@/services/wishlistService';
+import {Game, Giveaway, RawgGame, SimilarGame} from '@/types';
+import {Button} from '@/ui/button';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -42,11 +43,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/ui/dropdown-menu';
-import { Separator } from '@/ui/separator';
-import { Skeleton } from '@/ui/skeleton';
-import { toast } from '@/utils/toast';
+import {Separator} from '@/ui/separator';
+import {Skeleton} from '@/ui/skeleton';
+import {toast} from '@/utils/toast';
 
-import { openExternalLink } from '../utils/openLink';
+import {openExternalLink} from '../utils/openLink';
 
 interface TrendingProps {
   userGames: Game[];
@@ -125,6 +126,31 @@ export default function Trending(props: TrendingProps) {
   // Prioriza jogos com maior afinidade ao perfil do usuário
   const gridGames = useSortedByAffinity(games.slice(5, 15), profile);
 
+  // Set em vez de busca linear repetida em cada card (troca O(n) por O(1))
+  const wishlistIds = useMemo(
+    () => new Set(wishlistGames.map(w => w.id)),
+    [wishlistGames]
+  );
+
+  // Afinidade calculada uma vez por jogo/render, não recalculada dentro do .map() a cada re-render do componente (hover, filtro, etc.)
+  const gridGamesWithAffinity = useMemo(
+    () =>
+      gridGames.map(game => ({
+        game,
+        ...calculateGameAffinity(game, profile),
+      })),
+    [gridGames, profile]
+  );
+
+  const upcomingGamesWithAffinity = useMemo(
+    () =>
+      upcomingGames.map(game => ({
+        game,
+        ...calculateGameAffinity(game, profile),
+      })),
+    [upcomingGames, profile]
+  );
+
   // Mantém os dados em tela caso exista conteúdo em cache
   const hasData =
     games.length > 0 ||
@@ -144,9 +170,9 @@ export default function Trending(props: TrendingProps) {
   // Informações do jogo atualmente exibido no Hero
   const currentHero = heroGames[heroIndex];
 
-  const isHeroInWishlist = wishlistGames.some(
-    w => w.id === currentHero?.id.toString()
-  );
+  const isHeroInWishlist = currentHero
+    ? wishlistIds.has(currentHero.id.toString())
+    : false;
 
   // Eventos da interface
   const handleRetry = () => {
@@ -432,9 +458,7 @@ export default function Trending(props: TrendingProps) {
                     </div>
                   ))
                 : profileSimilar.map((game: SimilarGame) => {
-                    const isInWishlist = wishlistGames.some(
-                      w => w.id === game.id
-                    );
+                    const isInWishlist = wishlistIds.has(game.id);
 
                     return (
                       <StandardGameCard
@@ -492,11 +516,8 @@ export default function Trending(props: TrendingProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {gridGames.map(game => {
-            const { genres, badge } = calculateGameAffinity(game, profile);
-            const isInWishlist = wishlistGames.some(
-              w => w.id === game.id.toString()
-            );
+          {gridGamesWithAffinity.map(({ game, genres, badge }) => {
+            const isInWishlist = wishlistIds.has(game.id.toString());
 
             return (
               <StandardGameCard
@@ -554,11 +575,8 @@ export default function Trending(props: TrendingProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
-              {upcomingGames.map(game => {
-                const { badge } = calculateGameAffinity(game, profile);
-                const isInWishlist = wishlistGames.some(
-                  w => w.id === game.id.toString()
-                );
+              {upcomingGamesWithAffinity.map(({ game, badge }) => {
+                const isInWishlist = wishlistIds.has(game.id.toString());
 
                 return (
                   <StandardGameCard
