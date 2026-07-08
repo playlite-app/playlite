@@ -1,6 +1,7 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -109,32 +110,38 @@ export function UIProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const [enableUpdaterChecks, setEnableUpdaterChecks] = useState(true);
 
-  const toggleAdultFilter = () => {
-    const newValue = !hideAdult;
-    setHideAdult(newValue);
-    localStorage.setItem('playlite_hide_adult', String(newValue));
-  };
+  const toggleAdultFilter = useCallback(() => {
+    setHideAdult(prev => {
+      const newValue = !prev;
+      localStorage.setItem('playlite_hide_adult', String(newValue));
 
-  const toggleDuplicatesFilter = () => {
-    const newValue = !hideDuplicates;
-    setHideDuplicates(newValue);
-    localStorage.setItem('playlite_hide_duplicates', String(newValue));
-  };
+      return newValue;
+    });
+  }, []);
 
-  const openAddModal = () => {
+  const toggleDuplicatesFilter = useCallback(() => {
+    setHideDuplicates(prev => {
+      const newValue = !prev;
+      localStorage.setItem('playlite_hide_duplicates', String(newValue));
+
+      return newValue;
+    });
+  }, []);
+
+  const openAddModal = useCallback(() => {
     setGameToEdit(null);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const openEditModal = (game: Game) => {
+  const openEditModal = useCallback((game: Game) => {
     setGameToEdit(game);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const closeAddModal = () => {
+  const closeAddModal = useCallback(() => {
     setIsAddModalOpen(false);
     setGameToEdit(null);
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
