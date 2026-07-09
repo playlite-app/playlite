@@ -30,6 +30,8 @@ jobs:
 
       - name: Gerar Rustdocs
         run: npm run docs:rust
+        env:
+          ITAD_API_KEY: 'chave_ficticia_docs'
 
       - name: Gerar JSDocs (TypeDoc)
         run: npm run docs:ts
