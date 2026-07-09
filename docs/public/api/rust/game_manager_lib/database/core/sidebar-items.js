@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["SCHEMA_VERSION"],"fn":["current_schema_version","delete_secret","deserialize_tags","expected_schema_version","get_secret","init_db","initialize_databases","list_supported_keys","serialize_tags","set_secret"],"struct":["AppState"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["cache_cover_image","check_local_cover","clear_cover_cache"]};

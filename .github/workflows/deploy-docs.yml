@@ -1,0 +1,43 @@
+name: Generate and Push API Docs
+
+on:
+  push:
+    branches:
+      - main # Dispara sempre que o código principal for atualizado
+
+jobs:
+  build-and-push-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código principal
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Dependências
+        run: npm install
+
+      - name: Gerar Rustdocs
+        run: npm run docs:rust
+
+      - name: Gerar JSDocs (TypeDoc)
+        run: npm run docs:ts
+
+      - name: Enviar para o Repositório de Docs
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.DOCS_REPO_PAT }}
+        with:
+          source-directory: "docs/public/api" # Pasta onde os scripts salvam os arquivos gerados
+          destination-github-username: "playlite-app"
+          destination-repository-name: "playlite-docs"
+          user-email: "bot@playlite.dev"
+          target-branch: "main"
+          target-directory: "public/api" # Pasta de destino no repo
+          commit-message: "chore: update API docs (auto-generated)"

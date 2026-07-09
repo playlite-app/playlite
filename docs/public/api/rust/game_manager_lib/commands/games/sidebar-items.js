@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["add_game","delete_game","get_games","get_library_game_details","set_game_rating","set_game_status","toggle_favorite","update_game","update_game_details"],"struct":["GameInput","UpdateGameDetailsInput"]};

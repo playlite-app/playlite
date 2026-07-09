@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["covers","enrichment","refresh","search","shared"]};

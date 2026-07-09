@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["achievements","ai_translation","caches","games","metadata","plataforms","recommendation","settings","system","version","wishlist"]};

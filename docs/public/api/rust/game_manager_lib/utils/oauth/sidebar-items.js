@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["wait_for_auth_code"],"struct":["PkceChallenge"]};
