@@ -12,6 +12,11 @@ jobs:
       - name: Checkout código principal
         uses: actions/checkout@v4
 
+      - name: Instalar dependências de sistema do Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -20,7 +25,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Instalar Dependências
+      - name: Instalar Dependências NPM
         run: npm install
 
       - name: Gerar Rustdocs
@@ -34,10 +39,10 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.DOCS_REPO_PAT }}
         with:
-          source-directory: "docs/public/api" # Pasta onde os scripts salvam os arquivos gerados
-          destination-github-username: "playlite-app"
-          destination-repository-name: "playlite-docs"
-          user-email: "bot@playlite.dev"
-          target-branch: "main"
-          target-directory: "public/api" # Pasta de destino no repo
-          commit-message: "chore: update API docs (auto-generated)"
+          source-directory: '.api-output'
+          destination-github-username: 'playlite-app'
+          destination-repository-name: 'playlite-docs'
+          user-email: 'alandeogoncalves@gmail.com'
+          target-branch: 'main'
+          target-directory: 'public/api'
+          commit-message: 'chore: update API docs (auto-generated)'

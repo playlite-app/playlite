@@ -19,7 +19,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:rust": "cargo doc --no-deps --manifest-path src-tauri/Cargo.toml && mkdir -p docs/public/api/rust && cp -r src-tauri/target/doc/* docs/public/api/rust/",
+    "docs:rust": "cargo doc --no-deps --manifest-path src-tauri/Cargo.toml && mkdir -p .api-output/rust && cp -r src-tauri/target/doc/* .api-output/rust/",
     "docs:ts": "typedoc",
     "build:all-docs": "npm run docs:rust && npm run docs:ts && npm run docs:build"
   },
