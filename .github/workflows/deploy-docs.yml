@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Instalar Dependências NPM
         run: npm install
@@ -32,6 +32,12 @@ jobs:
         run: npm run docs:rust
         env:
           ITAD_API_KEY: 'chave_ficticia_docs'
+
+      - name: Baixar README do repositório de docs
+        run: |
+          curl -H "Authorization: token ${{ secrets.DOCS_REPO_PAT }}" \
+               -o TEMP_README.md \
+               https://raw.githubusercontent.com/playlite-app/playlite-docs/main/API_README.md
 
       - name: Gerar JSDocs (TypeDoc)
         run: npm run docs:ts

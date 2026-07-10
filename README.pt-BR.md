@@ -145,7 +145,7 @@ código aberto e em constante evolução.
 
 - **GitHub Sponsors:** https://github.com/sponsors/Alan-oliveir
 - **Ko-fi:** https://ko-fi.com/alandeogoncalves
-- **Site oficial:** https://landing-page-alan-oliveirs-projects.vercel.app/pt-BR
+- **Site oficial:** https://playlite-site.vercel.app/pt-BR
 
 Obrigado por apoiar o Playlite!
 

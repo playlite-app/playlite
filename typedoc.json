@@ -4,7 +4,7 @@
   "out": ".api-output/frontend",
   "skipErrorChecking": true,
   "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"],
-  "readme": "none",
+  "readme": "TEMP_README.md",
   "sort": ["source-order"],
   "categorizeByGroup": true,
   "defaultCategory": "Other"

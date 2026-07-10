@@ -144,7 +144,7 @@ improve.
 
 - **GitHub Sponsors:** https://github.com/sponsors/Alan-oliveir
 - **Ko-fi:** https://ko-fi.com/alandeogoncalves
-- **Project Website:** https://landing-page-alan-oliveirs-projects.vercel.app/en
+- **Project Website:** https://playlite-site.vercel.app/en
 
 Thank you for supporting Playlite!
 
