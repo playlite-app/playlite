@@ -44,3 +44,4 @@ lerna-debug.log*
 *.sln
 *.sw?
 .settings.dat
+project-structure.txt
