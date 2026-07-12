@@ -1,5 +1,5 @@
 import { Heart } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LibraryGameCard } from '@/components/cards';
@@ -24,16 +24,21 @@ export default function Favorites({
   const { t } = useTranslation('library');
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
+  const gamesRef = useRef(games);
+  useEffect(() => {
+    gamesRef.current = games;
+  }, [games]);
+
   const handleAddToPlaylist = useCallback(
     (gameId: string) => {
-      const game = games.find(g => g.id === gameId);
+      const game = gamesRef.current.find(g => g.id === gameId);
       addToPlaylist(gameId);
 
       if (game) {
         toast.success(t('game_added_to_playlist', { name: game.name }));
       }
     },
-    [games, addToPlaylist, t]
+    [addToPlaylist, t]
   );
 
   // Primeiro filtra apenas favoritos, depois aplica o hook de filtro

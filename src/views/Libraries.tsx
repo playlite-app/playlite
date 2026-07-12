@@ -1,5 +1,5 @@
 import { Library } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LibraryGameCard } from '@/components/cards';
@@ -24,20 +24,21 @@ export default function Libraries({
   const { t } = useTranslation('library');
   const { addToPlaylist, isInPlaylist } = usePlaylist(games);
 
-  // Handler para adicionar à playlist com notificação. Estabilizado com
-  // useCallback para não quebrar a memoização do LibraryGameCard — sem
-  // isso, cada re-render de Libraries recriaria a função e invalidaria o
-  // React.memo de todos os cards da grade.
+  const gamesRef = useRef(games);
+  useEffect(() => {
+    gamesRef.current = games;
+  }, [games]);
+
   const handleAddToPlaylist = useCallback(
     (gameId: string) => {
-      const game = games.find(g => g.id === gameId);
+      const game = gamesRef.current.find(g => g.id === gameId);
       addToPlaylist(gameId);
 
       if (game) {
         toast.success(t('game_added_to_playlist', { name: game.name }));
       }
     },
-    [games, addToPlaylist, t]
+    [addToPlaylist, t]
   );
 
   // Usa hook para filtrar jogos (busca + filtro adulto)
