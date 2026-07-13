@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] - 2026-07-13
+
+### Added
+
+- Automatic advance for the Hero carousel on the Home and Trending pages (manual navigation via the arrow buttons
+  remains available at any time)
+
+### Fixed
+
+- Hero banner on Home repeatedly canceling in-progress cover image requests whenever the recommendation-based slide
+  resolved after other sources — the "highlighted game" was being recalculated on every render instead of computed once
+  with a stable, append-only slide order
+- Rendered more/fewer hooks violation on the Trending page caused by hooks being called after conditional early `return`
+  statements; all hooks now run unconditionally before any early return
+- Toggling a favorite in the Library or Favorites pages re-rendering every card in the grid instead of just the one
+  affected, caused by the full games array being listed as a dependency of an unrelated playlist callback
+
+### Improved
+
+- Library and Favorites pages now render through a virtualized grid (`react-window` v2), mounting only the cards
+  currently visible on screen instead of all of them at once — removes the 300+ms render commits seen on larger
+  libraries and keeps performance flat as more platform integrations add more games over time
+- Game card components (`StandardGameCard`, `ActionButton`, `GameActionsMenu`, `CachedImage`) memoized with
+  `React.memo`, with callbacks stabilized end-to-end across `GameLibraryContext`, `UIContext`, and every page that
+  renders game cards
+- Duplicated card markup and logic between Library and Favorites consolidated into a shared `LibraryGameCard` component
+- `CachedImage` no longer reads `localStorage` on every render (moved to a one-time lazy initializer) and skips its
+  async local-cache resolution cycle entirely when the "save covers locally" setting is off
+
 ## [4.1.2] - 2026-07-07
 
 ### Improved

@@ -122,6 +122,13 @@ npm run tauri dev
 npm run tauri build
 ```
 
+### Extensões do VSCode (Recomendado)
+
+Se estiver utilizando o Visual Studio Code, recomenda-se instalar as extensões:
+
+- `tauri-apps.tauri-vscode` (Tauri)
+- `rust-lang.rust-analyzer` (Rust)
+
 ## 📚 Documentação Adicional
 
 - Decisões arquiteturais (ADR): [`ADR.md`](ADR.md)
