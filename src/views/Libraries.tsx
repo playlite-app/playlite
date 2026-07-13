@@ -2,10 +2,10 @@ import { Library } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { LibraryGameCard } from '@/components/cards';
+import { LibraryGameGrid } from '@/components';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
-import { Game, GameActions } from '@/types/game';
-import { toast } from '@/utils/toast';
+import { Game, GameActions } from '@/types';
+import { toast } from '@/utils';
 
 interface LibraryProps extends GameActions {
   games: Game[];
@@ -41,7 +41,6 @@ export default function Libraries({
     [addToPlaylist, t]
   );
 
-  // Usa hook para filtrar jogos (busca + filtro adulto)
   const displayedGames = useLibraryFilter({
     games,
     searchTerm,
@@ -60,42 +59,37 @@ export default function Libraries({
   }
 
   return (
-    <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
-      <div className="space-y-6">
-        {/* Header da Biblioteca */}
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
-            <Library size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t('my_library_title')}</h1>
-            <p className="text-muted-foreground text-sm">
-              {displayedGames.length}{' '}
-              {displayedGames.length === 1
-                ? t('game_singular')
-                : t('games_plural')}{' '}
-              {displayedGames.length === 1
-                ? t('found_singular')
-                : t('found_plural')}
-            </p>
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-8">
+      {/* Header da Biblioteca — fixo, não faz parte da área com scroll */}
+      <div className="mb-6 flex shrink-0 items-center gap-3">
+        <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
+          <Library size={24} />
         </div>
+        <div>
+          <h1 className="text-2xl font-bold">{t('my_library_title')}</h1>
+          <p className="text-muted-foreground text-sm">
+            {displayedGames.length}{' '}
+            {displayedGames.length === 1
+              ? t('game_singular')
+              : t('games_plural')}{' '}
+            {displayedGames.length === 1
+              ? t('found_singular')
+              : t('found_plural')}
+          </p>
+        </div>
+      </div>
 
-        {/* Grid de Jogos */}
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {displayedGames.map(game => (
-            <LibraryGameCard
-              key={game.id}
-              game={game}
-              onGameClick={actions.onGameClick}
-              onToggleFavorite={actions.onToggleFavorite}
-              onAddToPlaylist={handleAddToPlaylist}
-              onEditGame={actions.onEditGame}
-              onDeleteGame={actions.onDeleteGame}
-              isInPlaylist={isInPlaylist}
-            />
-          ))}
-        </div>
+      {/* Grade virtualizada — única área com scroll próprio */}
+      <div className="min-h-0 flex-1">
+        <LibraryGameGrid
+          games={displayedGames}
+          onGameClick={actions.onGameClick}
+          onToggleFavorite={actions.onToggleFavorite}
+          onAddToPlaylist={handleAddToPlaylist}
+          onEditGame={actions.onEditGame}
+          onDeleteGame={actions.onDeleteGame}
+          isInPlaylist={isInPlaylist}
+        />
       </div>
     </div>
   );

@@ -8,5 +8,6 @@ export { ContentLoading } from './ContentLoading';
 export { ErrorState } from './ErrorState';
 export { GameActionsMenu } from './GameActionsMenu';
 export { default as Hero } from './Hero';
+export { LibraryGameGrid } from './LibraryGameGrid';
 export { SettingsRow } from './SettingsRow';
 export { StatusBadge } from './StatusBadge';

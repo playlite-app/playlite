@@ -2,10 +2,10 @@ import { Heart } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { LibraryGameCard } from '@/components/cards';
+import { LibraryGameGrid } from '@/components';
 import { useLibraryFilter, usePlaylist } from '@/hooks';
 import { Game, GameActions } from '@/types';
-import { toast } from '@/utils/toast';
+import { toast } from '@/utils';
 
 interface FavoritesProps extends GameActions {
   games: Game[];
@@ -63,42 +63,37 @@ export default function Favorites({
   }
 
   return (
-    <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
-      <div className="space-y-6">
-        {/* Header dos Favoritos */}
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
-            <Heart size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t('my_favorites_title')}</h1>
-            <p className="text-muted-foreground text-sm">
-              {displayedGames.length}{' '}
-              {displayedGames.length === 1
-                ? t('game_singular')
-                : t('games_plural')}{' '}
-              {displayedGames.length === 1
-                ? t('loved_singular')
-                : t('loved_plural')}
-            </p>
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-8">
+      {/* Header dos Favoritos — fixo, não faz parte da área com scroll */}
+      <div className="mb-6 flex shrink-0 items-center gap-3">
+        <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
+          <Heart size={24} />
         </div>
+        <div>
+          <h1 className="text-2xl font-bold">{t('my_favorites_title')}</h1>
+          <p className="text-muted-foreground text-sm">
+            {displayedGames.length}{' '}
+            {displayedGames.length === 1
+              ? t('game_singular')
+              : t('games_plural')}{' '}
+            {displayedGames.length === 1
+              ? t('loved_singular')
+              : t('loved_plural')}
+          </p>
+        </div>
+      </div>
 
-        {/* Grid de Jogos */}
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {displayedGames.map(game => (
-            <LibraryGameCard
-              key={game.id}
-              game={game}
-              onGameClick={actions.onGameClick}
-              onToggleFavorite={actions.onToggleFavorite}
-              onAddToPlaylist={handleAddToPlaylist}
-              onEditGame={actions.onEditGame}
-              onDeleteGame={actions.onDeleteGame}
-              isInPlaylist={isInPlaylist}
-            />
-          ))}
-        </div>
+      {/* Grade virtualizada — única área com scroll próprio */}
+      <div className="min-h-0 flex-1">
+        <LibraryGameGrid
+          games={displayedGames}
+          onGameClick={actions.onGameClick}
+          onToggleFavorite={actions.onToggleFavorite}
+          onAddToPlaylist={handleAddToPlaylist}
+          onEditGame={actions.onEditGame}
+          onDeleteGame={actions.onDeleteGame}
+          isInPlaylist={isInPlaylist}
+        />
       </div>
     </div>
   );
