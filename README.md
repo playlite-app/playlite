@@ -17,7 +17,7 @@
 A local-first desktop game library manager with an intelligent recommendation system based on classical Machine
 Learning.
 
-![Playlite Demo](https://github.com/Alan-oliveir/game_manager/blob/main/docs/assets/demo.gif?raw=true)
+![Playlite Demo](https://github.com/playlite-app/playlite/blob/main/public/demo.gif?raw=true)
 
 ## 💡 Motivation
 
