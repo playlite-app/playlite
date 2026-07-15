@@ -34,8 +34,7 @@ lerna-debug.log*
 # ==========================================
 # Editor & OS Generated Files
 # ==========================================
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .idea/
 .DS_Store
 *.suo

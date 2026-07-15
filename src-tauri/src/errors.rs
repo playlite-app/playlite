@@ -84,6 +84,18 @@ pub enum AppError {
 
     #[error("Erro ao configurar WAL em {0}: {1}")]
     DatabaseWalConfigError(String, String),
+
+    #[error("Erro de configuração OAuth: {0}")]
+    OAuthConfigError(String),
+
+    #[error("Erro ao trocar código por token OAuth: {0}")]
+    OAuthTokenExchangeError(String),
+
+    #[error("Erro ao renovar token OAuth: {0}")]
+    OAuthRefreshError(String),
+
+    #[error("Token OAuth não encontrado para o provedor: {0}")]
+    OAuthTokenNotFound(String),
 }
 
 impl From<rusqlite::Error> for AppError {
@@ -110,6 +122,13 @@ impl From<std::io::Error> for AppError {
 impl From<serde_json::Error> for AppError {
     fn from(err: serde_json::Error) -> Self {
         AppError::SerializationError(err.to_string())
+    }
+}
+
+// Para erros de rede vindos do reqwest
+impl From<reqwest::Error> for AppError {
+    fn from(err: reqwest::Error) -> Self {
+        AppError::NetworkError(err.to_string())
     }
 }
 

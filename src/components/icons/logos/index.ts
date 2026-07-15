@@ -1,5 +1,6 @@
 export { Epic } from './Epic';
 export { Github } from './Github';
+export { Gog } from './Gog';
 export { Heroic } from './Heroic';
 export { Kofi } from './Kofi';
 export { Legacy } from './Legacy';

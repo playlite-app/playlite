@@ -1,5 +1,6 @@
 export type { ImportProgressPayload, ImportStatus } from './types';
 export { useEpicConfig } from './useEpicConfig';
+export { useGogConfig } from './useGogConfig';
 export { useHeroicConfig } from './useHeroicConfig';
 export { useImportProgress } from './useImportProgress';
 export { useLegacyConfig } from './useLegacyConfig';

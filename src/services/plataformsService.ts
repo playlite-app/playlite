@@ -86,4 +86,43 @@ export const platformsService = {
       winePrefix: winePrefix ?? null,
     });
   },
+
+  /**
+   * Inicia o fluxo de login OAuth2 da conta GOG.
+   * Abre uma janela de login; a Promise resolve quando o token é obtido e salvo.
+   *
+   * @throws Se o login falhar, for cancelado, ou a troca de token falhar
+   */
+  gogLogin: async (): Promise<string> => {
+    return await invoke<string>('gog_login');
+  },
+
+  /**
+   * Remove o token OAuth salvo da conta GOG (logout).
+   */
+  gogLogout: async (): Promise<void> => {
+    return await invoke<void>('gog_logout');
+  },
+
+  /**
+   * Verifica se existe uma conta GOG conectada (token salvo).
+   * Não garante que o token ainda é válido — apenas que existe um login prévio.
+   */
+  gogIsAuthenticated: async (): Promise<boolean> => {
+    return await invoke<boolean>('gog_is_authenticated');
+  },
+
+  /**
+   * Importa a biblioteca completa de jogos possuídos na conta GOG.
+   * Requer login prévio via `gogLogin`.
+   *
+   * @throws Se não houver conta conectada ou a API estiver indisponível
+   */
+  importGogGames: async (): Promise<string> => {
+    const gogGamesDir = localStorage.getItem('gog_games_dir') || undefined;
+
+    return await invoke<string>('import_gog_games', {
+      gogGamesDir: gogGamesDir ?? null,
+    });
+  },
 };

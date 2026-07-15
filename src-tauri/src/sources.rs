@@ -7,6 +7,7 @@
 //! **Módulos:**
 //!
 //! - `epic`: Importa jogos da Epic Games Store, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
+//! - `gog`: Importa jogos do GOG Galaxy, com OAuth.
 //! - `heroic`: Importa jogos do Heroic Games Launcher, lendo os arquivos de configuração do Heroic para detectar jogos instalados via essa plataforma.
 //! - `legacy`: Importa jogos da loja Legacy Games, utilizando métodos de leitura de arquivos para identificar jogos obtidos por essa plataforma.
 //! - `providers`: Gerencia provedores de jogos, permitindo a integração com múltiplas plataformas de jogos.
@@ -15,6 +16,7 @@
 //! - `ubisoft`: Importa jogos da Ubisoft Connect, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
 
 pub mod epic;
+pub mod gog;
 pub mod heroic;
 pub mod legacy;
 pub mod providers;

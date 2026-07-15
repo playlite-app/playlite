@@ -1,14 +1,22 @@
-import { AlertCircle, CheckCircle2, Settings2, Wine } from 'lucide-react';
+import { CheckCircle2, Settings2, Wine } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Epic, Heroic, Legacy, Steam, Ubisoft } from '@/components/icons/logos';
+import {
+  Epic,
+  Gog,
+  Heroic,
+  Legacy,
+  Steam,
+  Ubisoft,
+} from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { useImportProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
   EpicGamesSettings,
+  GogSettings,
   HeroicSettings,
   LegacySettings,
   LocalScannerSettings,
@@ -76,8 +84,8 @@ export default function PlataformsConfig({
     {
       id: 'gog',
       name: t('config_store_gog'),
-      Icon: AlertCircle,
-      connected: false,
+      Icon: Gog,
+      connected: true,
     },
     {
       id: 'local',
@@ -131,12 +139,7 @@ export default function PlataformsConfig({
         return <WineSettings />;
       case 'gog':
         return (
-          <div className="flex h-full flex-col items-center justify-center opacity-30">
-            <AlertCircle size={48} className="mb-4" />
-            <p className="text-lg font-medium">
-              {t('config_integration_soon')}
-            </p>
-          </div>
+          <GogSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
         );
       default:
         return null;

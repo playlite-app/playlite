@@ -9,12 +9,15 @@
 //! - block_in_place usado para manter conexão SQLite durante awaits
 //! - Itens compartilhados com covers estão no módulo shared
 
-use super::shared::{fetch_rawg_metadata, EnrichProgress};
+use super::shared::{
+    extract_steam_id_from_url, fetch_rawg_metadata, fetch_steam_playtime, fetch_steam_reviews,
+    fetch_steam_store_data, find_steam_id_in_links, EnrichProgress,
+};
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::integration::{steam_api, steamspy};
+use crate::services::integration::steam_api;
 use crate::services::{cache, playtime};
 use crate::utils::series;
 use rusqlite::params;
@@ -26,9 +29,12 @@ use tracing::{info, warn};
 
 const ENRICH_SKIP_SOURCE: &str = "enrich";
 
+// === HELPERS LOCAIS ===
+
 fn enrich_skip_key(game_id: &str) -> String {
     format!("skip_{}", game_id)
 }
+
 fn is_enrich_skipped(game_id: &str, cache_conn: &rusqlite::Connection) -> bool {
     let key = enrich_skip_key(game_id);
     cache::get_stale_api_data(cache_conn, ENRICH_SKIP_SOURCE, &key).is_some()
@@ -74,91 +80,6 @@ pub(in crate::commands::metadata) struct ProcessedGameDetails {
     pub(in crate::commands::metadata) steam_app_id: Option<String>,
     pub(in crate::commands::metadata) median_playtime: Option<i32>,
     pub(in crate::commands::metadata) estimated_playtime: Option<f32>,
-}
-
-// === FUNÇÕES AUXILIARES ===
-
-fn extract_steam_id_from_url(url: &str) -> Option<String> {
-    if url.contains("store.steampowered.com/app/") {
-        let parts: Vec<&str> = url.split("/app/").collect();
-        if let Some(right_part) = parts.get(1) {
-            let id_part: String = right_part.chars().take_while(|c| c.is_numeric()).collect();
-            if !id_part.is_empty() {
-                return Some(id_part);
-            }
-        }
-    }
-    None
-}
-
-// === ENRIQUECIMENTO COM CACHE ===
-
-/// Busca dados Steam Store com cache
-async fn fetch_steam_store_data(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<steam_api::SteamStoreData> {
-    let cache_key = format!("store_{}", steam_id);
-
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(data) = serde_json::from_str::<steam_api::SteamStoreData>(&cached) {
-            return Some(data);
-        }
-    }
-
-    match steam_api::get_app_details(steam_id).await {
-        Ok(Some(data)) => {
-            if let Ok(json) = serde_json::to_string(&data) {
-                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
-            }
-            Some(data)
-        }
-        _ => None,
-    }
-}
-
-/// Busca reviews Steam com cache
-async fn fetch_steam_reviews(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<steam_api::SteamReviewSummary> {
-    let cache_key = format!("reviews_{}", steam_id);
-
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(reviews) = serde_json::from_str::<steam_api::SteamReviewSummary>(&cached) {
-            return Some(reviews);
-        }
-    }
-
-    match steam_api::get_app_reviews(steam_id).await {
-        Ok(Some(reviews)) => {
-            if let Ok(json) = serde_json::to_string(&reviews) {
-                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
-            }
-            Some(reviews)
-        }
-        _ => None,
-    }
-}
-
-/// Busca median playtime com cache
-async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection) -> Option<u32> {
-    let cache_key = format!("playtime_{}", steam_id);
-
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(hours) = cached.parse::<u32>() {
-            return Some(hours);
-        }
-    }
-
-    match steamspy::get_median_playtime(steam_id).await {
-        Ok(Some(hours)) => {
-            let _ =
-                cache::save_cached_api_data(cache_conn, "steam", &cache_key, &hours.to_string());
-            Some(hours)
-        }
-        _ => None,
-    }
 }
 
 // === LÓGICA CORE (REFATORADA) ===
@@ -255,6 +176,15 @@ async fn enrich_game_metadata(
                         links_map.insert("steam".to_string(), store_data.url.clone());
                     }
                 }
+            }
+        }
+
+        // Fallback — Steam pode estar em outro campo (ex: website)
+        // Não sobrescreve a chave "steam" aqui — ela pode já apontar para outro campo (ex: "website").
+        // O objetivo é só extrair o ID, e não reorganizar os links salvos.
+        if target_steam_id.is_none() {
+            if let Some(steam_id) = find_steam_id_in_links(&links_map) {
+                target_steam_id = Some(steam_id.clone());
             }
         }
     }

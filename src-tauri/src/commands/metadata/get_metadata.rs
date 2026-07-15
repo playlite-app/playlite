@@ -10,13 +10,15 @@
 //! - Reutiliza `ProcessedGameDetails` e `save_game_details` de `enrichment.rs`.
 
 use super::enrichment::{save_game_details, ProcessedGameDetails};
-use super::shared::{fetch_rawg_metadata_fresh, EnrichProgress};
+use super::shared::{
+    extract_steam_id_from_url, fetch_rawg_metadata_fresh, fetch_steam_playtime,
+    fetch_steam_reviews, fetch_steam_store_data, find_steam_id_in_links, EnrichProgress,
+};
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
 use crate::errors::AppError;
-use crate::services::cache;
-use crate::services::integration::{steam_api, steamspy};
+use crate::services::integration::steam_api;
 use crate::services::playtime;
 use crate::utils::series;
 use rusqlite::params;
@@ -25,82 +27,6 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::time::sleep;
 use tracing::{info, warn};
-
-// === HELPERS LOCAIS ===
-
-fn extract_steam_id_from_url(url: &str) -> Option<String> {
-    if url.contains("store.steampowered.com/app/") {
-        let parts: Vec<&str> = url.split("/app/").collect();
-        if let Some(right_part) = parts.get(1) {
-            let id_part: String = right_part.chars().take_while(|c| c.is_numeric()).collect();
-            if !id_part.is_empty() {
-                return Some(id_part);
-            }
-        }
-    }
-    None
-}
-
-async fn fetch_steam_store_data(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<steam_api::SteamStoreData> {
-    let cache_key = format!("store_{}", steam_id);
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(data) = serde_json::from_str::<steam_api::SteamStoreData>(&cached) {
-            return Some(data);
-        }
-    }
-    match steam_api::get_app_details(steam_id).await {
-        Ok(Some(data)) => {
-            if let Ok(json) = serde_json::to_string(&data) {
-                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
-            }
-            Some(data)
-        }
-        _ => None,
-    }
-}
-
-async fn fetch_steam_reviews(
-    steam_id: &str,
-    cache_conn: &rusqlite::Connection,
-) -> Option<steam_api::SteamReviewSummary> {
-    let cache_key = format!("reviews_{}", steam_id);
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(reviews) = serde_json::from_str::<steam_api::SteamReviewSummary>(&cached) {
-            return Some(reviews);
-        }
-    }
-    match steam_api::get_app_reviews(steam_id).await {
-        Ok(Some(reviews)) => {
-            if let Ok(json) = serde_json::to_string(&reviews) {
-                let _ = cache::save_cached_api_data(cache_conn, "steam", &cache_key, &json);
-            }
-            Some(reviews)
-        }
-        _ => None,
-    }
-}
-
-async fn fetch_steam_playtime(steam_id: &str, cache_conn: &rusqlite::Connection) -> Option<u32> {
-    let cache_key = format!("playtime_{}", steam_id);
-    if let Some(cached) = cache::get_cached_api_data(cache_conn, "steam", &cache_key) {
-        if let Ok(hours) = cached.parse::<u32>() {
-            return Some(hours);
-        }
-    }
-    match steamspy::get_median_playtime(steam_id).await {
-        Ok(Some(hours)) => {
-            let _ =
-                cache::save_cached_api_data(cache_conn, "steam", &cache_key, &hours.to_string());
-            Some(hours)
-        }
-        _ => None,
-    }
-}
-
-// === COMANDO PRINCIPAL ===
 
 /// Preenche campos de metadados vazios consultando a RAWG (sem cache).
 ///
@@ -325,6 +251,13 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
                                                 );
                                             }
                                         }
+                                    }
+                                }
+
+                                // Fallback — Steam pode estar em outro campo (ex: website), não só listada como "store" própria pela RAWG.
+                                if target_steam_id.is_none() {
+                                    if let Some(steam_id) = find_steam_id_in_links(&links_map) {
+                                        target_steam_id = Some(steam_id);
                                     }
                                 }
                             } else {

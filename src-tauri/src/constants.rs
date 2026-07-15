@@ -12,6 +12,9 @@ pub(crate) const GEMINI_API_URL: &str =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 pub const PCGW_API_BASE: &str = "https://www.pcgamingwiki.com/w/api.php"; // Base da MediaWiki Action API do PCGamingWiki.
 
+// === RAWG METADATA ===
+pub const RAWG_NOT_FOUND_MARKER: &str = "__RAWG_NOT_FOUND__";
+
 // === CAMINHOS DE IMAGENS DA STEAM ===
 pub const STEAM_HEADER_IMAGE_PATH: &str = "steam/apps/{}/header.jpg";
 pub const STEAM_LIBRARY_IMAGE_PATH: &str = "steam/apps/{}/library_600x900.jpg";
@@ -23,8 +26,6 @@ pub const COVER_IMAGE_EXTENSION: &str = ".jpg";
 pub const COVERS_DIR_NAME: &str = "covers";
 pub const EPIC_MANIFEST_PATH_WINDOWS: &str =
     r"C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests";
-
-// === DATA FILES ===
 
 // === VALORES PADRÕES E LIMITES ===
 pub const MAX_NAME_LENGTH: usize = 200;
@@ -120,3 +121,13 @@ pub const DB_FILENAME_GAMES: &str = "games.db";
 pub const DB_FILENAME_CACHE: &str = "cache.db";
 pub const DB_FILENAME_SECRETS: &str = "secrets.db";
 pub const DB_JOURNAL_MODE: &str = "WAL";
+
+// === OAuth GOG ===
+pub const GOG_CLIENT_ID: &str = "46899977096215655";
+pub const GOG_CLIENT_SECRET: &str =
+    "9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9";
+pub const GOG_AUTH_ENDPOINT: &str = "https://login.gog.com/auth";
+pub const GOG_TOKEN_ENDPOINT: &str = "https://auth.gog.com/token";
+pub const GOG_REDIRECT_URI: &str = "https://embed.gog.com/on_login_success?origin=client";
+pub const GOG_FILTERED_PRODUCTS_ENDPOINT: &str =
+    "https://embed.gog.com/account/getFilteredProducts";
