@@ -1,5 +1,6 @@
 //! Módulo de importação de bibliotecas de plataformas externas (Steam, Epic, GOG).
 //!
+//! - **Battle.Net:** Módulo para importar jogos da Battle.Net.
 //! - **Core:** Módulo com funções genéricas para salvar jogos no banco de dados.
 //! - **Epic:** Funções específicas para importar jogos da Epic Games.
 //! - **GOG:** Funções específicas para importar jogos da GOG com OAuth.
@@ -9,6 +10,7 @@
 //! - **Steam:** Funções para importar jogos da Steam.
 //! - **Ubisoft:** Funções para importar jogos da Ubisoft.
 
+pub mod battle_net;
 pub mod core;
 pub mod epic;
 pub mod gog;
@@ -17,10 +19,10 @@ pub mod legacy;
 pub mod scanner;
 pub mod steam;
 pub mod ubisoft;
-
 // === REEXPORTS ===
 
 // Mantêm o caminho `commands::plataforms::X` estável para quem consome (lib.rs, frontend via invoke, etc.).
+pub use battle_net::import_battle_net_games;
 pub use epic::import_epic_games;
 pub use gog::{gog_is_authenticated, gog_login, gog_logout, import_gog_games};
 pub use heroic::import_heroic_games;

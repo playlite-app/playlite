@@ -271,4 +271,3 @@ fn log_success(
     tracing::info!("  TXT:  {:?}", txt_path);
     tracing::info!("  CSV:  {:?}", csv_path);
 }
-

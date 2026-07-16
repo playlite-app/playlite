@@ -1,0 +1,150 @@
+[
+    {
+        "ProductId": "WoW",
+        "Name": "World of Warcraft"
+    },
+    {
+        "ProductId": "D3",
+        "Name": "Diablo III"
+    },
+    {
+        "ProductId": "S2",
+        "Name": "StarCraft II"
+    },
+    {
+        "ProductId": "S1",
+        "Name": "StarCraft"
+    },
+    {
+        "ProductId": "WTCG",
+        "Name": "Hearthstone"
+    },
+    {
+        "ProductId": "Hero",
+        "Name": "Heroes of the Storm"
+    },
+    {
+        "ProductId": "Pro",
+        "Name": "Overwatch 2"
+    },
+    {
+        "ProductId": "D2",
+        "Name": "Diablo II"
+    },
+    {
+        "ProductId": "D2X",
+        "Name": "Diablo II: Lord of Destruction"
+    },
+    {
+        "ProductId": "VIPR",
+        "Name": "Call of Duty: Black Ops 4"
+    },
+    {
+        "ProductId": "ODIN",
+        "Name": "Call of Duty: Modern Warfare"
+    },
+    {
+        "ProductId": "W3C",
+        "Name": "Warcraft III: Reign of Chaos"
+    },
+    {
+        "ProductId": "W3CX",
+        "Name": "Warcraft III: The Frozen Throne"
+    },
+    {
+        "ProductId": "W3",
+        "Name": "Warcraft III: Reforged"
+    },
+    {
+        "ProductId": "LAZR",
+        "Name": "Call of Duty: Modern Warfare 2 Campaign Remastered"
+    },
+    {
+        "ProductId": "ZEUS",
+        "Name": "Call of Duty: Black Ops Cold War"
+    },
+    {
+        "ProductId": "WLBY",
+        "Name": "Crash Bandicoot 4"
+    },
+    {
+        "ProductId": "OSI",
+        "Name": "Diablo II: Resurrected"
+    },
+    {
+        "ProductId": "RTRO",
+        "Name": "Blizzard Arcade Collection"
+    },
+    {
+        "ProductId": "FORE",
+        "Name": "Call of Duty: Vanguard"
+    },
+    {
+        "ProductId": "ANBS",
+        "Name": "Diablo Immortal"
+    },
+    {
+        "ProductId": "AUKS",
+        "Name": "Call of Duty: Modern Warfare II"
+    },
+    {
+        "ProductId": "Fen",
+        "Name": "Diablo IV"
+    },
+    {
+        "ProductId": "D1",
+        "Name": "Diablo"
+    },
+    {
+        "ProductId": "W1R",
+        "Name": "Warcraft: Remastered"
+    },
+    {
+        "ProductId": "W2R",
+        "Name": "Warcraft II: Remastered"
+    },
+    {
+        "ProductId": "W1R",
+        "Name": "Warcraft: Remastered"
+    },
+    {
+        "ProductId": "W2R",
+        "Name": "Warcraft II: Remastered"
+    },
+    {
+        "ProductId": "W1",
+        "Name": "Warcraft: Orcs & Humans"
+    },
+    {
+        "ProductId": "W2",
+        "Name": "Warcraft II: Battle.net Edition"
+    },
+    {
+        "ProductId": "GRY",
+        "Name": "Warcraft Rumble"
+    },
+    {
+        "ProductId": "ARIS",
+        "Name": "Doom: The Dark Ages"
+    },
+    {
+        "ProductId": "SCOR",
+        "Name": "Sea of Thieves"
+    },
+    {
+        "ProductId": "ARK",
+        "Name": "The Outer Worlds 2"
+    },
+    {
+        "ProductId": "LBRA",
+        "Name": "Tony Hawk's Pro Skater 3 + 4"
+    },
+    {
+        "ProductId": "PNTA",
+        "Name": "Call of Duty: Modern Warfare III"
+    },
+    {
+        "ProductId": "AQUA",
+        "Name": "Avowed"
+    }
+]

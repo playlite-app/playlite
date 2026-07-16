@@ -124,6 +124,7 @@ pub fn run() {
             commands::plataforms::gog::gog_logout,
             commands::plataforms::gog::gog_is_authenticated,
             commands::plataforms::gog::import_gog_games,
+            commands::plataforms::battle_net::import_battle_net_games,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
             commands::metadata::get_metadata::fill_missing_metadata,

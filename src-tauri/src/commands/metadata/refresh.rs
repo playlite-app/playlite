@@ -181,8 +181,12 @@ async fn refresh_gamerpower_background(
 ) -> Result<(), String> {
     let should_refresh = {
         let cache_conn = state.cache_db.lock().map_err(|_| "Falha DB Cache Lock")?;
-        cache::get_cached_api_data(&cache_conn, GAMERPOWER_CACHE_SOURCE, GAMERPOWER_LIST_ACTIVE_CACHE_KEY)
-            .is_none()
+        cache::get_cached_api_data(
+            &cache_conn,
+            GAMERPOWER_CACHE_SOURCE,
+            GAMERPOWER_LIST_ACTIVE_CACHE_KEY,
+        )
+        .is_none()
     };
 
     if !should_refresh {

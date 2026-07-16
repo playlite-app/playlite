@@ -125,4 +125,17 @@ export const platformsService = {
       gogGamesDir: gogGamesDir ?? null,
     });
   },
+
+  /**
+   * Importa jogos instalados via Battle.net (Blizzard/Activision).
+   * Detecta automaticamente lendo `product.db` do Battle.net Agent.
+   *
+   * Windows apenas: C:\ProgramData\Battle.net\Agent\product.db
+   * (Battle.net não roda de forma confiável via Wine no Linux.)
+   *
+   * @throws Se o Battle.net não estiver instalado ou não houver jogos
+   */
+  importBattleNetGames: async (): Promise<string> => {
+    return await invoke<string>('import_battle_net_games');
+  },
 };

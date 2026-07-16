@@ -280,4 +280,3 @@ fn format_recommendations(
         })
         .collect()
 }
-

@@ -2,6 +2,7 @@
 export { default as PlataformsConfig } from './PlataformsConfig.tsx';
 
 // Store-specific settings components
+export { BattleNetSettings } from './BattleNetSettings';
 export { EpicGamesSettings } from './EpicGamesSettings';
 export { GogSettings } from './GogSettings';
 export { HeroicSettings } from './HeroicSettings';

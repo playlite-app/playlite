@@ -1,3 +1,4 @@
+export { BattleNet } from './BattleNet';
 export { Epic } from './Epic';
 export { Github } from './Github';
 export { Gog } from './Gog';

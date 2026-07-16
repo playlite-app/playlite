@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  BattleNet,
   Epic,
   Gog,
   Heroic,
@@ -15,6 +16,7 @@ import { WindowBase } from '@/components/wrappers/WindowBase';
 import { useImportProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
+  BattleNetSettings,
   EpicGamesSettings,
   GogSettings,
   HeroicSettings,
@@ -32,6 +34,7 @@ type SourceProvider =
   | 'ubisoft'
   | 'legacy'
   | 'gog'
+  | 'battlenet'
   | 'local'
   | 'wine';
 
@@ -88,6 +91,12 @@ export default function PlataformsConfig({
       connected: true,
     },
     {
+      id: 'battlenet',
+      name: t('config_store_battlenet'),
+      Icon: BattleNet,
+      connected: true,
+    },
+    {
       id: 'local',
       name: t('config_store_local'),
       Icon: Settings2,
@@ -133,14 +142,21 @@ export default function PlataformsConfig({
             progress={progress}
           />
         );
-      case 'local':
-        return <LocalScannerSettings />;
-      case 'wine':
-        return <WineSettings />;
       case 'gog':
         return (
           <GogSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
         );
+      case 'battlenet':
+        return (
+          <BattleNetSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
+        );
+      case 'local':
+        return <LocalScannerSettings />;
+      case 'wine':
+        return <WineSettings />;
       default:
         return null;
     }

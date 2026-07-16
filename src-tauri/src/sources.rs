@@ -6,6 +6,7 @@
 //!
 //! **Módulos:**
 //!
+//! - `battle_net`: Impora jogos da Battle.Net.
 //! - `epic`: Importa jogos da Epic Games Store, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
 //! - `gog`: Importa jogos do GOG Galaxy, com OAuth.
 //! - `heroic`: Importa jogos do Heroic Games Launcher, lendo os arquivos de configuração do Heroic para detectar jogos instalados via essa plataforma.
@@ -15,6 +16,7 @@
 //! - `steam`: Importa jogos da Steam.
 //! - `ubisoft`: Importa jogos da Ubisoft Connect, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
 
+pub mod battle_net;
 pub mod epic;
 pub mod gog;
 pub mod heroic;

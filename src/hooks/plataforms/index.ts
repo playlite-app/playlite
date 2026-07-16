@@ -1,4 +1,5 @@
 export type { ImportProgressPayload, ImportStatus } from './types';
+export { useBattleNetConfig } from './useBattleNetConfig';
 export { useEpicConfig } from './useEpicConfig';
 export { useGogConfig } from './useGogConfig';
 export { useHeroicConfig } from './useHeroicConfig';
