@@ -138,4 +138,20 @@ export const platformsService = {
   importBattleNetGames: async (): Promise<string> => {
     return await invoke<string>('import_battle_net_games');
   },
+
+  /**
+   * Importa jogos instalados via EA App (Electronic Arts).
+   * A EA não expõe um arquivo estruturado e confiável com o status de instalação,
+   * nem oferece um jeito viável de autenticar para listar a biblioteca completa —
+   * a detecção depende inteiramente da pasta de instalação configurada pelo usuário.
+   *
+   * @throws Se a pasta não estiver configurada ou não houver jogos
+   */
+  importEaGames: async (): Promise<string> => {
+    const eaInstallDir = localStorage.getItem('ea_install_dir') || undefined;
+
+    return await invoke<string>('import_ea_games', {
+      eaInstallDir: eaInstallDir ?? null,
+    });
+  },
 };

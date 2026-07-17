@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import {
   BattleNet,
+  Ea,
   Epic,
   Gog,
   Heroic,
@@ -17,6 +18,7 @@ import { useImportProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
   BattleNetSettings,
+  EaSettings,
   EpicGamesSettings,
   GogSettings,
   HeroicSettings,
@@ -35,6 +37,7 @@ type SourceProvider =
   | 'legacy'
   | 'gog'
   | 'battlenet'
+  | 'ea'
   | 'local'
   | 'wine';
 
@@ -97,6 +100,12 @@ export default function PlataformsConfig({
       connected: true,
     },
     {
+      id: 'ea',
+      name: t('config_store_ea'),
+      Icon: Ea,
+      connected: true,
+    },
+    {
       id: 'local',
       name: t('config_store_local'),
       Icon: Settings2,
@@ -152,6 +161,10 @@ export default function PlataformsConfig({
             onLibraryUpdate={onLibraryUpdate}
             progress={progress}
           />
+        );
+      case 'ea':
+        return (
+          <EaSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
         );
       case 'local':
         return <LocalScannerSettings />;
