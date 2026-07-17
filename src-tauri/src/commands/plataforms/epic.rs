@@ -17,7 +17,7 @@ pub async fn import_epic_games(
         .filter(|s| !s.trim().is_empty())
         .map(std::path::PathBuf::from);
 
-    let source = EpicSource::new(prefix);
+    let source = EpicSource::new(app.clone(), prefix);
     let games = source.import_installed().await?;
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());

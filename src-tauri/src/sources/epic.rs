@@ -1,6 +1,7 @@
-//! Source para importar jogos instalados via Epic Games Launcher
+//! Source para importar jogos da Epic Games
 //!
 //! Detecta jogos instalados lendo os arquivos de manifesto `.item` do Epic Games Launcher.
+//! Importa a biblioteca completa via OAuth2 (login na conta Epic).
 //!
 //! **Observações:**
 //! - **Windows:** os manifestos estão em `C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests`.
@@ -8,41 +9,88 @@
 //!   `<prefix>/drive_c/ProgramData/Epic/EpicGamesLauncher/Data/Manifests`.
 //! - Cada arquivo `.item` é um JSON com nome, caminho de instalação e executável do jogo.
 
+use crate::constants::EPIC_CATALOG_BULK_ENDPOINT;
+use crate::constants::{
+    EPIC_LIBRARY_ENDPOINT, EPIC_LOGIN_URL, EPIC_OAUTH_CLIENT_ID, EPIC_OAUTH_CLIENT_SECRET,
+    EPIC_PSEUDO_REDIRECT_SCHEME, EPIC_REDIRECT_PREFIX, EPIC_TOKEN_ENDPOINT,
+    OAUTH_CALLBACK_TIMEOUT_SECS,
+};
 use crate::errors::AppError;
-use crate::sources::providers::SourceGame;
+use crate::sources::providers::{GameSource, OAuthGameSource, SourceGame};
+use crate::utils::http_client::HTTP_CLIENT;
+use crate::utils::oauth::config::{
+    exchange_code_for_token, OAuthProviderConfig, TokenAuthMethod, TokenRequestMethod,
+};
+use crate::utils::oauth::token_store::save_oauth_token;
+use async_trait::async_trait;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
+use std::time::Duration;
+use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
-// === EPIC GAMES SOURCE - JOGOS INSTALADOS ===
+// === EPIC GAMES SOURCE - STRUCTS ===
 
 /// Estrutura mínima do JSON dos arquivos `.item`
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 struct EpicManifest {
-    #[serde(rename = "DisplayName")]
     display_name: Option<String>,
-
-    #[serde(rename = "InstallLocation")]
     install_location: Option<String>,
-
-    #[serde(rename = "LaunchExecutable")]
     launch_executable: Option<String>,
-
-    #[serde(rename = "AppName")]
     app_name: Option<String>,
 }
 
 /// Source responsável por importar jogos instalados via Epic Games
 pub struct EpicSource {
-    /// Wine prefix utilizado no Linux para localizar os manifestos do Epic.
-    /// Ignorado no Windows.
-    #[allow(dead_code)]
-    pub wine_prefix: Option<PathBuf>,
+    app_handle: AppHandle,
+    wine_prefix: Option<PathBuf>, // Wine prefix utilizado no Linux para localizar os manifestos do Epic. Ignorado no Windows.
+    config: OAuthProviderConfig,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicLibraryItem {
+    namespace: String,
+    #[serde(rename = "catalogItemId")]
+    catalog_item_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicLibraryResponse {
+    records: Vec<EpicLibraryItem>,
+    #[serde(rename = "responseMetadata")]
+    response_metadata: EpicLibraryMetadata,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicLibraryMetadata {
+    #[serde(rename = "nextCursor")]
+    next_cursor: Option<String>,
 }
 
 impl EpicSource {
-    pub fn new(wine_prefix: Option<PathBuf>) -> Self {
-        Self { wine_prefix }
+    pub fn new(app_handle: AppHandle, wine_prefix: Option<PathBuf>) -> Self {
+        let config = OAuthProviderConfig {
+            provider_id: "epic",
+            client_id: EPIC_OAUTH_CLIENT_ID.to_string(),
+            client_secret: Some(EPIC_OAUTH_CLIENT_SECRET.to_string()),
+            authorize_endpoint: EPIC_LOGIN_URL.to_string(),
+            token_endpoint: EPIC_TOKEN_ENDPOINT.to_string(),
+            redirect_uri: EPIC_REDIRECT_PREFIX.to_string(),
+            scopes: vec![],
+            uses_pkce: false,
+            extra_params: vec![],
+            token_request_method: TokenRequestMethod::Post,
+            token_auth_method: TokenAuthMethod::BasicHeader,
+        };
+
+        Self {
+            app_handle,
+            wine_prefix,
+            config,
+        }
     }
 
     /// Resolve o diretório de manifestos do Epic Games Launcher.
@@ -78,7 +126,7 @@ impl EpicSource {
         None
     }
 
-    /// Importa todos os jogos instalados detectados nos manifestos
+    /// Importa todos os jogos instalados detectados nos manifestos locais
     pub async fn import_installed(&self) -> Result<Vec<SourceGame>, AppError> {
         let manifest_dir = match self.resolve_manifest_dir() {
             Some(dir) => dir,
@@ -107,7 +155,7 @@ impl EpicSource {
         Ok(games)
     }
 
-    fn parse_manifest(path: &PathBuf) -> Result<SourceGame, AppError> {
+    fn parse_manifest(path: &Path) -> Result<SourceGame, AppError> {
         let content = fs::read_to_string(path)?;
 
         let manifest: EpicManifest = serde_json::from_str(&content)?;
@@ -143,6 +191,283 @@ impl EpicSource {
             playtime_minutes: None,
             last_played: None,
         })
+    }
+}
+
+// === BIBLIOTECA COMPLETA (OAuth) ===
+
+impl EpicSource {
+    /// Importa a biblioteca completa de jogos possuídos na conta Epic (requer login prévio).
+    pub async fn fetch_library_detailed(&self) -> Result<Vec<SourceGame>, AppError> {
+        let access_token = self.ensure_valid_token().await?;
+        let items = fetch_all_library_items(&access_token).await?;
+
+        let mut by_namespace: HashMap<String, Vec<String>> = HashMap::new();
+        for item in &items {
+            by_namespace
+                .entry(item.namespace.clone())
+                .or_default()
+                .push(item.catalog_item_id.clone());
+        }
+
+        let mut names: HashMap<(String, String), String> = HashMap::new();
+        for (namespace, ids) in by_namespace {
+            let resolved = fetch_catalog_names(&access_token, &namespace, &ids).await?;
+            for (id, name) in resolved {
+                names.insert((namespace.clone(), id), name);
+            }
+        }
+
+        let games = items
+            .into_iter()
+            .filter(|i| i.namespace != "ue") // filtra addons de Unreal Engine
+            .map(|item| {
+                let name = names
+                    .get(&(item.namespace.clone(), item.catalog_item_id.clone()))
+                    .cloned();
+
+                SourceGame {
+                    platform: "Epic".to_string(),
+                    platform_game_id: item.catalog_item_id,
+                    name,
+                    installed: false,
+                    executable_path: None,
+                    install_path: None,
+                    playtime_minutes: None,
+                    last_played: None,
+                }
+            })
+            .collect();
+
+        Ok(games)
+    }
+}
+
+#[async_trait]
+impl GameSource for EpicSource {
+    async fn fetch_games(&self) -> Result<Vec<SourceGame>, AppError> {
+        self.fetch_library_detailed().await
+    }
+}
+
+#[async_trait]
+impl OAuthGameSource for EpicSource {
+    fn oauth_config(&self) -> &OAuthProviderConfig {
+        &self.config
+    }
+
+    fn app_handle(&self) -> &AppHandle {
+        &self.app_handle
+    }
+
+    /// A Epic não devolve `code` na query do redirect (como o GOG) — o `authorizationCode`
+    /// vem como JSON no corpo da própria página de redirect. Um script injetado via
+    /// `on_page_load` lê esse corpo e navega para uma pseudo-URL própria
+    /// (`playlite://epic-auth-code?data=...`), que o `on_navigation` consegue interceptar
+    /// (ele só recebe a URL da navegação, nunca o conteúdo da página).
+    async fn login(&self) -> Result<(), AppError> {
+        let config = self.oauth_config();
+        let login_url = url::Url::parse(&config.authorize_endpoint)
+            .map_err(|e| AppError::OAuthConfigError(format!("URL de login Epic inválida: {e}")))?;
+
+        let (tx, rx) = mpsc::channel::<Result<String, String>>();
+        let tx_nav = tx.clone();
+
+        let window = WebviewWindowBuilder::new(
+            &self.app_handle,
+            "epic_oauth_login",
+            WebviewUrl::External(login_url),
+        )
+            .title("Login Epic Games")
+            .inner_size(480.0, 720.0)
+            .on_navigation(move |url| {
+                let url_str = url.as_str();
+                if url_str.starts_with(EPIC_PSEUDO_REDIRECT_SCHEME) {
+                    let data = url
+                        .query_pairs()
+                        .find(|(k, _)| k == "data")
+                        .map(|(_, v)| v.to_string());
+                    let result =
+                        data.ok_or_else(|| "Payload 'data' ausente no callback Epic".to_string());
+                    let _ = tx_nav.send(result);
+                    return false;
+                }
+                true
+            })
+            .on_page_load(move |window, payload| {
+                if payload.url().as_str().starts_with(EPIC_REDIRECT_PREFIX) {
+                    let script = format!(
+                        r#"(function() {{
+                        try {{
+                            var data = document.body.innerText || document.body.textContent || "";
+                            window.location.href = "{scheme}?data=" + encodeURIComponent(data);
+                        }} catch (e) {{
+                            window.location.href = "{scheme}?data=" + encodeURIComponent(JSON.stringify({{error: String(e)}}));
+                        }}
+                    }})();"#,
+                        scheme = EPIC_PSEUDO_REDIRECT_SCHEME
+                    );
+                    let _ = window.eval(&script);
+                }
+            })
+            .build()
+            .map_err(|e| {
+                AppError::OAuthConfigError(format!("Falha ao abrir janela de login Epic: {e}"))
+            })?;
+
+        let raw_json = tokio::task::spawn_blocking(move || {
+            rx.recv_timeout(Duration::from_secs(OAUTH_CALLBACK_TIMEOUT_SECS))
+        })
+        .await
+        .map_err(|e| AppError::OAuthConfigError(format!("Task de callback falhou: {e}")))?
+        .map_err(|_| AppError::OAuthConfigError("Tempo limite de login excedido".to_string()))?
+        .map_err(AppError::OAuthConfigError)?;
+
+        let _ = window.close();
+
+        #[derive(Deserialize)]
+        struct EpicAuthRedirect {
+            #[serde(rename = "authorizationCode")]
+            authorization_code: Option<String>,
+        }
+
+        let parsed: EpicAuthRedirect = serde_json::from_str(&raw_json).map_err(|e| {
+            AppError::OAuthConfigError(format!("Resposta de login Epic inesperada: {e}"))
+        })?;
+
+        let code = parsed.authorization_code.ok_or_else(|| {
+            AppError::OAuthConfigError(
+                "Epic não retornou 'authorizationCode' — login cancelado ou falhou".to_string(),
+            )
+        })?;
+
+        let token_response = exchange_code_for_token(config, &code, None).await?;
+        save_oauth_token(&self.app_handle, config.provider_id, &token_response.into())?;
+
+        Ok(())
+    }
+}
+
+// === FUNÇÕES AUXILIARES: biblioteca + catálogo ===
+
+async fn fetch_all_library_items(access_token: &str) -> Result<Vec<EpicLibraryItem>, AppError> {
+    let mut all = Vec::new();
+    let mut cursor: Option<String> = None;
+
+    loop {
+        let mut request = HTTP_CLIENT
+            .get(EPIC_LIBRARY_ENDPOINT)
+            .bearer_auth(access_token)
+            .query(&[("includeMetadata", "false")]);
+
+        if let Some(c) = &cursor {
+            request = request.query(&[("cursor", c)]);
+        }
+
+        let response = request.send().await?;
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(AppError::NetworkError(format!(
+                "Epic library retornou HTTP {status}: {body}"
+            )));
+        }
+
+        let parsed: EpicLibraryResponse = response
+            .json()
+            .await
+            .map_err(|e| AppError::ParseError(format!("Falha ao parsear biblioteca Epic: {e}")))?;
+
+        cursor = parsed.response_metadata.next_cursor.clone();
+        all.extend(parsed.records);
+
+        if cursor.is_none() {
+            break;
+        }
+    }
+
+    Ok(all)
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicCatalogItem {
+    title: String,
+}
+
+async fn fetch_catalog_names(
+    access_token: &str,
+    namespace: &str,
+    catalog_item_ids: &[String],
+) -> Result<Vec<(String, String)>, AppError> {
+    if catalog_item_ids.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let url = format!("{EPIC_CATALOG_BULK_ENDPOINT}/{namespace}/bulk/items");
+
+    let mut query: Vec<(&str, &str)> = catalog_item_ids
+        .iter()
+        .map(|id| ("id", id.as_str()))
+        .collect();
+    query.push(("includeDLCDetails", "false"));
+    query.push(("includeMainGameDetails", "false"));
+    query.push(("country", "US"));
+    query.push(("locale", "en"));
+
+    let response = HTTP_CLIENT
+        .get(&url)
+        .bearer_auth(access_token)
+        .query(&query)
+        .send()
+        .await?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(AppError::NetworkError(format!(
+            "Epic catalog retornou HTTP {status}: {body}"
+        )));
+    }
+
+    let parsed: HashMap<String, EpicCatalogItem> = response
+        .json()
+        .await
+        .map_err(|e| AppError::ParseError(format!("Falha ao parsear catálogo Epic: {e}")))?;
+
+    Ok(parsed
+        .into_iter()
+        .map(|(id, item)| (id, item.title))
+        .collect())
+}
+
+/// Cruza a biblioteca completa (OAuth) com os jogos detectados localmente via manifesto,
+/// marcando como instalados os que baterem por nome (case-insensitive) — já que o `AppName`
+/// do manifesto local e o `catalogItemId` da API não são o mesmo ID. Jogos instalados que,
+/// por algum motivo, não aparecerem na biblioteca são mantidos como entradas à parte.
+pub fn merge_local_install_status(
+    library_games: &mut Vec<SourceGame>,
+    local_games: Vec<SourceGame>,
+) {
+    for local in local_games {
+        let local_name = local
+            .name
+            .as_deref()
+            .unwrap_or_default()
+            .trim()
+            .to_lowercase();
+
+        let matched = library_games
+            .iter_mut()
+            .find(|g| g.name.as_deref().unwrap_or_default().trim().to_lowercase() == local_name);
+
+        match matched {
+            Some(g) => {
+                g.installed = true;
+                g.executable_path = local.executable_path;
+                g.install_path = local.install_path;
+            }
+            None => library_games.push(local),
+        }
     }
 }
 
