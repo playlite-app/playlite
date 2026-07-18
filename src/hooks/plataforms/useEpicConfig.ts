@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
@@ -10,6 +11,43 @@ import { platformsService } from '@/services/plataformsService';
 export function useEpicConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('plataforms');
   const { status, setStatus } = usePlatformStatus();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const checkAuth = async () => {
+    setIsCheckingAuth(true);
+
+    try {
+      const authenticated = await platformsService.epicIsAuthenticated();
+      setIsAuthenticated(authenticated);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const login = async () => {
+    setIsLoggingIn(true);
+
+    try {
+      await platformsService.epicLogin();
+      await checkAuth();
+      setStatus({ type: 'success', message: t('epic_login_success') });
+    } catch (err) {
+      setStatus({ type: 'error', message: t('epic_login_error') });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const logout = async () => {
+    await platformsService.epicLogout();
+    setIsAuthenticated(false);
+  };
 
   const { isImporting: isImportingEpic, run: importEpicGames } =
     usePlatformImportAction(() => platformsService.importEpicGames(), {
@@ -19,8 +57,13 @@ export function useEpicConfig(onLibraryUpdate?: () => void) {
     });
 
   return {
-    loading: { importingEpic: isImportingEpic },
+    loading: {
+      importingEpic: isImportingEpic,
+      checkingAuth: isCheckingAuth,
+      loggingIn: isLoggingIn,
+    },
+    isAuthenticated,
     status,
-    actions: { importEpicGames },
+    actions: { importEpicGames, login, logout },
   };
 }

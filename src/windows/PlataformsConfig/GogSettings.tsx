@@ -75,6 +75,7 @@ export function GogSettings({
         >
           {!loading.checkingAuth && (
             <PlatformActionButton
+              variant="outline"
               onClick={isAuthenticated ? actions.logout : actions.login}
               isLoading={loading.loggingIn}
               disabled={loading.loggingIn}
@@ -117,7 +118,7 @@ export function GogSettings({
 
         <ImportedItemsBox
           title={t('gog_imported_title')}
-          items={[t('gog_import_item_owned'), t('gog_import_item_category')]}
+          items={[t('gog_import_item_owned')]}
           note={t('gog_import_note_details')}
         />
       </div>

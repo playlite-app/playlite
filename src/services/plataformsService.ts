@@ -19,6 +19,18 @@ export const platformsService = {
     });
   },
 
+  epicLogin: async (): Promise<string> => {
+    return await invoke<string>('epic_login');
+  },
+
+  epicLogout: async (): Promise<void> => {
+    return await invoke<void>('epic_logout');
+  },
+
+  epicIsAuthenticated: async (): Promise<boolean> => {
+    return await invoke<boolean>('epic_is_authenticated');
+  },
+
   /**
    * Importa jogos instalados da Epic Games Store.
    * Detecta automaticamente via manifestos do Epic Games Launcher.

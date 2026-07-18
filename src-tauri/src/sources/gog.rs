@@ -8,7 +8,8 @@ use crate::errors::AppError;
 use crate::sources::providers::{GameSource, OAuthGameSource, SourceGame};
 use crate::utils::http_client::HTTP_CLIENT;
 use crate::utils::oauth::config::{
-    build_authorize_url, exchange_code_for_token, OAuthProviderConfig, TokenRequestMethod,
+    build_authorize_url, exchange_code_for_token, OAuthProviderConfig, TokenAuthMethod,
+    TokenRequestMethod,
 };
 use crate::utils::oauth::core::{generate_state, AuthCallbackResult};
 use crate::utils::oauth::token_store::save_oauth_token;
@@ -55,6 +56,7 @@ impl GogSource {
             uses_pkce: false,
             extra_params: vec![("layout".into(), "galaxy".into())],
             token_request_method: TokenRequestMethod::Get,
+            token_auth_method: TokenAuthMethod::Body,
         };
 
         Self { app_handle, config }

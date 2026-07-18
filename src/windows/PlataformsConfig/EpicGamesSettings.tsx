@@ -1,4 +1,4 @@
-import { FolderOpen, Info, RefreshCw } from 'lucide-react';
+import { FolderOpen, Info, LogIn, LogOut, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -25,7 +25,8 @@ export function EpicGamesSettings({
   progress,
 }: Readonly<EpicGamesSettingsProps>) {
   const { t } = useTranslation('plataforms');
-  const { loading, status, actions } = useEpicConfig(onLibraryUpdate);
+  const { loading, status, actions, isAuthenticated } =
+    useEpicConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
@@ -40,7 +41,37 @@ export function EpicGamesSettings({
       />
 
       <div className="space-y-4">
-        {/* Info sobre Detecção Automática */}
+        {/* Conta Epic (OAuth) */}
+        <SettingsRow
+          icon={isAuthenticated ? LogOut : LogIn}
+          title={
+            isAuthenticated ? t('epic_connected_title') : t('epic_login_title')
+          }
+          description={
+            isAuthenticated
+              ? t('epic_connected_description')
+              : t('epic_login_description')
+          }
+        >
+          {!loading.checkingAuth && (
+            <PlatformActionButton
+              variant="outline"
+              onClick={isAuthenticated ? actions.logout : actions.login}
+              isLoading={loading.loggingIn}
+              disabled={loading.loggingIn}
+              label={
+                isAuthenticated
+                  ? t('epic_disconnect_button')
+                  : t('epic_login_button')
+              }
+              loadingLabel={t('epic_logging_in')}
+              icon={isAuthenticated ? LogOut : LogIn}
+              className="ml-auto"
+            />
+          )}
+        </SettingsRow>
+
+        {/* Info sobre Detecção Automática (instalados) */}
         <SettingsRow
           icon={FolderOpen}
           title={t('epic_auto_detection_title')}
@@ -91,8 +122,8 @@ export function EpicGamesSettings({
             t('epic_import_item_install_dir'),
             t('epic_import_item_executable'),
             t('epic_import_item_status'),
+            t('epic_import_item_owned'),
           ]}
-          note={t('epic_import_note')}
         />
       </div>
 

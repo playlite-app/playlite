@@ -1,9 +1,30 @@
-//! Epic Games - Importa jogos instalados da Epic Games
+//! Epic Games - Login OAuth e importação (biblioteca completa + instalados)
 
 use crate::commands::plataforms::core::persist_source_games;
 use crate::database::AppState;
 use crate::errors::AppError;
+use crate::sources::epic::{merge_local_install_status, EpicSource};
+use crate::sources::providers::OAuthGameSource;
 use tauri::{AppHandle, Emitter, State};
+
+#[tauri::command]
+pub async fn epic_login(app: AppHandle) -> Result<String, AppError> {
+    let source = EpicSource::new(app, None);
+    source.login().await?;
+    Ok("Conta Epic conectada com sucesso!".to_string())
+}
+
+#[tauri::command]
+pub fn epic_logout(app: AppHandle) -> Result<(), AppError> {
+    let source = EpicSource::new(app, None);
+    source.logout()
+}
+
+#[tauri::command]
+pub fn epic_is_authenticated(app: AppHandle) -> Result<bool, AppError> {
+    let source = EpicSource::new(app, None);
+    source.is_authenticated()
+}
 
 #[tauri::command]
 pub async fn import_epic_games(
@@ -11,14 +32,27 @@ pub async fn import_epic_games(
     state: State<'_, AppState>,
     wine_prefix: Option<String>,
 ) -> Result<String, AppError> {
-    use crate::sources::epic::EpicSource;
-
     let prefix = wine_prefix
         .filter(|s| !s.trim().is_empty())
         .map(std::path::PathBuf::from);
 
     let source = EpicSource::new(app.clone(), prefix);
-    let games = source.import_installed().await?;
+
+    let local_games = source.import_installed().await?;
+
+    // Sem login, mantém o comportamento atual: só jogos instalados.
+    let mut games = if source.is_authenticated().unwrap_or(false) {
+        source.fetch_library_detailed().await?
+    } else {
+        Vec::new()
+    };
+
+    merge_local_install_status(&mut games, local_games);
+
+    if games.is_empty() {
+        return Ok("Nenhum jogo Epic encontrado.".to_string());
+    }
+
     let (inserted, updated) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 

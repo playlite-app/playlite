@@ -165,6 +165,7 @@ pub async fn get_ubisoft_plus_games(
     Ok(games)
 }
 
+/// Obtém a lista de serviços assinados pelo usuário (Amazon Luna, Game Pass, EA Play, Ubisoft+)
 pub fn get_enabled_services(state: &State<'_, AppState>) -> Result<Vec<String>, String> {
     let conn = state.games_db.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn

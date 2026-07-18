@@ -131,3 +131,14 @@ pub const GOG_TOKEN_ENDPOINT: &str = "https://auth.gog.com/token";
 pub const GOG_REDIRECT_URI: &str = "https://embed.gog.com/on_login_success?origin=client";
 pub const GOG_FILTERED_PRODUCTS_ENDPOINT: &str =
     "https://embed.gog.com/account/getFilteredProducts";
+
+// === OAuth Epic Games — endpoints e client_id/secret públicos ===
+pub const EPIC_OAUTH_CLIENT_ID: &str = "34a02cf8f4414e29b15921876da36f9a";
+pub const EPIC_OAUTH_CLIENT_SECRET: &str = "daafbccc737745039dffe53d94fc76cf";
+pub const EPIC_LOGIN_URL: &str = "https://www.epicgames.com/id/login?redirectUrl=https%3A%2F%2Fwww.epicgames.com%2Fid%2Fapi%2Fredirect%3FclientId%3D34a02cf8f4414e29b15921876da36f9a%26responseType%3Dcode";
+pub const EPIC_REDIRECT_PREFIX: &str = "https://www.epicgames.com/id/api/redirect";
+pub const EPIC_PSEUDO_REDIRECT_SCHEME: &str = "playlite://epic-auth-code";
+pub const EPIC_TOKEN_ENDPOINT: &str =
+    "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token";
+pub const EPIC_LIBRARY_ENDPOINT: &str =
+    "https://library-service.live.use1a.on.epicgames.com/library/api/public/items";

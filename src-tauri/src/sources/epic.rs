@@ -9,7 +9,6 @@
 //!   `<prefix>/drive_c/ProgramData/Epic/EpicGamesLauncher/Data/Manifests`.
 //! - Cada arquivo `.item` é um JSON com nome, caminho de instalação e executável do jogo.
 
-use crate::constants::EPIC_CATALOG_BULK_ENDPOINT;
 use crate::constants::{
     EPIC_LIBRARY_ENDPOINT, EPIC_LOGIN_URL, EPIC_OAUTH_CLIENT_ID, EPIC_OAUTH_CLIENT_SECRET,
     EPIC_PSEUDO_REDIRECT_SCHEME, EPIC_REDIRECT_PREFIX, EPIC_TOKEN_ENDPOINT,
@@ -24,14 +23,13 @@ use crate::utils::oauth::config::{
 use crate::utils::oauth::token_store::save_oauth_token;
 use async_trait::async_trait;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::time::Duration;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
-// === EPIC GAMES SOURCE - STRUCTS ===
+// === STRUCTS ===
 
 /// Estrutura mínima do JSON dos arquivos `.item`
 #[derive(Debug, Deserialize)]
@@ -46,29 +44,34 @@ struct EpicManifest {
 /// Source responsável por importar jogos instalados via Epic Games
 pub struct EpicSource {
     app_handle: AppHandle,
+    #[allow(dead_code)]
     wine_prefix: Option<PathBuf>, // Wine prefix utilizado no Linux para localizar os manifestos do Epic. Ignorado no Windows.
     config: OAuthProviderConfig,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct EpicLibraryItem {
     namespace: String,
     #[serde(rename = "catalogItemId")]
     catalog_item_id: String,
+    #[serde(rename = "sandboxName")]
+    sandbox_name: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct EpicLibraryResponse {
     records: Vec<EpicLibraryItem>,
-    #[serde(rename = "responseMetadata")]
-    response_metadata: EpicLibraryMetadata,
+    #[serde(rename = "responseMetadata", default)]
+    response_metadata: Option<EpicLibraryMetadata>,
 }
 
 #[derive(Debug, Deserialize)]
 struct EpicLibraryMetadata {
-    #[serde(rename = "nextCursor")]
+    #[serde(rename = "nextCursor", default)]
     next_cursor: Option<String>,
 }
+
+// === JOGOS INSTALADOS ===
 
 impl EpicSource {
     pub fn new(app_handle: AppHandle, wine_prefix: Option<PathBuf>) -> Self {
@@ -202,42 +205,36 @@ impl EpicSource {
         let access_token = self.ensure_valid_token().await?;
         let items = fetch_all_library_items(&access_token).await?;
 
-        let mut by_namespace: HashMap<String, Vec<String>> = HashMap::new();
-        for item in &items {
-            by_namespace
-                .entry(item.namespace.clone())
-                .or_default()
-                .push(item.catalog_item_id.clone());
-        }
+        let mut seen_namespaces = std::collections::HashSet::new();
+        let mut games = Vec::new();
 
-        let mut names: HashMap<(String, String), String> = HashMap::new();
-        for (namespace, ids) in by_namespace {
-            let resolved = fetch_catalog_names(&access_token, &namespace, &ids).await?;
-            for (id, name) in resolved {
-                names.insert((namespace.clone(), id), name);
+        for item in items {
+            if item.namespace == "ue" {
+                continue; // addons/assets de Unreal Engine, não são jogos
             }
+
+            // Múltiplos catalogItemId podem compartilhar o mesmo namespace (builds/plataformas
+            // diferentes do mesmo título) — mantém só a primeira ocorrência por jogo.
+            if !seen_namespaces.insert(item.namespace.clone()) {
+                continue;
+            }
+
+            let name = item
+                .sandbox_name
+                .filter(|n| !n.trim().is_empty())
+                .unwrap_or_else(|| item.catalog_item_id.clone());
+
+            games.push(SourceGame {
+                platform: "Epic".to_string(),
+                platform_game_id: item.namespace,
+                name: Some(name),
+                installed: false,
+                executable_path: None,
+                install_path: None,
+                playtime_minutes: None,
+                last_played: None,
+            });
         }
-
-        let games = items
-            .into_iter()
-            .filter(|i| i.namespace != "ue") // filtra addons de Unreal Engine
-            .map(|item| {
-                let name = names
-                    .get(&(item.namespace.clone(), item.catalog_item_id.clone()))
-                    .cloned();
-
-                SourceGame {
-                    platform: "Epic".to_string(),
-                    platform_game_id: item.catalog_item_id,
-                    name,
-                    installed: false,
-                    executable_path: None,
-                    install_path: None,
-                    playtime_minutes: None,
-                    last_played: None,
-                }
-            })
-            .collect();
 
         Ok(games)
     }
@@ -307,6 +304,7 @@ impl OAuthGameSource for EpicSource {
                     }})();"#,
                         scheme = EPIC_PSEUDO_REDIRECT_SCHEME
                     );
+
                     let _ = window.eval(&script);
                 }
             })
@@ -350,6 +348,9 @@ impl OAuthGameSource for EpicSource {
 
 // === FUNÇÕES AUXILIARES: biblioteca + catálogo ===
 
+/// Busca a biblioteca completa da Epic Games
+/// Esse endpoint não expôs nenhum campo de paginação (`responseMetadata`/cursor).
+/// Na prática retorna a lista inteira numa resposta só.
 async fn fetch_all_library_items(access_token: &str) -> Result<Vec<EpicLibraryItem>, AppError> {
     let mut all = Vec::new();
     let mut cursor: Option<String> = None;
@@ -358,86 +359,44 @@ async fn fetch_all_library_items(access_token: &str) -> Result<Vec<EpicLibraryIt
         let mut request = HTTP_CLIENT
             .get(EPIC_LIBRARY_ENDPOINT)
             .bearer_auth(access_token)
-            .query(&[("includeMetadata", "false")]);
+            .query(&[("includeMetadata", "true")]);
 
         if let Some(c) = &cursor {
             request = request.query(&[("cursor", c)]);
         }
 
         let response = request.send().await?;
-        if !response.status().is_success() {
-            let status = response.status();
-            let body = response.text().await.unwrap_or_default();
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+
+        if !status.is_success() {
             return Err(AppError::NetworkError(format!(
                 "Epic library retornou HTTP {status}: {body}"
             )));
         }
 
-        let parsed: EpicLibraryResponse = response
-            .json()
-            .await
-            .map_err(|e| AppError::ParseError(format!("Falha ao parsear biblioteca Epic: {e}")))?;
+        let parsed: EpicLibraryResponse = serde_json::from_str(&body).map_err(|e| {
+            AppError::ParseError(format!(
+                "Falha ao parsear biblioteca Epic: {e} — corpo: {body}"
+            ))
+        })?;
 
-        cursor = parsed.response_metadata.next_cursor.clone();
+        let record_count = parsed.records.len();
         all.extend(parsed.records);
 
-        if cursor.is_none() {
-            break;
+        let next_cursor = parsed.response_metadata.and_then(|m| m.next_cursor);
+        log::debug!(
+            "Epic library: página com {record_count} itens (total acumulado: {})",
+            all.len()
+        );
+
+        match next_cursor {
+            Some(c) if !c.is_empty() => cursor = Some(c),
+            _ => break,
         }
     }
 
     Ok(all)
-}
-
-#[derive(Debug, Deserialize)]
-struct EpicCatalogItem {
-    title: String,
-}
-
-async fn fetch_catalog_names(
-    access_token: &str,
-    namespace: &str,
-    catalog_item_ids: &[String],
-) -> Result<Vec<(String, String)>, AppError> {
-    if catalog_item_ids.is_empty() {
-        return Ok(vec![]);
-    }
-
-    let url = format!("{EPIC_CATALOG_BULK_ENDPOINT}/{namespace}/bulk/items");
-
-    let mut query: Vec<(&str, &str)> = catalog_item_ids
-        .iter()
-        .map(|id| ("id", id.as_str()))
-        .collect();
-    query.push(("includeDLCDetails", "false"));
-    query.push(("includeMainGameDetails", "false"));
-    query.push(("country", "US"));
-    query.push(("locale", "en"));
-
-    let response = HTTP_CLIENT
-        .get(&url)
-        .bearer_auth(access_token)
-        .query(&query)
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        return Err(AppError::NetworkError(format!(
-            "Epic catalog retornou HTTP {status}: {body}"
-        )));
-    }
-
-    let parsed: HashMap<String, EpicCatalogItem> = response
-        .json()
-        .await
-        .map_err(|e| AppError::ParseError(format!("Falha ao parsear catálogo Epic: {e}")))?;
-
-    Ok(parsed
-        .into_iter()
-        .map(|(id, item)| (id, item.title))
-        .collect())
 }
 
 /// Cruza a biblioteca completa (OAuth) com os jogos detectados localmente via manifesto,
