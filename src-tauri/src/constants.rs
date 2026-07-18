@@ -142,3 +142,5 @@ pub const EPIC_TOKEN_ENDPOINT: &str =
     "https://account-public-service-prod.ol.epicgames.com/account/api/oauth/token";
 pub const EPIC_LIBRARY_ENDPOINT: &str =
     "https://library-service.live.use1a.on.epicgames.com/library/api/public/items";
+pub const EPIC_CATALOG_BULK_ENDPOINT: &str =
+    "https://catalog-public-service-prod06.ol.epicgames.com/catalog/api/shared/namespace";

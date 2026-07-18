@@ -10,9 +10,9 @@
 //! - Cada arquivo `.item` é um JSON com nome, caminho de instalação e executável do jogo.
 
 use crate::constants::{
-    EPIC_LIBRARY_ENDPOINT, EPIC_LOGIN_URL, EPIC_OAUTH_CLIENT_ID, EPIC_OAUTH_CLIENT_SECRET,
-    EPIC_PSEUDO_REDIRECT_SCHEME, EPIC_REDIRECT_PREFIX, EPIC_TOKEN_ENDPOINT,
-    OAUTH_CALLBACK_TIMEOUT_SECS,
+    EPIC_CATALOG_BULK_ENDPOINT, EPIC_LIBRARY_ENDPOINT, EPIC_LOGIN_URL, EPIC_OAUTH_CLIENT_ID,
+    EPIC_OAUTH_CLIENT_SECRET, EPIC_PSEUDO_REDIRECT_SCHEME, EPIC_REDIRECT_PREFIX,
+    EPIC_TOKEN_ENDPOINT, OAUTH_CALLBACK_TIMEOUT_SECS,
 };
 use crate::errors::AppError;
 use crate::sources::providers::{GameSource, OAuthGameSource, SourceGame};
@@ -22,7 +22,9 @@ use crate::utils::oauth::config::{
 };
 use crate::utils::oauth::token_store::save_oauth_token;
 use async_trait::async_trait;
+use futures::stream::{self, StreamExt};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
@@ -50,12 +52,10 @@ pub struct EpicSource {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-struct EpicLibraryItem {
-    namespace: String,
+pub struct EpicLibraryItem {
+    pub(crate) namespace: String,
     #[serde(rename = "catalogItemId")]
-    catalog_item_id: String,
-    #[serde(rename = "sandboxName")]
-    sandbox_name: Option<String>,
+    pub(crate) catalog_item_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,6 +69,24 @@ struct EpicLibraryResponse {
 struct EpicLibraryMetadata {
     #[serde(rename = "nextCursor", default)]
     next_cursor: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicCatalogItem {
+    title: String,
+    #[serde(default)]
+    categories: Vec<EpicCategory>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EpicCategory {
+    path: String,
+}
+
+impl EpicCatalogItem {
+    fn is_game(&self) -> bool {
+        self.categories.iter().any(|c| c.path == "games")
+    }
 }
 
 // === JOGOS INSTALADOS ===
@@ -149,7 +167,7 @@ impl EpicSource {
             match Self::parse_manifest(&path) {
                 Ok(game) => games.push(game),
                 Err(err) => {
-                    eprintln!("Erro ao processar manifest {:?}: {}", path, err);
+                    log::warn!("Erro ao processar manifest {:?}: {}", path, err);
                     continue;
                 }
             }
@@ -205,36 +223,53 @@ impl EpicSource {
         let access_token = self.ensure_valid_token().await?;
         let items = fetch_all_library_items(&access_token).await?;
 
-        let mut seen_namespaces = std::collections::HashSet::new();
-        let mut games = Vec::new();
-
-        for item in items {
+        let mut by_namespace: HashMap<String, Vec<String>> = HashMap::new();
+        for item in &items {
             if item.namespace == "ue" {
-                continue; // addons/assets de Unreal Engine, não são jogos
+                continue;
             }
+            by_namespace
+                .entry(item.namespace.clone())
+                .or_default()
+                .push(item.catalog_item_id.clone());
+        }
 
-            // Múltiplos catalogItemId podem compartilhar o mesmo namespace (builds/plataformas
-            // diferentes do mesmo título) — mantém só a primeira ocorrência por jogo.
-            if !seen_namespaces.insert(item.namespace.clone()) {
+        let titles = fetch_all_catalog_titles(&access_token, &by_namespace).await?;
+
+        // Escolhe, por namespace, o catalogItemId marcado como "games" no catálogo.
+        let mut chosen_per_namespace: HashMap<String, (String, String)> = HashMap::new(); // namespace -> (catalog_item_id, title)
+
+        for item in &items {
+            if item.namespace == "ue" {
                 continue;
             }
 
-            let name = item
-                .sandbox_name
-                .filter(|n| !n.trim().is_empty())
-                .unwrap_or_else(|| item.catalog_item_id.clone());
+            let Some((title, is_game)) =
+                titles.get(&(item.namespace.clone(), item.catalog_item_id.clone()))
+            else {
+                continue; // catálogo não resolveu esse item; ignora, não usa como fallback de namespace
+            };
 
-            games.push(SourceGame {
+            if *is_game {
+                chosen_per_namespace
+                    .entry(item.namespace.clone())
+                    .or_insert_with(|| (item.catalog_item_id.clone(), title.clone()));
+            }
+        }
+
+        let games = chosen_per_namespace
+            .into_iter()
+            .map(|(namespace, (_, title))| SourceGame {
                 platform: "Epic".to_string(),
-                platform_game_id: item.namespace,
-                name: Some(name),
+                platform_game_id: namespace,
+                name: Some(title),
                 installed: false,
                 executable_path: None,
                 install_path: None,
                 playtime_minutes: None,
                 last_played: None,
-            });
-        }
+            })
+            .collect();
 
         Ok(games)
     }
@@ -348,9 +383,11 @@ impl OAuthGameSource for EpicSource {
 
 // === FUNÇÕES AUXILIARES: biblioteca + catálogo ===
 
-/// Busca a biblioteca completa da Epic Games
-/// Esse endpoint não expôs nenhum campo de paginação (`responseMetadata`/cursor).
-/// Na prática retorna a lista inteira numa resposta só.
+/// Busca a biblioteca completa da Epic Games, paginando via cursor.
+///
+/// **Importante:** `includeMetadata` precisa ser `"true"` — com `"false"`, a API omite
+/// `responseMetadata`/`nextCursor` da resposta e retorna só a primeira página sem sinalizar
+/// que há mais páginas disponíveis.
 async fn fetch_all_library_items(access_token: &str) -> Result<Vec<EpicLibraryItem>, AppError> {
     let mut all = Vec::new();
     let mut cursor: Option<String> = None;
@@ -397,6 +434,92 @@ async fn fetch_all_library_items(access_token: &str) -> Result<Vec<EpicLibraryIt
     }
 
     Ok(all)
+}
+
+/// Resolve os títulos reais dos itens de um namespace via catálogo.
+async fn fetch_catalog_titles(
+    access_token: &str,
+    namespace: &str,
+    catalog_item_ids: &[String],
+) -> Result<HashMap<String, (String, bool)>, AppError> {
+    if catalog_item_ids.is_empty() {
+        return Ok(HashMap::new());
+    }
+
+    let url = format!("{EPIC_CATALOG_BULK_ENDPOINT}/{namespace}/bulk/items");
+
+    let mut query: Vec<(&str, &str)> = catalog_item_ids
+        .iter()
+        .map(|id| ("id", id.as_str()))
+        .collect();
+    query.push(("includeDLCDetails", "false"));
+    query.push(("includeMainGameDetails", "false"));
+
+    let response = HTTP_CLIENT
+        .get(&url)
+        .bearer_auth(access_token)
+        .query(&query)
+        .send()
+        .await?;
+
+    let status = response.status();
+    let body = response.text().await.unwrap_or_default();
+
+    if !status.is_success() {
+        log::warn!("Epic catalog (namespace={namespace}) retornou HTTP {status}: {body}");
+        return Ok(HashMap::new());
+    }
+
+    let parsed: HashMap<String, EpicCatalogItem> = serde_json::from_str(&body).map_err(|e| {
+        AppError::ParseError(format!(
+            "Falha ao parsear catálogo Epic: {e} — corpo: {body}"
+        ))
+    })?;
+
+    Ok(parsed
+        .into_iter()
+        .map(|(id, item)| {
+            let is_game = item.is_game();
+            (id, (item.title, is_game))
+        })
+        .collect())
+}
+
+/// Resolve os títulos de todos os namespaces em paralelo (até 8 chamadas simultâneas) em vez de sequencialmente — reduz o tempo de import.
+async fn fetch_all_catalog_titles(
+    access_token: &str,
+    by_namespace: &HashMap<String, Vec<String>>,
+) -> Result<HashMap<(String, String), (String, bool)>, AppError> {
+    // Clonar o token de acesso para que cada tarefa assíncrona possua seu próprio dono do token e não dependa de um borrow com lifetime restrito.
+    let access_owned = access_token.to_string();
+
+    let jobs: Vec<(String, Vec<String>)> = by_namespace
+        .iter()
+        .map(|(namespace, ids)| (namespace.clone(), ids.clone()))
+        .collect();
+
+    let results: Vec<Result<(String, HashMap<String, (String, bool)>), AppError>> =
+        stream::iter(jobs)
+            .map(move |(namespace, ids)| {
+                let access = access_owned.clone();
+                async move {
+                    let resolved = fetch_catalog_titles(&access, &namespace, &ids).await?;
+                    Ok::<_, AppError>((namespace, resolved))
+                }
+            })
+            .buffer_unordered(8)
+            .collect()
+            .await;
+
+    let mut titles = HashMap::new();
+    for result in results {
+        let (namespace, resolved) = result?;
+        for (catalog_item_id, (title, is_game)) in resolved {
+            titles.insert((namespace.clone(), catalog_item_id), (title, is_game));
+        }
+    }
+
+    Ok(titles)
 }
 
 /// Cruza a biblioteca completa (OAuth) com os jogos detectados localmente via manifesto,
