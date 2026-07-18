@@ -116,7 +116,7 @@ pub async fn fetch_game_pass_pc_catalog(
         let body = serde_json::json!({ "Products": chunk });
 
         let response: serde_json::Value = client
-            .post(&format!(
+            .post(format!(
                 "https://catalog.gamepass.com/products?market=BR&language={}&hydration=MobileDetailsForConsole",
                 language
             ))

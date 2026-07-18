@@ -2,9 +2,9 @@
 //!
 //! - URL: https://store.ubisoft.com/ofertas/ubisoftplus/games?access=ubisoft&offer=premium
 //! - Descrição: Scraper para obter a lista de jogos disponíveis no Ubisoft+ Premium para PC,
-//! incluindo título, edição, gênero, imagem e link da loja.
+//!   incluindo título, edição, gênero, imagem e link da loja.
 //! - Método: Requisição POST direta à API pública do Algolia utilizada pelo site da Ubisoft,
-//! com chave de busca read-only exposta no frontend (padrão Algolia, sem autenticação de sessão).
+//!   com chave de busca read-only exposta no frontend (padrão Algolia, sem autenticação de sessão).
 
 use reqwest::Client;
 use serde::{Deserialize, Serialize};

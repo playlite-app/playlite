@@ -5,18 +5,18 @@
 
 use serde_json::Value;
 
+type L10nLists = (
+    Option<Vec<String>>,
+    Option<Vec<String>>,
+    Option<Vec<String>>,
+);
+
 /// Agrupa os resultados da tabela L10n (uma linha por idioma) em três listas:
 /// idiomas com suporte a interface, áudio e legendas.
 ///
 /// Filtra valores negativos ("false", "n/a", "unknown") — só inclui idiomas
 /// confirmados ("true") ou com tradução de fã ("hackable").
-pub(crate) fn parse_l10n_rows(
-    rows: &[Value],
-) -> (
-    Option<Vec<String>>,
-    Option<Vec<String>>,
-    Option<Vec<String>>,
-) {
+pub(crate) fn parse_l10n_rows(rows: &[Value]) -> L10nLists {
     let mut interface_langs = Vec::new();
     let mut audio_langs = Vec::new();
     let mut subtitle_langs = Vec::new();

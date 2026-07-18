@@ -119,7 +119,7 @@ fn normalize_game_name(name: &str) -> String {
             let cut = &trimmed[..rest.len()];
             // Remove separadores opcionais antes do sufixo: espaço, hífen, vírgula, dois-pontos
             return cut
-                .trim_end_matches(|c: char| c == '-' || c == ':' || c == ',' || c == ' ')
+            .trim_end_matches(['-', ':', ',', ' '])
                 .trim()
                 .to_string();
         }

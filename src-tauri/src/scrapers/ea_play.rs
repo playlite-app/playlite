@@ -97,7 +97,7 @@ pub async fn fetch_ea_play_catalog(language: &str) -> Result<Vec<EAPlayGame>, St
         let body = serde_json::json!({ "Products": chunk });
 
         let response: serde_json::Value = client
-            .post(&format!(
+            .post(format!(
                 "https://catalog.gamepass.com/products?market=BR&language={}&hydration=MobileDetailsForConsole",
                 language
             ))

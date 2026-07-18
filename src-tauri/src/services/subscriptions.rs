@@ -19,8 +19,6 @@ fn normalize_lang_tag(lang: &str) -> String {
     let lower = lang.to_lowercase();
     if lower.starts_with("pt") {
         "pt-BR".to_string()
-    } else if lower.starts_with("en") {
-        "en-US".to_string()
     } else {
         "en-US".to_string() // fallback
     }

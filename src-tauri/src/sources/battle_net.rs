@@ -92,11 +92,12 @@ struct ProductDbEntry {
 }
 
 /// Source responsável por importar jogos instalados via Battle.net
+#[derive(Default)]
 pub struct BattleNetSource {}
 
 impl BattleNetSource {
     pub fn new() -> Self {
-        Self {}
+        Self::default()
     }
 
     /// Resolve o diretório do Battle.net Agent (onde ficam `product.db` e `aggregate.json`).

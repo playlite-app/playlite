@@ -31,6 +31,9 @@ use std::sync::mpsc;
 use std::time::Duration;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
 
+type CatalogTitles = HashMap<(String, String), (String, bool)>;
+type CatalogResolution = Result<(String, HashMap<String, (String, bool)>), AppError>;
+
 // === STRUCTS ===
 
 /// Estrutura mínima do JSON dos arquivos `.item`
@@ -489,7 +492,7 @@ async fn fetch_catalog_titles(
 async fn fetch_all_catalog_titles(
     access_token: &str,
     by_namespace: &HashMap<String, Vec<String>>,
-) -> Result<HashMap<(String, String), (String, bool)>, AppError> {
+) -> Result<CatalogTitles, AppError> {
     // Clonar o token de acesso para que cada tarefa assíncrona possua seu próprio dono do token e não dependa de um borrow com lifetime restrito.
     let access_owned = access_token.to_string();
 
@@ -498,7 +501,7 @@ async fn fetch_all_catalog_titles(
         .map(|(namespace, ids)| (namespace.clone(), ids.clone()))
         .collect();
 
-    let results: Vec<Result<(String, HashMap<String, (String, bool)>), AppError>> =
+    let results: Vec<CatalogResolution> =
         stream::iter(jobs)
             .map(move |(namespace, ids)| {
                 let access = access_owned.clone();

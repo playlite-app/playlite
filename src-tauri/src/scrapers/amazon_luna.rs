@@ -2,10 +2,10 @@
 //!
 //! - URL: https://luna.amazon.com/claims/home
 //! - Descrição: Scraper para obter a lista de jogos gratuitos disponíveis na Amazon Luna,
-//! incluindo título, descrição, imagem, link de resgate e data de término da oferta.
+//!   incluindo título, descrição, imagem, link de resgate e data de término da oferta.
 //! - Método: Acesso à página de reivindicações da Amazon Luna para obter cookies de sessão e token CSRF,
-//! seguido por uma requisição POST GraphQL para a API interna da Amazon Luna, utilizando os cookies
-//! e token para autenticação.
+//!   seguido por uma requisição POST GraphQL para a API interna da Amazon Luna, utilizando os cookies
+//!   e token para autenticação.
 
 use reqwest::{cookie::Jar, Client};
 use scraper::{Html, Selector};
