@@ -17,6 +17,7 @@
 //! - `steam`: Importa jogos da Steam.
 //! - `ubisoft`: Importa jogos da Ubisoft Connect, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
 
+pub mod amazon;
 pub mod battle_net;
 pub mod ea;
 pub mod epic;

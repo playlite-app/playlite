@@ -146,8 +146,7 @@ pub async fn search_games(api_key: &str, query: &str) -> Result<Vec<RawgGame>, S
 
 /// Busca detalhes completos de um jogo específico.
 ///
-/// Converte o nome do jogo em slug (formato URL-friendly) e busca
-/// informações detalhadas na API RAWG.
+/// Converte o nome do jogo em slug (formato URL-friendly) e busca informações detalhadas na API RAWG.
 pub async fn fetch_game_details(api_key: &str, query: String) -> Result<GameDetails, String> {
     let identifier = if query.chars().all(char::is_numeric) {
         query

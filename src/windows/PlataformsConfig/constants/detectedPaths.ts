@@ -20,4 +20,8 @@ export const DETECTED_PATHS = {
     linuxWine:
       '<wine_prefix>/drive_c/users/<USER>/AppData/Roaming/legacy-games-launcher/',
   },
+  amazon: {
+    windows:
+      'C:\\Users\\<user>\\AppData\\Local\\Amazon Games\\Data\\Games\\Sql\\GameInstallInfo.sqlite',
+  },
 } as const;

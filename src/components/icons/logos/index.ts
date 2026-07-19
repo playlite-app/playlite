@@ -1,3 +1,4 @@
+export { Amazon } from './Amazon';
 export { BattleNet } from './BattleNet';
 export { Ea } from './Ea';
 export { Epic } from './Epic';

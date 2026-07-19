@@ -3,16 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import {
-  ImportProgressPayload,
-  useGogConfig,
-  useNativePathPicker,
-} from '@/hooks/plataforms';
+import { ImportProgressPayload, useGogConfig, useNativePathPicker, } from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,
   ImportProgressIndicator,
-  InfoNoteBox,
   PathPickerField,
   PlatformActionButton,
   PlatformActionsFooter,
@@ -107,14 +102,6 @@ export function GogSettings({
             showPreview={false}
           />
         </SettingsRow>
-
-        {isAuthenticated && (
-          <InfoNoteBox>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('gog_import_note')}
-            </p>
-          </InfoNoteBox>
-        )}
 
         <ImportedItemsBox
           title={t('gog_imported_title')}

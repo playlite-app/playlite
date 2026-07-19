@@ -1,5 +1,6 @@
 //! Módulo de importação de bibliotecas de plataformas externas (Steam, Epic, GOG).
 //!
+//! - **Amazon Games:** Módulo para importar jogos da Amazon.
 //! - **Battle.Net:** Módulo para importar jogos da Battle.Net.
 //! - **Core:** Módulo com funções genéricas para salvar jogos no banco de dados.
 //! - **EA:** Funções específicas para importar jogos da EA Desktop.
@@ -11,6 +12,7 @@
 //! - **Steam:** Funções para importar jogos da Steam.
 //! - **Ubisoft:** Funções para importar jogos da Ubisoft.
 
+pub mod amazon;
 pub mod battle_net;
 pub mod core;
 pub mod ea;
@@ -21,7 +23,6 @@ pub mod legacy;
 pub mod scanner;
 pub mod steam;
 pub mod ubisoft;
-
 // === REEXPORTS ===
 
 // Mantêm o caminho `commands::plataforms::X` estável para quem consome (lib.rs, frontend via invoke, etc.).

@@ -2,6 +2,7 @@
 export { default as PlataformsConfig } from './PlataformsConfig.tsx';
 
 // Store-specific settings components
+export { AmazonGamesSettings } from './AmazonGamesSettings';
 export { BattleNetSettings } from './BattleNetSettings';
 export { EaSettings } from './EaSettings';
 export { EpicGamesSettings } from './EpicGamesSettings';

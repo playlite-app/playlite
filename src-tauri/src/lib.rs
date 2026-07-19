@@ -129,6 +129,10 @@ pub fn run() {
             commands::plataforms::gog::import_gog_games,
             commands::plataforms::battle_net::import_battle_net_games,
             commands::plataforms::ea::import_ea_games,
+            commands::plataforms::amazon::amazon_login,
+            commands::plataforms::amazon::amazon_logout,
+            commands::plataforms::amazon::amazon_is_authenticated,
+            commands::plataforms::amazon::import_amazon_games,
             // Comandos de Metadados (Enriquecimento, Capas, Refresh, Busca)
             commands::metadata::enrichment::update_metadata,
             commands::metadata::get_metadata::fill_missing_metadata,

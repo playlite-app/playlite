@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  Amazon,
   BattleNet,
   Ea,
   Epic,
@@ -17,6 +18,7 @@ import { WindowBase } from '@/components/wrappers/WindowBase';
 import { useImportProgress } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
+  AmazonGamesSettings,
   BattleNetSettings,
   EaSettings,
   EpicGamesSettings,
@@ -38,6 +40,7 @@ type SourceProvider =
   | 'gog'
   | 'battlenet'
   | 'ea'
+  | 'amazon'
   | 'local'
   | 'wine';
 
@@ -106,6 +109,12 @@ export default function PlataformsConfig({
       connected: true,
     },
     {
+      id: 'amazon',
+      name: t('config_store_amazon'),
+      Icon: Amazon,
+      connected: true,
+    },
+    {
       id: 'local',
       name: t('config_store_local'),
       Icon: Settings2,
@@ -165,6 +174,13 @@ export default function PlataformsConfig({
       case 'ea':
         return (
           <EaSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
+        );
+      case 'amazon':
+        return (
+          <AmazonGamesSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
         );
       case 'local':
         return <LocalScannerSettings />;

@@ -144,3 +144,16 @@ pub const EPIC_LIBRARY_ENDPOINT: &str =
     "https://library-service.live.use1a.on.epicgames.com/library/api/public/items";
 pub const EPIC_CATALOG_BULK_ENDPOINT: &str =
     "https://catalog-public-service-prod06.ol.epicgames.com/catalog/api/shared/namespace";
+
+// === Amazon Games (device registration flow — baseado no cliente open-source Nile) ===
+pub const AMAZON_API: &str = "https://api.amazon.com";
+pub const AMAZON_GAMING_DISTRIBUTION_ENTITLEMENTS: &str =
+    "https://gaming.amazon.com/api/distribution/entitlements";
+pub const AMAZON_MARKETPLACE_ID: &str = "ATVPDKIKX0DER";
+pub const AMAZON_ASSOC_HANDLE: &str = "amzn_sonic_games_launcher";
+pub const AMAZON_DEVICE_TYPE: &str = "A2UMVHOX7UP4V7";
+pub const AMAZON_APP_NAME: &str = "AGSLauncher for Windows";
+pub const AMAZON_APP_VERSION: &str = "1.0.0";
+pub const AMAZON_REDIRECT_PREFIX: &str =
+    "https://www.amazon.com/?openid.assoc_handle=amzn_sonic_games_launcher";
+pub const AMAZON_ENTITLEMENTS_KEY_ID: &str = "d5dc8b8b-86c8-4fc4-ae93-18c0def5314d";

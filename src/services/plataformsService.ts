@@ -166,4 +166,27 @@ export const platformsService = {
       eaInstallDir: eaInstallDir ?? null,
     });
   },
+
+  amazonLogin: async (): Promise<string> => {
+    return await invoke<string>('amazon_login');
+  },
+
+  amazonLogout: async (): Promise<void> => {
+    return await invoke<void>('amazon_logout');
+  },
+
+  amazonIsAuthenticated: async (): Promise<boolean> => {
+    return await invoke<boolean>('amazon_is_authenticated');
+  },
+
+  /**
+   * Importa a biblioteca completa de jogos possuídos na conta Amazon Games.
+   * Cruza com jogos instalados detectados via Amazon Games App (Windows apenas).
+   * Sem conta conectada, importa somente os jogos instalados localmente.
+   *
+   * @throws Se a API estiver indisponível
+   */
+  importAmazonGames: async (): Promise<string> => {
+    return await invoke<string>('import_amazon_games');
+  },
 };

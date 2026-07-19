@@ -7,6 +7,7 @@ use crate::errors::AppError;
 use crate::utils::http_client::HTTP_CLIENT;
 use crate::utils::oauth::core::PkceChallenge;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
@@ -64,6 +65,8 @@ pub struct OAuthToken {
     pub refresh_token: Option<String>,
     pub expires_at: Option<i64>, // timestamp unix; None = expiração desconhecida
     pub scope: Option<String>,
+    #[serde(default)]
+    pub extra: HashMap<String, String>, // ex: "device_serial" para Amazon
 }
 
 impl From<TokenResponse> for OAuthToken {
@@ -74,6 +77,7 @@ impl From<TokenResponse> for OAuthToken {
             refresh_token: resp.refresh_token,
             expires_at,
             scope: resp.scope,
+            extra: HashMap::new(),
         }
     }
 }
@@ -90,7 +94,7 @@ impl OAuthToken {
 
 // === HELPERS LOCAIS ===
 
-fn now_unix() -> i64 {
+pub(crate) fn now_unix() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
