@@ -10,9 +10,10 @@
 //! - Itens compartilhados com covers estão no módulo shared
 
 use super::shared::{
-    extract_steam_id_from_url, fetch_rawg_metadata, fetch_steam_playtime, fetch_steam_reviews,
-    fetch_steam_store_data, find_steam_id_in_links, EnrichProgress,
+    fetch_rawg_metadata, fetch_steam_playtime, fetch_steam_reviews, fetch_steam_store_data,
+    resolve_steam_app_id, EnrichProgress,
 };
+use crate::commands::platforms::core::NewlyImportedGame;
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
 use crate::database::AppState;
@@ -84,6 +85,83 @@ pub(in crate::commands::metadata) struct ProcessedGameDetails {
 
 // === LÓGICA CORE (REFATORADA) ===
 
+pub async fn enrich_newly_imported(app: AppHandle, games: Vec<NewlyImportedGame>) {
+    let api_key = match database::get_secret(&app, "rawg_api_key") {
+        Ok(key) if !key.is_empty() => key,
+        _ => {
+            warn!("Enrichment pós-import ignorado: API Key da RAWG não configurada.");
+            return;
+        }
+    };
+
+    let state: State<AppState> = app.state();
+    let total = games.len();
+    let mut all_session_tags: HashSet<String> = HashSet::new();
+    let mut batch_results = Vec::new();
+
+    for (index, game) in games.into_iter().enumerate() {
+        let _ = app.emit(
+            "enrich_progress",
+            EnrichProgress {
+                current: (index + 1) as i32,
+                total_found: total as i32,
+                last_game: game.name.clone(),
+                status: "running".to_string(),
+            },
+        );
+
+        let (processed_data, raw_tags, _rawg_found) = {
+            let cache_conn = match state.cache_db.lock() {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            tokio::task::block_in_place(|| {
+                let rt = tokio::runtime::Handle::current();
+                rt.block_on(async {
+                    enrich_game_metadata(
+                        &api_key,
+                        &game.game_id,
+                        &game.name,
+                        &game.platform,
+                        Some(game.platform_game_id.clone()),
+                        &cache_conn,
+                    )
+                    .await
+                })
+            })
+        };
+
+        for tag in raw_tags {
+            all_session_tags.insert(tag);
+        }
+        batch_results.push((game.name, processed_data));
+
+        sleep(Duration::from_millis(RAWG_RATE_LIMIT_MS)).await;
+    }
+
+    if let Ok(mut conn) = state.games_db.lock() {
+        if let Ok(tx) = conn.transaction() {
+            let mut success = 0;
+            let mut errors = 0;
+            for (name, data) in batch_results {
+                if let Err(e) = save_game_details(&tx, data) {
+                    warn!("enrich_newly_imported: erro ao salvar {}: {}", name, e);
+                    errors += 1;
+                } else {
+                    success += 1;
+                }
+            }
+            match tx.commit() {
+                Ok(_) => info!("enrich_newly_imported: {} ok, {} erros", success, errors),
+                Err(e) => warn!("enrich_newly_imported: commit falhou: {}", e),
+            }
+        }
+    }
+
+    let _ = crate::services::tags::generate_analysis_report(&app, all_session_tags);
+    let _ = app.emit("enrich_complete", "Enriquecimento pós-import concluído.");
+}
+
 /// Processa um único jogo com cache integrado (sem manter lock)
 async fn enrich_game_metadata(
     api_key: &str,
@@ -123,12 +201,12 @@ async fn enrich_game_metadata(
     let mut found_raw_tags: Vec<String> = Vec::new();
     let mut rawg_found = false;
 
-    // 1. Estratégia de Steam ID
-    let mut target_steam_id = if platform.to_lowercase() == "steam" {
-        platform_game_id
-    } else {
-        None
-    };
+    // 1. Resolução do Steam App ID — cobre tanto jogos Steam (direto do platform_game_id) quanto
+    // jogos de outras plataformas (via busca por nome na Steam Store Search), com cache de tentativas sem sucesso.
+    let target_steam_id =
+        resolve_steam_app_id(name, platform, platform_game_id.as_deref(), cache_conn)
+            .await
+            .map(|resolution| resolution.app_id);
 
     // 2. Busca na RAWG (com cache)
     if let Some(rawg_det) = fetch_rawg_metadata(api_key, name, cache_conn).await {
@@ -152,7 +230,6 @@ async fn enrich_game_metadata(
         details.background_image = rawg_det.background_image;
         details.esrb_rating = rawg_det.esrb_rating.as_ref().map(|r| r.name.clone());
 
-        // Links
         if let Some(url) = &rawg_det.website {
             links_map.insert("website".to_string(), url.clone());
         }
@@ -166,48 +243,21 @@ async fn enrich_game_metadata(
             "rawg".to_string(),
             format!("https://rawg.io/games/{}", rawg_det.id),
         );
-
-        // Descobre Steam ID via RAWG
-        if target_steam_id.is_none() {
-            for store_data in &rawg_det.stores {
-                if store_data.store.slug == "steam" {
-                    if let Some(extracted_id) = extract_steam_id_from_url(&store_data.url) {
-                        target_steam_id = Some(extracted_id);
-                        links_map.insert("steam".to_string(), store_data.url.clone());
-                    }
-                }
-            }
-        }
-
-        // Fallback — Steam pode estar em outro campo (ex: website)
-        // Não sobrescreve a chave "steam" aqui — ela pode já apontar para outro campo (ex: "website").
-        // O objetivo é só extrair o ID, e não reorganizar os links salvos.
-        if target_steam_id.is_none() {
-            if let Some(steam_id) = find_steam_id_in_links(&links_map) {
-                target_steam_id = Some(steam_id.clone());
-            }
-        }
     }
 
-    // 3. Busca na Steam (com cache)
+    // 3. Busca na Steam (com cache) — usa o ID já resolvido no passo 1
     if let Some(steam_id) = &target_steam_id {
-        if !links_map.contains_key("steam") {
-            links_map.insert(
-                "steam".to_string(),
-                format!("https://store.steampowered.com/app/{}", steam_id),
-            );
-        }
+        links_map
+            .entry("steam".to_string())
+            .or_insert_with(|| format!("https://store.steampowered.com/app/{}", steam_id));
         details.steam_app_id = Some(steam_id.clone());
 
-        // A. Store data
         if let Some(store_data) = fetch_steam_store_data(steam_id, cache_conn).await {
             let (detected_adult, flags) = steam_api::detect_adult_content(&store_data);
             details.is_adult = detected_adult;
             if !flags.is_empty() {
                 details.adult_tags = serde_json::to_string(&flags).ok();
             }
-
-            // Fallbacks
             if details.description_raw.is_none() {
                 details.description_raw = Some(store_data.short_description);
             }
@@ -219,7 +269,6 @@ async fn enrich_game_metadata(
             }
         }
 
-        // B. Reviews
         if let Some(reviews) = fetch_steam_reviews(steam_id, cache_conn).await {
             details.steam_review_label = Some(reviews.review_score_desc);
             details.steam_review_count = Some(reviews.total_reviews as i32);
@@ -231,16 +280,13 @@ async fn enrich_game_metadata(
             details.steam_review_updated_at = Some(chrono::Utc::now().to_rfc3339());
         }
 
-        // C. Playtime
         if let Some(hours) = fetch_steam_playtime(steam_id, cache_conn).await {
             details.median_playtime = Some(hours as i32);
-
             let genre_list: Vec<String> = details
                 .genres
                 .split(',')
                 .map(|s| s.trim().to_lowercase())
                 .collect();
-
             if let Some(estimated_hours) =
                 playtime::estimate_playtime(Some(hours), &genre_list, &details.tags)
             {

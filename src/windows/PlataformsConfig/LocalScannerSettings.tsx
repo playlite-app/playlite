@@ -11,7 +11,7 @@ import { ScanResultBanner } from './components/ScanResultBanner';
 import { DiscoveriesList } from './DiscoveriesList';
 
 export function LocalScannerSettings() {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const {
     scanning,
     result,

@@ -24,7 +24,7 @@ export function SteamSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<SteamSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const {
     steamConfig,
     setSteamConfig,

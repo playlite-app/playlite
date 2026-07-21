@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { ImportProgressPayload, useGogConfig, useNativePathPicker, } from '@/hooks/plataforms';
+import {
+  ImportProgressPayload,
+  useGogConfig,
+  useNativePathPicker,
+} from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,
@@ -23,7 +27,7 @@ export function GogSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<GogSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [gogGamesDir, setGogGamesDir] = useState(
     localStorage.getItem('gog_games_dir') || ''
   );

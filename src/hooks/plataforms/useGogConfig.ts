@@ -12,7 +12,7 @@ import { toast } from '@/utils/toast';
  * antes que a importação da biblioteca esteja disponível.
  */
 export function useGogConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);

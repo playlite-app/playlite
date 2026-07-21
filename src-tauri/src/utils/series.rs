@@ -3,6 +3,7 @@
 //! Baseado no nome do jogo, tenta identificar a série a que ele pertence.
 //! Utiliza uma lista conhecida de séries e heurísticas simples para identificar a série correta.
 
+use crate::utils::text::normalize_for_matching;
 use std::sync::OnceLock;
 
 /// Carrega e cacheia a lista de séries do JSON
@@ -18,21 +19,14 @@ fn get_known_series() -> &'static Vec<String> {
     })
 }
 
-fn normalize_name(name: &str) -> String {
-    name.to_lowercase()
-        .replace(['™', '®', '©', ':'], "")
-        .trim()
-        .to_string()
-}
-
 /// Tenta identificar a série baseada no nome do jogo
 pub fn infer_series(game_name: &str) -> Option<String> {
-    let normalized_target = normalize_name(game_name);
+    let normalized_target = normalize_for_matching(game_name);
     let known_list = get_known_series();
 
     // 1. Busca na lista conhecida
     for series in known_list {
-        let normalized_series = normalize_name(series);
+        let normalized_series = normalize_for_matching(&series);
         if normalized_target.contains(&normalized_series) {
             return Some(series.clone());
         }

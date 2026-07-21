@@ -11,8 +11,8 @@
 
 use super::enrichment::{save_game_details, ProcessedGameDetails};
 use super::shared::{
-    extract_steam_id_from_url, fetch_rawg_metadata_fresh, fetch_steam_playtime,
-    fetch_steam_reviews, fetch_steam_store_data, find_steam_id_in_links, EnrichProgress,
+    fetch_rawg_metadata_fresh, fetch_steam_playtime, fetch_steam_reviews, fetch_steam_store_data,
+    resolve_steam_app_id, EnrichProgress,
 };
 use crate::constants::{RAWG_RATE_LIMIT_MS, RAWG_REQUISITIONS_PER_BATCH};
 use crate::database;
@@ -188,11 +188,12 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
                             let mut links_map: HashMap<String, String> = HashMap::new();
                             let mut found_raw_tags: Vec<String> = Vec::new();
 
-                            let mut target_steam_id = if platform.to_lowercase() == "steam" {
-                                platform_game_id.clone()
-                            } else {
-                                None
-                            };
+                            // 1. Resolução do Steam App ID — cobre tanto jogos Steam (direto do platform_game_id) quanto
+                            // jogos de outras plataformas (via busca por nome na Steam Store Search), com cache de tentativas sem sucesso.
+                            let target_steam_id =
+                                resolve_steam_app_id(&name, &platform, platform_game_id.as_deref(), &cache_conn)
+                                    .await
+                                    .map(|resolution| resolution.app_id);
 
                             // 2a. Busca na RAWG ignorando o cache
                             if let Some(rawg_det) =
@@ -237,29 +238,6 @@ pub async fn fill_missing_metadata(app: AppHandle) -> Result<(), AppError> {
                                     "rawg".to_string(),
                                     format!("https://rawg.io/games/{}", rawg_det.id),
                                 );
-
-                                if target_steam_id.is_none() {
-                                    for store_data in &rawg_det.stores {
-                                        if store_data.store.slug == "steam" {
-                                            if let Some(id) =
-                                                extract_steam_id_from_url(&store_data.url)
-                                            {
-                                                target_steam_id = Some(id);
-                                                links_map.insert(
-                                                    "steam".to_string(),
-                                                    store_data.url.clone(),
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Fallback — Steam pode estar em outro campo (ex: website), não só listada como "store" própria pela RAWG.
-                                if target_steam_id.is_none() {
-                                    if let Some(steam_id) = find_steam_id_in_links(&links_map) {
-                                        target_steam_id = Some(steam_id);
-                                    }
-                                }
                             } else {
                                 warn!(
                                     game = %name,

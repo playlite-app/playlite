@@ -23,7 +23,7 @@ export function AmazonGamesSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<AmazonGamesSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions, isAuthenticated } =
     useAmazonConfig(onLibraryUpdate);
 

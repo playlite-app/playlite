@@ -10,7 +10,7 @@ import { platformsService } from '@/services/plataformsService';
  * detectados automaticamente pelo Amazon Games App (Windows apenas).
  */
 export function useAmazonConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);

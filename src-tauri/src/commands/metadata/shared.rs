@@ -2,10 +2,11 @@
 //!
 //! Contém estruturas e funções reutilizadas por enrichment e covers.
 
-use crate::constants::RAWG_NOT_FOUND_MARKER;
+use crate::constants::NOT_FOUND_MARKER;
+use crate::models::ImportConfidence;
 use crate::services::cache;
 use crate::services::integration::{rawg, steam_api, steamspy};
-use std::collections::HashMap;
+use crate::utils::text::{is_likely_non_base_game, normalize_for_matching, strip_edition_suffix};
 
 // === ESTRUTURAS COMPARTILHADAS ===
 
@@ -16,6 +17,12 @@ pub struct EnrichProgress {
     pub total_found: i32,
     pub last_game: String,
     pub status: String,
+}
+
+/// Resultado da resolução de `steam_app_id` a partir do nome de um jogo.
+pub struct SteamIdResolution {
+    pub app_id: String,
+    pub confidence: ImportConfidence,
 }
 
 // === HELPERS LOCAIS ===
@@ -30,7 +37,7 @@ pub(in crate::commands::metadata) fn rawg_not_found_cached(
 ) -> bool {
     let cache_key = rawg_cache_key(name);
     cache::get_cached_api_data(cache_conn, "rawg", &cache_key)
-        .is_some_and(|cached| cached == RAWG_NOT_FOUND_MARKER)
+        .is_some_and(|cached| cached == NOT_FOUND_MARKER)
 }
 
 async fn fetch_rawg_metadata_inner(
@@ -43,7 +50,7 @@ async fn fetch_rawg_metadata_inner(
 
     if !bypass_cache {
         if let Some(cached) = cache::get_cached_api_data(cache_conn, "rawg", &cache_key) {
-            if cached == RAWG_NOT_FOUND_MARKER {
+            if cached == NOT_FOUND_MARKER {
                 return None;
             }
             if let Ok(details) = serde_json::from_str::<rawg::GameDetails>(&cached) {
@@ -69,19 +76,15 @@ async fn fetch_rawg_metadata_inner(
                                 cache_conn,
                                 "rawg",
                                 &cache_key,
-                                RAWG_NOT_FOUND_MARKER,
+                                NOT_FOUND_MARKER,
                             );
                         }
                         None
                     }
                 }
             } else {
-                let _ = cache::save_cached_api_data(
-                    cache_conn,
-                    "rawg",
-                    &cache_key,
-                    RAWG_NOT_FOUND_MARKER,
-                );
+                let _ =
+                    cache::save_cached_api_data(cache_conn, "rawg", &cache_key, NOT_FOUND_MARKER);
                 None
             }
         }
@@ -116,28 +119,70 @@ pub async fn fetch_rawg_metadata_fresh(
     fetch_rawg_metadata_inner(api_key, name, cache_conn, true).await
 }
 
-// === FUNÇÕES AUXILIARES ===
-
-pub(crate) fn extract_steam_id_from_url(url: &str) -> Option<String> {
-    if url.contains("store.steampowered.com/app/") {
-        let parts: Vec<&str> = url.split("/app/").collect();
-        if let Some(right_part) = parts.get(1) {
-            let id_part: String = right_part.chars().take_while(|c| c.is_numeric()).collect();
-            if !id_part.is_empty() {
-                return Some(id_part);
-            }
+pub async fn resolve_steam_app_id(
+    name: &str,
+    platform: &str,
+    platform_game_id: Option<&str>,
+    cache_conn: &rusqlite::Connection,
+) -> Option<SteamIdResolution> {
+    if platform.to_lowercase() == "steam" {
+        if let Some(id) = platform_game_id {
+            return Some(SteamIdResolution {
+                app_id: id.to_string(),
+                confidence: ImportConfidence::High,
+            });
         }
     }
-    None
-}
 
-/// Tenta localizar um Steam App ID em qualquer valor de `external_links`, não apenas na chave "steam".
-///
-/// Cobre o caso em que a RAWG não lista Steam como "store" própria, mas outro campo (ex: `website`) já é a página da Steam.
-pub(crate) fn find_steam_id_in_links(links: &HashMap<String, String>) -> Option<String> {
-    links
-        .values()
-        .find_map(|url| extract_steam_id_from_url(url))
+    let cache_key = format!("resolve_{}", normalize_for_matching(name));
+    if cache::get_cached_api_data(cache_conn, "steam_resolve", &cache_key)
+        .is_some_and(|v| v == NOT_FOUND_MARKER)
+    {
+        return None;
+    }
+
+    let candidates = steam_api::search_app_by_name(name).await.ok()?;
+    let target = normalize_for_matching(name);
+
+    // 1. Match exato de nome normalizado → confiança alta
+    let resolution = candidates
+        .iter()
+        .find(|item| normalize_for_matching(&item.name) == target)
+        .map(|item| SteamIdResolution {
+            app_id: item.id.to_string(),
+            confidence: ImportConfidence::High,
+        })
+        // 2. Nome sem sufixo de edição, contra candidatos também sem sufixo
+        .or_else(|| {
+            let stripped_target = normalize_for_matching(&strip_edition_suffix(name));
+            candidates
+                .iter()
+                .find(|item| {
+                    normalize_for_matching(&strip_edition_suffix(&item.name)) == stripped_target
+                })
+                .map(|item| SteamIdResolution {
+                    app_id: item.id.to_string(),
+                    confidence: ImportConfidence::Medium,
+                })
+        })
+        // 3. Sem match exato: pega o primeiro candidato que não pareça DLC/edição/trilha sonora.
+        // Evita cair numa correlação claramente errada quando o nome divergir entre plataformas (subtítulo, edição regional etc.)
+        .or_else(|| {
+            candidates
+                .iter()
+                .find(|item| !is_likely_non_base_game(&item.name))
+                .map(|item| SteamIdResolution {
+                    app_id: item.id.to_string(),
+                    confidence: ImportConfidence::Low,
+                })
+        });
+
+    if resolution.is_none() {
+        let _ =
+            cache::save_cached_api_data(cache_conn, "steam_resolve", &cache_key, NOT_FOUND_MARKER);
+    }
+
+    resolution
 }
 
 // === ENRIQUECIMENTO COM CACHE ===

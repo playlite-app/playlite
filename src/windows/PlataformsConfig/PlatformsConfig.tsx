@@ -46,7 +46,7 @@ type SourceProvider =
 
 type IconComponent = ComponentType<{ size?: number; className?: string }>;
 
-export default function PlataformsConfig({
+export default function PlatformsConfig({
   isOpen,
   onClose,
   onLibraryUpdate,
@@ -55,7 +55,7 @@ export default function PlataformsConfig({
   onClose: () => void;
   onLibraryUpdate?: () => void;
 }>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [activeStore, setActiveStore] = useState<SourceProvider>('steam');
   const { progress } = useImportProgress();
 

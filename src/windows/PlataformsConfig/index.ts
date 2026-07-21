@@ -1,5 +1,5 @@
 // Main component
-export { default as PlataformsConfig } from './PlataformsConfig.tsx';
+export { default as PlataformsConfig } from './PlatformsConfig.tsx';
 
 // Store-specific settings components
 export { AmazonGamesSettings } from './AmazonGamesSettings';

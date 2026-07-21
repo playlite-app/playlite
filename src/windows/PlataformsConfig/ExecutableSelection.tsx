@@ -34,7 +34,7 @@ export function ExecutableSelection({
   onClose,
   discovery,
 }: Readonly<ExecutableSelectionProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { isSaving, handleSelect } = useExecutableSelection(discovery, onClose);
 
   const sortedExecutables = useMemo(

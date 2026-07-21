@@ -8,7 +8,7 @@ import { platformsService } from '@/services/plataformsService';
  * Detecção automática via %LOCALAPPDATA%\Ubisoft Game Launcher.
  */
 export function useUbisoftConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const { isImporting: isImportingUbisoft, run: importUbisoftGames } =

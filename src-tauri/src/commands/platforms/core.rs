@@ -2,8 +2,6 @@
 //!
 //! Fornece comandos para salvar dados dos jogos nos bancos de dados.
 
-// === Estruturas de Dados ===
-
 use crate::constants;
 use crate::database::AppState;
 use crate::errors::AppError;
@@ -13,6 +11,8 @@ use chrono::{TimeZone, Utc};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+// === Estruturas de Dados ===
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ScanResult {
@@ -29,6 +29,15 @@ pub struct ScanGameInput {
     pub base_path: String,
 }
 
+/// Dados mínimos de um jogo recém-inserido, usados para disparar enriquecimento automático logo após a importação.
+#[derive(Debug, Clone)]
+pub struct NewlyImportedGame {
+    pub game_id: String,
+    pub name: String,
+    pub platform: String,
+    pub platform_game_id: String,
+}
+
 // === Funções Genéricas de Persistência ===
 
 /// Persiste uma lista de jogos de uma fonte externa (como Steam) no banco de dados.
@@ -37,7 +46,7 @@ pub struct ScanGameInput {
 pub(crate) async fn persist_source_games(
     state: &AppState,
     games: Vec<crate::sources::providers::SourceGame>,
-) -> Result<(u32, u32), AppError> {
+) -> Result<(u32, u32, Vec<NewlyImportedGame>), AppError> {
     let mut conn = state.games_db.lock().map_err(|_| AppError::MutexError)?;
 
     // Inicia uma transação única para todo o lote
@@ -47,6 +56,7 @@ pub(crate) async fn persist_source_games(
 
     let mut inserted = 0;
     let mut updated = 0;
+    let mut newly_imported = Vec::new();
     let now = Utc::now().to_rfc3339();
 
     for game in games {
@@ -71,6 +81,7 @@ pub(crate) async fn persist_source_games(
 
         if !exists {
             let new_id = Uuid::new_v4().to_string();
+            let display_name = game.name.clone().unwrap_or_else(|| "Unknown".to_string());
 
             // Define uma capa padrão da Steam se for essa a plataforma
             let cover_url = if game.platform == "Steam" {
@@ -105,6 +116,13 @@ pub(crate) async fn persist_source_games(
             )
             .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
+            newly_imported.push(NewlyImportedGame {
+                game_id: new_id,
+                name: display_name,
+                platform: game.platform.clone(),
+                platform_game_id: game.platform_game_id.clone(),
+            });
+
             inserted += 1;
         } else {
             tx.execute(
@@ -135,5 +153,5 @@ pub(crate) async fn persist_source_games(
     tx.commit()
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
-    Ok((inserted, updated))
+    Ok((inserted, updated, newly_imported))
 }

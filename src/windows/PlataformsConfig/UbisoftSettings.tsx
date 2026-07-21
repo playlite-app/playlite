@@ -22,7 +22,7 @@ export function UbisoftSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<UbisoftSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions } = useUbisoftConfig(onLibraryUpdate);
 
   return (

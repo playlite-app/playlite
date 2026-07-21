@@ -22,7 +22,7 @@ interface GameDiscoveryCardProps {
 export function GameDiscoveryCard({
   discovery,
 }: Readonly<GameDiscoveryCardProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [showModal, setShowModal] = useState(false);
   const bestExe = getBestExecutable(discovery);
 

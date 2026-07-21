@@ -21,14 +21,14 @@
 
 use crate::errors::AppError;
 use crate::sources::providers::{GameSource, SourceGame};
+use crate::utils::text::{is_likely_non_base_game, strip_trademark_symbols};
 use async_trait::async_trait;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 pub struct UbisoftSource {
     pub include_library_cache: bool,
-    /// Wine prefix utilizado no Linux para localizar o diretório de dados do Ubisoft Game Launcher.
-    /// Ignorado no Windows.
+    /// Wine prefix utilizado no Linux para localizar o diretório de dados do Ubisoft Game Launcher. Ignorado no Windows.
     #[allow(dead_code)]
     pub wine_prefix: Option<PathBuf>,
 }
@@ -163,7 +163,7 @@ impl UbisoftSource {
                 raw_name
             };
 
-            if is_likely_dlc(&n) {
+            if n.len() <= 2 || is_likely_non_base_game(&n) {
                 return;
             }
 
@@ -284,15 +284,6 @@ impl UbisoftSource {
     }
 }
 
-/// Remove símbolos de marca registrada do nome para exibição limpa.
-fn strip_trademark_symbols(s: &str) -> String {
-    s.chars()
-        .filter(|&c| c != '™' && c != '®' && c != '©')
-        .collect::<String>()
-        .trim()
-        .to_string()
-}
-
 /// Remove aspas simples, duplas e espaços ao redor do valor de um campo YAML.
 fn parse_yaml_string_value(s: &str) -> String {
     let trimmed = s.trim().trim_end_matches('\r').trim();
@@ -331,39 +322,4 @@ impl GameSource for UbisoftSource {
 
         Ok(games)
     }
-}
-
-/// Detecta se uma entrada é provavelmente um DLC ou add-on e não um jogo base.
-///
-/// Mantém apenas keywords genéricos que não causam falsos positivos em títulos legítimos de outros publishers.
-fn is_likely_dlc(name: &str) -> bool {
-    let lower = name.to_lowercase();
-
-    // Entradas muito curtas (artefatos de parsing binário)
-    if name.len() <= 2 {
-        return true;
-    }
-
-    // Keywords genéricos que identificam conteúdo extra ou demos sem ambiguidade.
-    let dlc_keywords = [
-        "season pass",
-        " dlc",
-        "demo",
-        "add-on",
-        "addon",
-        "expansion",
-        "pre-order",
-        "preorder",
-        "pre order",
-        "starter pack",
-        " pack",
-    ];
-
-    for kw in &dlc_keywords {
-        if lower.contains(kw) {
-            return true;
-        }
-    }
-
-    false
 }

@@ -29,7 +29,7 @@ export function LegacySettings({
   onLibraryUpdate,
   progress,
 }: Readonly<LegacySettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions } = useLegacyConfig(onLibraryUpdate);
 
   const [appStatePath, setAppStatePath] = useState('');

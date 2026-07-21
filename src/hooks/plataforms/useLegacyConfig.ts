@@ -9,7 +9,7 @@ import { platformsService } from '@/services/plataformsService';
  * usado quando a detecção automática (inclusive via Wine, no Linux) falha.
  */
 export function useLegacyConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const { isImporting: isImportingLegacy, run: importLegacyGames } =

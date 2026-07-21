@@ -14,3 +14,4 @@ pub mod oauth;
 pub mod series;
 pub mod status_logic;
 pub mod tag_utils;
+pub mod text;

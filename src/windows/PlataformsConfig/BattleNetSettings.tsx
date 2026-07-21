@@ -22,7 +22,7 @@ export function BattleNetSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<BattleNetSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions } = useBattleNetConfig(onLibraryUpdate);
 
   return (

@@ -25,7 +25,7 @@ pub mod steam;
 pub mod ubisoft;
 // === REEXPORTS ===
 
-// Mantêm o caminho `commands::plataforms::X` estável para quem consome (lib.rs, frontend via invoke, etc.).
+// Mantêm o caminho `commands::platforms::X` estável para quem consome (lib.rs, frontend via invoke, etc.).
 pub use battle_net::import_battle_net_games;
 pub use ea::import_ea_games;
 pub use epic::import_epic_games;

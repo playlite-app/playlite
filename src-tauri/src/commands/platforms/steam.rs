@@ -3,7 +3,7 @@
 //! Obtém jogos de múltiplas fontes: instalados via arquivos VDF locais do Steam, não instalados
 //! via librarycache do Steam e usa como fallback a API para jogos não encontrados localmente.
 
-use crate::commands::plataforms::core::persist_source_games;
+use crate::commands::platforms::core::persist_source_games;
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::sources::steam;
@@ -35,7 +35,7 @@ pub async fn import_steam_library(
     }
 
     // 3. Persiste usando a função genérica otimizada
-    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let (inserted, updated, _newly_imported) = persist_source_games(&state, games).await?;
     let message = format!("Steam: {} adicionados, {} atualizados", inserted, updated);
     info!("{}", message);
 

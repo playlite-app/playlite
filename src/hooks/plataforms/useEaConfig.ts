@@ -9,7 +9,7 @@ import { platformsService } from '@/services/plataformsService';
  * A detecção depende inteiramente da pasta de instalação configurada pelo usuário.
  */
 export function useEaConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const { isImporting: isImportingEa, run: importEaGames } =

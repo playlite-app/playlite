@@ -9,7 +9,7 @@ import { platformsService } from '@/services/plataformsService';
  * A detecção é automática (via manifests), não há credenciais a configurar.
  */
 export function useEpicConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);

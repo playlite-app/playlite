@@ -9,7 +9,7 @@ import { platformsService } from '@/services/plataformsService';
  * não há OAuth nem caminho manual configurável — Windows apenas.
  */
 export function useBattleNetConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const { isImporting: isImportingBattleNet, run: importBattleNetGames } =

@@ -12,7 +12,7 @@ const SAVED_BADGE_DURATION_MS = 3000;
  * localStorage (mesmo padrão do `steamRoot`).
  */
 export function useWineConfig() {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
 
   const [winePrefix, setWinePrefix] = useState<string>(
     () => localStorage.getItem(WINE_PREFIX_KEY) || ''

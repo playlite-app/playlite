@@ -2,7 +2,7 @@
 //!
 //! Retorna uma lista de descobertas encontradas.
 
-use crate::commands::plataforms::core::{persist_source_games, ScanGameInput, ScanResult};
+use crate::commands::platforms::core::{persist_source_games, ScanGameInput, ScanResult};
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::sources::scanner::scan_folder;
@@ -68,7 +68,7 @@ pub async fn add_game_from_scan(
         last_played: None,
     };
 
-    let (inserted, _) = persist_source_games(&state, vec![game]).await?;
+    let (inserted, _, _) = persist_source_games(&state, vec![game]).await?;
 
     if inserted == 0 {
         return Err(AppError::ValidationError(
@@ -104,7 +104,7 @@ pub async fn add_games_from_scan(
         })
         .collect();
 
-    let (inserted, updated) = persist_source_games(&state, source_games).await?;
+    let (inserted, updated, _newly_imported) = persist_source_games(&state, source_games).await?;
     let _ = app.emit("library_updated", ());
 
     Ok(format!("{} adicionados, {} atualizados", inserted, updated))

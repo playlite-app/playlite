@@ -24,7 +24,7 @@ export function EpicGamesSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<EpicGamesSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions, isAuthenticated } =
     useEpicConfig(onLibraryUpdate);
 

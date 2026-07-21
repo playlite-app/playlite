@@ -1,6 +1,6 @@
 //! Heroic - Importa jogos instalados do Heroic Games Launcher
 
-use crate::commands::plataforms::core::persist_source_games;
+use crate::commands::platforms::core::persist_source_games;
 use crate::database::AppState;
 use crate::errors::AppError;
 use tauri::{AppHandle, Emitter, State};
@@ -18,7 +18,7 @@ pub async fn import_heroic_games(
         .map(std::path::PathBuf::from);
 
     let games = HeroicSource::import_installed(config_path).await?;
-    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let (inserted, updated, _newly_imported) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 
     Ok(format!(

@@ -17,7 +17,7 @@ export function useExecutableSelection(
   discovery: GameDiscovery,
   onSuccess: () => void
 ) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSelect = async (executable: ExecutableCandidate) => {

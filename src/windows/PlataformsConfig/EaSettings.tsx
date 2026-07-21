@@ -28,7 +28,7 @@ export function EaSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<EaSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [eaInstallDir, setEaInstallDir] = useState(
     localStorage.getItem('ea_install_dir') || ''
   );

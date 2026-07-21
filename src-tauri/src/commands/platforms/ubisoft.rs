@@ -6,7 +6,7 @@
 //! `wine_prefix` — (Linux) caminho do Wine prefix onde o Ubisoft Game Launcher está instalado.
 //! No Windows o parâmetro é ignorado.
 
-use crate::commands::plataforms::core::persist_source_games;
+use crate::commands::platforms::core::persist_source_games;
 use crate::database::AppState;
 use crate::errors::AppError;
 use tauri::{AppHandle, Emitter, State};
@@ -31,8 +31,16 @@ pub async fn import_ubisoft_games(
         return Ok("Nenhum jogo Ubisoft encontrado.".to_string());
     }
 
-    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let (inserted, updated, newly_imported) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
+
+    if !newly_imported.is_empty() {
+        let app_clone = app.clone();
+        tauri::async_runtime::spawn(async move {
+            crate::commands::metadata::enrichment::enrich_newly_imported(app_clone, newly_imported)
+                .await;
+        });
+    }
 
     Ok(format!(
         "Ubisoft: {} adicionados, {} atualizados",

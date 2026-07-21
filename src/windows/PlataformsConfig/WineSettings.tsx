@@ -14,7 +14,7 @@ import {
 } from './components';
 
 export function WineSettings() {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { winePrefix, setWinePrefix, saved, actions } = useWineConfig();
 
   return (

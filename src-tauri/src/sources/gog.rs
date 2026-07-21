@@ -13,6 +13,7 @@ use crate::utils::oauth::config::{
 };
 use crate::utils::oauth::core::{generate_state, AuthCallbackResult};
 use crate::utils::oauth::token_store::save_oauth_token;
+use crate::utils::text::is_likely_non_base_game;
 use async_trait::async_trait;
 use serde::Deserialize;
 use std::fs;
@@ -20,7 +21,6 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::time::Duration;
 use tauri::{AppHandle, WebviewUrl, WebviewWindowBuilder};
-
 // === STRUCTS ===
 
 pub struct GogSource {
@@ -68,7 +68,7 @@ impl GogSource {
 
         let games = products
             .into_iter()
-            .filter(|p| !is_goodies_pack(&p.title))
+            .filter(|p| !is_likely_non_base_game(&p.title))
             .map(|p| SourceGame {
                 platform: "GOG".to_string(),
                 platform_game_id: p.id.to_string(),
@@ -264,10 +264,4 @@ pub fn detect_installed_games(games: &mut [SourceGame], gog_games_dir: &Path) {
             game.install_path = Some(path.to_string_lossy().to_string());
         }
     }
-}
-
-/// Filtra pacotes de bônus/goodies, que a GOG lista como produtos próprios na loja mas não são jogos jogáveis (soundtracks, wallpapers, artbooks digitais).
-fn is_goodies_pack(title: &str) -> bool {
-    let lower = title.to_lowercase();
-    lower.contains("goodie") // cobre "goodie" e "goodies"
 }

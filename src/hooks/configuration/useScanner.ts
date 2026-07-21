@@ -15,7 +15,7 @@ import { toast } from '@/utils/toast';
  * @returns Estado e funções para escanear a pasta de jogos
  */
 export function useScanner() {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string>('');

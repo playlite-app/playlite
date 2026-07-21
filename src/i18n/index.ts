@@ -14,7 +14,7 @@ export const NAMESPACES = [
   'trending',
   'playlist',
   'game_detail',
-  'plataforms',
+  'platforms',
   'subscription',
   'errors',
 ] as const;

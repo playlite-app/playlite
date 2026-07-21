@@ -20,7 +20,7 @@ const STEAM_ROOT_KEY = 'steam_root';
  * etc.) estava aberta.
  */
 export function useSteamConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const [steamConfig, setSteamConfig] = useState({

@@ -9,7 +9,7 @@ import { platformsService } from '@/services/plataformsService';
  * automática do diretório de configuração do Heroic falha).
  */
 export function useHeroicConfig(onLibraryUpdate?: () => void) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
 
   const { isImporting: isImportingHeroic, run: importHeroicGames } =

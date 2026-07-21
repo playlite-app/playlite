@@ -30,7 +30,7 @@ export function HeroicSettings({
   onLibraryUpdate,
   progress,
 }: Readonly<HeroicSettingsProps>) {
-  const { t } = useTranslation('plataforms');
+  const { t } = useTranslation('platforms');
   const { loading, status, actions } = useHeroicConfig(onLibraryUpdate);
 
   const [configPath, setConfigPath] = useState('');

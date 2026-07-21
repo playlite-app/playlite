@@ -13,8 +13,8 @@ pub(crate) const GEMINI_API_URL: &str =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 pub const PCGW_API_BASE: &str = "https://www.pcgamingwiki.com/w/api.php"; // Base da MediaWiki Action API do PCGamingWiki.
 
-// === RAWG METADATA ===
-pub const RAWG_NOT_FOUND_MARKER: &str = "__RAWG_NOT_FOUND__";
+// === METADATA ===
+pub const NOT_FOUND_MARKER: &str = "__NOT_FOUND__";
 
 // === CAMINHOS DE IMAGENS DA STEAM ===
 pub const STEAM_HEADER_IMAGE_PATH: &str = "steam/apps/{}/header.jpg";
@@ -90,6 +90,7 @@ pub const STARTUP_DELAY_SECS: u64 = 5;
 pub const BACKGROUND_TASK_INTERVAL_SECS: u64 = 2;
 
 // === TTL DE CACHE (Time To Live em dias) ===
+pub const CACHE_STEAM_RESOLVE_TTL_DAYS: i64 = 90;
 pub const CACHE_RAWG_GAME_TTL_DAYS: i64 = 30;
 pub const CACHE_RAWG_LIST_TTL_DAYS: i64 = 1; // Trending/Upcoming/Giveaways
 pub const CACHE_GAMEBRAIN_ID_TTL_DAYS: i64 = 30;

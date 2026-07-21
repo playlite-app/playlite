@@ -1,6 +1,6 @@
 //! Amazon Games - Login (registro de dispositivo) e importação de biblioteca completa
 
-use crate::commands::plataforms::core::persist_source_games;
+use crate::commands::platforms::core::persist_source_games;
 use crate::database::AppState;
 use crate::errors::AppError;
 use crate::sources::amazon::AmazonSource;
@@ -47,7 +47,7 @@ pub async fn import_amazon_games(
         return Ok("Nenhum jogo Amazon encontrado.".to_string());
     }
 
-    let (inserted, updated) = persist_source_games(&state, games).await?;
+    let (inserted, updated, _newly_imported) = persist_source_games(&state, games).await?;
     let _ = app.emit("library_updated", ());
 
     Ok(format!(
