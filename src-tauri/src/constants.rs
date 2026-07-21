@@ -5,6 +5,7 @@ pub const STEAM_CDN_URL: &str = "https://cdn.cloudflare.steamstatic.com";
 pub const STEAM_CDN_AKAMAI_URL: &str = "https://cdn.akamai.steamstatic.com";
 pub const STEAM_STORE_URL: &str = "https://store.steampowered.com";
 pub const STEAM_STORE_API_URL: &str = "https://store.steampowered.com/api/appdetails";
+pub const STEAM_STORE_SEARCH_URL: &str = "https://store.steampowered.com/api/storesearch/";
 pub(crate) const REVIEW_API_URL: &str = "https://store.steampowered.com/appreviews";
 pub(crate) const STEAMSPY_API_URL: &str = "https://steamspy.com/api.php";
 pub const ITAD_API_URL: &str = "https://api.isthereanydeal.com";

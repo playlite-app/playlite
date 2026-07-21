@@ -3,7 +3,9 @@
 //! Unifica funcionalidades da API de Usuário (autenticada) para obter conquistas
 //! e da API da Loja (pública) para enriquecer metadados (reviews, conteúdo adulto).
 
-use crate::constants::{REVIEW_API_URL, STEAM_STORE_API_URL, STEAM_STORE_TIMEOUT_SECS};
+use crate::constants::{
+    REVIEW_API_URL, STEAM_STORE_API_URL, STEAM_STORE_SEARCH_URL, STEAM_STORE_TIMEOUT_SECS,
+};
 use crate::utils::http_client::HTTP_CLIENT;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -188,6 +190,64 @@ pub struct SteamReviewSummary {
     pub total_positive: u32,
     pub total_negative: u32,
     pub total_reviews: u32,
+}
+
+/// Resultado mínimo de busca por nome na Store Search pública da Steam.
+///
+/// Contém apenas os campos necessários para resolver o `app_id` de um jogo
+/// a partir do nome — os demais campos do endpoint (preço, plataformas,
+/// metascore) já são obtidos de outras fontes integradas ao Playlite
+/// (ITAD, PCGamingWiki, RAWG) e por isso são intencionalmente descartados.
+#[derive(Debug, Deserialize)]
+pub struct SteamSearchItem {
+    pub id: u32,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub item_type: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct SteamSearchResponse {
+    items: Vec<SteamSearchItem>,
+}
+
+/// Busca jogos na Steam Store por nome (endpoint público, sem API key).
+///
+/// Usado para resolver o `app_id` de jogos importados de outras plataformas
+/// (Epic, GOG etc.), quando o `app_id` não é conhecido diretamente.
+///
+/// Filtra automaticamente itens do tipo `"sub"` (pacotes/bundles), que não
+/// são jogos individuais e não servem como alvo de correlação. Itens do tipo
+/// `"app"` ainda podem incluir DLCs, trilhas sonoras e edições especiais —
+/// a desambiguação desses casos é responsabilidade de quem chama esta função.
+pub async fn search_app_by_name(name: &str) -> Result<Vec<SteamSearchItem>, String> {
+    let url = format!(
+        "{}?term={}&l=english&",
+        STEAM_STORE_SEARCH_URL,
+        urlencoding::encode(name)
+    );
+
+    let res = HTTP_CLIENT
+        .get(&url)
+        .timeout(Duration::from_secs(STEAM_STORE_TIMEOUT_SECS))
+        .send()
+        .await
+        .map_err(|e| format!("Erro requisição Steam Store Search: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("Steam Store Search API Error: {}", res.status()));
+    }
+
+    let data: SteamSearchResponse = res
+        .json()
+        .await
+        .map_err(|e| format!("Erro ao parsear resposta Steam Store Search: {}", e))?;
+
+    Ok(data
+        .items
+        .into_iter()
+        .filter(|item| item.item_type != "sub")
+        .collect())
 }
 
 /// Busca detalhes da loja (Conteúdo adulto, descrição, imagens).
