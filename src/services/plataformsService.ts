@@ -189,4 +189,19 @@ export const platformsService = {
   importAmazonGames: async (): Promise<string> => {
     return await invoke<string>('import_amazon_games');
   },
+
+  /**
+   * Importa jogos instalados via Xbox App / Microsoft Store (Gaming Services).
+   * Detecta automaticamente em qualquer drive com um marcador `.GamingRoot`
+   * na raiz. Windows apenas.
+   *
+   * Jogos instalados via Game Pass permanecem na biblioteca mesmo depois de saírem
+   * do catálogo ou a assinatura ser cancelada — só a remoção manual do jogo
+   * instalado tira ele da biblioteca.
+   *
+   * @throws Se nenhum jogo for detectado
+   */
+  importXboxGames: async (): Promise<string> => {
+    return await invoke<string>('import_xbox_games');
+  },
 };

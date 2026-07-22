@@ -13,6 +13,7 @@ import {
   Legacy,
   Steam,
   Ubisoft,
+  Xbox,
 } from '@/components/icons/logos';
 import { WindowBase } from '@/components/wrappers/WindowBase';
 import { useImportProgress } from '@/hooks';
@@ -29,6 +30,7 @@ import {
   SteamSettings,
   UbisoftSettings,
   WineSettings,
+  XboxSettings,
 } from '@/windows';
 
 type SourceProvider =
@@ -41,6 +43,7 @@ type SourceProvider =
   | 'battlenet'
   | 'ea'
   | 'amazon'
+  | 'xbox'
   | 'local'
   | 'wine';
 
@@ -115,6 +118,12 @@ export default function PlatformsConfig({
       connected: true,
     },
     {
+      id: 'xbox',
+      name: t('config_store_xbox'),
+      Icon: Xbox,
+      connected: true,
+    },
+    {
       id: 'local',
       name: t('config_store_local'),
       Icon: Settings2,
@@ -181,6 +190,10 @@ export default function PlatformsConfig({
             onLibraryUpdate={onLibraryUpdate}
             progress={progress}
           />
+        );
+      case 'xbox':
+        return (
+          <XboxSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
         );
       case 'local':
         return <LocalScannerSettings />;

@@ -16,6 +16,7 @@
 //! - `scanner`: Escaneia pastas em busca de jogos instalados localmente.
 //! - `steam`: Importa jogos da Steam.
 //! - `ubisoft`: Importa jogos da Ubisoft Connect, conectando-se aos arquivos locais para obter a lista completa de jogos instalados.
+//! - `xbox`: Importa jogos da Microsoft Store / Xbox App (Gaming Services), lendo os arquivos de configuração para identificar jogos instalados via essa plataforma.
 
 pub mod amazon;
 pub mod battle_net;
@@ -28,3 +29,4 @@ pub mod providers;
 pub mod scanner;
 pub mod steam;
 pub mod ubisoft;
+pub mod xbox;

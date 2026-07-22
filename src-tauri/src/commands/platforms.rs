@@ -23,6 +23,8 @@ pub mod legacy;
 pub mod scanner;
 pub mod steam;
 pub mod ubisoft;
+pub mod xbox;
+
 // === REEXPORTS ===
 
 // Mantêm o caminho `commands::platforms::X` estável para quem consome (lib.rs, frontend via invoke, etc.).

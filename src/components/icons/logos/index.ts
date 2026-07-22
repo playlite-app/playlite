@@ -9,3 +9,4 @@ export { Kofi } from './Kofi';
 export { Legacy } from './Legacy';
 export { Steam } from './Steam';
 export { Ubisoft } from './Ubisoft';
+export { Xbox } from './Xbox';

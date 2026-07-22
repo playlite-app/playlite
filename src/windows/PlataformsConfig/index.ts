@@ -13,6 +13,7 @@ export { LocalScannerSettings } from './LocalScannerSettings';
 export { SteamSettings } from './SteamSettings';
 export { UbisoftSettings } from './UbisoftSettings';
 export { WineSettings } from './WineSettings';
+export { XboxSettings } from './XboxSettings';
 
 // Scanner components
 export { DiscoveriesList } from './DiscoveriesList';
