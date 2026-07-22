@@ -3,7 +3,7 @@
 //! Baseado no nome do jogo, tenta identificar a série a que ele pertence.
 //! Utiliza uma lista conhecida de séries e heurísticas simples para identificar a série correta.
 
-use crate::utils::text::normalize_for_matching;
+use crate::utils::text::{contains_word_boundary, normalize_for_matching};
 use std::sync::OnceLock;
 
 /// Carrega e cacheia a lista de séries do JSON
@@ -27,7 +27,7 @@ pub fn infer_series(game_name: &str) -> Option<String> {
     // 1. Busca na lista conhecida
     for series in known_list {
         let normalized_series = normalize_for_matching(&series);
-        if normalized_target.contains(&normalized_series) {
+        if contains_word_boundary(&normalized_target, &normalized_series) {
             return Some(series.clone());
         }
     }
