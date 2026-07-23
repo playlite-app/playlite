@@ -24,4 +24,7 @@ export const DETECTED_PATHS = {
     windows:
       'C:\\Users\\<user>\\AppData\\Local\\Amazon Games\\Data\\Games\\Sql\\GameInstallInfo.sqlite',
   },
+  battleNet: {
+    windows: 'C:\\ProgramData\\Battle.net\\Agent',
+  },
 } as const;

@@ -1,10 +1,11 @@
-import { RefreshCw } from 'lucide-react';
+import { Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { StatusBadge } from '@/components/common';
+import { SettingsRow, StatusBadge } from '@/components/common';
 import { ImportProgressPayload, useUbisoftConfig } from '@/hooks/plataforms';
 
 import {
+  DetectedPathsBox,
   ImportedItemsBox,
   ImportProgressIndicator,
   PlatformActionButton,
@@ -38,6 +39,24 @@ export function UbisoftSettings({
       />
 
       <div className="space-y-4">
+        {/* Info sobre Detecção Automática (instalados) */}
+        <SettingsRow
+          icon={Info}
+          title={t('ubisoft_auto_detection_title')}
+          description={t('ubisoft_auto_detection_description')}
+        >
+          <DetectedPathsBox
+            intro={t('ubisoft_checked_paths')}
+            paths={[
+              {
+                label: t('ubisoft_windows_label'),
+                path: DETECTED_PATHS.ubisoft.windows,
+              },
+            ]}
+            note={t('ubisoft_linux_note')}
+          />
+        </SettingsRow>
+
         {/* Info sobre o que será importado */}
         <ImportedItemsBox
           title={t('ubisoft_imported_title')}
@@ -50,7 +69,6 @@ export function UbisoftSettings({
           note={
             <>
               {t('ubisoft_import_note_prefix')}{' '}
-              <code>{DETECTED_PATHS.ubisoft.windows}</code>
               {t('ubisoft_import_note_suffix')}
             </>
           }

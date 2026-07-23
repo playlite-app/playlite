@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useNativePathPicker } from '@/hooks';
+import { useLocalStoragePlatformPath, useNativePathPicker } from '@/hooks';
 import { toast } from '@/utils/toast';
 
 const WINE_PREFIX_KEY = 'wine_prefix';
@@ -14,15 +14,9 @@ const SAVED_BADGE_DURATION_MS = 3000;
 export function useWineConfig() {
   const { t } = useTranslation('platforms');
 
-  const [winePrefix, setWinePrefix] = useState<string>(
-    () => localStorage.getItem(WINE_PREFIX_KEY) || ''
-  );
+  const [winePrefix, setWinePrefix] =
+    useLocalStoragePlatformPath(WINE_PREFIX_KEY);
   const [saved, setSaved] = useState(false);
-
-  // Persiste no localStorage sempre que mudar
-  useEffect(() => {
-    localStorage.setItem(WINE_PREFIX_KEY, winePrefix);
-  }, [winePrefix]);
 
   const { pick } = useNativePathPicker({
     directory: true,
@@ -44,18 +38,16 @@ export function useWineConfig() {
    * Salva o Wine prefix manualmente e exibe feedback temporário.
    */
   const saveWinePrefix = useCallback(() => {
-    localStorage.setItem(WINE_PREFIX_KEY, winePrefix);
     setSaved(true);
     toast.success(t('wine_config_saved'));
     setTimeout(() => setSaved(false), SAVED_BADGE_DURATION_MS);
-  }, [t, winePrefix]);
+  }, [t]);
 
   /**
    * Limpa o Wine prefix salvo.
    */
   const clearWinePrefix = useCallback(() => {
     setWinePrefix('');
-    localStorage.removeItem(WINE_PREFIX_KEY);
     toast.info(t('wine_config_removed'));
   }, [t]);
 

@@ -7,6 +7,7 @@ export { useGogConfig } from './useGogConfig';
 export { useHeroicConfig } from './useHeroicConfig';
 export { useImportProgress } from './useImportProgress';
 export { useLegacyConfig } from './useLegacyConfig';
+export { useLocalStoragePlatformPath } from './useLocalStoragePlatformPath';
 export { useNativePathPicker } from './useNativePathPicker';
 export { usePlatformImportAction } from './usePlatformImportAction';
 export { usePlatformStatus } from './usePlatformStatus';

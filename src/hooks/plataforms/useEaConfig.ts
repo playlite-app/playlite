@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
+import {
+  useLocalStoragePlatformPath,
+  usePlatformImportAction,
+  usePlatformStatus,
+} from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 
 /**
@@ -11,6 +15,8 @@ import { platformsService } from '@/services/plataformsService';
 export function useEaConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
+  const [installDir, setInstallDir] =
+    useLocalStoragePlatformPath('ea_install_dir');
 
   const { isImporting: isImportingEa, run: importEaGames } =
     usePlatformImportAction(() => platformsService.importEaGames(), {
@@ -20,6 +26,8 @@ export function useEaConfig(onLibraryUpdate?: () => void) {
     });
 
   return {
+    installDir,
+    setInstallDir,
     loading: {
       importingEa: isImportingEa,
     },

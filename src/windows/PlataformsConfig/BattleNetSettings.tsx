@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
 import { ImportProgressPayload, useBattleNetConfig } from '@/hooks/plataforms';
+import { DETECTED_PATHS } from '@/windows/PlataformsConfig/constants';
 
 import {
+  DetectedPathsBox,
   ImportedItemsBox,
   ImportProgressIndicator,
-  InfoNoteBox,
   PlatformActionButton,
   PlatformActionsFooter,
   PlatformHeader,
@@ -43,31 +44,16 @@ export function BattleNetSettings({
           title={t('battlenet_auto_detection_title')}
           description={t('battlenet_auto_detection_description')}
         >
-          <InfoNoteBox>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('battlenet_auto_detection_note')}
-            </p>
-            <ul className="text-muted-foreground space-y-1 text-xs">
-              <li>
-                <strong className="text-foreground/70">
-                  {t('battlenet_windows_label')}
-                </strong>{' '}
-                <code>C:\ProgramData\Battle.net\Agent</code>
-              </li>
-            </ul>
-          </InfoNoteBox>
-        </SettingsRow>
-
-        <SettingsRow
-          icon={Info}
-          title={t('battlenet_linux_title')}
-          description={t('battlenet_linux_description')}
-        >
-          <InfoNoteBox>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('battlenet_linux_note')}
-            </p>
-          </InfoNoteBox>
+          <DetectedPathsBox
+            intro={t('battlenet_auto_detection_note')}
+            paths={[
+              {
+                label: t('battlenet_windows_label'),
+                path: DETECTED_PATHS.battleNet.windows,
+              },
+            ]}
+            note={t('battlenet_linux_note')}
+          />
         </SettingsRow>
 
         <ImportedItemsBox

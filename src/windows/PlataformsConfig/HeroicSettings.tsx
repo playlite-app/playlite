@@ -1,5 +1,4 @@
-import { FolderOpen, Info, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { FolderOpen, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -31,9 +30,8 @@ export function HeroicSettings({
   progress,
 }: Readonly<HeroicSettingsProps>) {
   const { t } = useTranslation('platforms');
-  const { loading, status, actions } = useHeroicConfig(onLibraryUpdate);
-
-  const [configPath, setConfigPath] = useState('');
+  const { configPath, setConfigPath, loading, status, actions } =
+    useHeroicConfig(onLibraryUpdate);
   const { pick } = useNativePathPicker({
     directory: true,
     title: t('heroic_select_config_dir_title'),
@@ -85,7 +83,7 @@ export function HeroicSettings({
 
         {/* Diretório manual (opcional) */}
         <SettingsRow
-          icon={Info}
+          icon={FolderOpen}
           title={t('heroic_custom_dir_title')}
           description={t('heroic_custom_dir_description')}
         >

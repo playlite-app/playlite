@@ -20,7 +20,7 @@ export function ImportedItemsBox({
       <h4 className="mb-2 text-sm font-semibold">{title}</h4>
       <ul className="text-muted-foreground space-y-1 text-xs">
         {items.map((item, index) => (
-          <li key={index}>{item}</li>
+          <li key={index}> ✓ {item}</li>
         ))}
       </ul>
       {note && <p className="text-muted-foreground mt-4 text-xs">{note}</p>}

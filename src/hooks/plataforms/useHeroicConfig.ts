@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
+import {
+  useLocalStoragePlatformPath,
+  usePlatformImportAction,
+  usePlatformStatus,
+} from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 
 /**
@@ -11,6 +15,8 @@ import { platformsService } from '@/services/plataformsService';
 export function useHeroicConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
+  const [configPath, setConfigPath] =
+    useLocalStoragePlatformPath('heroic_config_path');
 
   const { isImporting: isImportingHeroic, run: importHeroicGames } =
     usePlatformImportAction(
@@ -23,6 +29,8 @@ export function useHeroicConfig(onLibraryUpdate?: () => void) {
     );
 
   return {
+    configPath,
+    setConfigPath,
     loading: { importingHeroic: isImportingHeroic },
     status,
     actions: { importHeroicGames },

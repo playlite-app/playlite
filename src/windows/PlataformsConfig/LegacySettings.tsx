@@ -1,5 +1,4 @@
 import { FolderOpen, Info, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -30,9 +29,8 @@ export function LegacySettings({
   progress,
 }: Readonly<LegacySettingsProps>) {
   const { t } = useTranslation('platforms');
-  const { loading, status, actions } = useLegacyConfig(onLibraryUpdate);
-
-  const [appStatePath, setAppStatePath] = useState('');
+  const { appStatePath, setAppStatePath, loading, status, actions } =
+    useLegacyConfig(onLibraryUpdate);
   const { pick } = useNativePathPicker({
     directory: false,
     title: t('legacy_select_app_state_title'),

@@ -8,8 +8,8 @@
 //!
 //! ## Caminhos de configuração detectados automaticamente
 //!
-//! **Linux (nativo):** `~/.config/heroic/installed.json`  
-//! **Linux (Flatpak):** `~/.var/app/com.heroicgameslauncher.hgl/config/heroic/installed.json`  
+//! **Linux (nativo):** `~/.config/heroic/installed.json`
+//! **Linux (Flatpak):** `~/.var/app/com.heroicgameslauncher.hgl/config/heroic/installed.json`
 //! **Windows:** `%APPDATA%\heroic\installed.json`
 //!
 //! ## Aviso sobre duplicatas

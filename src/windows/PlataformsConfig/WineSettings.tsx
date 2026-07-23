@@ -1,4 +1,11 @@
-import { CheckCircle2, Info, Save, Terminal, Trash2, Wine } from 'lucide-react';
+import {
+  CheckCircle2,
+  FolderOpen,
+  Info,
+  Save,
+  Trash2,
+  Wine,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow } from '@/components/common';
@@ -42,7 +49,7 @@ export function WineSettings() {
       <div className="space-y-4">
         {/* Wine Prefix */}
         <SettingsRow
-          icon={Terminal}
+          icon={FolderOpen}
           title={t('wine_prefix_title')}
           description={t('wine_prefix_description')}
         >

@@ -1,4 +1,4 @@
-import { FolderOpen, Info, LogIn, LogOut, RefreshCw } from 'lucide-react';
+import { Info, LogIn, LogOut, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -73,7 +73,7 @@ export function EpicGamesSettings({
 
         {/* Info sobre Detecção Automática (instalados) */}
         <SettingsRow
-          icon={FolderOpen}
+          icon={Info}
           title={t('epic_auto_detection_title')}
           description={t('epic_auto_detection_description')}
         >

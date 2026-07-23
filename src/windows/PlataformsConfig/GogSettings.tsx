@@ -1,5 +1,4 @@
 import { FolderOpen, LogIn, LogOut, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -28,9 +27,14 @@ export function GogSettings({
   progress,
 }: Readonly<GogSettingsProps>) {
   const { t } = useTranslation('platforms');
-  const [gogGamesDir, setGogGamesDir] = useState(
-    localStorage.getItem('gog_games_dir') || ''
-  );
+  const {
+    isAuthenticated,
+    gogGamesDir,
+    setGogGamesDir,
+    loading,
+    status,
+    actions,
+  } = useGogConfig(onLibraryUpdate);
   const { pick } = useNativePathPicker({
     directory: true,
     title: t('gog_select_games_dir_title'),
@@ -39,14 +43,8 @@ export function GogSettings({
   const handleChooseDir = async () => {
     const selected = await pick();
 
-    if (selected) {
-      setGogGamesDir(selected);
-      localStorage.setItem('gog_games_dir', selected);
-    }
+    if (selected) setGogGamesDir(selected);
   };
-
-  const { isAuthenticated, loading, status, actions } =
-    useGogConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">

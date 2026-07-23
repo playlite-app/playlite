@@ -1,4 +1,4 @@
-import { FolderOpen, LogIn, LogOut, RefreshCw } from 'lucide-react';
+import { Info, LogIn, LogOut, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -74,7 +74,7 @@ export function AmazonGamesSettings({
 
         {/* Info sobre Detecção Automática (instalados) */}
         <SettingsRow
-          icon={FolderOpen}
+          icon={Info}
           title={t('amazon_auto_detection_title')}
           description={t('amazon_auto_detection_description')}
         >

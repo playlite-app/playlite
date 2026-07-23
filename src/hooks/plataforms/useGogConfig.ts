@@ -2,7 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { parsePlatformError } from '@/errors/errorMessages';
-import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
+import {
+  useLocalStoragePlatformPath,
+  usePlatformImportAction,
+  usePlatformStatus,
+} from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 import { toast } from '@/utils/toast';
 
@@ -14,6 +18,8 @@ import { toast } from '@/utils/toast';
 export function useGogConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
+  const [gogGamesDir, setGogGamesDir] =
+    useLocalStoragePlatformPath('gog_games_dir');
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -70,6 +76,8 @@ export function useGogConfig(onLibraryUpdate?: () => void) {
 
   return {
     isAuthenticated,
+    gogGamesDir,
+    setGogGamesDir,
     loading: {
       checkingAuth,
       loggingIn: isLoggingIn,

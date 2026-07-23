@@ -1,5 +1,4 @@
 import { FolderOpen, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -29,9 +28,8 @@ export function EaSettings({
   progress,
 }: Readonly<EaSettingsProps>) {
   const { t } = useTranslation('platforms');
-  const [eaInstallDir, setEaInstallDir] = useState(
-    localStorage.getItem('ea_install_dir') || ''
-  );
+  const { installDir, setInstallDir, loading, status, actions } =
+    useEaConfig(onLibraryUpdate);
   const { pick } = useNativePathPicker({
     directory: true,
     title: t('ea_select_install_dir_title'),
@@ -40,13 +38,8 @@ export function EaSettings({
   const handleChooseDir = async () => {
     const selected = await pick();
 
-    if (selected) {
-      setEaInstallDir(selected);
-      localStorage.setItem('ea_install_dir', selected);
-    }
+    if (selected) setInstallDir(selected);
   };
-
-  const { loading, status, actions } = useEaConfig(onLibraryUpdate);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300">
@@ -68,8 +61,8 @@ export function EaSettings({
           description={t('ea_install_dir_description')}
         >
           <PathPickerField
-            value={eaInstallDir}
-            onChange={setEaInstallDir}
+            value={installDir}
+            onChange={setInstallDir}
             onBrowse={handleChooseDir}
             placeholder={t('ea_install_dir_placeholder')}
             browseLabel={t('ea_browse')}

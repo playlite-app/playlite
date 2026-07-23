@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-import { usePlatformImportAction, usePlatformStatus } from '@/hooks';
+import {
+  useLocalStoragePlatformPath,
+  usePlatformImportAction,
+  usePlatformStatus,
+} from '@/hooks';
 import { platformsService } from '@/services/plataformsService';
 
 /**
@@ -11,6 +15,9 @@ import { platformsService } from '@/services/plataformsService';
 export function useLegacyConfig(onLibraryUpdate?: () => void) {
   const { t } = useTranslation('platforms');
   const { status, setStatus } = usePlatformStatus();
+  const [appStatePath, setAppStatePath] = useLocalStoragePlatformPath(
+    'legacy_app_state_path'
+  );
 
   const { isImporting: isImportingLegacy, run: importLegacyGames } =
     usePlatformImportAction(
@@ -24,6 +31,8 @@ export function useLegacyConfig(onLibraryUpdate?: () => void) {
     );
 
   return {
+    appStatePath,
+    setAppStatePath,
     loading: { importingLegacy: isImportingLegacy },
     status,
     actions: { importLegacyGames },
