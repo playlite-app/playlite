@@ -12,6 +12,7 @@ import {
   PlatformActionButton,
   PlatformActionsFooter,
   PlatformHeader,
+  WarningBox,
 } from './components';
 
 interface BattleNetSettingsProps {
@@ -64,8 +65,13 @@ export function BattleNetSettings({
             t('battlenet_import_item_executable'),
             t('battlenet_import_item_last_played'),
           ]}
-          note={t('battlenet_import_note')}
         />
+
+        <WarningBox icon={Info} title={t('battlenet_warning_library_title')}>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {t('battlenet_import_note')}
+          </p>
+        </WarningBox>
       </div>
 
       {loading.importingBattleNet && progress && (

@@ -7,6 +7,7 @@ import {
   useGogConfig,
   useNativePathPicker,
 } from '@/hooks/plataforms';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
 import {
   ImportedItemsBox,
@@ -119,18 +120,27 @@ export function GogSettings({
         />
       )}
 
-      {isAuthenticated && (
-        <PlatformActionsFooter>
-          <PlatformActionButton
-            onClick={actions.importGogGames}
-            isLoading={loading.importingGog}
-            disabled={loading.importingGog}
-            label={t('gog_import_button')}
-            loadingLabel={t('gog_importing_short')}
-            icon={RefreshCw}
-          />
-        </PlatformActionsFooter>
-      )}
+      <PlatformActionsFooter>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={!isAuthenticated ? 'cursor-not-allowed' : undefined}
+            >
+              <PlatformActionButton
+                onClick={actions.importGogGames}
+                isLoading={loading.importingGog}
+                disabled={!isAuthenticated || loading.importingGog}
+                label={t('gog_import_button')}
+                loadingLabel={t('gog_importing_short')}
+                icon={RefreshCw}
+              />
+            </span>
+          </TooltipTrigger>
+          {!isAuthenticated && (
+            <TooltipContent>{t('gog_connect_first_tooltip')}</TooltipContent>
+          )}
+        </Tooltip>
+      </PlatformActionsFooter>
     </div>
   );
 }

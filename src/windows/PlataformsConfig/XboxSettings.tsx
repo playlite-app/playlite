@@ -11,6 +11,7 @@ import {
   PlatformActionButton,
   PlatformActionsFooter,
   PlatformHeader,
+  WarningBox,
 } from './components';
 
 interface XboxSettingsProps {
@@ -51,13 +52,6 @@ export function XboxSettings({
           </InfoNoteBox>
         </SettingsRow>
 
-        {/* Nota importante sobre jogos do Game Pass */}
-        <InfoNoteBox>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {t('xbox_gamepass_note')}
-          </p>
-        </InfoNoteBox>
-
         <ImportedItemsBox
           title={t('xbox_imported_title')}
           items={[
@@ -67,6 +61,16 @@ export function XboxSettings({
             t('xbox_import_item_store_id'),
           ]}
         />
+
+        <WarningBox icon={Info} title={t('xbox_warning_library_title')}>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {t('xbox_import_note')}
+          </p>
+        </WarningBox>
+
+        <WarningBox title={t('xbox_warning_gamepass_title')}>
+          {t('xbox_gamepass_note')}
+        </WarningBox>
       </div>
 
       {loading.importingXbox && progress && (

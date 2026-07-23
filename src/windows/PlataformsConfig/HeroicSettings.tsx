@@ -1,12 +1,8 @@
-import { FolderOpen, RefreshCw } from 'lucide-react';
+import { FolderOpen, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import {
-  ImportProgressPayload,
-  useHeroicConfig,
-  useNativePathPicker,
-} from '@/hooks/plataforms';
+import { ImportProgressPayload, useHeroicConfig, useNativePathPicker, } from '@/hooks/plataforms';
 
 import {
   DetectedPathsBox,
@@ -58,7 +54,7 @@ export function HeroicSettings({
       <div className="space-y-4">
         {/* Detecção automática */}
         <SettingsRow
-          icon={FolderOpen}
+          icon={Info}
           title={t('heroic_auto_detection_title')}
           description={t('heroic_auto_detection_description')}
         >

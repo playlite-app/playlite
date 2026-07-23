@@ -14,6 +14,8 @@ export const DETECTED_PATHS = {
   },
   ubisoft: {
     windows: '%LOCALAPPDATA%\\Ubisoft Game Launcher',
+    linux:
+      '<wine_prefix>/drive_c/users/<USER>/AppData/Local/Ubisoft Game Launcher',
   },
   legacy: {
     windows: '%APPDATA%\\Roaming\\legacy-games-launcher\\app-state.json',

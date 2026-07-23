@@ -8,6 +8,7 @@ import {
   DetectedPathsBox,
   ImportedItemsBox,
   ImportProgressIndicator,
+  InfoNoteBox,
   PlatformActionButton,
   PlatformActionsFooter,
   PlatformHeader,
@@ -52,9 +53,25 @@ export function UbisoftSettings({
                 label: t('ubisoft_windows_label'),
                 path: DETECTED_PATHS.ubisoft.windows,
               },
+              {
+                label: t('ubisoft_linux_label'),
+                path: DETECTED_PATHS.ubisoft.linux,
+              },
             ]}
-            note={t('ubisoft_linux_note')}
           />
+        </SettingsRow>
+
+        {/* Nota Wine */}
+        <SettingsRow
+          icon={Info}
+          title={t('ubisoft_wine_title')}
+          description={t('ubisoft_linux_note')}
+        >
+          <InfoNoteBox>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {t('ubisoft_wine_description')}
+            </p>
+          </InfoNoteBox>
         </SettingsRow>
 
         {/* Info sobre o que será importado */}

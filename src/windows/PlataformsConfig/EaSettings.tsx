@@ -1,4 +1,4 @@
-import { FolderOpen, RefreshCw } from 'lucide-react';
+import { FolderOpen, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
@@ -11,11 +11,11 @@ import {
 import {
   ImportedItemsBox,
   ImportProgressIndicator,
-  InfoNoteBox,
   PathPickerField,
   PlatformActionButton,
   PlatformActionsFooter,
   PlatformHeader,
+  WarningBox,
 } from './components';
 
 interface EaSettingsProps {
@@ -71,17 +71,17 @@ export function EaSettings({
           />
         </SettingsRow>
 
-        <InfoNoteBox>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {t('ea_info_note')}
-          </p>
-        </InfoNoteBox>
-
         <ImportedItemsBox
           title={t('ea_imported_title')}
           items={[t('ea_import_item_installed'), t('ea_import_item_owned')]}
           note={t('ea_import_note_details')}
         />
+
+        <WarningBox icon={Info} title={t('ea_warning_library_title')}>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {t('ea_info_note')}
+          </p>
+        </WarningBox>
       </div>
 
       {loading.importingEa && progress && (
