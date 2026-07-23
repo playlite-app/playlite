@@ -106,17 +106,9 @@ export function HeroicSettings({
 
         {/* Aviso de duplicatas */}
         <WarningBox title={t('heroic_duplicate_warning_title')}>
-          {t('heroic_duplicate_warning_prefix')}{' '}
-          <strong className="text-foreground/80">{t('heroic_and')}</strong>
-          {t('heroic_duplicate_warning_connector')}
-          {t('heroic_duplicate_warning_middle_a')}
-          {t('heroic_duplicate_warning_middle_b')}{' '}
-          <strong className="text-foreground/80">{t('heroic_twice')}</strong>
-          {t('heroic_duplicate_warning_library')}
-          {t('heroic_duplicate_warning_middle_c')}
-          <code>"Heroic"</code> <strong>{t('heroic_and')}</strong>{' '}
-          <code>"Epic Games"</code>){t('heroic_duplicate_warning_expected')}
-          {t('heroic_duplicate_warning_suffix')}
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {t('heroic_duplicate_warning_text')}
+          </p>
         </WarningBox>
       </div>
 

@@ -83,12 +83,7 @@ export function UbisoftSettings({
             t('ubisoft_import_item_name_id'),
             t('ubisoft_import_item_install_exec'),
           ]}
-          note={
-            <>
-              {t('ubisoft_import_note_prefix')}{' '}
-              {t('ubisoft_import_note_suffix')}
-            </>
-          }
+          note={t('ubisoft_import_note')}
         />
       </div>
 

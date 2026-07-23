@@ -2,11 +2,7 @@ import { FolderOpen, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import {
-  ImportProgressPayload,
-  useLegacyConfig,
-  useNativePathPicker,
-} from '@/hooks/plataforms';
+import { ImportProgressPayload, useLegacyConfig, useNativePathPicker, } from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,
@@ -64,9 +60,9 @@ export function LegacySettings({
         >
           <InfoNoteBox>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('legacy_auto_detection_note_prefix')}{' '}
-              <code className="text-primary/80">app-state.json</code>
-              {t('legacy_auto_detection_note_suffix')}
+              {t('legacy_auto_detection_note_before')}{' '}
+              <code className="text-primary/80">app-state.json</code>{' '}
+              {t('legacy_auto_detection_note_after')}
             </p>
             <ul className="text-muted-foreground space-y-1 text-xs">
               <li>
@@ -93,11 +89,11 @@ export function LegacySettings({
         >
           <InfoNoteBox>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('legacy_wine_note_prefix')}{' '}
+              {t('legacy_wine_note_before')}{' '}
               <strong className="text-foreground/70">
                 {t('legacy_wine_linux_label')}
-              </strong>
-              {t('legacy_wine_note_suffix')}
+              </strong>{' '}
+              {t('legacy_wine_note_after')}
             </p>
           </InfoNoteBox>
         </SettingsRow>

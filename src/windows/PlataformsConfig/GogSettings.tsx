@@ -2,11 +2,7 @@ import { FolderOpen, LogIn, LogOut, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import {
-  ImportProgressPayload,
-  useGogConfig,
-  useNativePathPicker,
-} from '@/hooks/plataforms';
+import { ImportProgressPayload, useGogConfig, useNativePathPicker, } from '@/hooks/plataforms';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
 import {
@@ -108,7 +104,7 @@ export function GogSettings({
 
         <ImportedItemsBox
           title={t('gog_imported_title')}
-          items={[t('gog_import_item_owned')]}
+          items={[t('gog_import_item_owned'), t('gog_import_item_installed')]}
           note={t('gog_import_note_details')}
         />
       </div>

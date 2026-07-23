@@ -101,15 +101,9 @@ export function EpicGamesSettings({
         >
           <InfoNoteBox>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              {t('epic_wine_note_prefix')}{' '}
-              <strong className="text-foreground/70">
-                {t('epic_wine_prefix_label')}
-              </strong>{' '}
-              {t('epic_wine_note_middle')}{' '}
-              <strong className="text-foreground/70">
-                {t('epic_wine_linux_label')}
-              </strong>
-              .{t('epic_wine_note_suffix')}
+              {t('epic_wine_note_before')}{' '}
+              <strong>{t('epic_wine_prefix_label')}</strong>
+              {t('epic_wine_note_after')}
             </p>
           </InfoNoteBox>
         </SettingsRow>
