@@ -24,6 +24,7 @@ pub mod ea;
 pub mod epic;
 pub mod gog;
 pub mod heroic;
+pub mod indiegala;
 pub mod legacy;
 pub mod providers;
 pub mod scanner;

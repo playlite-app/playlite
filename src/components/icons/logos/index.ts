@@ -5,6 +5,7 @@ export { Epic } from './Epic';
 export { Github } from './Github';
 export { Gog } from './Gog';
 export { Heroic } from './Heroic';
+export { Indiegala } from './Indiegala';
 export { Kofi } from './Kofi';
 export { Legacy } from './Legacy';
 export { Steam } from './Steam';

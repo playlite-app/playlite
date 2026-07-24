@@ -77,6 +77,7 @@ impl FromStr for Platform {
             "Amazon" => Ok(Platform::Amazon),
             "Heroic" => Ok(Platform::Heroic),
             "Legacy Games" => Ok(Platform::LegacyGames),
+            "Indie" => Ok(Platform::Indie),
             "Outra" => Ok(Platform::Outra),
             _ => Err(()),
         }

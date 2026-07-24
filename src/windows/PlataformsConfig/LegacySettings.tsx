@@ -2,7 +2,11 @@ import { FolderOpen, Info, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsRow, StatusBadge } from '@/components/common';
-import { ImportProgressPayload, useLegacyConfig, useNativePathPicker, } from '@/hooks/plataforms';
+import {
+  ImportProgressPayload,
+  useLegacyConfig,
+  useNativePathPicker,
+} from '@/hooks/plataforms';
 
 import {
   ImportedItemsBox,

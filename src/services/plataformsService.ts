@@ -204,4 +204,24 @@ export const platformsService = {
   importXboxGames: async (): Promise<string> => {
     return await invoke<string>('import_xbox_games');
   },
+
+  /**
+   * Importa jogos da IndieGala via IGClient. Detecção totalmente automática
+   * — sem login e sem pasta a configurar.
+   *
+   * `full=false`: só jogos instalados no momento, via installed.json
+   * (%APPDATA%\IGClient\storage\installed.json).
+   * `full=true`: biblioteca completa de posse via config.json
+   * (%APPDATA%\IGClient\config.json), cruzada com installed.json pra marcar
+   * o que está instalado e reaproveitar metadados completos desses casos.
+   *
+   * @throws Se nenhum jogo for encontrado
+   */
+  importIndiegalaGames: async (full: boolean): Promise<string> => {
+    return await invoke<string>('import_indiegala_games', {
+      full,
+      installedJsonPath: null,
+      configJsonPath: null,
+    });
+  },
 };

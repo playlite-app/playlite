@@ -29,4 +29,8 @@ export const DETECTED_PATHS = {
   battleNet: {
     windows: 'C:\\ProgramData\\Battle.net\\Agent',
   },
+  indiegala: {
+    windowsInstalled: '%APPDATA%\\IGClient\\storage\\installed.json',
+    windowsConfig: '%APPDATA%\\IGClient\\config.json',
+  },
 } as const;

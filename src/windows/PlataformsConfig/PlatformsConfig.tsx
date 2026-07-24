@@ -10,6 +10,7 @@ import {
   Epic,
   Gog,
   Heroic,
+  Indiegala,
   Legacy,
   Steam,
   Ubisoft,
@@ -32,6 +33,7 @@ import {
   WineSettings,
   XboxSettings,
 } from '@/windows';
+import { IndiegalaSettings } from '@/windows/PlataformsConfig/IndiegalaSettings.tsx';
 
 type SourceProvider =
   | 'steam'
@@ -44,6 +46,7 @@ type SourceProvider =
   | 'ea'
   | 'amazon'
   | 'xbox'
+  | 'indiegala'
   | 'local'
   | 'wine';
 
@@ -124,6 +127,12 @@ export default function PlatformsConfig({
       connected: true,
     },
     {
+      id: 'indiegala',
+      name: t('config_store_indiegala'),
+      Icon: Indiegala,
+      connected: true,
+    },
+    {
       id: 'local',
       name: t('config_store_local'),
       Icon: Settings2,
@@ -194,6 +203,13 @@ export default function PlatformsConfig({
       case 'xbox':
         return (
           <XboxSettings onLibraryUpdate={onLibraryUpdate} progress={progress} />
+        );
+      case 'indiegala':
+        return (
+          <IndiegalaSettings
+            onLibraryUpdate={onLibraryUpdate}
+            progress={progress}
+          />
         );
       case 'local':
         return <LocalScannerSettings />;
